@@ -43,7 +43,7 @@ def main() -> None:
         action="store_true",
         help="Run only slow benchmark/evidence modules.",
     )
-    parser.add_argument("--fail-fast", action="store_true", help="Stop scheduling output after the first failed module.")
+    parser.add_argument("--fail-fast", action="store_true", help="Stop after the first failed module.")
     args = parser.parse_args()
     if args.quick and args.slow:
         parser.error("--quick and --slow cannot be used together")
@@ -54,7 +54,7 @@ def main() -> None:
     print(f"Running {len(modules)} {mode} test module(s) with {workers} worker(s)")
 
     start = time.perf_counter()
-    results = _run_parallel(modules, workers)
+    results = _run_parallel(modules, workers, fail_fast=args.fail_fast)
     elapsed = time.perf_counter() - start
     failed = [result for result in results if result.returncode != 0]
 
@@ -63,8 +63,6 @@ def main() -> None:
         print(f"{status:4s} {result.elapsed_s:6.2f}s {result.module}")
         if result.returncode != 0:
             print(result.output.rstrip())
-            if args.fail_fast:
-                break
 
     print(f"Finished in {elapsed:.2f}s")
     if failed:
@@ -103,14 +101,25 @@ def _worker_count(value: str, module_count: int) -> int:
     return min(workers, module_count)
 
 
-def _run_parallel(modules: list[str], workers: int) -> list[TestResult]:
+def _run_parallel(modules: list[str], workers: int, *, fail_fast: bool = False) -> list[TestResult]:
     if workers == 1:
-        return [_run_module(module) for module in modules]
+        results: list[TestResult] = []
+        for module in modules:
+            result = _run_module(module)
+            results.append(result)
+            if fail_fast and result.returncode != 0:
+                break
+        return results
     results: list[TestResult] = []
     with ProcessPoolExecutor(max_workers=workers) as executor:
         futures = {executor.submit(_run_module, module): module for module in modules}
         for future in as_completed(futures):
-            results.append(future.result())
+            result = future.result()
+            results.append(result)
+            if fail_fast and result.returncode != 0:
+                for pending in futures:
+                    pending.cancel()
+                break
     return results
 
 
