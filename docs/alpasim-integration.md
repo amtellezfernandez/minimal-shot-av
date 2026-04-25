@@ -60,6 +60,39 @@ uv run --project alpasim/src/wizard alpasim_wizard \
   scenes.scene_ids='["<scene-id>"]'
 ```
 
+## Import AlpaSim Metrics Into Evidence
+
+After a run finishes, AlpaSim writes native closed-loop metrics under the run
+directory, typically:
+
+```text
+<run-dir>/aggregate/metrics_results.txt
+```
+
+Import those metrics into a COMPASS-side evidence JSON:
+
+```bash
+PYTHONPATH=src uv run --no-sync python scripts/import_alpasim_metrics.py \
+  alpasim_spotlight_run \
+  --output artifacts/alpasim_spotlight_evidence.json
+```
+
+The importer is dependency-free and reads either AlpaSim's aggregate
+`metrics_results.txt` or a scripted `metrics_results.json`. It preserves the
+distinction between evidence tiers:
+
+- AlpaSim evidence is sensor-realistic, closed-loop validation.
+- It is not an official COMPASS score.
+- It should be reported alongside abstract COMPASS results, not merged into
+  them as if they measured the same thing.
+
+Imported gates currently cover AlpaSim's native metrics when present:
+
+- `collision_at_fault`
+- `offroad`
+- `dist_to_gt_trajectory` or `plan_deviation`
+- `safety_monitor_triggered`
+
 ## Honest Limitation
 
 This first bridge is trajectory-level. It consumes AlpaSim route command and
