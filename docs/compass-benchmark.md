@@ -117,9 +117,7 @@ COMPASS = 0.30 * safety
 This intentionally prevents a policy from getting a top score by merely
 surviving. `safety` includes collision and clearance, `route_quality` includes
 progress and lane discipline, and `comfort` includes intervention burden,
-stalling, and speed-change cost. The legacy `trajectory_score` remains in JSON
-as a diagnostic compatibility field, but it is not the default official
-COMPASS component.
+stalling, and speed-change cost.
 
 The oracle has privileged access to scenario state and future actor projection.
 It is used as an independent feasibility check and to produce a reference trace.

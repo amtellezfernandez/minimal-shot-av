@@ -98,7 +98,6 @@ class CompassTests(unittest.TestCase):
                             "generalization": 0.0,
                         },
                         "driving_quality": {"progress_target_m_per_step": 1.2},
-                        "trajectory_score": {"collision_penalty": 9.0, "intervention_penalty_scale": 1.0},
                         "scenario_generation": {
                             "name": "unit-scenario-generator",
                             "suite_pressure": {
@@ -130,7 +129,6 @@ class CompassTests(unittest.TestCase):
         self.assertEqual(profile.name, "unit-compass")
         self.assertEqual(profile.score_weights.safety, 1.0)
         self.assertEqual(profile.driving_quality.progress_target_m_per_step, 1.2)
-        self.assertEqual(profile.trajectory_score.collision_penalty, 9.0)
         self.assertEqual(profile.scenario_generation.name, "unit-scenario-generator")
         self.assertEqual(profile.scenario_generation.hazard_counts["adversarial"], (3,))
         self.assertEqual(profile.scenario_generation.ambient_base_count, 2)
@@ -210,7 +208,6 @@ class CompassTests(unittest.TestCase):
                 solvable=False,
                 success=True,
                 collision=False,
-                trajectory_score=8.0,
                 safety_score=8.0,
                 route_quality_score=8.0,
                 comfort_score=8.0,
