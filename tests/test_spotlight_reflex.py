@@ -14,21 +14,27 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.environment import Obstacle, Scenario, generate_scenario
-from minimal_shot_av.perception import perceive_scene
+from minimal_shot_av.environment import Actor, Obstacle, Scenario, generate_scenario, scenario_at_tick
+from minimal_shot_av.perception import ScenePerception, perceive_scene
+from minimal_shot_av.planner import PlannedAction
 from minimal_shot_av.policy import run_policy, run_spotlight_reflex_policy
+from minimal_shot_av.safety import apply_safety_filter
 from minimal_shot_av.spotlight_reflex import (
-    RFS_3S_INDEX,
-    RFS_5S_INDEX,
+    DEFAULT_SPOTLIGHT_CONFIG,
     ManeuverCandidate,
     RfsReference,
+    _min_obstacle_clearance,
     generate_maneuver_candidates,
     score_candidate,
     select_maneuver,
     speed_scale,
     trust_region_score,
 )
-from minimal_shot_av.world_model import update_world_state
+from minimal_shot_av.world_model import WorldState, update_world_state
+
+
+RFS_3S_INDEX = DEFAULT_SPOTLIGHT_CONFIG.rfs.index_3s
+RFS_5S_INDEX = DEFAULT_SPOTLIGHT_CONFIG.rfs.index_5s
 
 
 def straight_trajectory(lateral_offset: float = 0.0, longitudinal_offset: float = 0.0) -> list[tuple[float, float]]:
@@ -125,6 +131,126 @@ class ManeuverLibraryTests(unittest.TestCase):
         world_state = update_world_state(scenario, position, perception)
         selection = select_maneuver(scenario, position, world_state, perception, 1.25)
         self.assertIn(selection.candidate.name, {"nudge_right", "evasive_right"})
+
+    def test_forecast_clearance_keeps_static_obstacle_with_same_label_as_moving_actor(self) -> None:
+        scenario = Scenario(
+            width=20.0,
+            height=20.0,
+            lane_center=[(0.0, 0.0), (10.0, 0.0)],
+            lane_half_width=4.0,
+            obstacles=[Obstacle(x=1.0, y=0.0, radius=1.0, kind="barrier", label="shared_role")],
+            start=(0.0, 0.0),
+            goal=(10.0, 0.0),
+            seed=7,
+            actors=[
+                Actor(
+                    actor_id="moving_0",
+                    kind="vehicle",
+                    x=0.0,
+                    y=10.0,
+                    width=1.0,
+                    length=1.0,
+                    heading=-math.pi / 2.0,
+                    speed=1.0,
+                    vx=0.0,
+                    vy=-1.0,
+                    behavior="linear",
+                    role="shared_role",
+                )
+            ],
+        )
+        active = scenario_at_tick(scenario, 0)
+
+        self.assertLess(_min_obstacle_clearance([(1.0, 0.0)], active), 0.0)
+
+    def test_forecast_clearance_uses_future_position_for_moving_actor(self) -> None:
+        scenario = Scenario(
+            width=20.0,
+            height=20.0,
+            lane_center=[(0.0, 0.0), (10.0, 0.0)],
+            lane_half_width=4.0,
+            obstacles=[],
+            start=(0.0, 0.0),
+            goal=(10.0, 0.0),
+            seed=8,
+            actors=[
+                Actor(
+                    actor_id="crossing_0",
+                    kind="vehicle",
+                    x=0.0,
+                    y=1.0,
+                    width=1.0,
+                    length=1.0,
+                    heading=-math.pi / 2.0,
+                    speed=4.0,
+                    vx=0.0,
+                    vy=-4.0,
+                    behavior="linear",
+                    role="crossing_actor",
+                )
+            ],
+        )
+        active = scenario_at_tick(scenario, 0)
+
+        self.assertLess(_min_obstacle_clearance([(0.0, 0.0)], active), 0.0)
+
+    def test_forecast_clearance_replaces_current_moving_actor_obstacle(self) -> None:
+        scenario = Scenario(
+            width=20.0,
+            height=20.0,
+            lane_center=[(0.0, 0.0), (10.0, 0.0)],
+            lane_half_width=4.0,
+            obstacles=[],
+            start=(0.0, 0.0),
+            goal=(10.0, 0.0),
+            seed=9,
+            actors=[
+                Actor(
+                    actor_id="departing_0",
+                    kind="vehicle",
+                    x=0.0,
+                    y=0.0,
+                    width=1.0,
+                    length=1.0,
+                    heading=math.pi / 2.0,
+                    speed=40.0,
+                    vx=0.0,
+                    vy=40.0,
+                    behavior="linear",
+                    role="departing_actor",
+                )
+            ],
+        )
+        active = scenario_at_tick(scenario, 0)
+
+        self.assertGreater(_min_obstacle_clearance([(0.0, 0.0)], active), 5.0)
+
+    def test_lane_recovery_steers_toward_world_model_target(self) -> None:
+        action = PlannedAction(direction=(1.0, 0.0), speed=1.0, mode="planned", score=0.0)
+        world_state = WorldState(
+            position=(0.0, 0.0),
+            target_point=(3.0, 4.0),
+            progress_fraction=0.0,
+            collision_risk=0.0,
+            goal_distance=10.0,
+            uncertainty=0.1,
+        )
+        perception = ScenePerception(
+            lane_index=0,
+            lane_point=(0.0, 0.0),
+            lane_error=4.0,
+            lane_heading=(1.0, 0.0),
+            corridor_margin=0.1,
+            free_space_confidence=0.9,
+            uncertainty=0.1,
+            visible_obstacles=[],
+        )
+
+        safe_action = apply_safety_filter(action, world_state, perception)
+
+        self.assertEqual(safe_action.mode, "lane_recovery")
+        self.assertAlmostEqual(safe_action.direction[0], 0.6)
+        self.assertAlmostEqual(safe_action.direction[1], 0.8)
 
 
 class DemoIntegrationTests(unittest.TestCase):

@@ -132,7 +132,7 @@ def obstacles_at_tick(scenario: Scenario, tick: int, dt: float = 0.25) -> list[O
 
 
 def scenario_at_tick(scenario: Scenario, tick: int, dt: float = 0.25) -> Scenario:
-    return replace(scenario, obstacles=obstacles_at_tick(scenario, tick, dt))
+    return replace(scenario, obstacles=obstacles_at_tick(scenario, tick, dt), environment={**scenario.environment, "tick": tick})
 
 
 def interpolate_lane(centerline: list[tuple[float, float]], samples_per_segment: int = 16) -> list[tuple[float, float]]:

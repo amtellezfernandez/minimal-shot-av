@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import math
 from typing import Any, Callable
 
@@ -8,7 +8,7 @@ from .environment import Scenario, scenario_at_tick
 from .perception import ScenePerception, perceive_scene
 from .planner import PlannedAction, plan_action
 from .safety import SafeAction, apply_safety_filter
-from .spotlight_reflex import plan_spotlight_reflex_action
+from .spotlight_reflex import SpotlightReflexConfig, plan_spotlight_reflex_action
 from .world_model import WorldState, update_world_state
 
 
@@ -49,22 +49,66 @@ class Rollout:
 
 
 PolicyPlanner = Callable[
-    [Scenario, tuple[float, float], WorldState, ScenePerception, float],
+    [Scenario, tuple[float, float], WorldState, ScenePerception, "RolloutConfig"],
     tuple[PlannedAction, dict[str, Any]],
 ]
 
 
-def run_policy(scenario: Scenario, max_steps: int = 220, step_size: float = 1.25) -> Rollout:
-    return _run_rollout(scenario, _baseline_planner, max_steps, step_size)
+@dataclass(frozen=True)
+class RolloutConfig:
+    max_steps: int = 220
+    step_size: float = 1.25
+    goal_tolerance_m: float = 3.0
+    stall_goal_distance_m: float = 3.0
+    preserve_planned_direction: bool = False
+    spotlight: SpotlightReflexConfig = field(default_factory=SpotlightReflexConfig)
 
 
-def run_spotlight_reflex_policy(scenario: Scenario, max_steps: int = 220, step_size: float = 1.25) -> Rollout:
+DEFAULT_BASELINE_ROLLOUT_CONFIG = RolloutConfig()
+DEFAULT_SPOTLIGHT_ROLLOUT_CONFIG = RolloutConfig(preserve_planned_direction=True)
+
+
+def run_policy(
+    scenario: Scenario,
+    max_steps: int = 220,
+    step_size: float = 1.25,
+    config: RolloutConfig | None = None,
+) -> Rollout:
+    config = _rollout_config(config, max_steps, step_size, DEFAULT_BASELINE_ROLLOUT_CONFIG)
+    return _run_rollout(scenario, _baseline_planner, config)
+
+
+def run_spotlight_reflex_policy(
+    scenario: Scenario,
+    max_steps: int = 220,
+    step_size: float = 1.25,
+    config: RolloutConfig | None = None,
+) -> Rollout:
+    config = _rollout_config(config, max_steps, step_size, DEFAULT_SPOTLIGHT_ROLLOUT_CONFIG)
     return _run_rollout(
         scenario,
         _spotlight_reflex_planner,
-        max_steps,
-        step_size,
-        preserve_planned_direction=True,
+        config,
+    )
+
+
+def _rollout_config(
+    config: RolloutConfig | None,
+    max_steps: int,
+    step_size: float,
+    default: RolloutConfig,
+) -> RolloutConfig:
+    if config is not None:
+        return config
+    if max_steps == default.max_steps and step_size == default.step_size:
+        return default
+    return RolloutConfig(
+        max_steps=max_steps,
+        step_size=step_size,
+        goal_tolerance_m=default.goal_tolerance_m,
+        stall_goal_distance_m=default.stall_goal_distance_m,
+        preserve_planned_direction=default.preserve_planned_direction,
+        spotlight=default.spotlight,
     )
 
 
@@ -73,10 +117,10 @@ def _baseline_planner(
     position: tuple[float, float],
     world_state: WorldState,
     perception: ScenePerception,
-    step_size: float,
+    config: RolloutConfig,
 ) -> tuple[PlannedAction, dict[str, Any]]:
     del scenario
-    return plan_action(position, world_state, perception, nominal_step_size=step_size), {}
+    return plan_action(position, world_state, perception, nominal_step_size=config.step_size), {}
 
 
 def _spotlight_reflex_planner(
@@ -84,14 +128,15 @@ def _spotlight_reflex_planner(
     position: tuple[float, float],
     world_state: WorldState,
     perception: ScenePerception,
-    step_size: float,
+    config: RolloutConfig,
 ) -> tuple[PlannedAction, dict[str, Any]]:
     planned_action, selection = plan_spotlight_reflex_action(
         scenario,
         position,
         world_state,
         perception,
-        nominal_step_size=step_size,
+        nominal_step_size=config.step_size,
+        config=config.spotlight,
     )
     return planned_action, selection.to_metadata()
 
@@ -99,24 +144,22 @@ def _spotlight_reflex_planner(
 def _run_rollout(
     scenario: Scenario,
     planner: PolicyPlanner,
-    max_steps: int,
-    step_size: float,
-    preserve_planned_direction: bool = False,
+    config: RolloutConfig,
 ) -> Rollout:
     position = scenario.start
     steps: list[StepRecord] = []
     collision = False
     reached_goal = False
 
-    for tick in range(max_steps):
+    for tick in range(config.max_steps):
         active_scenario = scenario_at_tick(scenario, tick)
         previous_position = position
         perception = perceive_scene(active_scenario, position)
         world_state = update_world_state(active_scenario, position, perception)
-        planned_action, metadata = planner(active_scenario, position, world_state, perception, step_size)
+        planned_action, metadata = planner(active_scenario, position, world_state, perception, config)
         safe_action = apply_safety_filter(planned_action, world_state, perception)
         if (
-            preserve_planned_direction
+            config.preserve_planned_direction
             and safe_action.direction == (0.0, 0.0)
             and safe_action.speed > 0.0
             and planned_action.direction != (0.0, 0.0)
@@ -152,13 +195,14 @@ def _run_rollout(
                 len(active_scenario.actors),
                 steps[-1].speed if steps else None,
                 metadata,
+                config,
             )
         )
 
         if collision:
             break
 
-        if math.dist(position, scenario.goal) < 3.0:
+        if math.dist(position, scenario.goal) < config.goal_tolerance_m:
             reached_goal = True
             break
 
@@ -178,6 +222,7 @@ def _step_record(
     active_actor_count: int,
     previous_speed: float | None,
     metadata: dict[str, Any],
+    config: RolloutConfig,
 ) -> StepRecord:
     return StepRecord(
         t=tick,
@@ -194,7 +239,7 @@ def _step_record(
         progress=previous_goal_distance - goal_distance,
         comfort_cost=0.0 if previous_speed is None else abs(safe_action.speed - previous_speed),
         active_actor_count=active_actor_count,
-        stall=safe_action.speed == 0.0 and goal_distance >= 3.0,
+        stall=safe_action.speed == 0.0 and goal_distance >= config.stall_goal_distance_m,
         **_spotlight_step_fields(metadata),
     )
 

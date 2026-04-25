@@ -12,10 +12,14 @@ from .compositional_scenarios import (
     CorridorClearanceConfig,
     DEFAULT_COMPOSITIONAL_PROFILE,
     DifficultyConfig,
+    AmbientGeometryConfig,
+    EnvironmentConfig,
+    HazardGeometryConfig,
+    TopologyGeometryConfig,
     generate_compositional_scenario,
 )
 from .environment import Obstacle, Scenario
-from .oracle import OracleCertificate, run_oracle_policy
+from .oracle import DEFAULT_ORACLE_CONFIG, OracleCertificate, OracleConfig, run_oracle_policy
 from .policy import Rollout, run_policy, run_spotlight_reflex_policy
 from .wod_scenarios import WOD_E2E_CLUSTERS, generate_wod_scenario
 
@@ -36,9 +40,29 @@ class CompassLevel:
 
 @dataclass(frozen=True)
 class CompassScoreWeights:
-    trajectory: float = 0.50
-    recovery: float = 0.25
-    generalization: float = 0.25
+    safety: float = 0.30
+    route_quality: float = 0.25
+    comfort: float = 0.15
+    recovery: float = 0.15
+    generalization: float = 0.15
+
+
+@dataclass(frozen=True)
+class DrivingQualityConfig:
+    success_score: float = 10.0
+    failure_score: float = 2.0
+    collision_penalty: float = 10.0
+    clearance_target_m: float = 2.0
+    clearance_zero_m: float = 0.0
+    progress_target_m_per_step: float = 1.0
+    route_lane_error_target_m: float = 0.35
+    route_lane_error_zero_m: float = 4.0
+    intervention_rate_target: float = 0.10
+    intervention_rate_zero: float = 0.70
+    comfort_cost_target: float = 0.10
+    comfort_cost_zero: float = 1.20
+    stall_rate_target: float = 0.00
+    stall_rate_zero: float = 0.25
 
 
 @dataclass(frozen=True)
@@ -72,8 +96,10 @@ class CompassProfile:
     levels: tuple[CompassLevel, ...]
     official_level_weights: dict[int, float]
     score_weights: CompassScoreWeights = field(default_factory=CompassScoreWeights)
+    driving_quality: DrivingQualityConfig = field(default_factory=DrivingQualityConfig)
     trajectory_score: TrajectoryScoreConfig = field(default_factory=TrajectoryScoreConfig)
     scenario_generation: CompositionalScenarioProfile = field(default_factory=lambda: DEFAULT_COMPOSITIONAL_PROFILE)
+    oracle: OracleConfig = field(default_factory=lambda: DEFAULT_ORACLE_CONFIG)
     min_official_coverage_weight: float = 0.85
     min_runs_per_official_level: int = 3
     suite_penalties: dict[str, SuitePenaltyConfig] = field(default_factory=dict)
@@ -137,6 +163,9 @@ class CompassRun:
     success: bool
     collision: bool
     trajectory_score: float
+    safety_score: float
+    route_quality_score: float
+    comfort_score: float
     reasoning_quality: float
     reasoning_score_source: str
     recovery_rate: float
@@ -176,7 +205,7 @@ def _evaluate_level(
     for seed in seeds:
         paired_in_dist = policy(_paired_in_distribution_scenario(level, seed, profile))
         for scenario in _scenarios_for_level(level, seed, profile):
-            oracle = run_oracle_policy(scenario)
+            oracle = run_oracle_policy(scenario, config=profile.oracle)
             rollout = policy(scenario)
             runs.append(_score_run(policy_name, level, seed, rollout, paired_in_dist, oracle, scenario, profile))
     return runs
@@ -193,14 +222,20 @@ def _score_run(
     profile: CompassProfile,
 ) -> CompassRun:
     policy_trace = _policy_trace(rollout)
+    quality = _driving_quality_scores(rollout, level.suite, profile)
     trajectory = _trajectory_score(rollout, level.suite, profile)
     reasoning = _reasoning_quality(policy_trace, oracle.reasoning_trace)
     recovery = _recovery_rate(rollout)
     generalization = _generalization_score(paired_in_dist, rollout, level.suite, profile)
-    compass = (
-        profile.score_weights.trajectory * trajectory
-        + profile.score_weights.recovery * recovery
-        + profile.score_weights.generalization * generalization
+    compass = _weighted_compass_score(
+        profile.score_weights,
+        {
+            "safety": quality["safety_score"],
+            "route_quality": quality["route_quality_score"],
+            "comfort": quality["comfort_score"],
+            "recovery": recovery,
+            "generalization": generalization,
+        },
     )
     failure_axes = "" if rollout.success else str(scenario.tags.get("ood_axes", ""))
     return CompassRun(
@@ -214,6 +249,9 @@ def _score_run(
         success=rollout.success,
         collision=rollout.collision,
         trajectory_score=round(trajectory, 3),
+        safety_score=round(quality["safety_score"], 3),
+        route_quality_score=round(quality["route_quality_score"], 3),
+        comfort_score=round(quality["comfort_score"], 3),
         reasoning_quality=round(reasoning, 3),
         reasoning_score_source=REASONING_SCORE_SOURCE,
         recovery_rate=round(recovery, 3),
@@ -260,6 +298,75 @@ def _trajectory_score(
         if penalties.progress_threshold is not None and progress < penalties.progress_threshold:
             score -= penalties.progress_penalty
     return max(0.0, min(10.0, score))
+
+
+def _driving_quality_scores(
+    rollout: Rollout,
+    suite: str = "compositional",
+    profile: CompassProfile | None = None,
+) -> dict[str, float]:
+    profile = profile or DEFAULT_COMPASS_PROFILE
+    config = profile.driving_quality
+    if not rollout.steps:
+        return {"safety_score": 0.0, "route_quality_score": 0.0, "comfort_score": 0.0}
+
+    count = len(rollout.steps)
+    min_clearance = min(step.min_obstacle_distance for step in rollout.steps)
+    avg_progress = sum((step.progress or 0.0) for step in rollout.steps) / count
+    avg_lane_error = sum(abs(step.lane_error) for step in rollout.steps) / count
+    intervention_rate = sum(1 for step in rollout.steps if step.intervention) / count
+    avg_comfort_cost = sum((step.comfort_cost or 0.0) for step in rollout.steps) / count
+    stall_rate = sum(1 for step in rollout.steps if step.stall) / count
+
+    safety_score = config.success_score if rollout.success else config.failure_score
+    if rollout.collision:
+        safety_score -= config.collision_penalty
+    safety_score = min(safety_score, _scale_higher_is_better(min_clearance, config.clearance_zero_m, config.clearance_target_m))
+
+    progress_score = _scale_higher_is_better(avg_progress, 0.0, config.progress_target_m_per_step)
+    lane_score = _scale_lower_is_better(avg_lane_error, config.route_lane_error_target_m, config.route_lane_error_zero_m)
+    route_quality_score = (progress_score + lane_score) * 0.5
+
+    intervention_score = _scale_lower_is_better(
+        intervention_rate,
+        config.intervention_rate_target,
+        config.intervention_rate_zero,
+    )
+    comfort_score = _scale_lower_is_better(avg_comfort_cost, config.comfort_cost_target, config.comfort_cost_zero)
+    stall_score = _scale_lower_is_better(stall_rate, config.stall_rate_target, config.stall_rate_zero)
+    comfort_score = (intervention_score + comfort_score + stall_score) / 3.0
+
+    penalties = profile.suite_penalties.get(suite)
+    if penalties is not None:
+        if penalties.min_clearance_threshold is not None and min_clearance < penalties.min_clearance_threshold:
+            safety_score -= penalties.min_clearance_penalty
+        if penalties.intervention_rate_threshold is not None and intervention_rate > penalties.intervention_rate_threshold:
+            comfort_score -= min(
+                penalties.intervention_penalty_cap,
+                (intervention_rate - penalties.intervention_rate_threshold) * penalties.intervention_penalty_scale,
+            )
+        if penalties.progress_threshold is not None and avg_progress < penalties.progress_threshold:
+            route_quality_score -= penalties.progress_penalty
+
+    return {
+        "safety_score": max(0.0, min(10.0, safety_score)),
+        "route_quality_score": max(0.0, min(10.0, route_quality_score)),
+        "comfort_score": max(0.0, min(10.0, comfort_score)),
+    }
+
+
+def _scale_higher_is_better(value: float, zero: float, target: float) -> float:
+    if target <= zero:
+        raise ValueError("target must be greater than zero for higher-is-better scaling")
+    return max(0.0, min(10.0, 10.0 * (value - zero) / (target - zero)))
+
+
+def _scale_lower_is_better(value: float, target: float, zero: float) -> float:
+    if zero <= target:
+        raise ValueError("zero must be greater than target for lower-is-better scaling")
+    if value <= target:
+        return 10.0
+    return max(0.0, min(10.0, 10.0 * (zero - value) / (zero - target)))
 
 
 def _reasoning_quality(policy_trace: str, oracle_trace: str) -> float:
@@ -332,13 +439,18 @@ def _summary(runs: list[CompassRun], profile: CompassProfile | None = None) -> d
         "runs": len(runs),
         "benchmark_profile": profile.name,
         "official_score_formula": _score_formula(profile.score_weights),
+        "driving_quality_config": asdict(profile.driving_quality),
         "trajectory_score_config": asdict(profile.trajectory_score),
         "scenario_generation_profile": asdict(profile.scenario_generation),
+        "oracle_config": asdict(profile.oracle),
         "reasoning_score_source": REASONING_SCORE_SOURCE,
         "solvability_rate": round(sum(run.solvable for run in runs) / count, 3),
         "success_rate": round(sum(run.success for run in runs) / count, 3),
         "collision_rate": round(sum(run.collision for run in runs) / count, 3),
         "avg_trajectory_score": round(sum(run.trajectory_score for run in runs) / count, 3),
+        "avg_safety_score": round(sum(run.safety_score for run in runs) / count, 3),
+        "avg_route_quality_score": round(sum(run.route_quality_score for run in runs) / count, 3),
+        "avg_comfort_score": round(sum(run.comfort_score for run in runs) / count, 3),
         "avg_reasoning_quality": round(sum(run.reasoning_quality for run in runs) / count, 3),
         "avg_recovery_rate": round(sum(run.recovery_rate for run in runs) / count, 3),
         "avg_generalization_score": round(sum(run.generalization_score for run in runs) / count, 3),
@@ -399,7 +511,9 @@ def _ladder_summary(runs: list[CompassRun], profile: CompassProfile | None = Non
         "sample_size_valid": sample_size_valid,
         "score_valid": official_weight >= profile.min_official_coverage_weight and sample_size_valid,
         "official_score_formula": _score_formula(profile.score_weights),
+        "driving_quality_config": asdict(profile.driving_quality),
         "scenario_generation_profile": asdict(profile.scenario_generation),
+        "oracle_config": asdict(profile.oracle),
         "reasoning_score_source": REASONING_SCORE_SOURCE,
         "frontier_probe": frontier,
         "levels": level_summaries,
@@ -477,11 +591,25 @@ def _sanity_scenario(seed: int) -> Scenario:
 
 
 def _score_formula(weights: CompassScoreWeights) -> str:
+    total_weight = _score_weight_sum(weights)
     return (
-        f"{weights.trajectory:.2f}*trajectory + "
+        f"{weights.safety:.2f}*safety + "
+        f"{weights.route_quality:.2f}*route_quality + "
+        f"{weights.comfort:.2f}*comfort + "
         f"{weights.recovery:.2f}*recovery + "
         f"{weights.generalization:.2f}*generalization"
+        f" normalized_by {total_weight:.2f}"
     )
+
+
+def _weighted_compass_score(weights: CompassScoreWeights, components: dict[str, float]) -> float:
+    total_weight = _score_weight_sum(weights)
+    weighted_sum = sum(float(weight) * float(components[name]) for name, weight in asdict(weights).items())
+    return weighted_sum / total_weight
+
+
+def _score_weight_sum(weights: CompassScoreWeights) -> float:
+    return sum(float(value) for value in asdict(weights).values())
 
 
 def compass_profile_by_name(name: str) -> CompassProfile:
@@ -499,8 +627,10 @@ def load_compass_profile(path: Path) -> CompassProfile:
         "levels",
         "official_level_weights",
         "score_weights",
+        "driving_quality",
         "trajectory_score",
         "scenario_generation",
+        "oracle",
         "min_official_coverage_weight",
         "min_runs_per_official_level",
         "suite_penalties",
@@ -512,8 +642,10 @@ def load_compass_profile(path: Path) -> CompassProfile:
     raw_levels = payload.get("levels")
     levels = DEFAULT_COMPASS_LEVELS if raw_levels is None else tuple(CompassLevel(**level) for level in raw_levels)
     score_weights = CompassScoreWeights(**payload.get("score_weights", {}))
+    driving_quality = DrivingQualityConfig(**payload.get("driving_quality", {}))
     trajectory_score = TrajectoryScoreConfig(**payload.get("trajectory_score", {}))
     scenario_generation = _load_scenario_generation_profile(payload.get("scenario_generation"))
+    oracle = OracleConfig(**payload.get("oracle", {}))
     if "suite_penalties" in payload:
         suite_penalties = {
             suite: SuitePenaltyConfig(**config)
@@ -530,8 +662,10 @@ def load_compass_profile(path: Path) -> CompassProfile:
         levels=levels,
         official_level_weights=official_weights,
         score_weights=score_weights,
+        driving_quality=driving_quality,
         trajectory_score=trajectory_score,
         scenario_generation=scenario_generation,
+        oracle=oracle,
         min_official_coverage_weight=float(
             payload.get("min_official_coverage_weight", DEFAULT_COMPASS_PROFILE.min_official_coverage_weight)
         ),
@@ -556,6 +690,10 @@ def _load_scenario_generation_profile(payload: dict | None) -> CompositionalScen
         "gauntlet_lane_half_width_cap",
         "corridor_clearance",
         "difficulty",
+        "topology",
+        "hazards",
+        "ambient",
+        "environment",
     }
     unknown = sorted(set(payload) - allowed)
     if unknown:
@@ -588,6 +726,10 @@ def _load_scenario_generation_profile(payload: dict | None) -> CompositionalScen
         ),
         corridor_clearance=CorridorClearanceConfig(**payload.get("corridor_clearance", {})),
         difficulty=DifficultyConfig(**payload.get("difficulty", {})),
+        topology=TopologyGeometryConfig(**payload.get("topology", {})),
+        hazards=HazardGeometryConfig(**payload.get("hazards", {})),
+        ambient=AmbientGeometryConfig(**payload.get("ambient", {})),
+        environment=EnvironmentConfig(**payload.get("environment", {})),
     )
 
 
@@ -606,7 +748,27 @@ def _validate_compass_profile(profile: CompassProfile) -> None:
         raise ValueError("min_runs_per_official_level must be at least 1")
     if not 0.0 <= profile.min_official_coverage_weight <= total_weight:
         raise ValueError("min_official_coverage_weight must be between 0 and total official weight")
+    _validate_score_weights(profile.score_weights)
+    _validate_driving_quality(profile.driving_quality)
     _validate_scenario_generation_profile(profile.scenario_generation)
+
+
+def _validate_score_weights(weights: CompassScoreWeights) -> None:
+    values = asdict(weights)
+    negative = sorted(name for name, value in values.items() if value < 0.0)
+    if negative:
+        raise ValueError(f"score_weights has negative weight(s): {negative}")
+    if _score_weight_sum(weights) <= 0.0:
+        raise ValueError("score_weights must have positive total weight")
+
+
+def _validate_driving_quality(config: DrivingQualityConfig) -> None:
+    _scale_higher_is_better(config.clearance_target_m, config.clearance_zero_m, config.clearance_target_m)
+    _scale_higher_is_better(config.progress_target_m_per_step, 0.0, config.progress_target_m_per_step)
+    _scale_lower_is_better(config.route_lane_error_target_m, config.route_lane_error_target_m, config.route_lane_error_zero_m)
+    _scale_lower_is_better(config.intervention_rate_target, config.intervention_rate_target, config.intervention_rate_zero)
+    _scale_lower_is_better(config.comfort_cost_target, config.comfort_cost_target, config.comfort_cost_zero)
+    _scale_lower_is_better(config.stall_rate_target, config.stall_rate_target, config.stall_rate_zero)
 
 
 def _validate_scenario_generation_profile(profile: CompositionalScenarioProfile) -> None:

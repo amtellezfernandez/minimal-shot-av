@@ -206,6 +206,17 @@ PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.compass ladder \
   --output artifacts/compass_ladder.json
 ```
 
+Config-driven stress benchmark:
+
+```bash
+PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.compass ladder \
+  --policy spotlight-reflex \
+  --profile-json configs/compass_stress.json \
+  --seed-start 1 \
+  --seed-end 20 \
+  --output artifacts/compass_stress.json
+```
+
 SOTIF-aligned evidence package:
 
 ```bash
@@ -228,7 +239,9 @@ edits: use `--profile-json compass_profile.json` with COMPASS, or
 profile can override official level weights, score weights, trajectory scoring,
 suite penalties, and compositional scenario-generation settings such as hazard
 counts, suite pressure, ambient density, corridor clearance, and difficulty
-scoring.
+scoring. For harder ODD portability, the same profile can override topology
+geometry, hazard geometry, visibility/latency ranges, and oracle feasibility
+parameters.
 
 Available procedural clusters:
 

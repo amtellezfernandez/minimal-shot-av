@@ -9,11 +9,31 @@ from .policy import Rollout, StepRecord
 from .world_model import update_world_state
 
 
-ORACLE_SPEED_SCALES = (1.0, 0.65, 0.35, 0.0)
-ORACLE_ANGLES = (-1.1, -0.55, 0.0, 0.55, 1.1)
-ORACLE_HORIZON_STEPS = 5
-ORACLE_LANE_SAMPLES_PER_SEGMENT = 12
-ORACLE_LOOKAHEAD_SAMPLES = 24
+@dataclass(frozen=True)
+class OracleConfig:
+    speed_scales: tuple[float, ...] = (1.0, 0.65, 0.35, 0.0)
+    steering_angles_rad: tuple[float, ...] = (-1.1, -0.55, 0.0, 0.55, 1.1)
+    horizon_steps: int = 5
+    lane_samples_per_segment: int = 12
+    lookahead_samples: int = 24
+    max_steps: int = 220
+    step_size: float = 1.35
+    goal_tolerance_m: float = 3.0
+    stall_goal_distance_m: float = 3.0
+    solvable_min_clearance_m: float = 0.25
+    yield_speed_scale_max: float = 0.5
+    avoidance_angle_threshold_rad: float = 0.2
+    collision_penalty: float = 1_000_000.0
+    collision_penalty_slope: float = 10_000.0
+    lane_error_fraction: float = 0.75
+    clearance_score_cap_m: float = 5.0
+    clearance_score_weight: float = 22.0
+    progress_score_weight: float = 18.0
+    lane_penalty_weight: float = 12.0
+    stopped_penalty: float = 0.15
+
+
+DEFAULT_ORACLE_CONFIG = OracleConfig()
 
 
 @dataclass(frozen=True)
@@ -25,24 +45,29 @@ class OracleCertificate:
     intervention_free: bool
 
 
-def run_oracle_policy(scenario: Scenario, max_steps: int = 220, step_size: float = 1.35) -> OracleCertificate:
+def run_oracle_policy(
+    scenario: Scenario,
+    max_steps: int = 220,
+    step_size: float = 1.35,
+    config: OracleConfig | None = None,
+) -> OracleCertificate:
     """Run a privileged receding-horizon oracle over full simulator state.
 
     The oracle is not a submitted driving policy. It sees future actor positions
     over a short horizon and exists to check that a generated scenario has a
     feasible route through the current abstract simulator.
     """
-
+    config = _oracle_config(config, max_steps, step_size)
     position = scenario.start
-    dense_lane = interpolate_lane(scenario.lane_center, samples_per_segment=ORACLE_LANE_SAMPLES_PER_SEGMENT)
+    dense_lane = interpolate_lane(scenario.lane_center, samples_per_segment=config.lane_samples_per_segment)
     steps: list[StepRecord] = []
     collision = False
     reached_goal = False
 
-    for tick in range(max_steps):
+    for tick in range(config.max_steps):
         active_scenario = scenario_at_tick(scenario, tick)
         previous_position = position
-        direction, speed, mode = _choose_privileged_action(scenario, position, tick, step_size, dense_lane)
+        direction, speed, mode = _choose_privileged_action(scenario, position, tick, dense_lane, config)
         position = (position[0] + direction[0] * speed, position[1] + direction[1] * speed)
 
         for obstacle in active_scenario.obstacles:
@@ -74,13 +99,13 @@ def run_oracle_policy(scenario: Scenario, max_steps: int = 220, step_size: float
                 progress=previous_goal_distance - goal_distance,
                 comfort_cost=0.0 if not steps else abs(speed - steps[-1].speed),
                 active_actor_count=len(active_scenario.actors),
-                stall=speed == 0.0 and goal_distance >= 3.0,
+                stall=speed == 0.0 and goal_distance >= config.stall_goal_distance_m,
             )
         )
 
         if collision:
             break
-        if goal_distance < 3.0:
+        if goal_distance < config.goal_tolerance_m:
             reached_goal = True
             break
 
@@ -88,12 +113,20 @@ def run_oracle_policy(scenario: Scenario, max_steps: int = 220, step_size: float
     min_clearance = min((step.min_obstacle_distance for step in steps), default=math.inf)
     trace = oracle_reasoning_trace(scenario, rollout)
     return OracleCertificate(
-        solvable=rollout.success and min_clearance > 0.25,
+        solvable=rollout.success and min_clearance > config.solvable_min_clearance_m,
         reasoning_trace=trace,
         rollout=rollout,
         min_clearance=min_clearance,
         intervention_free=True,
     )
+
+
+def _oracle_config(config: OracleConfig | None, max_steps: int, step_size: float) -> OracleConfig:
+    if config is not None:
+        return config
+    if max_steps == DEFAULT_ORACLE_CONFIG.max_steps and step_size == DEFAULT_ORACLE_CONFIG.step_size:
+        return DEFAULT_ORACLE_CONFIG
+    return OracleConfig(max_steps=max_steps, step_size=step_size)
 
 
 def oracle_reasoning_trace(scenario: Scenario, rollout: Rollout | None = None) -> str:
@@ -114,34 +147,34 @@ def _choose_privileged_action(
     scenario: Scenario,
     position: tuple[float, float],
     tick: int,
-    step_size: float,
     dense_lane: list[tuple[float, float]],
+    config: OracleConfig,
 ) -> tuple[tuple[float, float], float, str]:
-    target = _lookahead_target(scenario, position, dense_lane)
+    target = _lookahead_target(scenario, position, dense_lane, config)
     base = _normalize((target[0] - position[0], target[1] - position[1]))
     if base == (0.0, 0.0):
         base = _normalize((scenario.goal[0] - position[0], scenario.goal[1] - position[1]))
     future_scenarios = tuple(
-        scenario_at_tick(scenario, tick + offset) for offset in range(1, ORACLE_HORIZON_STEPS + 1)
+        scenario_at_tick(scenario, tick + offset) for offset in range(1, config.horizon_steps + 1)
     )
     candidates: list[tuple[float, tuple[float, float], float, str]] = []
-    for speed_scale in ORACLE_SPEED_SCALES:
-        for angle in ORACLE_ANGLES:
+    for speed_scale in config.speed_scales:
+        for angle in config.steering_angles_rad:
             direction = _normalize(_rotate(base, angle))
-            speed = step_size * speed_scale
-            score = _horizon_score(scenario, position, direction, speed, future_scenarios)
-            mode = _candidate_mode(speed_scale, angle)
+            speed = config.step_size * speed_scale
+            score = _horizon_score(scenario, position, direction, speed, future_scenarios, config)
+            mode = _candidate_mode(speed_scale, angle, config)
             candidates.append((score, direction, speed, mode))
     _, direction, speed, mode = max(candidates, key=lambda item: item[0])
     return direction, speed, mode
 
 
-def _candidate_mode(speed_scale: float, angle: float) -> str:
-    if speed_scale <= 0.5:
+def _candidate_mode(speed_scale: float, angle: float, config: OracleConfig) -> str:
+    if speed_scale <= config.yield_speed_scale_max:
         return "yield"
-    if angle > 0.2:
+    if angle > config.avoidance_angle_threshold_rad:
         return "avoid_left"
-    if angle < -0.2:
+    if angle < -config.avoidance_angle_threshold_rad:
         return "avoid_right"
     return "progress"
 
@@ -152,6 +185,7 @@ def _horizon_score(
     direction: tuple[float, float],
     speed: float,
     future_scenarios: tuple[Scenario, ...],
+    config: OracleConfig,
 ) -> float:
     simulated = position
     min_clearance = math.inf
@@ -165,22 +199,28 @@ def _horizon_score(
             clearance = math.dist(simulated, (obstacle.x, obstacle.y)) - obstacle.radius
             min_clearance = min(min_clearance, clearance)
             if clearance < 0.0:
-                return -1_000_000.0 + clearance * 10_000.0
+                return -config.collision_penalty + clearance * config.collision_penalty_slope
         perception = perceive_scene(active, simulated)
-        lane_penalty += max(0.0, perception.lane_error - active.lane_half_width * 0.75)
-    clearance_score = min(5.0, min_clearance) * 22.0
-    return progress * 18.0 + clearance_score - lane_penalty * 12.0 - (0.15 if speed == 0.0 else 0.0)
+        lane_penalty += max(0.0, perception.lane_error - active.lane_half_width * config.lane_error_fraction)
+    clearance_score = min(config.clearance_score_cap_m, min_clearance) * config.clearance_score_weight
+    return (
+        progress * config.progress_score_weight
+        + clearance_score
+        - lane_penalty * config.lane_penalty_weight
+        - (config.stopped_penalty if speed == 0.0 else 0.0)
+    )
 
 
 def _lookahead_target(
     scenario: Scenario,
     position: tuple[float, float],
     dense_lane: list[tuple[float, float]],
+    config: OracleConfig,
 ) -> tuple[float, float]:
     best_index, _, _ = nearest_lane_point(position, dense_lane)
-    if best_index >= len(dense_lane) - ORACLE_LOOKAHEAD_SAMPLES:
+    if best_index >= len(dense_lane) - config.lookahead_samples:
         return scenario.goal
-    return dense_lane[min(len(dense_lane) - 1, best_index + ORACLE_LOOKAHEAD_SAMPLES)]
+    return dense_lane[min(len(dense_lane) - 1, best_index + config.lookahead_samples)]
 
 
 def _normalize(vector: tuple[float, float]) -> tuple[float, float]:

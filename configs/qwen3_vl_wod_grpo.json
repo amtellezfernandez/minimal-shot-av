@@ -1,0 +1,26 @@
+{
+  "model_name": "Qwen/Qwen3-VL-8B-Instruct",
+  "license": "Apache-2.0",
+  "runtime_position": "offline SFT/GRPO teacher and distilled fast trajectory decoder; do not run 8B VLM in the simulator loop",
+  "trajectory_format": {
+    "decoder_output": "64 waypoints at 10 Hz",
+    "submission_output": "20 waypoints at 4 Hz over 5 seconds",
+    "resampler": "minimal_shot_av.trajectory_resampling.resample_64wp_10hz_to_20wp_4hz"
+  },
+  "training": {
+    "sft_dataset": "artifacts/qwen3_vl_wod_sft.jsonl",
+    "preference_rows": "artifacts/wod_preference_candidates.full.jsonl",
+    "rfs_ranker": "artifacts/wod_preference_ranker.full.json",
+    "grpo_reward_weights": {
+      "rfs": 1.0,
+      "format": 0.05,
+      "smoothness": 0.03,
+      "finite": 0.10
+    }
+  },
+  "commands": {
+    "setup": "scripts/setup_qwen3_vl_stack.sh",
+    "build_sft": "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/build_qwen3_vl_sft_dataset.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/qwen3_vl_wod_sft.jsonl",
+    "dry_run_reward": ".venv-qwen/bin/python scripts/train_qwen3_vl_grpo.py --dataset artifacts/qwen3_vl_wod_sft.jsonl --dry-run"
+  }
+}

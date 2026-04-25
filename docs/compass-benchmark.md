@@ -78,8 +78,16 @@ override benchmark levels, official weights, trajectory scoring constants,
 suite penalties, coverage gates, minimum ranked runs, and scenario-generation
 settings. The `scenario_generation` block controls suite seed offsets, suite
 pressure, hazard-count distributions, ambient-object density, gauntlet corridor
-width caps, corridor clearance, and difficulty scoring. Unknown JSON fields are
-rejected so stale configuration does not silently pass.
+width caps, corridor clearance, topology geometry, hazard geometry, environment
+visibility/latency ranges, and difficulty scoring. The same profile can also
+override the oracle feasibility-check horizon, action lattice, scoring weights,
+lookahead, and clearance gates. Unknown JSON fields are rejected so stale
+configuration does not silently pass.
+
+The repository includes `configs/compass_stress.json` as an example non-default
+benchmark profile. It makes scenario generation and oracle settings harder
+without changing policy code, which is the intended workflow for discovering
+policy failures instead of making the benchmark fit one model.
 
 ## Score
 
@@ -98,10 +106,19 @@ and should not collapse the ranked score.
 The current dependency-free score is:
 
 ```text
-COMPASS = 0.50 * trajectory_score
-        + 0.25 * recovery_rate
-        + 0.25 * generalization_score
+COMPASS = 0.30 * safety
+        + 0.25 * route_quality
+        + 0.15 * comfort
+        + 0.15 * recovery_rate
+        + 0.15 * generalization_score
 ```
+
+This intentionally prevents a policy from getting a top score by merely
+surviving. `safety` includes collision and clearance, `route_quality` includes
+progress and lane discipline, and `comfort` includes intervention burden,
+stalling, and speed-change cost. The legacy `trajectory_score` remains in JSON
+as a diagnostic compatibility field, but it is not the default official
+COMPASS component.
 
 The oracle has privileged access to scenario state and future actor projection.
 It is used as an independent feasibility check and to produce a reference trace.

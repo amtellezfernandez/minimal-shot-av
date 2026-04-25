@@ -1,0 +1,121 @@
+{
+  "name": "compass-stress-v0",
+  "official_level_weights": {
+    "0": 0.10,
+    "1": 0.20,
+    "2": 0.35,
+    "3": 0.35
+  },
+  "min_official_coverage_weight": 0.85,
+  "min_runs_per_official_level": 3,
+  "score_weights": {
+    "safety": 0.30,
+    "route_quality": 0.30,
+    "comfort": 0.20,
+    "recovery": 0.25,
+    "generalization": 0.20
+  },
+  "driving_quality": {
+    "clearance_target_m": 2.5,
+    "progress_target_m_per_step": 1.15,
+    "route_lane_error_target_m": 0.25,
+    "route_lane_error_zero_m": 3.0,
+    "intervention_rate_target": 0.05,
+    "intervention_rate_zero": 0.45,
+    "comfort_cost_target": 0.08,
+    "comfort_cost_zero": 0.90,
+    "stall_rate_zero": 0.15
+  },
+  "scenario_generation": {
+    "name": "compositional-stress-v0",
+    "suite_pressure": {
+      "compositional": 1.15,
+      "hidden": 1.55,
+      "adversarial": 2.20,
+      "gauntlet": 3.00
+    },
+    "hazard_counts": {
+      "compositional": [2],
+      "hidden": [2, 3],
+      "adversarial": [3],
+      "gauntlet": [4]
+    },
+    "ambient_base_count": 8,
+    "gauntlet_lane_half_width_cap": [4.0, 5.2],
+    "corridor_clearance": {
+      "rural_single_track": 0.8,
+      "static_blocker": 1.1,
+      "default": 1.35
+    },
+    "topology": {
+      "lane_half_width_ranges": {
+        "rural_single_track": [4.0, 5.0],
+        "industrial_yard": [5.0, 6.4],
+        "worksite_chicane": [5.0, 6.2],
+        "roundabout_entry": [6.0, 7.2],
+        "default": [6.2, 8.0]
+      },
+      "rural_jitter_m": 3.0,
+      "worksite_chicane_amplitude_m": 11.0
+    },
+    "hazards": {
+      "crossing_start_scale": {
+        "gauntlet": 0.38,
+        "adversarial": 0.55,
+        "default": 0.85
+      },
+      "cut_in_start_scale": {
+        "gauntlet": 0.35,
+        "adversarial": 0.55,
+        "default": 0.95
+      },
+      "wrong_way_lateral_scale": {
+        "gauntlet": 0.0,
+        "adversarial": 0.05,
+        "default": 0.25
+      },
+      "novel_object_radius_max_m": {
+        "gauntlet": 3.0,
+        "default": 2.6
+      }
+    },
+    "environment": {
+      "visibility_ranges": {
+        "clear": [0.70, 0.92],
+        "rain": [0.30, 0.62],
+        "low_light": [0.25, 0.55],
+        "glare": [0.28, 0.58],
+        "mist": [0.24, 0.50],
+        "wet_surface": [0.45, 0.72]
+      },
+      "normal_latency_budget_ms": [80, 120, 160],
+      "degraded_latency_budget_ms": [40, 60, 80],
+      "degraded_latency_visibility_threshold": 0.60
+    }
+  },
+  "oracle": {
+    "horizon_steps": 7,
+    "lookahead_samples": 32,
+    "steering_angles_rad": [-1.35, -0.85, -0.35, 0.0, 0.35, 0.85, 1.35],
+    "speed_scales": [1.0, 0.65, 0.35, 0.0],
+    "solvable_min_clearance_m": 0.2
+  },
+  "suite_penalties": {
+    "adversarial": {
+      "min_clearance_threshold": 0.9,
+      "min_clearance_penalty": 1.5,
+      "intervention_rate_threshold": 0.45,
+      "intervention_penalty_cap": 2.5,
+      "intervention_penalty_scale": 5.0
+    },
+    "gauntlet": {
+      "min_clearance_threshold": 1.2,
+      "min_clearance_penalty": 2.5,
+      "intervention_rate_threshold": 0.22,
+      "intervention_penalty_cap": 3.5,
+      "intervention_penalty_scale": 9.0,
+      "progress_threshold": 0.60,
+      "progress_penalty": 2.5
+    }
+  }
+}
