@@ -10,9 +10,25 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []
 
+[project.optional-dependencies]
+sim-viz = ["Pillow>=10"]
+alpasim = ["numpy", "torch"]
+
+[project.entry-points."alpasim.models"]
+spotlight_reflex = "minimal_shot_av.alpasim_spotlight:SpotlightReflexAlpaSimModel"
+
+[project.entry-points."alpasim.configs"]
+spotlight_reflex = "minimal_shot_av.alpasim_configs"
+
+[project.scripts]
+compass = "minimal_shot_av.compass:main"
+compass-evidence = "minimal_shot_av.certification:main"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"minimal_shot_av.alpasim_configs" = ["**/*.yaml"]

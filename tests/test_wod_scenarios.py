@@ -1,0 +1,227 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from minimal_shot_av.compositional_scenarios import COMPOSITIONAL_SUITES, generate_compositional_scenario
+from minimal_shot_av.environment import actor_at_tick, actor_to_obstacle, interpolate_lane, nearest_lane_point, scenario_at_tick, scenario_to_dict
+from minimal_shot_av.wod_scenarios import WOD_E2E_CLUSTERS, generate_wod_scenario
+
+
+class WodScenarioGeneratorTests(unittest.TestCase):
+    def test_all_clusters_generate_deterministic_scenarios(self) -> None:
+        for cluster in WOD_E2E_CLUSTERS:
+            first = scenario_to_dict(generate_wod_scenario(cluster, seed=42))
+            second = scenario_to_dict(generate_wod_scenario(cluster, seed=42))
+            self.assertEqual(first, second)
+            self.assertEqual(first["cluster"], cluster)
+            self.assertEqual(first["tags"]["generator"], "wod_e2e_procedural_v1")
+            self.assertGreaterEqual(len(first["lane_center"]), 2)
+            self.assertGreater(len(first["obstacles"]), 0)
+            self.assertGreater(len(first["actors"]), 0)
+            self.assertIn("weather", first["environment"])
+            self.assertGreater(len(first["map_features"]), 0)
+
+    def test_invalid_cluster_raises(self) -> None:
+        with self.assertRaises(ValueError):
+            generate_wod_scenario("not-a-cluster", seed=1)
+
+    def test_demo_cli_accepts_wod_cluster(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "run_demo.py"),
+                    "--seed",
+                    "3",
+                    "--policy",
+                    "spotlight-reflex",
+                    "--scenario-cluster",
+                    "spotlight",
+                    "--artifacts-dir",
+                    temp_dir,
+                ],
+                cwd=ROOT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            payload = json.loads((Path(temp_dir) / "latest_rollout.json").read_text())
+
+        self.assertEqual(payload["architecture"]["scenario_source"], "WOD-E2E procedural cluster generator")
+        self.assertEqual(payload["scenario"]["cluster"], "spotlight")
+        self.assertEqual(payload["scenario"]["tags"]["generator"], "wod_e2e_procedural_v1")
+        self.assertGreater(len(payload["scenario"]["actors"]), 0)
+        self.assertEqual(payload["architecture"]["policy"], "spotlight-reflex")
+
+    def test_dynamic_actor_projection_updates_active_obstacles(self) -> None:
+        scenario = generate_wod_scenario("cut-in", seed=2)
+        actor = scenario.actors[0]
+        projected = actor_to_obstacle(actor, tick=4)
+        self.assertIsNotNone(projected)
+        active = scenario_at_tick(scenario, tick=4)
+        self.assertTrue(any(obstacle.kind == actor.kind for obstacle in active.obstacles))
+        self.assertNotEqual((actor.x, actor.y), (projected.x, projected.y))
+
+    def test_ambient_obstacles_are_visual_texture_not_blocking_hazards(self) -> None:
+        scenario = generate_wod_scenario("construction", seed=10)
+        self.assertTrue(any(obstacle.kind == "ambient" for obstacle in scenario.obstacles))
+        active = scenario_at_tick(scenario, tick=0)
+        self.assertFalse(any(obstacle.kind == "ambient" for obstacle in active.obstacles))
+
+    def test_wod_smoke_seeds_have_reachable_routes_and_no_ambient_blockers(self) -> None:
+        for cluster in WOD_E2E_CLUSTERS:
+            for seed in (1, 2, 3):
+                scenario = generate_wod_scenario(cluster, seed)
+                self.assertGreater(scenario.goal[0], scenario.start[0], f"{cluster} seed {seed} route regressed")
+                self.assertGreaterEqual(len(scenario.lane_center), 2)
+                active = scenario_at_tick(scenario, tick=0)
+                self.assertFalse(any(obstacle.kind == "ambient" for obstacle in active.obstacles))
+
+    def test_evaluation_script_writes_csv_and_json(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "evaluate_scenarios.py"),
+                    "--seed-start",
+                    "1",
+                    "--seed-end",
+                    "2",
+                    "--policy",
+                    "spotlight-reflex",
+                    "--suite",
+                    "wod",
+                    "--output-dir",
+                    temp_dir,
+                ],
+                cwd=ROOT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            payload = json.loads((Path(temp_dir) / "scenario_eval.json").read_text())
+            csv_text = (Path(temp_dir) / "scenario_eval.csv").read_text()
+
+        self.assertEqual(len(payload["runs"]), len(WOD_E2E_CLUSTERS) * 2)
+        self.assertIn("success_rate", payload["summary"][0])
+        self.assertIn("suite,cluster,topology", csv_text)
+
+    def test_compositional_generator_emits_manifest_not_taxonomy_only(self) -> None:
+        for suite in COMPOSITIONAL_SUITES:
+            scenario = generate_compositional_scenario(seed=7, suite=suite)
+            first = scenario_to_dict(scenario)
+            second = scenario_to_dict(generate_compositional_scenario(seed=7, suite=suite))
+            self.assertEqual(first, second)
+            self.assertEqual(first["tags"]["generator"], "compositional_ood_v1")
+            self.assertEqual(first["tags"]["scenario_suite"], suite)
+            self.assertIn(first["tags"]["topology"], first["cluster"])
+            self.assertIn("primary_hazard_id", first["tags"])
+            self.assertIn("intended_decision", first["tags"])
+            self.assertIn("allowed_maneuvers", first["tags"])
+            self.assertIn("ood_axes", first["tags"])
+            self.assertGreaterEqual(first["tags"]["blocking_hazards"], 1)
+            self.assertGreater(len(first["map_features"]), 1)
+
+    def test_compositional_primary_static_hazard_remains_deliberate(self) -> None:
+        for seed in range(1, 30):
+            scenario = generate_compositional_scenario(seed=seed, suite="compositional")
+            primary_id = scenario.tags["primary_hazard_id"]
+            primary = next((obstacle for obstacle in scenario.obstacles if obstacle.label == primary_id), None)
+            if primary is None:
+                continue
+            _, _, lane_error = nearest_lane_point((primary.x, primary.y), interpolate_lane(scenario.lane_center))
+            self.assertLessEqual(lane_error, scenario.lane_half_width * 0.55)
+            return
+        self.fail("no static primary hazard found in seed range")
+
+    def test_compositional_adversarial_combines_hazards(self) -> None:
+        scenario = generate_compositional_scenario(seed=9, suite="adversarial")
+        self.assertIn("+", scenario.tags["hazard_composition"])
+        self.assertIn("composed_hazards", scenario.tags["ood_axes"])
+        self.assertIn(len(str(scenario.tags["hazard_composition"]).split("+")), {2, 3})
+        self.assertEqual(scenario.tags["hazard_count"], len(str(scenario.tags["hazard_composition"]).split("+")))
+        active = scenario_at_tick(scenario, tick=3)
+        self.assertFalse(any(obstacle.kind == "ambient" for obstacle in active.obstacles))
+
+    def test_gauntlet_is_four_hazard_quality_gated_suite(self) -> None:
+        scenario = generate_compositional_scenario(seed=11, suite="gauntlet")
+        composition = str(scenario.tags["hazard_composition"]).split("+")
+        self.assertEqual(len(composition), 4)
+        self.assertIn("synchronized_threats", scenario.tags["ood_axes"])
+        self.assertEqual(scenario.tags["difficulty"], 1.0)
+        self.assertLessEqual(scenario.lane_half_width, 6.2)
+        self.assertGreaterEqual(scenario.tags["blocking_hazards"], 4)
+
+    def test_compositional_includes_wrong_way_as_adversarial_hazard(self) -> None:
+        found = False
+        for seed in range(1, 60):
+            scenario = generate_compositional_scenario(seed=seed, suite="adversarial")
+            if "wrong_way_vehicle" in str(scenario.tags["hazard_composition"]):
+                found = True
+                self.assertTrue(any(actor.behavior == "wrong_way" for actor in scenario.actors))
+                break
+        self.assertTrue(found, "wrong_way_vehicle should be reachable in adversarial sampling")
+
+    def test_dynamic_behavior_is_not_constant_velocity_for_cut_in(self) -> None:
+        scenario = generate_compositional_scenario(seed=21, suite="adversarial")
+        actor = next((candidate for candidate in scenario.actors if candidate.behavior == "cut_in"), None)
+        if actor is None:
+            self.skipTest("seed did not generate a cut-in actor")
+        projected = actor_at_tick(actor, tick=8)
+        constant_y = actor.y + actor.vy * 8 * 0.25
+        self.assertNotAlmostEqual(projected.y, constant_y)
+
+    def test_compositional_smoke_seeds_have_manifested_primary_decisions(self) -> None:
+        for suite in ("compositional", "adversarial"):
+            for seed in (1, 2, 3):
+                scenario = generate_compositional_scenario(seed, suite=suite)
+                self.assertIn("primary_hazard_id", scenario.tags)
+                self.assertIn("primary_decision_point", {feature["kind"] for feature in scenario.map_features})
+                self.assertGreaterEqual(scenario.tags["blocking_hazards"], 1)
+
+    def test_evaluation_script_writes_compositional_suite(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "evaluate_scenarios.py"),
+                    "--seed-start",
+                    "1",
+                    "--seed-end",
+                    "1",
+                    "--policy",
+                    "spotlight-reflex",
+                    "--suite",
+                    "compositional",
+                    "--output-dir",
+                    temp_dir,
+                ],
+                cwd=ROOT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            payload = json.loads((Path(temp_dir) / "scenario_eval.json").read_text())
+
+        self.assertEqual(len(payload["runs"]), 6)
+        self.assertEqual(payload["runs"][0]["suite"], "compositional")
+        self.assertIn("ood_axes", payload["runs"][0])
+        self.assertIn("benchmark_pass_rate", payload["summary"][0])
+
+
+if __name__ == "__main__":
+    unittest.main()

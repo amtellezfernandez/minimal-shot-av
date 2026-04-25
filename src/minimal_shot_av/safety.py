@@ -27,10 +27,10 @@ def apply_safety_filter(action: PlannedAction, world_state: WorldState, percepti
             intervention=True,
         )
 
-    if perception.corridor_margin < 0.8:
+    if perception.corridor_margin < 0.45:
         return SafeAction(
             direction=perception.lane_heading,
-            speed=min(action.speed, 0.6),
+            speed=min(action.speed, 0.75),
             mode="lane_recovery",
             intervention=True,
         )

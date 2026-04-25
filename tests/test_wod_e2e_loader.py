@@ -1,0 +1,168 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from pathlib import Path
+import sys
+import unittest
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from minimal_shot_av.wod_e2e import (
+    align_preference_trajectory,
+    init_speed_from_states,
+    preference_frame_from_proto,
+    trajectory_from_states,
+)
+
+
+@dataclass
+class FakeStates:
+    pos_x: list[float]
+    pos_y: list[float]
+    vel_x: list[float] = field(default_factory=list)
+    vel_y: list[float] = field(default_factory=list)
+    preference_score: float = -1.0
+    has_score: bool = False
+
+    def HasField(self, name: str) -> bool:
+        if name != "preference_score":
+            raise ValueError(name)
+        return self.has_score
+
+
+@dataclass
+class FakeContext:
+    name: str
+
+
+@dataclass
+class FakeFramePayload:
+    context: FakeContext
+
+
+@dataclass
+class FakeE2EDFrame:
+    frame: FakeFramePayload
+    past_states: FakeStates
+    future_states: FakeStates
+    intent: int
+    preference_trajectories: list[FakeStates]
+
+
+class WodE2ELoaderTests(unittest.TestCase):
+    def test_align_preference_trajectory_truncates_like_official_metric(self) -> None:
+        trajectory = [(float(i), float(-i)) for i in range(21)]
+        aligned = align_preference_trajectory(trajectory)
+        self.assertEqual(len(aligned), 20)
+        self.assertEqual(aligned[0], (0.0, 0.0))
+        self.assertEqual(aligned[-1], (19.0, -19.0))
+
+    def test_align_preference_trajectory_keeps_twenty_point_input(self) -> None:
+        trajectory = [(float(i), 0.0) for i in range(20)]
+        self.assertEqual(align_preference_trajectory(trajectory), trajectory)
+
+    def test_align_preference_trajectory_pads_short_input_like_official_metric(self) -> None:
+        aligned = align_preference_trajectory([(1.0, 2.0)] * 19)
+        self.assertEqual(len(aligned), 20)
+        self.assertEqual(aligned[-1], (1.0, 2.0))
+
+    def test_align_preference_trajectory_rejects_empty_input(self) -> None:
+        with self.assertRaises(ValueError):
+            align_preference_trajectory([])
+
+    def test_init_speed_uses_last_velocity_when_available(self) -> None:
+        states = FakeStates([0.0], [0.0], vel_x=[3.0], vel_y=[4.0])
+        self.assertEqual(init_speed_from_states(states), 5.0)
+
+    def test_init_speed_falls_back_to_position_delta_at_4hz(self) -> None:
+        states = FakeStates([0.0, 0.75], [0.0, 1.0])
+        self.assertEqual(init_speed_from_states(states), 5.0)
+
+    def test_preference_frame_from_proto_skips_invalid_scores(self) -> None:
+        future = FakeStates([float(i) for i in range(1, 21)], [0.0] * 20)
+        past = FakeStates([0.0, 0.75], [0.0, 1.0])
+        valid_preference = FakeStates(
+            [float(i) for i in range(21)],
+            [float(i * 0.1) for i in range(21)],
+            preference_score=8.5,
+            has_score=True,
+        )
+        invalid_preference = FakeStates(
+            [float(i) for i in range(21)],
+            [0.0] * 21,
+            preference_score=-1.0,
+            has_score=True,
+        )
+        missing_score_preference = FakeStates(
+            [float(i) for i in range(21)],
+            [0.0] * 21,
+            preference_score=9.0,
+            has_score=False,
+        )
+        frame = FakeE2EDFrame(
+            frame=FakeFramePayload(FakeContext("segment-150")),
+            past_states=past,
+            future_states=future,
+            intent=2,
+            preference_trajectories=[
+                invalid_preference,
+                valid_preference,
+                missing_score_preference,
+            ],
+        )
+
+        parsed = preference_frame_from_proto(frame)
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(parsed.frame_name, "segment-150")
+        self.assertEqual(parsed.intent, 2)
+        self.assertEqual(parsed.init_speed_mps, 5.0)
+        self.assertEqual(len(parsed.future_trajectory), 20)
+        self.assertEqual(len(parsed.references), 1)
+        self.assertEqual(parsed.references[0].label, "wod_preference_1")
+        self.assertEqual(parsed.references[0].score, 8.5)
+        self.assertEqual(len(parsed.references[0].trajectory), 20)
+        self.assertEqual(parsed.references[0].trajectory[0], (0.0, 0.0))
+
+    def test_preference_frame_from_proto_skips_empty_valid_scored_preference(self) -> None:
+        future = FakeStates([float(i) for i in range(1, 21)], [0.0] * 20)
+        past = FakeStates([0.0, 0.75], [0.0, 1.0])
+        empty_preference = FakeStates(
+            [],
+            [],
+            preference_score=8.0,
+            has_score=True,
+        )
+        valid_preference = FakeStates(
+            [float(i) for i in range(20)],
+            [0.0] * 20,
+            preference_score=7.0,
+            has_score=True,
+        )
+        frame = FakeE2EDFrame(
+            frame=FakeFramePayload(FakeContext("segment-151")),
+            past_states=past,
+            future_states=future,
+            intent=1,
+            preference_trajectories=[empty_preference, valid_preference],
+        )
+
+        parsed = preference_frame_from_proto(frame)
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(len(parsed.references), 1)
+        self.assertEqual(parsed.references[0].label, "wod_preference_1")
+
+    def test_trajectory_from_states_pairs_xy_values(self) -> None:
+        states = FakeStates([1, 2, 3], [4, 5])
+        self.assertEqual(trajectory_from_states(states), [(1.0, 4.0), (2.0, 5.0)])
+
+
+if __name__ == "__main__":
+    unittest.main()

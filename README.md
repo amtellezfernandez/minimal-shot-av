@@ -2,6 +2,16 @@
 
 Submission scaffold for **SoTA Commission I: Minimal-Shot Autonomy**.
 
+This repo is intentionally split into two independent submission tracks:
+
+- **Grand Commission submission:** Spotlight Reflex, a minimal-shot autonomy architecture and runnable zero-AV-finetune policy slice.
+- **Minor Commission submission:** WOD-E2E procedural scenario generator, a randomized simulation environment for long-tail driving cases.
+
+The tracks share code, but can be submitted separately. See:
+
+- [`docs/grand-submission.md`](docs/grand-submission.md)
+- [`docs/minor-simulation-submission.md`](docs/minor-simulation-submission.md)
+
 ## Thesis
 
 This project targets the Waymo Open Dataset for End-to-End Driving (WOD-E2E) with a deliberately strict claim:
@@ -84,21 +94,25 @@ The recommended submission architecture is:
    - Treats rater preference as the target, not just L2 imitation of the logged future.
    - Pays special attention to 3s and 5s trajectory positions because RFS trust regions are evaluated at those times.
 
-## Current Baseline
+## Current Runnable System
 
-The runnable code in this repo is currently a lightweight 2D navigation harness:
+The runnable code in this repo is currently a lightweight 2D navigation harness plus two scenario generators:
 
 - procedurally generated lanes and obstacle fields
-- no stored route library or map-specific tuning
-- a reactive policy that follows corridor geometry and avoids hazards online
+- 11 WOD-E2E-inspired long-tail scenario clusters
+- compositional OOD suites that independently sample topology, hazards, conditions, and novel objects
+- adversarial and hidden holdout suites for harder frozen-policy evaluation
+- a gauntlet suite with synchronized threats and quality-gated benchmark scoring
+- a baseline reactive policy for comparison
+- a Spotlight Reflex policy with deterministic maneuver candidates and exact RFS trust-region scoring
 - artifact generation for demos and documentation
 
-This baseline is not the final WOD-E2E policy. It is a fast harness for demonstrating the architecture pattern before connecting real WOD-E2E TFRecords and submission protos.
+This is not a production AV stack and it is not a completed WOD-E2E leaderboard submission. It is a fast, reproducible prototype for the SoTA Commission brief: randomized scenario generation plus a minimal-shot autonomy policy demonstration.
 
 ## Repo Structure
 
-- `src/minimal_shot_av/`: simulation and baseline policy
-- `scripts/run_demo.py`: generate a random scenario and rollout artifacts
+- `src/minimal_shot_av/`: simulation, scenario generation, baseline policy, and Spotlight Reflex
+- `scripts/run_demo.py`: generate baseline, WOD-style, or compositional rollout artifacts
 - `docs/`: WOD-E2E submission plan, write-up, video, and checklist
 - `models/`: base-model and architecture declaration
 - `notebooks/`: analysis notebook plan
@@ -106,10 +120,10 @@ This baseline is not the final WOD-E2E policy. It is a fast harness for demonstr
 
 ## Quickstart
 
-Use Python 3.10+.
+Use Python 3.10+ and `uv`.
 
 ```bash
-python3 scripts/run_demo.py
+uv run --no-sync python scripts/run_demo.py
 ```
 
 This writes:
@@ -117,21 +131,132 @@ This writes:
 - `artifacts/latest_rollout.json`
 - `artifacts/latest_rollout.svg`
 
-## Submission Deliverables
+Grand Commission architecture demo:
 
-The submission should include:
+```bash
+uv run --no-sync python scripts/run_demo.py \
+  --policy spotlight-reflex \
+  --scenario-cluster spotlight \
+  --seed 3 \
+  --artifacts-dir artifacts/grand_spotlight_demo
+```
 
-- GitHub repo with code, README, and full base-model declaration.
-- Analysis notebook showing WOD-E2E data inspection, scenario focus, failed scaffolds, and final design rationale.
-- 1-5 minute video or slide deck showing the policy on WOD-E2E scenes, including one understood failure.
-- Short write-up of at most two pages covering motivation, architecture, results, failures, and next funding milestone.
+Minor Commission simulation demo:
+
+```bash
+uv run --no-sync python scripts/run_demo.py \
+  --policy spotlight-reflex \
+  --scenario-cluster construction \
+  --seed 1 \
+  --artifacts-dir artifacts/minor_construction_demo
+```
+
+Minor Commission scenario sweep:
+
+```bash
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy both \
+  --suite wod \
+  --seed-start 1 \
+  --seed-end 20 \
+  --output-dir artifacts/eval_wod
+```
+
+Compositional OOD sweep:
+
+```bash
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy both \
+  --suite compositional \
+  --seed-start 1 \
+  --seed-end 20 \
+  --output-dir artifacts/eval_compositional
+```
+
+Adversarial stress sweep:
+
+```bash
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy both \
+  --suite adversarial \
+  --seed-start 1 \
+  --seed-end 20 \
+  --output-dir artifacts/eval_adversarial
+```
+
+Gauntlet benchmark sweep:
+
+```bash
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy both \
+  --suite gauntlet \
+  --seed-start 1 \
+  --seed-end 20 \
+  --output-dir artifacts/eval_gauntlet
+```
+
+COMPASS composite benchmark:
+
+```bash
+PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.compass ladder \
+  --policy spotlight-reflex \
+  --profile compass-v0 \
+  --seed-start 1 \
+  --seed-end 10 \
+  --output artifacts/compass_ladder.json
+```
+
+SOTIF-aligned evidence package:
+
+```bash
+PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.certification \
+  --policy spotlight-reflex \
+  --profile sotif-v0 \
+  --seed-start 1 \
+  --seed-end 10 \
+  --output artifacts/compass_evidence_report.json
+```
+
+This is a structured simulation evidence report, not a legal certification or
+public-road deployment approval. The default `1%` collision-confidence
+threshold requires `381` zero-collision ranked runs per official level, so short
+runs are expected to report evidence gaps. Use `--profile smoke` for plumbing
+checks, or pass `--odd-spec odd.json --thresholds thresholds.json` for a custom
+ODD/evidence standard. Benchmark assumptions are also configuration, not source
+edits: use `--profile-json compass_profile.json` with COMPASS, or
+`--compass-profile-json compass_profile.json` with the evidence CLI. The COMPASS
+profile can override official level weights, score weights, trajectory scoring,
+suite penalties, and compositional scenario-generation settings such as hazard
+counts, suite pressure, ambient density, corridor clearance, and difficulty
+scoring.
+
+Available procedural clusters:
+
+`construction`, `intersection`, `pedestrian`, `cyclist`, `multi-lane maneuver`, `single-lane maneuver`, `cut-in`, `foreign object debris`, `special vehicle`, `spotlight`, `others`.
+
+Available OOD suites:
+
+`compositional`, `adversarial`, `gauntlet`, `hidden`.
+
+See [`docs/compositional-ood-eval.md`](docs/compositional-ood-eval.md) for the scenario manifest and evaluation metrics.
+See [`docs/compass-benchmark.md`](docs/compass-benchmark.md) for the oracle, reasoning, recovery, and generalisation-gap benchmark layer.
+
+## Split Submission Deliverables
+
+The repo can support two separate submissions:
+
+- **Grand Commission:** Spotlight Reflex architecture, model declaration, WOD-E2E analysis plan, demo artifacts, and architecture write-up.
+- **Minor Commission:** randomized WOD-style scenario generator, cluster templates, reproducibility evidence, demo artifacts, and simulation-environment write-up.
+
+Shared supporting materials:
+
+- [`models/DECLARATION.md`](models/DECLARATION.md)
+- [`docs/two-page-writeup.md`](docs/two-page-writeup.md)
+- [`docs/video-outline.md`](docs/video-outline.md)
+- [`docs/submission-checklist.md`](docs/submission-checklist.md)
 
 ## Recommended Next Steps
 
-1. Use `docs/spotlight-reflex.md` as the target architecture: frozen scene critic, counterfactual hypotheses, maneuver library, and exact RFS trust-region selection.
-2. Add a `wod_e2e/` package for `E2EDFrame` parsing, camera extraction, ego-history parsing, RFS evaluation, and submission proto writing.
-3. Download WOD-E2E through <https://waymo.com/open/download/> and complete the checks in `docs/waymo-data-access.md`.
-4. Build the notebook from `notebooks/README.md`: parse records, visualize 8-camera context, inspect rater trajectories, and compute official RFS.
-5. Implement constant-stop, constant-velocity, curvature, and intent-template baselines before claiming architecture value.
-6. Implement a zero-AV-finetune first pass using a frozen VLM scene critic plus hand-coded trajectory primitives.
-7. Evaluate on validation RFS by cluster and document at least one Spotlight failure with a concrete component-level cause.
+1. For the **Grand** submission, turn `docs/grand-submission.md` into the slide/video script and connect WOD-E2E TFRecords when access is available.
+2. For the **Minor** submission, turn `docs/minor-simulation-submission.md` into the simulation-environment slide/video script and show seeded cluster variation.
+3. Keep artifacts for each track in separate directories under `artifacts/`.
