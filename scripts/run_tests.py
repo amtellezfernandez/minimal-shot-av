@@ -30,7 +30,7 @@ def main() -> None:
         "-w",
         "--workers",
         default="auto",
-        help="Worker count, 'auto', or 1 for serial. Auto caps at the number of test modules.",
+        help="Worker count, 'auto', 'max', or 1 for serial. Auto is laptop-friendly and caps at 4.",
     )
     parser.add_argument("--fail-fast", action="store_true", help="Stop scheduling output after the first failed module.")
     args = parser.parse_args()
@@ -75,7 +75,9 @@ def _worker_count(value: str, module_count: int) -> int:
         return 1
     if value == "auto":
         cpu_count = os.cpu_count() or 1
-        return max(1, min(module_count, cpu_count))
+        return max(1, min(module_count, max(1, cpu_count - 1), 4))
+    if value == "max":
+        return module_count
     workers = int(value)
     if workers < 1:
         raise ValueError("workers must be >= 1")

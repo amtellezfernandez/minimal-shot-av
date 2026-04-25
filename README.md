@@ -153,8 +153,9 @@ UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py
 ```
 
 The test runner uses standard-library multiprocessing and chooses the worker
-count automatically. Use `--workers 1` for serial debugging or pass specific
-modules/files, for example `scripts/run_tests.py tests/test_compass.py`.
+count automatically, capped for laptop responsiveness. Use `--workers 1` for
+serial debugging, `--workers max` to use one process per test module, or pass
+specific modules/files, for example `scripts/run_tests.py tests/test_compass.py`.
 
 Grand Commission architecture demo:
 
