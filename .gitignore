@@ -3,6 +3,7 @@
 .venv-qwen/
 .uv-cache/
 .wod-protos/
+.codex
 __pycache__/
 *.pyc
 *.egg-info/
@@ -11,5 +12,7 @@ dist/
 build/
 artifacts/
 waymo_open_dataset_end_to_end_camera_v_1_0_0/
+alpasim/
+waymo-open-dataset/
 external/*
 !external/README.md

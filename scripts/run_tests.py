@@ -13,6 +13,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 TESTS = ROOT / "tests"
+SLOW_MODULES = frozenset({"tests.test_certification", "tests.test_compass"})
 
 
 @dataclass(frozen=True)
@@ -32,12 +33,25 @@ def main() -> None:
         default="auto",
         help="Worker count, 'auto', 'max', or 1 for serial. Auto is laptop-friendly and caps at 4.",
     )
+    parser.add_argument(
+        "--quick",
+        action="store_true",
+        help="Skip slow benchmark/evidence modules for a tight local edit loop.",
+    )
+    parser.add_argument(
+        "--slow",
+        action="store_true",
+        help="Run only slow benchmark/evidence modules.",
+    )
     parser.add_argument("--fail-fast", action="store_true", help="Stop scheduling output after the first failed module.")
     args = parser.parse_args()
+    if args.quick and args.slow:
+        parser.error("--quick and --slow cannot be used together")
 
-    modules = _selected_modules(args.tests)
+    modules = _selected_modules(args.tests, quick=args.quick, slow=args.slow)
     workers = _worker_count(args.workers, len(modules))
-    print(f"Running {len(modules)} test module(s) with {workers} worker(s)")
+    mode = "quick" if args.quick else "slow" if args.slow else "full"
+    print(f"Running {len(modules)} {mode} test module(s) with {workers} worker(s)")
 
     start = time.perf_counter()
     results = _run_parallel(modules, workers)
@@ -57,9 +71,14 @@ def main() -> None:
         raise SystemExit(1)
 
 
-def _selected_modules(items: list[str]) -> list[str]:
+def _selected_modules(items: list[str], *, quick: bool = False, slow: bool = False) -> list[str]:
     if not items:
-        return [f"tests.{path.stem}" for path in sorted(TESTS.glob("test_*.py"))]
+        modules = [f"tests.{path.stem}" for path in sorted(TESTS.glob("test_*.py"))]
+        if quick:
+            return [module for module in modules if module not in SLOW_MODULES]
+        if slow:
+            return [module for module in modules if module in SLOW_MODULES]
+        return modules
     modules: list[str] = []
     for item in items:
         path = Path(item)

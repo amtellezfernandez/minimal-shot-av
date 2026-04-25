@@ -153,7 +153,14 @@ UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py
 ```
 
 The test runner uses standard-library multiprocessing and chooses the worker
-count automatically, capped for laptop responsiveness. Use `--workers 1` for
+count automatically, capped for laptop responsiveness. For the fastest edit
+loop, skip benchmark/evidence sweeps:
+
+```bash
+UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py --quick
+```
+
+Use `--slow` to run only the benchmark/evidence modules, `--workers 1` for
 serial debugging, `--workers max` to use one process per test module, or pass
 specific modules/files, for example `scripts/run_tests.py tests/test_compass.py`.
 
