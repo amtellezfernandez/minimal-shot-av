@@ -42,6 +42,14 @@ class OddSpec:
 class EvidenceThresholds:
     min_success_rate_lower_bound: float = DEFAULT_SUCCESS_THRESHOLD
     max_collision_rate_upper_bound: float = DEFAULT_COLLISION_THRESHOLD
+    min_compass_score: float = 7.0
+    min_safety_score: float = 8.0
+    min_route_quality_score: float = 6.5
+    min_comfort_score: float = 6.0
+    min_worst_compass_score: float = 4.0
+    min_worst_safety_score: float = 5.0
+    min_worst_route_quality_score: float = 3.0
+    min_worst_comfort_score: float = 3.0
     min_ranked_runs_per_official_level: int = DEFAULT_MIN_RANKED_RUNS_PER_LEVEL
     confidence_level: float = CONFIDENCE_LEVEL
 
@@ -81,6 +89,7 @@ def generate_evidence_report(
     run_count = len(official_runs)
     success_count = sum(1 for run in official_runs if run["success"])
     collision_count = sum(1 for run in official_runs if run["collision"])
+    quality_summary = _quality_summary(official_runs)
 
     success_ci = _proportion_interval(success_count, run_count, limits.confidence_level)
     collision_ci = _proportion_interval(collision_count, run_count, limits.confidence_level)
@@ -103,6 +112,7 @@ def generate_evidence_report(
             "collision_count": collision_count,
             "success_rate": asdict(success_ci),
             "collision_rate": asdict(collision_ci),
+            "quality_summary": quality_summary,
             "official_level_evidence": level_evidence,
         },
         "sotif_alignment": _sotif_alignment(compass_report["summary"], status),
@@ -125,6 +135,14 @@ EVIDENCE_PROFILES = {
         thresholds=EvidenceThresholds(
             min_success_rate_lower_bound=0.50,
             max_collision_rate_upper_bound=0.50,
+            min_compass_score=0.0,
+            min_safety_score=0.0,
+            min_route_quality_score=0.0,
+            min_comfort_score=0.0,
+            min_worst_compass_score=0.0,
+            min_worst_safety_score=0.0,
+            min_worst_route_quality_score=0.0,
+            min_worst_comfort_score=0.0,
             min_ranked_runs_per_official_level=1,
             confidence_level=CONFIDENCE_LEVEL,
         ),
@@ -193,6 +211,7 @@ def _official_level_evidence(compass_report: dict[str, Any], thresholds: Evidenc
         run_count = len(level_runs)
         success_count = sum(1 for run in level_runs if run["success"])
         collision_count = sum(1 for run in level_runs if run["collision"])
+        quality = _quality_summary(level_runs)
         success_ci = _proportion_interval(success_count, run_count, thresholds.confidence_level)
         collision_ci = _proportion_interval(collision_count, run_count, thresholds.confidence_level)
         evidence.append(
@@ -205,13 +224,72 @@ def _official_level_evidence(compass_report: dict[str, Any], thresholds: Evidenc
                 "collision_count": collision_count,
                 "success_rate": asdict(success_ci),
                 "collision_rate": asdict(collision_ci),
+                "quality": quality,
                 "minimum_ranked_runs": minimum_runs,
                 "sample_size_valid": run_count >= minimum_runs,
                 "success_threshold_met": success_ci.lower >= thresholds.min_success_rate_lower_bound,
                 "collision_threshold_met": collision_ci.upper <= thresholds.max_collision_rate_upper_bound,
+                "quality_thresholds_met": _quality_thresholds_met(quality, thresholds),
             }
         )
     return evidence
+
+
+def _quality_summary(runs: list[dict[str, Any]]) -> dict[str, float]:
+    if not runs:
+        return {
+            "compass_score": 0.0,
+            "safety_score": 0.0,
+            "route_quality_score": 0.0,
+            "comfort_score": 0.0,
+            "worst_compass_score": 0.0,
+            "worst_safety_score": 0.0,
+            "worst_route_quality_score": 0.0,
+            "worst_comfort_score": 0.0,
+            "p10_compass_score": 0.0,
+            "p10_safety_score": 0.0,
+            "p10_route_quality_score": 0.0,
+            "p10_comfort_score": 0.0,
+        }
+    compass_values = [float(run["compass_score"]) for run in runs]
+    safety_values = [float(run["safety_score"]) for run in runs]
+    route_values = [float(run["route_quality_score"]) for run in runs]
+    comfort_values = [float(run["comfort_score"]) for run in runs]
+    return {
+        "compass_score": round(sum(compass_values) / len(runs), 6),
+        "safety_score": round(sum(safety_values) / len(runs), 6),
+        "route_quality_score": round(sum(route_values) / len(runs), 6),
+        "comfort_score": round(sum(comfort_values) / len(runs), 6),
+        "worst_compass_score": round(min(compass_values), 6),
+        "worst_safety_score": round(min(safety_values), 6),
+        "worst_route_quality_score": round(min(route_values), 6),
+        "worst_comfort_score": round(min(comfort_values), 6),
+        "p10_compass_score": round(_nearest_rank_percentile(compass_values, 0.10), 6),
+        "p10_safety_score": round(_nearest_rank_percentile(safety_values, 0.10), 6),
+        "p10_route_quality_score": round(_nearest_rank_percentile(route_values, 0.10), 6),
+        "p10_comfort_score": round(_nearest_rank_percentile(comfort_values, 0.10), 6),
+    }
+
+
+def _nearest_rank_percentile(values: list[float], percentile: float) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    index = max(0, min(len(ordered) - 1, math.ceil(percentile * len(ordered)) - 1))
+    return ordered[index]
+
+
+def _quality_thresholds_met(quality: dict[str, float], thresholds: EvidenceThresholds) -> bool:
+    return (
+        quality["compass_score"] >= thresholds.min_compass_score
+        and quality["safety_score"] >= thresholds.min_safety_score
+        and quality["route_quality_score"] >= thresholds.min_route_quality_score
+        and quality["comfort_score"] >= thresholds.min_comfort_score
+        and quality["worst_compass_score"] >= thresholds.min_worst_compass_score
+        and quality["worst_safety_score"] >= thresholds.min_worst_safety_score
+        and quality["worst_route_quality_score"] >= thresholds.min_worst_route_quality_score
+        and quality["worst_comfort_score"] >= thresholds.min_worst_comfort_score
+    )
 
 
 def _effective_minimum_ranked_runs(thresholds: EvidenceThresholds) -> int:
@@ -296,6 +374,15 @@ def _evidence_failures(
                     "threshold": thresholds.max_collision_rate_upper_bound,
                 }
             )
+        if not level["quality_thresholds_met"]:
+            failures.append(
+                {
+                    "code": "insufficient_per_level_driving_quality",
+                    "scope": level["name"],
+                    "quality": level["quality"],
+                    "thresholds": _quality_threshold_payload(thresholds),
+                }
+            )
     if success_ci.lower < thresholds.min_success_rate_lower_bound:
         failures.append(
             {
@@ -315,6 +402,19 @@ def _evidence_failures(
             }
         )
     return failures
+
+
+def _quality_threshold_payload(thresholds: EvidenceThresholds) -> dict[str, float]:
+    return {
+        "min_compass_score": thresholds.min_compass_score,
+        "min_safety_score": thresholds.min_safety_score,
+        "min_route_quality_score": thresholds.min_route_quality_score,
+        "min_comfort_score": thresholds.min_comfort_score,
+        "min_worst_compass_score": thresholds.min_worst_compass_score,
+        "min_worst_safety_score": thresholds.min_worst_safety_score,
+        "min_worst_route_quality_score": thresholds.min_worst_route_quality_score,
+        "min_worst_comfort_score": thresholds.min_worst_comfort_score,
+    }
 
 
 def _sotif_alignment(summary: dict[str, Any], status: str) -> dict[str, str]:
@@ -342,6 +442,8 @@ def _remaining_gaps(summary: dict[str, Any], failures: list[dict[str, Any]]) -> 
         gaps.append("improve lower confidence bound on success rate")
     if {"insufficient_collision_confidence", "insufficient_per_level_collision_confidence"} & failure_codes:
         gaps.append("improve upper confidence bound on collision rate")
+    if "insufficient_per_level_driving_quality" in failure_codes:
+        gaps.append("improve driving quality: safety margin, route discipline, comfort, and intervention burden")
     gaps.append("validate abstract-sim findings in sensor-realistic AlpaSim tier")
     gaps.append("document real-world ODD mismatch before any deployment claim")
     return gaps
@@ -402,13 +504,23 @@ def _print_level_evidence(level_evidence: list[dict[str, Any]]) -> None:
     for level in level_evidence:
         print(
             "L{level} {name:14s} runs={runs:4d} sample={sample} "
-            "success_lb={success_lb:.3f} collision_ub={collision_ub:.3f}".format(
+            "success_lb={success_lb:.3f} collision_ub={collision_ub:.3f} "
+            "score={score:.2f} safe={safe:.2f} route={route:.2f} comfort={comfort:.2f} "
+            "worst={worst:.2f}/{worst_safe:.2f}/{worst_route:.2f}/{worst_comfort:.2f}".format(
                 level=level["level"],
                 name=level["name"],
                 runs=level["ranked_runs"],
                 sample=level["sample_size_valid"],
                 success_lb=level["success_rate"]["lower"],
                 collision_ub=level["collision_rate"]["upper"],
+                score=level["quality"]["compass_score"],
+                safe=level["quality"]["safety_score"],
+                route=level["quality"]["route_quality_score"],
+                comfort=level["quality"]["comfort_score"],
+                worst=level["quality"]["worst_compass_score"],
+                worst_safe=level["quality"]["worst_safety_score"],
+                worst_route=level["quality"]["worst_route_quality_score"],
+                worst_comfort=level["quality"]["worst_comfort_score"],
             )
         )
 

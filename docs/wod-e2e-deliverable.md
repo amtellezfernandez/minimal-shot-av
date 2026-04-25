@@ -38,7 +38,13 @@ The key facts:
 - Required output is one 5-second ego trajectory at 4 Hz: 20 `(x, y)` waypoints.
 - The challenge page states the long-tail events were mined at less than `0.003%` frequency in daily driving.
 
-Current local data status is tracked in `docs/waymo-data-access.md`. At the time of this repo check, the Waymo code/protos/tutorial are present locally, but actual WOD-E2E train/validation/test TFRecords are not.
+Current local data status is tracked in `docs/waymo-data-access.md`. At the
+time of this repo check, the Waymo code/protos/tutorial are present locally and
+the WOD-E2E validation split is present under
+`waymo_open_dataset_end_to_end_camera_v_1_0_0/val`. Train and test TFRecords
+are not present in this workspace. The local parser currently finds 479
+preference-labeled validation frames and 1,437 valid human-rated reference
+trajectories.
 
 ## Data Record Contract
 
@@ -311,9 +317,11 @@ Report for each:
 Minimum credible submission preparation:
 
 - Dataset contract is documented at proto-field level.
-- Notebook can parse `E2EDFrame` once TFRecords are available.
-- Notebook can find valid `preference_trajectories`.
-- Official RFS utility is used for validation frames with rater labels.
+- Local tooling can parse validation `E2EDFrame` records from the downloaded
+  validation split.
+- Local tooling can find valid `preference_trajectories`.
+- Official RFS utility or the audited local trust-region implementation is used
+  for validation frames with rater labels.
 - At least three baselines are evaluated before the architecture claim.
 - One success and one failure case are documented with camera evidence, ego history, chosen trajectory, and component-level diagnosis.
 

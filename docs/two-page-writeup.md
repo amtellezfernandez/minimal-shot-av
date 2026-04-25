@@ -66,7 +66,7 @@ The failure diagnosis should name the component responsible: scene critic, tempo
 
 The next milestone is a WOD-E2E validation-quality prototype:
 
-- official TFRecord loader and submission writer
+- submission writer and strict proto validator
 - reproducible validation notebook
 - RFS-based evaluation table by scenario cluster
 - ablation against constant-velocity, route-following, and frozen-scene-only baselines

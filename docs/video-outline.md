@@ -78,7 +78,7 @@ Report:
 
 State what the prize enables:
 
-- complete WOD-E2E adapter
+- complete WOD-E2E submission writer and proto validator
 - reproducible notebook
 - stronger rater-aware selector
 - edge-sized SSM pilot

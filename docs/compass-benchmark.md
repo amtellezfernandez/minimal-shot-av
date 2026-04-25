@@ -55,8 +55,8 @@ PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.certification \
 
 This evidence package is intentionally not a legal certification. It records a
 machine-readable ODD, simulator tier, COMPASS results, Wilson confidence
-intervals for success and collision rates, SOTIF-aligned evidence status, and
-remaining gaps.
+intervals for success and collision rates, per-level driving-quality scores,
+SOTIF-aligned evidence status, and remaining gaps.
 
 The evidence layer is stricter than the COMPASS smoke benchmark. With the
 default `1%` collision upper-bound threshold at `95%` confidence, even a level
@@ -67,7 +67,8 @@ claims.
 Profiles make the certification assumptions explicit:
 
 - `sotif-v0`: conservative default, abstract simulator, `90%` success lower
-  confidence bound and `1%` collision upper confidence bound.
+  confidence bound, `1%` collision upper confidence bound, and minimum
+  per-level COMPASS/safety/route-quality/comfort scores.
 - `smoke`: development-only profile for checking report plumbing.
 
 Use `--odd-spec odd.json` and `--thresholds thresholds.json` to evaluate a

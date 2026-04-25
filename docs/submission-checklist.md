@@ -2,6 +2,7 @@
 
 ## Shared Required
 
+- Deadline tracked as May 10, 2026.
 - GitHub repo is public or ready to share privately.
 - README states that the repo supports two separate submissions.
 - `docs/grand-submission.md` is complete enough to submit the Grand Commission track.
@@ -58,7 +59,8 @@
 - Scenario evaluation writes `scenario_eval.json` and `scenario_eval.csv`.
 - The video or slide deck shows at least three clusters and at least two different seeds.
 - The write-up is honest that this is a lightweight 2D simulator, not AlpaSim or photorealistic sensor simulation.
-- AlpaSim is described only as future adapter work unless actually integrated.
+- AlpaSim is described precisely: trajectory-level plugin available, full
+  sensor/perception integration still future work.
 - Minor demo commands are included, for example:
   `uv run --no-sync python scripts/run_demo.py --policy spotlight-reflex --scenario-cluster construction --seed 1 --artifacts-dir artifacts/minor_construction_seed1`
 

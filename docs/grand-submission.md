@@ -61,8 +61,11 @@ Each command writes:
 ## Boundaries
 
 - This is a runnable architecture prototype, not a completed WOD-E2E leaderboard submission.
-- WOD-E2E TFRecords are not present locally yet; official dataset integration remains a next milestone.
-- The current scene critic is procedural/context-derived, not an Alpamayo/VLM camera stack.
+- The WOD-E2E validation split is present locally and can be used for analysis,
+  parser smoke tests, and preference-label experiments. Train/test TFRecords
+  are not present in this workspace.
+- The current scene critic is procedural/context-derived, not a deployed VLM
+  camera stack.
 - The strongest honest claim is minimal-shot architecture and reproducible closed-loop prototype behavior.
 
 ## Grand Submission Checklist

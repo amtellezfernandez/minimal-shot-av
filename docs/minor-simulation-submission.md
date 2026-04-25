@@ -101,14 +101,16 @@ Each generated scenario includes:
 - Different seeds produce different obstacle layouts and parameters.
 - The simulation is closed-loop: the policy reacts step-by-step to the generated scene.
 - It directly addresses the commission's "extra points" criterion for randomized scenario generation.
-- It can later be used as a Layer 3 wrapper above AlpaSim once an AlpaSim adapter is available.
+- It has an optional trajectory-level AlpaSim bridge; richer camera/perception
+  integration remains future work.
 
 ## Boundaries
 
 - This is a lightweight 2D simulator, not AlpaSim physics or photorealistic sensor simulation.
 - The current generator produces abstract obstacles, not camera-realistic assets.
 - The honest Minor Commission claim is randomized long-tail scenario design and reproducible closed-loop evaluation.
-- AlpaSim integration should be described as the next deployment target, not as already implemented.
+- AlpaSim integration should be described precisely: a trajectory-level plugin
+  exists, but full sensor/perception integration is not implemented.
 
 ## Minor Submission Checklist
 

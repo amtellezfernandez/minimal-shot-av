@@ -12,6 +12,16 @@ The tracks share code, but can be submitted separately. See:
 - [`docs/grand-submission.md`](docs/grand-submission.md)
 - [`docs/minor-simulation-submission.md`](docs/minor-simulation-submission.md)
 
+Commission constraints to keep visible:
+
+- Deadline: **May 10, 2026**.
+- Required package: GitHub repo, 1-5 minute video or slide deck, motivation,
+  and a short write-up.
+- Judging criteria: technical excellence, novelty, feasibility, and adherence
+  to the minimal-shot brief.
+- The commission is not only a leaderboard contest; honest execution,
+  randomized simulation, latency realism, and failure analysis matter.
+
 ## Thesis
 
 This project targets the Waymo Open Dataset for End-to-End Driving (WOD-E2E) with a deliberately strict claim:
@@ -66,8 +76,13 @@ Repo references:
 Current local data status:
 
 - Official Waymo code/protos/tutorial are present in `waymo-open-dataset/`.
-- Actual WOD-E2E train/validation/test TFRecords are not present yet.
-- The download page is Google-sign-in gated, so dataset acquisition must be completed manually through Waymo access.
+- WOD-E2E validation TFRecords are present locally under
+  `waymo_open_dataset_end_to_end_camera_v_1_0_0/val` with 93 shards.
+- The local parser finds 479 preference-labeled validation frames and 1,437
+  valid human-rated reference trajectories.
+- Train and test TFRecords are not present in this workspace.
+- The download page is Google-sign-in gated, so any missing splits must be
+  acquired manually through Waymo access.
 
 ## Architecture Direction
 
@@ -130,6 +145,16 @@ This writes:
 
 - `artifacts/latest_rollout.json`
 - `artifacts/latest_rollout.svg`
+
+Fast laptop test run:
+
+```bash
+UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py
+```
+
+The test runner uses standard-library multiprocessing and chooses the worker
+count automatically. Use `--workers 1` for serial debugging or pass specific
+modules/files, for example `scripts/run_tests.py tests/test_compass.py`.
 
 Grand Commission architecture demo:
 
@@ -270,6 +295,6 @@ Shared supporting materials:
 
 ## Recommended Next Steps
 
-1. For the **Grand** submission, turn `docs/grand-submission.md` into the slide/video script and connect WOD-E2E TFRecords when access is available.
+1. For the **Grand** submission, turn `docs/grand-submission.md` into the slide/video script and use the downloaded WOD-E2E validation split for analysis/failure cases.
 2. For the **Minor** submission, turn `docs/minor-simulation-submission.md` into the simulation-environment slide/video script and show seeded cluster variation.
 3. Keep artifacts for each track in separate directories under `artifacts/`.

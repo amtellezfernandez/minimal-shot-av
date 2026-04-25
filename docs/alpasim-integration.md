@@ -67,11 +67,12 @@ ego speed, but it does not yet parse camera images into hazards. The stronger
 submission version should add a perception adapter that converts AlpaSim camera
 or traffic outputs into Spotlight Reflex hazards before RFS selection.
 
-That next layer is where Alpamayo/CoC perception should sit:
+That next layer is where a permissively licensed perception model or structured
+hazard extractor should sit:
 
 ```text
 AlpaSim cameras + ego state
-  -> perception/CoC hazard extraction
+  -> structured hazard extraction
   -> Spotlight Reflex maneuver candidates
   -> RFS trust-region selector
   -> AlpaSim trajectory controller

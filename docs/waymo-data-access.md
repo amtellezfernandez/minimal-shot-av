@@ -17,9 +17,15 @@ The download page requires Google sign-in through Waymo. Dataset files cannot be
 
 Checked from repo root on 2026-04-25.
 
-Actual WOD-E2E train/validation/test TFRecords:
+Actual WOD-E2E TFRecords:
 
-- Not present in this workspace.
+- Validation split is present under
+  `waymo_open_dataset_end_to_end_camera_v_1_0_0/val`.
+- Local validation shard count: `93`.
+- Parsed preference-labeled validation frames: `479`.
+- Parsed valid human-rated reference trajectories: `1437`.
+- Train split is not present in this workspace.
+- Test split is not present in this workspace.
 
 Files currently present:
 
@@ -32,9 +38,10 @@ Files currently present:
   - `waymo-open-dataset/tutorial/tutorial_vision_based_e2e_driving.ipynb`
 - Official RFS utility:
   - `waymo-open-dataset/src/waymo_open_dataset/metrics/python/rater_feedback_utils.py`
-- Non-E2E test/tutorial TFRecords from other Waymo tasks.
 
-Do not treat the existing Waymo testdata TFRecords as WOD-E2E training, validation, or test data.
+Do not treat the separate `waymo-open-dataset/` checkout as downloaded
+WOD-E2E data. It contains code, protos, tutorials, and non-submission examples,
+not the local train/test challenge splits.
 
 ## Download Procedure
 
@@ -44,7 +51,7 @@ Manual steps required:
 2. Use **Access Waymo Open Dataset** or go directly to <https://waymo.com/open/download/>.
 3. Sign in with the Google account that has accepted the Waymo Open Dataset terms.
 4. Select the End-to-End Driving dataset.
-5. Download the train, validation, and test TFRecords plus any challenge frame-list JSON provided for test submission.
+5. Download any missing train/test TFRecords plus any challenge frame-list JSON provided for test submission. The validation split is already present locally.
 6. Place files outside git-tracked source, for example:
    - `data/waymo/e2e/train/`
    - `data/waymo/e2e/validation/`
@@ -98,26 +105,27 @@ The 2025 challenge page states:
 
 This project can choose a stricter rule than the challenge allows. The current submission thesis is **no AV-dataset fine-tuning**, even though the challenge itself allows additional public research datasets and automated labeling.
 
-## Local Data Status Template
+## Local Data Status
 
-Fill this in after download:
+Current known values:
 
 ```text
-WOD_E2E_ROOT=
+WOD_E2E_ROOT=waymo_open_dataset_end_to_end_camera_v_1_0_0
 TRAIN_GLOB=
-VALIDATION_GLOB=
+VALIDATION_GLOB=waymo_open_dataset_end_to_end_camera_v_1_0_0/val/val_*.tfrecord-*
 TEST_GLOB=
 SUBMISSION_FRAME_JSON=
 
 train_tfrecord_count=
-validation_tfrecord_count=
+validation_tfrecord_count=93
 test_tfrecord_count=
 
 sample_train_frame_name=
 sample_validation_frame_name=
 sample_test_frame_name=
 
-validation_frames_with_rater_labels=
+validation_frames_with_rater_labels=479
+validation_valid_reference_trajectories=1437
 test_required_frame_count=
-notes=
+notes=validation split present locally; train/test missing as of 2026-04-25
 ```

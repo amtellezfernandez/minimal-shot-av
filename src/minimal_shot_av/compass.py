@@ -399,10 +399,25 @@ def _generalization_score(
     profile: CompassProfile | None = None,
 ) -> float:
     profile = profile or DEFAULT_COMPASS_PROFILE
-    in_score = _trajectory_score(in_dist, profile=profile)
-    ood_score = _trajectory_score(ood, suite, profile)
+    in_score = _official_rollout_score(in_dist, "compositional", profile)
+    ood_score = _official_rollout_score(ood, suite, profile)
     gap = max(0.0, in_score - ood_score)
     return max(0.0, min(10.0, 10.0 - gap))
+
+
+def _official_rollout_score(rollout: Rollout, suite: str, profile: CompassProfile) -> float:
+    quality = _driving_quality_scores(rollout, suite, profile)
+    recovery = _recovery_rate(rollout)
+    return _weighted_compass_score(
+        profile.score_weights,
+        {
+            "safety": quality["safety_score"],
+            "route_quality": quality["route_quality_score"],
+            "comfort": quality["comfort_score"],
+            "recovery": recovery,
+            "generalization": 10.0,
+        },
+    )
 
 
 def _policy_trace(rollout: Rollout) -> str:
@@ -857,11 +872,18 @@ def _print_summary(summary: dict) -> None:
         marker = "official" if level["official"] else "frontier"
         print(
             "L{level} {name:14s} {marker:8s} score={score:5.2f} "
-            "success={success:4.2f} solvable={solvable:4.2f} excluded={excluded}".format(
+            "safe={safe:5.2f} route={route:5.2f} comfort={comfort:5.2f} "
+            "recovery={recovery:5.2f} gen={gen:5.2f} success={success:4.2f} "
+            "solvable={solvable:4.2f} excluded={excluded}".format(
                 level=level["level"],
                 name=level["name"],
                 marker=marker,
                 score=solved["compass_score"],
+                safe=solved["avg_safety_score"],
+                route=solved["avg_route_quality_score"],
+                comfort=solved["avg_comfort_score"],
+                recovery=solved["avg_recovery_rate"],
+                gen=solved["avg_generalization_score"],
                 success=all_runs["success_rate"],
                 solvable=all_runs["solvability_rate"],
                 excluded=level["excluded_unsolvable"],

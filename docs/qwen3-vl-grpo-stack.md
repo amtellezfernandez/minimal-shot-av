@@ -1,14 +1,19 @@
 # Qwen3-VL WOD-E2E GRPO Stack
 
-This stack uses `Qwen/Qwen3-VL-8B-Instruct` as an Apache-2.0 offline training
-model, not as the online simulator policy. The online policy remains the fast
+This stack is an optional offline research path around
+`Qwen/Qwen3-VL-8B-Instruct`. It is not the strict zero-shot submission path and
+it is not the online simulator policy. The online policy remains the fast
 trajectory decoder plus RFS trust-region selector.
 
 ## Position
 
-The idea is viable if the VLM is used for SFT/GRPO and distillation. It is not
-viable as a real-time online planner because VLM decoding is too slow compared
-with the optimized simulator loop.
+The idea is viable if the VLM is used for SFT/GRPO experiments and later
+distillation. It is not viable as a real-time online planner because VLM
+decoding is too slow compared with the optimized simulator loop.
+
+For SoTA Commission framing, keep this clearly separated from the strict
+minimal-shot claim. Any use of WOD-E2E labels for SFT/GRPO must be declared as
+preference-calibrated training, not zero-shot operation.
 
 ## Pipeline
 
@@ -44,8 +49,9 @@ with the optimized simulator loop.
 
 ## Prompt Policy
 
-The prompt is CoC-style but does not ask the model to emit hidden chain-of-
-thought. It emits compact causal fields:
+The prompt emits compact causal fields and does not ask the model to emit
+hidden chain-of-thought. In leaderboard-facing materials, describe this as
+structured scene/hazard output rather than branded causal-reasoning traces:
 
 - critical objects
 - interaction summary

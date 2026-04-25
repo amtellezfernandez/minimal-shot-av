@@ -21,9 +21,12 @@ from minimal_shot_av.certification import (
     load_thresholds,
     profile_by_name,
     _minimum_zero_event_trials,
+    _nearest_rank_percentile,
     _proportion_interval,
     generate_evidence_report,
 )
+from minimal_shot_av.compass import _driving_quality_scores
+from minimal_shot_av.policy import Rollout, StepRecord
 
 
 class CertificationEvidenceTests(unittest.TestCase):
@@ -53,6 +56,10 @@ class CertificationEvidenceTests(unittest.TestCase):
         interval = _proportion_interval(successes=0, trials=minimum, confidence=0.95)
         self.assertLessEqual(interval.upper, 0.01)
 
+    def test_nearest_rank_percentile_uses_lower_tail(self) -> None:
+        self.assertEqual(_nearest_rank_percentile([9.0, 1.0, 8.0, 7.0, 6.0], 0.10), 1.0)
+        self.assertEqual(_nearest_rank_percentile([9.0, 1.0, 8.0, 7.0, 6.0], 0.50), 7.0)
+
     def test_evidence_report_does_not_claim_legal_certification(self) -> None:
         report = generate_evidence_report("spotlight-reflex", range(1, 2), profile_name="sotif-v0")
         self.assertEqual(report["schema"], "compass_sotif_evidence_package_v0")
@@ -62,6 +69,10 @@ class CertificationEvidenceTests(unittest.TestCase):
         self.assertIn("compass_summary", report)
         self.assertIn("statistical_evidence", report)
         self.assertIn("official_level_evidence", report["statistical_evidence"])
+        self.assertIn("quality_summary", report["statistical_evidence"])
+        self.assertIn("quality", report["statistical_evidence"]["official_level_evidence"][0])
+        self.assertIn("worst_compass_score", report["statistical_evidence"]["quality_summary"])
+        self.assertIn("p10_route_quality_score", report["statistical_evidence"]["quality_summary"])
         self.assertIn("sotif_alignment", report)
         self.assertIn("evidence_failures", report)
         self.assertEqual(report["sotif_alignment"]["iso_21448_section_9_validation"], "partial_simulation_only")
@@ -86,12 +97,53 @@ class CertificationEvidenceTests(unittest.TestCase):
             thresholds=EvidenceThresholds(
                 min_success_rate_lower_bound=0.0,
                 max_collision_rate_upper_bound=0.99,
+                min_compass_score=0.0,
+                min_safety_score=0.0,
+                min_route_quality_score=0.0,
+                min_comfort_score=0.0,
+                min_worst_compass_score=0.0,
+                min_worst_safety_score=0.0,
+                min_worst_route_quality_score=0.0,
+                min_worst_comfort_score=0.0,
                 min_ranked_runs_per_official_level=1,
             ),
             profile_name="unit-test",
         )
         self.assertEqual(report["evidence_profile"], "unit-test")
         self.assertEqual(report["thresholds"]["max_collision_rate_upper_bound"], 0.99)
+
+    def test_quality_scores_fail_poor_driving_even_without_collision(self) -> None:
+        rollout = Rollout(
+            success=True,
+            collision=False,
+            reached_goal=True,
+            steps=[
+                StepRecord(
+                    t=index,
+                    x=float(index),
+                    y=0.0,
+                    lane_error=3.8,
+                    min_obstacle_distance=0.3,
+                    uncertainty=0.0,
+                    collision_risk=0.0,
+                    action_mode="poor",
+                    speed=0.05,
+                    intervention=True,
+                    goal_distance=10.0,
+                    progress=0.04,
+                    comfort_cost=1.1,
+                    active_actor_count=0,
+                    stall=True,
+                )
+                for index in range(8)
+            ],
+        )
+
+        scores = _driving_quality_scores(rollout)
+
+        self.assertLess(scores["safety_score"], 8.0)
+        self.assertLess(scores["route_quality_score"], 6.5)
+        self.assertLess(scores["comfort_score"], 6.0)
 
     def test_loads_odd_and_threshold_json_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -150,6 +202,7 @@ class CertificationEvidenceTests(unittest.TestCase):
         self.assertEqual(payload["compass_profile"], "smoke")
         self.assertIn("official_ranked_runs", payload["statistical_evidence"])
         self.assertIn("official_level_evidence", payload["statistical_evidence"])
+        self.assertIn("quality_summary", payload["statistical_evidence"])
         self.assertIn("evidence_failures", payload)
 
     def test_evidence_cli_accepts_custom_compass_profile_json(self) -> None:
