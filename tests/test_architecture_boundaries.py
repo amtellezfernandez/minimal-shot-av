@@ -103,6 +103,7 @@ SIMULATOR_SCRIPTS = {
 NEUTRAL_SCRIPTS = {
     "check_gpu_acceleration.py",
     "check_code_quality.py",
+    "audit_production_av_readiness.py",
     "import_alpasim_metrics.py",
     "produce_alpasim_comparable_reports.py",
     "run_tests.py",

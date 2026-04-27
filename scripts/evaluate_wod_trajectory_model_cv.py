@@ -24,6 +24,7 @@ from minimal_shot_av.model.learned_trajectory_model import (
     FEATURE_SET_BASE,
     FEATURE_SET_EXTERNAL_EMBEDDINGS,
     FEATURE_SET_TEMPORAL,
+    _frame_features,
     RESIDUAL_GROUP_INTENT,
     RESIDUAL_GROUP_INTENT_SPEED,
     RESIDUAL_GROUP_OFF,
@@ -85,7 +86,17 @@ def main() -> int:
     parser.add_argument("--selector-ridge", type=float, default=1.0)
     parser.add_argument(
         "--selector-target",
-        choices=("absolute", "frame_delta", "frame_zscore", "frame_rank", "oracle_binary", "pairwise_delta"),
+        choices=(
+            "absolute",
+            "absolute_normalized",
+            "frame_delta",
+            "frame_delta_normalized",
+            "frame_zscore",
+            "frame_zscore_normalized",
+            "frame_rank",
+            "oracle_binary",
+            "pairwise_delta",
+        ),
         default="absolute",
     )
     parser.add_argument(
@@ -150,7 +161,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--selector-fallback-router",
-        choices=("off", "intent", "speed", "intent_speed"),
+        choices=("off", "intent", "speed", "speed_fine", "intent_speed"),
         default="off",
         help="Choose fallback source policy per train-fold group.",
     )
@@ -178,7 +189,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--scene-gate-router",
-        choices=("off", "intent", "speed", "intent_speed"),
+        choices=("off", "intent", "speed", "speed_fine", "intent_speed"),
         default="speed",
         help="Choose scene-gate thresholds globally or per train-fold group.",
     )
@@ -191,7 +202,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--source-gate",
-        choices=("off", "train_margin"),
+        choices=("off", "train_margin", "independent_train_margin"),
         default="off",
         help=(
             "Learn train-fold source override gates from the baseline selection "
@@ -201,7 +212,7 @@ def main() -> int:
     parser.add_argument(
         "--source-gate-sources",
         default="kinematic,learned,temporal,scene",
-        help="Comma-separated candidate sources eligible for --source-gate train_margin.",
+        help="Comma-separated candidate sources eligible for --source-gate.",
     )
     parser.add_argument(
         "--source-gate-candidate-prefixes",
@@ -219,7 +230,7 @@ def main() -> int:
     parser.add_argument("--source-gate-margin", type=float, default=0.0)
     parser.add_argument(
         "--source-gate-router",
-        choices=("off", "intent", "speed", "intent_speed"),
+        choices=("off", "intent", "speed", "speed_fine", "intent_speed"),
         default="speed",
     )
     parser.add_argument("--source-gate-ridge", type=float, default=1.0)
@@ -278,6 +289,19 @@ def main() -> int:
         help="Features used to build the world-model latent space.",
     )
     parser.add_argument("--world-memory-top-k", type=int, default=0)
+    parser.add_argument(
+        "--memory-candidates",
+        choices=("off", "nearest_train", "nearest_preferences"),
+        default="off",
+        help="Add train-fold nearest-neighbor trajectory candidates without using test-fold labels.",
+    )
+    parser.add_argument("--memory-top-k", type=int, default=0)
+    parser.add_argument(
+        "--memory-feature-set",
+        choices=(FEATURE_SET_TEMPORAL, FEATURE_SET_EXTERNAL_EMBEDDINGS),
+        default=FEATURE_SET_TEMPORAL,
+    )
+    parser.add_argument("--target-rfs", type=float, default=10.0)
     parser.add_argument(
         "--scene-token-cache",
         type=Path,
@@ -394,6 +418,10 @@ def main() -> int:
         world_latent_source=args.world_latent_source,
         world_memory_top_k=args.world_memory_top_k,
         world_max_neighbor_distance=args.world_max_neighbor_distance,
+        memory_candidates=args.memory_candidates,
+        memory_top_k=args.memory_top_k,
+        memory_feature_set=args.memory_feature_set,
+        target_rfs=args.target_rfs,
         external_embedding_source=external_embedding_source,
         selector_source_guard=args.selector_source_guard,
         selector_source_guard_margin=args.selector_source_guard_margin,
@@ -560,6 +588,10 @@ def cross_validate_trajectory_model(
     world_latent_source: str = "all",
     world_memory_top_k: int = 0,
     world_max_neighbor_distance: float | None = None,
+    memory_candidates: str = "off",
+    memory_top_k: int = 0,
+    memory_feature_set: str = FEATURE_SET_TEMPORAL,
+    target_rfs: float = 10.0,
     external_embedding_source: str | None = None,
     selector_source_guard: str = "off",
     selector_source_guard_margin: float = 0.0,
@@ -598,6 +630,10 @@ def cross_validate_trajectory_model(
         raise ValueError(f"unsupported world model mode: {world_model_mode}")
     if world_model_mode == FEATURE_MODE_EXTERNAL_EMBEDDINGS:
         external_embedding_dimension(frames)
+    if memory_candidates not in {"off", "nearest_train", "nearest_preferences"}:
+        raise ValueError(f"unsupported memory candidate mode: {memory_candidates}")
+    if memory_top_k < 0:
+        raise ValueError("--memory-top-k must be non-negative")
     fold_frame_sets = _split_frame_names_by_segment(frames, folds=folds, seed=seed)
     fold_reports: list[dict[str, object]] = []
     for fold_index, test_names in enumerate(fold_frame_sets):
@@ -667,6 +703,16 @@ def cross_validate_trajectory_model(
                 feature_mode=world_model_mode,
                 latent_source=world_latent_source,
             )
+        memory_model = (
+            _fit_memory_candidate_model(
+                train_frames,
+                mode=memory_candidates,
+                top_k=memory_top_k,
+                feature_set=memory_feature_set,
+            )
+            if memory_candidates != "off" and memory_top_k > 0
+            else None
+        )
         if progress_every_fold:
             print(
                 json.dumps({"phase": "score_train_rows", "fold_index": fold_index, "train_frames": len(train_frames)}),
@@ -688,6 +734,7 @@ def cross_validate_trajectory_model(
             world_model=world_model,
             world_memory_top_k=world_memory_top_k,
             world_max_neighbor_distance=world_max_neighbor_distance,
+            memory_model=memory_model,
             blend_candidates=blend_candidates,
         )
         if progress_every_fold:
@@ -696,10 +743,11 @@ def cross_validate_trajectory_model(
                 file=sys.stderr,
                 flush=True,
             )
-        selector_train_rows = (
-            [row for row in train_rows if str(row["source"]) != "scene"]
-            if scene_gate != "off"
-            else train_rows
+        selector_train_rows = _selector_training_rows_for_gates(
+            train_rows,
+            scene_gate=scene_gate,
+            source_gate=source_gate,
+            source_gate_sources=source_gate_sources,
         )
         selector = _fit_selector(
             selector_train_rows,
@@ -815,6 +863,7 @@ def cross_validate_trajectory_model(
                 world_model=world_model,
                 world_memory_top_k=world_memory_top_k,
                 world_max_neighbor_distance=world_max_neighbor_distance,
+                memory_model=memory_model,
             )
         )
     report = {
@@ -856,6 +905,10 @@ def cross_validate_trajectory_model(
         "world_ridge": float(world_ridge),
         "world_memory_top_k": int(world_memory_top_k),
         "world_max_neighbor_distance": world_max_neighbor_distance,
+        "memory_candidates": memory_candidates,
+        "memory_top_k": int(memory_top_k),
+        "memory_feature_set": memory_feature_set,
+        "target_rfs": float(target_rfs),
         "selector_source_guard": selector_source_guard,
         "selector_source_guard_margin": float(selector_source_guard_margin),
         "selector_source_calibration": selector_source_calibration,
@@ -918,7 +971,25 @@ def cross_validate_trajectory_model(
         "learned_mean_candidate_mean_rfs": _weighted_mean(fold_reports, "learned_mean_candidate_mean_rfs"),
         "learned_oracle_mean_rfs": _weighted_mean(fold_reports, "learned_oracle_mean_rfs"),
         "combined_oracle_mean_rfs": _weighted_mean(fold_reports, "combined_oracle_mean_rfs"),
+        "combined_oracle_mean_normalized_rfs": _weighted_mean(
+            fold_reports,
+            "combined_oracle_mean_normalized_rfs",
+        ),
+        "reference_ceiling_mean_rfs": _weighted_mean(fold_reports, "reference_ceiling_mean_rfs"),
+        "future_trajectory_mean_rfs": _weighted_mean(fold_reports, "future_trajectory_mean_rfs"),
+        "future_trajectory_mean_normalized_rfs": _weighted_mean(
+            fold_reports,
+            "future_trajectory_mean_normalized_rfs",
+        ),
+        "target_rfs_reachable_by_references": _weighted_mean(fold_reports, "reference_ceiling_mean_rfs")
+        >= float(target_rfs),
+        "target_rfs_reachable_by_candidates": _weighted_mean(fold_reports, "combined_oracle_mean_rfs")
+        >= float(target_rfs),
         "combined_ranker_mean_rfs": _weighted_mean(fold_reports, "combined_ranker_mean_rfs"),
+        "combined_ranker_mean_normalized_rfs": _weighted_mean(
+            fold_reports,
+            "combined_ranker_mean_normalized_rfs",
+        ),
         "learned_mean_gain_vs_constant_velocity": _weighted_delta(
             fold_reports,
             "learned_mean_candidate_mean_rfs",
@@ -953,10 +1024,13 @@ def cross_validate_trajectory_model(
         "selected_scene_rate": _weighted_mean(fold_reports, "selected_scene_rate"),
         "selected_temporal_rate": _weighted_mean(fold_reports, "selected_temporal_rate"),
         "selected_kinematic_rate": _weighted_mean(fold_reports, "selected_kinematic_rate"),
+        "selected_memory_rate": _weighted_mean(fold_reports, "selected_memory_rate"),
         "oracle_anchor_rate": _weighted_mean(fold_reports, "oracle_anchor_rate"),
         "oracle_scene_rate": _weighted_mean(fold_reports, "oracle_scene_rate"),
         "oracle_temporal_rate": _weighted_mean(fold_reports, "oracle_temporal_rate"),
+        "oracle_memory_rate": _weighted_mean(fold_reports, "oracle_memory_rate"),
         "slices": _aggregate_fold_slices(fold_reports),
+        "selector_regret_buckets": _aggregate_fold_regret_buckets(fold_reports),
         "folds_detail": fold_reports,
     }
     if world_model_mode != WORLD_MODEL_OFF:
@@ -1013,6 +1087,7 @@ def _evaluate_fold(
     world_model: LearnedWorldModel | None,
     world_memory_top_k: int,
     world_max_neighbor_distance: float | None,
+    memory_model: dict[str, object] | None,
 ) -> dict[str, object]:
     kinematic_first_scores: list[float] = []
     kinematic_oracle_scores: list[float] = []
@@ -1020,8 +1095,13 @@ def _evaluate_fold(
     learned_oracle_scores: list[float] = []
     world_imagined_scores: list[float] = []
     world_oracle_scores: list[float] = []
+    reference_ceiling_scores: list[float] = []
+    future_trajectory_scores: list[float] = []
+    future_trajectory_normalized_scores: list[float] = []
     combined_oracle_scores: list[float] = []
+    combined_oracle_normalized_scores: list[float] = []
     combined_ranker_scores: list[float] = []
+    combined_ranker_normalized_scores: list[float] = []
     scene_gate_gains: list[float] = []
     scene_gate_false_positive_losses: list[float] = []
     scene_gate_positive_oracle_count = 0
@@ -1035,6 +1115,7 @@ def _evaluate_fold(
     selected_source_counts: dict[str, int] = defaultdict(int)
     oracle_source_counts: dict[str, int] = defaultdict(int)
     slice_accumulators: dict[str, dict[str, object]] = {}
+    regret_accumulators: dict[str, dict[str, object]] = {}
     frame_diagnostics: list[dict[str, object]] = []
     for frame in frames:
         rows = _frame_candidate_rows(
@@ -1052,15 +1133,17 @@ def _evaluate_fold(
             world_model=world_model,
             world_memory_top_k=world_memory_top_k,
             world_max_neighbor_distance=world_max_neighbor_distance,
+            memory_model=memory_model,
             blend_candidates=blend_candidates,
         )
         kinematic_scores = [float(row["rfs_score"]) for row in rows if str(row["source"]) == "kinematic"]
         learned_scores = [float(row["rfs_score"]) for row in rows if str(row["source"]) == "learned"]
         world_scores = [float(row["rfs_score"]) for row in rows if str(row["source"]) == "world"]
         policy_rows = [row for row in rows if str(row["source"]) != "scene"] if scene_gate_policy is not None else rows
+        policy_rows = _source_gate_baseline_rows(source_gate_policy, policy_rows) or policy_rows or rows
         selected = _select_with_policy(
             selector,
-            policy_rows or rows,
+            policy_rows,
             source_guard=source_guard,
             fallback_policy=fallback_policy,
             source_calibration=source_calibration,
@@ -1085,8 +1168,16 @@ def _evaluate_fold(
         oracle = max(rows, key=lambda row: float(row["rfs_score"]))
         oracle_score = float(oracle["rfs_score"])
         selected_score = float(selected["rfs_score"])
+        reference_ceiling = _reference_ceiling(frame)
+        reference_ceiling_scores.append(reference_ceiling)
+        future_trajectory_scores.append(
+            float(scorer(_record(frame, "ground_truth_future", -1, frame.future_trajectory), frame))
+        )
+        future_trajectory_normalized_scores.append(
+            _normalized_rfs_score(future_trajectory_scores[-1], reference_ceiling)
+        )
         scene_rows = [row for row in rows if str(row["source"]) == "scene"]
-        if scene_rows:
+        if scene_gate_policy is not None and scene_rows:
             best_scene = _select_by_calibrated_score(selector, scene_rows, source_calibration)
             scene_gain = float(best_scene["rfs_score"]) - float(baseline_selected["rfs_score"])
             if scene_gain > 0.0:
@@ -1114,13 +1205,16 @@ def _evaluate_fold(
             world_imagined_scores.append(world_scores[0])
             world_oracle_scores.append(max(world_scores))
         combined_ranker_scores.append(selected_score)
+        combined_ranker_normalized_scores.append(_normalized_rfs_score(selected_score, reference_ceiling))
         combined_oracle_scores.append(oracle_score)
+        combined_oracle_normalized_scores.append(_normalized_rfs_score(oracle_score, reference_ceiling))
         selected_source_counts[str(selected["source"])] += 1
         oracle_source_counts[str(oracle["source"])] += 1
         if selected_score == oracle_score:
             top1_matches += 1
         _add_slice_observation(slice_accumulators, f"speed:{_speed_bin(frame.init_speed_mps)}", selected, oracle)
         _add_slice_observation(slice_accumulators, f"intent:{int(frame.intent)}", selected, oracle)
+        _add_regret_observations(regret_accumulators, frame, selected, oracle)
         if include_frame_diagnostics:
             frame_diagnostics.append(_frame_diagnostic(frame, selected, oracle))
     report = {
@@ -1134,8 +1228,13 @@ def _evaluate_fold(
         "learned_oracle_mean_rfs": _mean(learned_oracle_scores),
         "world_imagined_mean_rfs": _mean(world_imagined_scores) if world_imagined_scores else 0.0,
         "world_oracle_mean_rfs": _mean(world_oracle_scores) if world_oracle_scores else 0.0,
+        "reference_ceiling_mean_rfs": _mean(reference_ceiling_scores),
+        "future_trajectory_mean_rfs": _mean(future_trajectory_scores),
+        "future_trajectory_mean_normalized_rfs": _mean(future_trajectory_normalized_scores),
         "combined_oracle_mean_rfs": _mean(combined_oracle_scores),
+        "combined_oracle_mean_normalized_rfs": _mean(combined_oracle_normalized_scores),
         "combined_ranker_mean_rfs": _mean(combined_ranker_scores),
+        "combined_ranker_mean_normalized_rfs": _mean(combined_ranker_normalized_scores),
         "combined_ranker_top1_oracle_match_rate": float(top1_matches / len(frames)),
         "scene_gate_selected_rate": float(scene_gate_override_count / len(frames)),
         "scene_gate_oracle_positive_rate": float(scene_gate_positive_oracle_count / len(frames)),
@@ -1161,11 +1260,14 @@ def _evaluate_fold(
         "selected_temporal_rate": selected_source_counts["temporal"] / len(frames),
         "selected_kinematic_rate": selected_source_counts["kinematic"] / len(frames),
         "selected_world_rate": selected_source_counts["world"] / len(frames),
+        "selected_memory_rate": selected_source_counts["memory"] / len(frames),
         "oracle_anchor_rate": oracle_source_counts["anchor"] / len(frames),
         "oracle_scene_rate": oracle_source_counts["scene"] / len(frames),
         "oracle_temporal_rate": oracle_source_counts["temporal"] / len(frames),
         "oracle_world_rate": oracle_source_counts["world"] / len(frames),
+        "oracle_memory_rate": oracle_source_counts["memory"] / len(frames),
         "slices": _finalize_slices(slice_accumulators),
+        "selector_regret_buckets": _finalize_regret_buckets(regret_accumulators),
     }
     if include_frame_diagnostics:
         report["frame_diagnostics"] = frame_diagnostics
@@ -1188,6 +1290,7 @@ def _scored_candidate_rows(
     world_model: LearnedWorldModel | None = None,
     world_memory_top_k: int = 0,
     world_max_neighbor_distance: float | None = None,
+    memory_model: dict[str, object] | None = None,
     blend_candidates: str = "off",
 ) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
@@ -1208,6 +1311,7 @@ def _scored_candidate_rows(
                 world_model=world_model,
                 world_memory_top_k=world_memory_top_k,
                 world_max_neighbor_distance=world_max_neighbor_distance,
+                memory_model=memory_model,
                 blend_candidates=blend_candidates,
             )
         )
@@ -1253,6 +1357,7 @@ def _frame_candidate_rows(
     world_model: LearnedWorldModel | None = None,
     world_memory_top_k: int = 0,
     world_max_neighbor_distance: float | None = None,
+    memory_model: dict[str, object] | None = None,
     blend_candidates: str = "off",
 ) -> list[dict[str, object]]:
     if blend_candidates not in {"off", "mean_pairs"}:
@@ -1309,6 +1414,11 @@ def _frame_candidate_rows(
                 max_neighbor_distance=world_max_neighbor_distance,
             )
         )
+    if memory_model is not None:
+        candidates.extend(
+            ("memory", name, trajectory, {})
+            for name, trajectory in _memory_candidate_trajectories(memory_model, frame)
+        )
     if blend_candidates == "mean_pairs":
         candidates.extend(_blend_mean_pair_candidates(candidates))
     rows: list[dict[str, object]] = []
@@ -1323,6 +1433,7 @@ def _frame_candidate_rows(
         )
         _add_world_candidate_features(row, metadata)
         row["rfs_score"] = float(scorer(record, frame))
+        row["rfs_score_normalized"] = _normalized_rfs_score(float(row["rfs_score"]), _reference_ceiling(frame))
         rows.append(
             {
                 **row,
@@ -1330,6 +1441,18 @@ def _frame_candidate_rows(
             }
         )
     return rows
+
+
+def _reference_ceiling(frame: WodE2EPreferenceFrame) -> float:
+    if not frame.references:
+        return 0.0
+    return max(float(reference.score) for reference in frame.references)
+
+
+def _normalized_rfs_score(score: float, reference_ceiling: float) -> float:
+    if reference_ceiling <= 1e-8:
+        return float(score)
+    return float(score) * 10.0 / float(reference_ceiling)
 
 
 def _blend_mean_pair_candidates(
@@ -1369,6 +1492,85 @@ def _blend_mean_pair_candidates(
                     )
                 )
     return blends
+
+
+def _fit_memory_candidate_model(
+    train_frames: list[WodE2EPreferenceFrame],
+    *,
+    mode: str,
+    top_k: int,
+    feature_set: str,
+) -> dict[str, object]:
+    if mode not in {"nearest_train", "nearest_preferences"}:
+        raise ValueError(f"unsupported memory candidate mode: {mode}")
+    rows = []
+    for frame in train_frames:
+        raw_features = _memory_raw_features(frame, feature_set)
+        trajectories: list[tuple[str, Trajectory]] = [("future", frame.future_trajectory)]
+        if mode == "nearest_preferences":
+            trajectories.extend(
+                (f"pref{index}_score{int(round(float(reference.score) * 100)):04d}", reference.trajectory)
+                for index, reference in enumerate(frame.references)
+            )
+        rows.append(
+            {
+                "frame_name": frame.frame_name,
+                "features": raw_features,
+                "trajectories": trajectories,
+            }
+        )
+    x = np.asarray([row["features"] for row in rows], dtype=np.float64)
+    mean = x.mean(axis=0)
+    scale = x.std(axis=0)
+    scale[scale < 1e-8] = 1.0
+    for row, features in zip(rows, x):
+        row["features_norm"] = ((features - mean) / scale).tolist()
+    return {
+        "mode": mode,
+        "top_k": int(top_k),
+        "feature_set": feature_set,
+        "feature_mean": mean.tolist(),
+        "feature_scale": scale.tolist(),
+        "rows": rows,
+    }
+
+
+def _memory_candidate_trajectories(
+    memory_model: dict[str, object],
+    frame: WodE2EPreferenceFrame,
+) -> list[tuple[str, Trajectory]]:
+    rows = list(memory_model["rows"])
+    if not rows:
+        return []
+    query = np.asarray(_memory_raw_features(frame, str(memory_model["feature_set"])), dtype=np.float64)
+    mean = np.asarray(memory_model["feature_mean"], dtype=np.float64)
+    scale = np.asarray(memory_model["feature_scale"], dtype=np.float64)
+    query_norm = (query - mean) / scale
+    distances = [
+        (float(np.mean((np.asarray(row["features_norm"], dtype=np.float64) - query_norm) ** 2)), row)
+        for row in rows
+    ]
+    distances.sort(key=lambda item: (item[0], str(item[1]["frame_name"])))
+    candidates: list[tuple[str, Trajectory]] = []
+    seen: set[tuple[tuple[float, float], ...]] = set()
+    for rank, (_distance, row) in enumerate(distances[: int(memory_model["top_k"])], start=1):
+        for suffix, trajectory in row["trajectories"]:
+            key = tuple((round(float(x), 3), round(float(y), 3)) for x, y in trajectory)
+            if key in seen:
+                continue
+            seen.add(key)
+            candidates.append((f"memory_neighbor_{rank}_{suffix}", trajectory))
+    return candidates
+
+
+def _memory_raw_features(frame: WodE2EPreferenceFrame, feature_set: str) -> list[float]:
+    return _frame_features(
+        frame.past_trajectory,
+        intent=frame.intent,
+        init_speed_mps=frame.init_speed_mps,
+        feature_set=feature_set,
+        external_embedding=frame.external_embedding,
+    )
 
 
 def _is_blend_representative(source: str, candidate_name: str) -> bool:
@@ -1951,6 +2153,28 @@ def _fit_source_calibration(
     return calibration
 
 
+def _selector_training_rows_for_gates(
+    rows: list[dict[str, object]],
+    *,
+    scene_gate: str,
+    source_gate: str,
+    source_gate_sources: tuple[str, ...],
+) -> list[dict[str, object]]:
+    held_out_sources = set()
+    if scene_gate != "off":
+        held_out_sources.add("scene")
+    if source_gate == "independent_train_margin":
+        held_out_sources.update(str(source) for source in source_gate_sources)
+    if not held_out_sources:
+        return rows
+    train_rows = [
+        row
+        for row in rows
+        if str(row["source"]) not in held_out_sources
+    ]
+    return train_rows or rows
+
+
 def _fit_fallback_selectors(
     rows: list[dict[str, object]],
     *,
@@ -2071,7 +2295,7 @@ def _fit_fallback_policy(
             "router": "off",
             **_fallback_route_payload(threshold, fallback_sources),
         }
-    if router not in {"intent", "speed", "intent_speed"}:
+    if router not in {"intent", "speed", "speed_fine", "intent_speed"}:
         raise ValueError(f"unsupported selector fallback router: {router}")
     groups: dict[str, list[dict[str, object]]] = defaultdict(list)
     for row in rows:
@@ -2149,7 +2373,7 @@ def _fit_scene_gate_policy(
         return None
     if mode != "train_margin":
         raise ValueError(f"unsupported scene gate: {mode}")
-    if router not in {"off", "intent", "speed", "intent_speed"}:
+    if router not in {"off", "intent", "speed", "speed_fine", "intent_speed"}:
         raise ValueError(f"unsupported scene gate router: {router}")
     if ridge <= 0.0:
         raise ValueError("--scene-gate-ridge must be positive")
@@ -2245,9 +2469,9 @@ def _fit_source_gate_policy(
 ) -> dict[str, object] | None:
     if mode == "off":
         return None
-    if mode != "train_margin":
+    if mode not in {"train_margin", "independent_train_margin"}:
         raise ValueError(f"unsupported source gate: {mode}")
-    if router not in {"off", "intent", "speed", "intent_speed"}:
+    if router not in {"off", "intent", "speed", "speed_fine", "intent_speed"}:
         raise ValueError(f"unsupported source gate router: {router}")
     if ridge <= 0.0:
         raise ValueError("--source-gate-ridge must be positive")
@@ -2265,6 +2489,15 @@ def _fit_source_gate_policy(
         rows_by_frame[str(row["frame_name"])].append(row)
     for frame_rows in rows_by_frame.values():
         baseline_rows = [row for row in frame_rows if str(row["source"]) != "scene"]
+        if mode == "independent_train_margin":
+            held_out_sources = set(source_names)
+            independent_baseline_rows = [
+                row
+                for row in baseline_rows
+                if str(row["source"]) not in held_out_sources
+            ]
+            if independent_baseline_rows:
+                baseline_rows = independent_baseline_rows
         if not baseline_rows:
             baseline_rows = frame_rows
         baseline = _select_with_policy(
@@ -2313,6 +2546,17 @@ def _fit_source_gate_policy(
             "routes": {},
             "train_observations": 0,
         }
+    if mode == "independent_train_margin":
+        return _fit_independent_source_gate_policy(
+            observations,
+            router=router,
+            source_names=source_names,
+            prefixes=prefixes,
+            allowed_routes=allowed_routes,
+            margin=margin,
+            max_rate=max_rate,
+            ridge=ridge,
+        )
     mean, scale, weights, _predicted_gains = _fit_gate_linear_model(observations, ridge=ridge)
     threshold_gains = _crossfit_gate_predictions(observations, ridge=ridge)
 
@@ -2384,6 +2628,93 @@ def _fit_gate_linear_model(
     penalty[0, 0] = 0.0
     weights = np.linalg.solve(design.T @ design + penalty, design.T @ y)
     return mean, scale, weights, design @ weights
+
+
+def _fit_independent_source_gate_policy(
+    observations: list[dict[str, object]],
+    *,
+    router: str,
+    source_names: tuple[str, ...],
+    prefixes: tuple[str, ...],
+    allowed_routes: frozenset[str],
+    margin: float,
+    max_rate: float,
+    ridge: float,
+) -> dict[str, object]:
+    source_models: dict[str, dict[str, object]] = {}
+    routes: dict[str, dict[str, object]] = {}
+    global_decisions: dict[str, dict[str, object]] = {}
+    train_positive_rates: dict[str, float] = {}
+    train_observations_by_source: dict[str, int] = {}
+    for source in source_names:
+        source_observations = [
+            observation
+            for observation in observations
+            if str(observation["source"]) == source
+        ]
+        if not source_observations:
+            global_decisions[source] = {"decision": "never", "threshold": None}
+            train_positive_rates[source] = 0.0
+            train_observations_by_source[source] = 0
+            continue
+        mean, scale, weights, _predicted_gains = _fit_gate_linear_model(source_observations, ridge=ridge)
+        predicted_gains = _crossfit_gate_predictions(source_observations, ridge=ridge)
+        source_models[source] = {
+            "feature_mean": mean.tolist(),
+            "feature_scale": scale.tolist(),
+            "weights": weights[1:].tolist(),
+            "bias": float(weights[0]),
+        }
+        train_positive_rates[source] = float(
+            np.mean([float(observation["gain"]) > 0.0 for observation in source_observations])
+        )
+        train_observations_by_source[source] = len(source_observations)
+        threshold_observations = [
+            {**observation, "scene_score": observation["source_score"]}
+            for observation in source_observations
+        ]
+        global_threshold = _fit_scene_gate_threshold(
+            threshold_observations,
+            predicted_gains,
+            margin=margin,
+            max_rate=max_rate,
+        )
+        global_decisions[source] = _scene_gate_route_payload(global_threshold)
+        for group in sorted({str(observation["group"]) for observation in source_observations}):
+            indices = [
+                index
+                for index, observation in enumerate(source_observations)
+                if str(observation["group"]) == group
+            ]
+            route_observations = [
+                {**source_observations[index], "scene_score": source_observations[index]["source_score"]}
+                for index in indices
+            ]
+            route_key = f"{source}|{group}"
+            routes[route_key] = _scene_gate_route_payload(
+                _fit_scene_gate_threshold(
+                    route_observations,
+                    predicted_gains[indices],
+                    margin=margin,
+                    max_rate=max_rate,
+                )
+            )
+    return {
+        "mode": "independent_train_margin",
+        "router": router,
+        "sources": list(source_names),
+        "candidate_prefixes": list(prefixes),
+        "route_allowlist": sorted(allowed_routes),
+        "margin": float(margin),
+        "max_rate": float(max_rate),
+        "source_models": source_models,
+        "source_decisions": global_decisions,
+        "routes": {} if router == "off" else routes,
+        "train_observations": len(observations),
+        "train_observations_by_source": train_observations_by_source,
+        "train_positive_rate_by_source": train_positive_rates,
+        "threshold_fit": "segment_crossfit_independent_sources",
+    }
 
 
 def _predict_gate_linear_model(
@@ -2550,6 +2881,21 @@ def _apply_source_gate(
     return best_candidate
 
 
+def _source_gate_baseline_rows(
+    policy: dict[str, object] | None,
+    rows: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    if policy is None or policy.get("mode") != "independent_train_margin":
+        return rows
+    held_out_sources = {str(source) for source in policy.get("sources", [])}
+    baseline_rows = [
+        row
+        for row in rows
+        if str(row["source"]) not in held_out_sources
+    ]
+    return baseline_rows or rows
+
+
 def _candidate_prefix_allowed(row: dict[str, object], prefixes: tuple[str, ...]) -> bool:
     if not prefixes:
         return True
@@ -2563,11 +2909,18 @@ def _source_gate_route_for_candidate(
     source: str,
 ) -> dict[str, object]:
     router = str(policy.get("router", "off"))
+    source_decisions = dict(policy.get("source_decisions", {}))
     if router == "off":
+        source_route = source_decisions.get(source)
+        if source_route is not None:
+            return dict(source_route)
         return {"decision": str(policy.get("decision", "never")), "threshold": policy.get("threshold")}
     route = dict(policy.get("routes", {})).get(f"{source}|{_fallback_router_key(baseline, router)}")
     if route is not None:
         return dict(route)
+    source_route = source_decisions.get(source)
+    if source_route is not None:
+        return dict(source_route)
     return {"decision": str(policy.get("decision", "never")), "threshold": policy.get("threshold")}
 
 
@@ -2579,10 +2932,12 @@ def _source_gate_predict(
     source_calibration: dict[str, dict[str, float]] | None,
 ) -> float:
     features = np.asarray(_source_gate_features(selector, baseline, candidate, source_calibration), dtype=np.float64)
-    mean = np.asarray(policy["feature_mean"], dtype=np.float64)
-    scale = np.asarray(policy["feature_scale"], dtype=np.float64)
-    weights = np.asarray(policy["weights"], dtype=np.float64)
-    return float(float(policy["bias"]) + ((features - mean) / scale) @ weights)
+    source_model = dict(policy.get("source_models", {})).get(str(candidate["source"]))
+    model = dict(source_model) if source_model is not None else policy
+    mean = np.asarray(model["feature_mean"], dtype=np.float64)
+    scale = np.asarray(model["feature_scale"], dtype=np.float64)
+    weights = np.asarray(model["weights"], dtype=np.float64)
+    return float(float(model["bias"]) + ((features - mean) / scale) @ weights)
 
 
 def _scene_gate_route_for_row(policy: dict[str, object], row: dict[str, object]) -> dict[str, object]:
@@ -2814,10 +3169,13 @@ def _fallback_router_key(row: dict[str, object], router: str) -> str:
     features = row["features"]
     intent_key = f"intent:{int(round(float(features['intent'])))}"
     speed_key = f"speed:{_speed_bin(float(features['init_speed_mps']))}"
+    speed_fine_key = f"speed:{_speed_fine_bin(float(features['init_speed_mps']))}"
     if router == "intent":
         return intent_key
     if router == "speed":
         return speed_key
+    if router == "speed_fine":
+        return speed_fine_key
     if router == "intent_speed":
         return f"{intent_key}|{speed_key}"
     raise ValueError(f"unsupported selector fallback router: {router}")
@@ -2870,10 +3228,12 @@ def _selector_numeric_features(feature_mode: str) -> list[str]:
 
 
 def _selector_targets(rows: list[dict[str, object]], target_mode: str) -> np.ndarray:
-    scores = np.asarray([float(row["rfs_score"]) for row in rows], dtype=np.float64)
-    if target_mode == "absolute":
+    score_key = "rfs_score_normalized" if target_mode.endswith("_normalized") else "rfs_score"
+    base_target_mode = target_mode.removesuffix("_normalized")
+    scores = np.asarray([float(row.get(score_key, row["rfs_score"])) for row in rows], dtype=np.float64)
+    if base_target_mode == "absolute":
         return scores
-    if target_mode == "oracle_binary":
+    if base_target_mode == "oracle_binary":
         best_by_frame: dict[str, float] = {}
         for row, score in zip(rows, scores):
             frame_name = str(row["frame_name"])
@@ -2882,7 +3242,7 @@ def _selector_targets(rows: list[dict[str, object]], target_mode: str) -> np.nda
             [1.0 if float(score) == best_by_frame[str(row["frame_name"])] else 0.0 for row, score in zip(rows, scores)],
             dtype=np.float64,
         )
-    if target_mode == "frame_rank":
+    if base_target_mode == "frame_rank":
         indices_by_frame: dict[str, list[int]] = defaultdict(list)
         for index, row in enumerate(rows):
             indices_by_frame[str(row["frame_name"])].append(index)
@@ -2893,7 +3253,7 @@ def _selector_targets(rows: list[dict[str, object]], target_mode: str) -> np.nda
             for rank, index in enumerate(ranked_indices):
                 targets[index] = rank / denominator
         return targets
-    if target_mode not in {"frame_delta", "frame_zscore"}:
+    if base_target_mode not in {"frame_delta", "frame_zscore"}:
         raise ValueError(f"unsupported selector target mode: {target_mode}")
     mean_by_frame: dict[str, float] = {}
     scale_by_frame: dict[str, float] = {}
@@ -2905,7 +3265,7 @@ def _selector_targets(rows: list[dict[str, object]], target_mode: str) -> np.nda
         scale = float(np.std(np.asarray(frame_scores, dtype=np.float64)))
         scale_by_frame[frame_name] = scale if scale > 1e-8 else 1.0
     targets = [float(score) - mean_by_frame[str(row["frame_name"])] for row, score in zip(rows, scores)]
-    if target_mode == "frame_zscore":
+    if base_target_mode == "frame_zscore":
         targets = [target / scale_by_frame[str(row["frame_name"])] for row, target in zip(rows, targets)]
     return np.asarray(targets, dtype=np.float64)
 
@@ -2970,6 +3330,17 @@ def _speed_bin(speed_mps: float) -> str:
     return speed_bin(speed_mps)
 
 
+def _speed_fine_bin(speed_mps: float) -> str:
+    coarse = speed_bin(speed_mps)
+    if coarse != "fast":
+        return coarse
+    if speed_mps < 14.0:
+        return "fast_low"
+    if speed_mps < 18.0:
+        return "fast_mid"
+    return "fast_high"
+
+
 def _add_slice_observation(
     accumulators: dict[str, dict[str, object]],
     key: str,
@@ -2993,6 +3364,71 @@ def _add_slice_observation(
     accumulator["oracle_scores"].append(oracle_score)
     accumulator["selected_source_counts"][str(selected["source"])] += 1
     accumulator["oracle_source_counts"][str(oracle["source"])] += 1
+
+
+def _add_regret_observations(
+    accumulators: dict[str, dict[str, object]],
+    frame: WodE2EPreferenceFrame,
+    selected: dict[str, object],
+    oracle: dict[str, object],
+) -> None:
+    regret = max(0.0, float(oracle["rfs_score"]) - float(selected["rfs_score"]))
+    bucket_keys = (
+        f"speed:{_speed_bin(frame.init_speed_mps)}",
+        f"intent:{int(frame.intent)}",
+        f"selected_source:{selected['source']}",
+        f"oracle_source:{oracle['source']}",
+        f"source_pair:{selected['source']}->{oracle['source']}",
+        f"selected_family:{_candidate_family(selected)}",
+        f"oracle_family:{_candidate_family(oracle)}",
+    )
+    for key in bucket_keys:
+        accumulator = accumulators.setdefault(
+            key,
+            {
+                "frames": 0,
+                "total_regret": 0.0,
+                "max_regret": 0.0,
+                "oracle_source_counts": defaultdict(int),
+                "selected_source_counts": defaultdict(int),
+            },
+        )
+        accumulator["frames"] = int(accumulator["frames"]) + 1
+        accumulator["total_regret"] = float(accumulator["total_regret"]) + regret
+        accumulator["max_regret"] = max(float(accumulator["max_regret"]), regret)
+        accumulator["oracle_source_counts"][str(oracle["source"])] += 1
+        accumulator["selected_source_counts"][str(selected["source"])] += 1
+
+
+def _candidate_family(row: dict[str, object]) -> str:
+    features = row.get("features", {})
+    if isinstance(features, dict) and features.get("candidate_family") is not None:
+        return str(features["candidate_family"])
+    return str(row.get("candidate_name", "unknown"))
+
+
+def _finalize_regret_buckets(
+    accumulators: dict[str, dict[str, object]],
+    *,
+    limit: int = 24,
+) -> list[dict[str, object]]:
+    buckets = []
+    for key, accumulator in accumulators.items():
+        frames = int(accumulator["frames"])
+        total_regret = float(accumulator["total_regret"])
+        buckets.append(
+            {
+                "bucket": key,
+                "frames": frames,
+                "total_regret": total_regret,
+                "mean_regret": total_regret / frames if frames else 0.0,
+                "max_regret": float(accumulator["max_regret"]),
+                "selected_source_rates": _source_rates(accumulator["selected_source_counts"], frames),
+                "oracle_source_rates": _source_rates(accumulator["oracle_source_counts"], frames),
+            }
+        )
+    buckets.sort(key=lambda item: (-float(item["total_regret"]), str(item["bucket"])))
+    return buckets[:limit]
 
 
 def _finalize_slices(accumulators: dict[str, dict[str, object]]) -> dict[str, dict[str, object]]:
@@ -3019,7 +3455,7 @@ def _finalize_slice(accumulator: dict[str, object]) -> dict[str, object]:
 
 
 def _source_rates(source_counts: dict[str, int], frames: int) -> dict[str, float]:
-    sources = ("kinematic", "learned", "scene", "temporal", "anchor", "world")
+    sources = ("kinematic", "learned", "scene", "temporal", "anchor", "world", "memory")
     return {source: float(source_counts[source] / frames) for source in sources}
 
 
@@ -3048,6 +3484,33 @@ def _aggregate_fold_slices(fold_reports: list[dict[str, object]]) -> dict[str, d
             for source, rate in dict(slice_report["oracle_source_rates"]).items():
                 accumulator["oracle_source_counts"][str(source)] += int(round(float(rate) * frames))
     return _finalize_slices(accumulators)
+
+
+def _aggregate_fold_regret_buckets(fold_reports: list[dict[str, object]]) -> list[dict[str, object]]:
+    accumulators: dict[str, dict[str, object]] = {}
+    for fold in fold_reports:
+        for bucket in list(fold.get("selector_regret_buckets", [])):
+            bucket_dict = dict(bucket)
+            key = str(bucket_dict["bucket"])
+            frames = int(bucket_dict["frames"])
+            accumulator = accumulators.setdefault(
+                key,
+                {
+                    "frames": 0,
+                    "total_regret": 0.0,
+                    "max_regret": 0.0,
+                    "selected_source_counts": defaultdict(float),
+                    "oracle_source_counts": defaultdict(float),
+                },
+            )
+            accumulator["frames"] = int(accumulator["frames"]) + frames
+            accumulator["total_regret"] = float(accumulator["total_regret"]) + float(bucket_dict["total_regret"])
+            accumulator["max_regret"] = max(float(accumulator["max_regret"]), float(bucket_dict["max_regret"]))
+            for source, rate in dict(bucket_dict["selected_source_rates"]).items():
+                accumulator["selected_source_counts"][str(source)] += float(rate) * frames
+            for source, rate in dict(bucket_dict["oracle_source_rates"]).items():
+                accumulator["oracle_source_counts"][str(source)] += float(rate) * frames
+    return _finalize_regret_buckets(accumulators)
 
 
 def _mean(values: list[float]) -> float:

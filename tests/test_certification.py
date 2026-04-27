@@ -26,7 +26,11 @@ from minimal_shot_av.simulator.certification import (
     generate_evidence_report,
 )
 from minimal_shot_av.simulator.compass import _driving_quality_scores
+from minimal_shot_av.simulator.perception import PerceivedObstacle, ScenePerception
+from minimal_shot_av.simulator.planner import PlannedAction
 from minimal_shot_av.simulator.policy import Rollout, StepRecord
+from minimal_shot_av.simulator.safety import apply_safety_filter
+from minimal_shot_av.simulator.world_model import WorldState
 
 
 class CertificationEvidenceTests(unittest.TestCase):
@@ -150,6 +154,118 @@ class CertificationEvidenceTests(unittest.TestCase):
         self.assertLess(scores["safety_score"], 8.0)
         self.assertLess(scores["route_quality_score"], 6.5)
         self.assertLess(scores["comfort_score"], 6.0)
+
+    def test_safety_filter_creeps_on_high_risk_uncertainty_before_emergency_stop(self) -> None:
+        action = PlannedAction(direction=(1.0, 0.0), speed=1.2, mode="planned", score=1.0)
+        world_state = WorldState(
+            position=(0.0, 0.0),
+            target_point=(10.0, 0.0),
+            progress_fraction=0.0,
+            collision_risk=0.7,
+            goal_distance=10.0,
+            uncertainty=0.7,
+        )
+        perception = ScenePerception(
+            lane_index=0,
+            lane_point=(0.0, 0.0),
+            lane_error=0.0,
+            lane_heading=(1.0, 0.0),
+            corridor_margin=2.0,
+            free_space_confidence=0.3,
+            uncertainty=0.7,
+            visible_obstacles=[],
+        )
+
+        safe = apply_safety_filter(action, world_state, perception)
+
+        self.assertEqual("risk_creep", safe.mode)
+        self.assertLess(safe.speed, 0.45)
+        self.assertGreaterEqual(safe.speed, 0.15)
+        self.assertTrue(safe.intervention)
+
+    def test_safety_filter_escapes_on_extreme_risk_before_collision(self) -> None:
+        action = PlannedAction(direction=(1.0, 0.0), speed=1.2, mode="planned", score=1.0)
+        world_state = WorldState(
+            position=(0.0, 0.0),
+            target_point=(10.0, 0.0),
+            progress_fraction=0.0,
+            collision_risk=0.94,
+            goal_distance=10.0,
+            uncertainty=0.74,
+        )
+        perception = ScenePerception(
+            lane_index=0,
+            lane_point=(0.0, 0.0),
+            lane_error=0.0,
+            lane_heading=(1.0, 0.0),
+            corridor_margin=2.0,
+            free_space_confidence=0.26,
+            uncertainty=0.74,
+            visible_obstacles=[PerceivedObstacle(x=1.0, y=0.0, radius=1.0, signed_distance=0.2)],
+        )
+
+        safe = apply_safety_filter(action, world_state, perception)
+
+        self.assertEqual("risk_escape", safe.mode)
+        self.assertEqual(0.7, safe.speed)
+        self.assertLess(safe.direction[0], 0.0)
+        self.assertTrue(safe.intervention)
+
+    def test_safety_filter_uses_emergency_escape_when_stop_would_hold_inside_visible_hazard(self) -> None:
+        action = PlannedAction(direction=(1.0, 0.0), speed=1.2, mode="planned", score=1.0)
+        world_state = WorldState(
+            position=(0.0, 0.0),
+            target_point=(10.0, 0.0),
+            progress_fraction=0.0,
+            collision_risk=0.99,
+            goal_distance=10.0,
+            uncertainty=0.9,
+        )
+        perception = ScenePerception(
+            lane_index=0,
+            lane_point=(0.0, 0.0),
+            lane_error=0.0,
+            lane_heading=(1.0, 0.0),
+            corridor_margin=2.0,
+            free_space_confidence=0.1,
+            uncertainty=0.9,
+            visible_obstacles=[PerceivedObstacle(x=0.5, y=0.0, radius=1.0, signed_distance=-0.2)],
+        )
+
+        safe = apply_safety_filter(action, world_state, perception)
+
+        self.assertEqual("emergency_escape", safe.mode)
+        self.assertEqual(1.15, safe.speed)
+        self.assertNotEqual((0.0, 0.0), safe.direction)
+        self.assertTrue(safe.intervention)
+
+    def test_safety_filter_nudges_on_moderate_risk_before_close_pass(self) -> None:
+        action = PlannedAction(direction=(1.0, 0.0), speed=1.2, mode="planned", score=1.0)
+        world_state = WorldState(
+            position=(0.0, 0.0),
+            target_point=(10.0, 0.0),
+            progress_fraction=0.0,
+            collision_risk=0.66,
+            goal_distance=10.0,
+            uncertainty=0.54,
+        )
+        perception = ScenePerception(
+            lane_index=0,
+            lane_point=(0.0, 0.0),
+            lane_error=0.0,
+            lane_heading=(1.0, 0.0),
+            corridor_margin=2.0,
+            free_space_confidence=0.46,
+            uncertainty=0.54,
+            visible_obstacles=[PerceivedObstacle(x=1.0, y=0.0, radius=1.0, signed_distance=0.8)],
+        )
+
+        safe = apply_safety_filter(action, world_state, perception)
+
+        self.assertEqual("risk_nudge", safe.mode)
+        self.assertEqual(0.45, safe.speed)
+        self.assertLess(safe.direction[0], 0.0)
+        self.assertTrue(safe.intervention)
 
     def test_loads_odd_and_threshold_json_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -102,12 +102,21 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         self.assertIn("learned_mean_candidate_mean_rfs", report)
         self.assertIn("combined_oracle_gain_vs_kinematic_oracle", report)
         self.assertIn("selected_learned_rate", report)
+        self.assertIn("reference_ceiling_mean_rfs", report)
+        self.assertIn("future_trajectory_mean_rfs", report)
+        self.assertIn("combined_ranker_mean_normalized_rfs", report)
+        self.assertIn("combined_oracle_mean_normalized_rfs", report)
+        self.assertFalse(report["target_rfs_reachable_by_references"])
+        self.assertFalse(report["target_rfs_reachable_by_candidates"])
         self.assertIn("slices", report)
+        self.assertIn("selector_regret_buckets", report)
+        self.assertTrue(report["selector_regret_buckets"])
         self.assertTrue(any(key.startswith("speed:") for key in report["slices"]))
         self.assertTrue(any(key.startswith("intent:") for key in report["slices"]))
         first_slice = next(iter(report["slices"].values()))
         self.assertIn("mean_regret", first_slice)
         self.assertIn("selected_source_rates", first_slice)
+        self.assertIn("memory", first_slice["selected_source_rates"])
         self.assertNotIn("frame_diagnostics", report["folds_detail"][0])
         self.assertFalse(report["frame_diagnostics_enabled"])
         self.assertEqual(0, report["frame_diagnostics_count"])
@@ -177,6 +186,56 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         self.assertIn("world_imagined_mean_rfs", first_fold)
         first_slice = next(iter(report["slices"].values()))
         self.assertIn("world", first_slice["selected_source_rates"])
+
+    def test_reference_ceiling_can_mark_target_unreachable(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frames = [sample_frame(f"segment-{index}-100", step=0.5 + index * 0.25) for index in range(6)]
+
+        report = cv.cross_validate_trajectory_model(
+            frames,
+            folds=3,
+            seed=5,
+            ridge=1.0,
+            feature_set=cv.FEATURE_SET_TEMPORAL,
+            residual_modes=1,
+            target_rfs=9.5,
+            scorer=cv._local_rfs_score,
+        )
+
+        self.assertAlmostEqual(9.0, report["reference_ceiling_mean_rfs"])
+        self.assertFalse(report["target_rfs_reachable_by_references"])
+        self.assertFalse(report["target_rfs_reachable_by_candidates"])
+
+    def test_memory_candidates_use_train_fold_frames_only(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        train_frames = [
+            sample_frame("segment-train-a-100", step=1.0),
+            sample_frame("segment-train-b-100", step=2.0),
+        ]
+        train_frames[0].references.append(
+            RfsReference(
+                "alternate",
+                [(float(index), 1.0) for index in range(1, 21)],
+                8.0,
+            )
+        )
+        test_frame = sample_frame("segment-test-100", step=1.1)
+
+        model = cv._fit_memory_candidate_model(
+            train_frames,
+            mode="nearest_preferences",
+            top_k=2,
+            feature_set=cv.FEATURE_SET_TEMPORAL,
+        )
+        candidates = cv._memory_candidate_trajectories(model, test_frame)
+        names = [name for name, _trajectory in candidates]
+
+        self.assertTrue(names)
+        self.assertTrue(all(name.startswith("memory_neighbor_") for name in names))
+        self.assertTrue(any("pref" in name for name in names))
+        self.assertFalse(any(test_frame.frame_name in name for name in names))
 
     def test_cross_validation_can_add_scene_token_world_model_candidates(self) -> None:
         if cv is None:
@@ -342,6 +401,19 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         ]
 
         targets = cv._selector_targets(rows, "frame_delta")
+
+        self.assertEqual([-1.0, 1.0, 0.0], targets.tolist())
+
+    def test_selector_targets_can_use_normalized_scores(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        rows = [
+            {"frame_name": "a", "rfs_score": 4.0, "rfs_score_normalized": 8.0},
+            {"frame_name": "a", "rfs_score": 5.0, "rfs_score_normalized": 10.0},
+            {"frame_name": "b", "rfs_score": 9.0, "rfs_score_normalized": 9.0},
+        ]
+
+        targets = cv._selector_targets(rows, "frame_delta_normalized")
 
         self.assertEqual([-1.0, 1.0, 0.0], targets.tolist())
 
@@ -637,6 +709,65 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         self.assertEqual(default_report["combined_ranker_mean_rfs"], off_report["combined_ranker_mean_rfs"])
         self.assertFalse(off_report["scene_gate_enabled"])
 
+    def test_independent_source_gate_fits_source_specific_models(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        class FakeSelector:
+            def select_row(self, rows):
+                return max(rows, key=self.predict_row)
+
+            def predict_row(self, row):
+                return float(row["predicted_selector_score"])
+
+        rows = []
+        frame = sample_frame("segment-a-100", step=1.0)
+        for index, (name, source, predicted, score) in enumerate(
+            [
+                ("ridge_mean", "learned", 1.0, 4.0),
+                ("constant_velocity", "kinematic", 0.5, 9.0),
+                ("memory_neighbor_1_future", "memory", 0.5, 1.0),
+            ]
+        ):
+            row = cv.candidate_ranker_row(
+                frame=frame,
+                trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                candidate_name=name,
+                candidate_index=index,
+                source=source,
+            )
+            row["source"] = source
+            row["rfs_score"] = score
+            row["predicted_selector_score"] = predicted
+            rows.append(row)
+
+        policy = cv._fit_source_gate_policy(
+            rows,
+            FakeSelector(),
+            mode="independent_train_margin",
+            sources=("kinematic", "memory"),
+            candidate_prefixes=(),
+            route_allowlist=(),
+            margin=0.0,
+            router="off",
+            ridge=0.01,
+            max_rate=1.0,
+            source_calibration=None,
+            fallback_policy=None,
+            fallback_selectors=None,
+        )
+        selected = cv._apply_source_gate(
+            policy,
+            FakeSelector(),
+            rows,
+            rows[0],
+            source_calibration=None,
+        )
+
+        self.assertEqual("independent_train_margin", policy["mode"])
+        self.assertEqual({"kinematic", "memory"}, set(policy["source_models"]))
+        self.assertEqual("constant_velocity", selected["candidate_name"])
+
     def test_source_calibration_can_offset_overconfident_source(self) -> None:
         if cv is None:
             self.skipTest("numpy is not installed")
@@ -703,6 +834,19 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
 
         self.assertEqual("speed:slow", cv._fallback_router_key(row, "speed"))
         self.assertEqual("intent:1|speed:slow", cv._fallback_router_key(row, "intent_speed"))
+
+    def test_fallback_router_key_can_use_fine_fast_speed(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        row = cv.candidate_ranker_row(
+            frame=sample_frame("segment-a-100", step=5.0),
+            trajectory=[(float(step), 0.0) for step in range(1, 21)],
+            candidate_name="constant_velocity",
+            candidate_index=0,
+            source="kinematic",
+        )
+
+        self.assertEqual("speed:fast_high", cv._fallback_router_key(row, "speed_fine"))
 
     def test_selector_numeric_features_can_include_squares(self) -> None:
         if cv is None:
