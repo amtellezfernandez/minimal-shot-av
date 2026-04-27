@@ -14,7 +14,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.wod_ranker import WodPreferenceRanker
+from minimal_shot_av.model.wod_ranker import WodPreferenceRanker
 
 
 def main() -> int:

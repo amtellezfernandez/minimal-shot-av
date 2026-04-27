@@ -1,15 +1,25 @@
-# Grand Commission Submission: Spotlight Reflex
+# Grand Commission Submission Candidate
 
 ## Submission Claim
 
-Spotlight Reflex is a minimal-shot autonomy architecture for rare long-tail driving scenes. It uses structured scene reasoning, deterministic maneuver generation, and exact RFS trust-region selection rather than AV-dataset fine-tuning or route memorization.
+The current repository is not yet a completed Grand Commission solution. It is a
+submission candidate built around two honest assets:
+
+- a WOD-E2E model-side benchmark and packaging harness;
+- a lightweight simulator/Spotlight Reflex prototype for reproducible long-tail
+  scenario evidence.
+
+The model-side claim is currently a transparent non-text WOD-E2E baseline, not
+frontier scene understanding. The latest lightweight world-model candidate
+improves official validation-CV selected RFS only from `7.602814916652251` to
+`7.606198495114426`, which is not enough to call the architecture solved.
 
 This submission targets the **Grand Commission**: overall best autonomy architecture.
 
 ## What To Submit
 
 - GitHub repo: this codebase, with `README.md`, `models/DECLARATION.md`, and `docs/spotlight-reflex.md`.
-- Video or slide deck: show the Spotlight Reflex policy navigating a generated long-tail scene and explain the RFS-style selector.
+- Video or slide deck: show the Spotlight Reflex policy navigating a generated long-tail scene and explain the simulator-native selector.
 - Short write-up: use `docs/two-page-writeup.md` as the architecture draft.
 - Analysis material: use `notebooks/README.md` as the planned WOD-E2E exploration notebook outline.
 
@@ -53,10 +63,13 @@ Each command writes:
 ## Evidence To Highlight
 
 - The policy outputs 20-point, 5-second maneuver trajectories internally.
-- Candidate selection uses exact RFS trust-region geometry at 3s and 5s.
+- Candidate selection uses simulator-native trajectory selector geometry at 3s and 5s.
 - The policy is deterministic and reproducible by seed.
 - The current implementation uses no learned AV-specific model and no WOD-E2E fine-tuning.
-- The built-in tests cover RFS geometry, maneuver generation, selection behavior, CLI artifacts, and deterministic simulator seeds.
+- The built-in tests cover selector geometry, maneuver generation, selection behavior, CLI artifacts, and deterministic simulator seeds.
+- The current model-side world-model experiment should be presented as a
+  negative/early result: it adds oracle headroom, but the selector cannot yet
+  exploit it reliably.
 
 ## Boundaries
 
@@ -66,7 +79,9 @@ Each command writes:
   are not present in this workspace.
 - The current scene critic is procedural/context-derived, not a deployed VLM
   camera stack.
-- The strongest honest claim is minimal-shot architecture and reproducible closed-loop prototype behavior.
+- The strongest honest claim is infrastructure plus reproducible closed-loop
+  prototype behavior. A stronger solution claim requires the acceptance bar in
+  `docs/solution-reset.md`.
 
 ## Grand Submission Checklist
 

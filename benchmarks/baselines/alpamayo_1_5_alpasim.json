@@ -1,0 +1,29 @@
+{
+  "system": "alpamayo_1_5",
+  "suite": "physicalai_nurec_alpasim",
+  "source": "https://huggingface.co/nvidia/Alpamayo-1.5-10B",
+  "metadata": {
+    "alpasim_version": "published_model_card_unspecified",
+    "camera_ids": "published_multi_camera_rgb",
+    "context_length": "published_alpamayo_1_5",
+    "ego_history_hz": 10,
+    "evaluation_contract": "physicalai_nurec_alpasim_closed_loop",
+    "output_horizon": "6.4s_64_waypoints_10hz",
+    "route_command_source": "navigation_guidance",
+    "scenario_set": "physicalai_av_nurec_910",
+    "score_backend": "alpasim",
+    "sensor_contract": "published_alpamayo_1_5_model_card"
+  },
+  "metrics": {
+    "alpasim_score": {
+      "value": 0.81,
+      "higher_is_better": true,
+      "unit": "score",
+      "uncertainty": 0.01
+    }
+  },
+  "notes": [
+    "Published model-card metric: closed-loop AlpaSim on 910 scenarios from the PhysicalAI-AV-NuRec dataset, reported as 0.81 +/- 0.01.",
+    "This is not a WOD-E2E RFS number and must not be compared to WOD-E2E validation or leaderboard RFS."
+  ]
+}

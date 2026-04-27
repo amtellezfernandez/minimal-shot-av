@@ -10,7 +10,7 @@ This submission targets the **Minor Commission**: overall best simulation enviro
 
 ## What To Submit
 
-- GitHub repo: this codebase, especially `src/minimal_shot_av/wod_scenarios.py`.
+- GitHub repo: this codebase, especially `src/minimal_shot_av/simulator/wod_scenarios.py`.
 - Video or slide deck: show multiple seeded scenarios from different clusters and the policy rolling through them.
 - Short write-up: describe why randomized long-tail generation tests minimal-shot generalization better than a fixed memorized map.
 - Demo artifacts: include SVG/JSON outputs from several clusters and seeds.

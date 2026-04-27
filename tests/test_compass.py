@@ -14,7 +14,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.compass import (
+from minimal_shot_av.simulator.compass import (
     CompassRun,
     DrivingQualityConfig,
     compass_profile_by_name,
@@ -26,10 +26,10 @@ from minimal_shot_av.compass import (
     evaluate_compass,
     evaluate_ladder,
 )
-from minimal_shot_av.compositional_scenarios import generate_compositional_scenario
-from minimal_shot_av.policy import Rollout, StepRecord, run_spotlight_reflex_policy
-from minimal_shot_av.oracle import run_oracle_policy
-from minimal_shot_av.wod_scenarios import WOD_E2E_CLUSTERS
+from minimal_shot_av.simulator.compositional_scenarios import generate_compositional_scenario
+from minimal_shot_av.simulator.policy import Rollout, StepRecord, run_spotlight_reflex_policy
+from minimal_shot_av.simulator.oracle import run_oracle_policy
+from minimal_shot_av.simulator.wod_scenarios import WOD_E2E_CLUSTERS
 
 
 class CompassTests(unittest.TestCase):
@@ -68,7 +68,10 @@ class CompassTests(unittest.TestCase):
         self.assertLessEqual(report["summary"]["official_coverage_weight"], 1.0)
         self.assertIn("score_valid", report["summary"])
         self.assertIn("minimum_required_coverage_weight", report["summary"])
-        self.assertEqual(report["summary"]["reasoning_score_source"], "diagnostic_rollout_trace_overlap_v0_not_official")
+        self.assertEqual(
+            report["summary"]["reasoning_score_source"],
+            "diagnostic_rollout_trace_overlap_v0_not_official",
+        )
         self.assertIn("official_score_formula", report["summary"])
         self.assertIn("sample_size_valid", report["summary"])
 
@@ -256,7 +259,7 @@ class CompassTests(unittest.TestCase):
                 [
                     sys.executable,
                     "-m",
-                    "minimal_shot_av.compass",
+                    "minimal_shot_av.simulator.compass",
                     "run",
                     "--policy",
                     "spotlight-reflex",
@@ -280,7 +283,10 @@ class CompassTests(unittest.TestCase):
 
         self.assertEqual(payload["summary"]["runs"], 1)
         self.assertIn("reasoning_quality", payload["runs"][0])
-        self.assertEqual(payload["runs"][0]["reasoning_score_source"], "diagnostic_rollout_trace_overlap_v0_not_official")
+        self.assertEqual(
+            payload["runs"][0]["reasoning_score_source"],
+            "diagnostic_rollout_trace_overlap_v0_not_official",
+        )
         self.assertIn("oracle_failed_policy_succeeded", payload["runs"][0])
         self.assertIn("oracle_failed_policy_failed", payload["runs"][0])
         self.assertIn("oracle_failed_policy_failed", payload["summary"])
@@ -294,7 +300,7 @@ class CompassTests(unittest.TestCase):
                 [
                     sys.executable,
                     "-m",
-                    "minimal_shot_av.compass",
+                    "minimal_shot_av.simulator.compass",
                     "benchmark",
                     "--policy",
                     "spotlight-reflex",

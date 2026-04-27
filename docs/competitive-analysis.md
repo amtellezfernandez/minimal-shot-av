@@ -110,7 +110,7 @@ The proposal should be sharpened around **Spotlight Reflex**, described in `docs
 - Pitch it as **Spotlight-targeted long-tail memory and candidate retrieval**.
 - Treat the SSM as a compact temporal compression layer over 12 seconds of camera/ego history.
 - Treat the latent maneuver library as a candidate generator/reranker, not a direct action head.
-- Add exact RFS trust-region selection at 3s and 5s, using the known lateral/longitudinal thresholds and speed scaling.
+- Add simulator-native trajectory selection at 3s and 5s, while keeping model-side RFS evaluation separate.
 - Treat a validation-trained RFS verifier as an optional preference-calibrated variant, not as the strictest zero-shot claim.
 - Consider data strategy as first-class: WOD-P domain matching, synthetic counterfactuals, and non-AV public driving data may matter more than architecture size.
 
@@ -122,4 +122,4 @@ Expected outcome framing:
 
 The defensible thesis:
 
-> Top WOD-E2E methods are converging through data diversity, candidate generation, and preference alignment. The remaining unsolved cluster is Spotlight. A credible novel submission should target Spotlight with temporal memory, semantic uncertainty, counterfactual candidate generation, and RFS-aware trajectory selection.
+> Top WOD-E2E methods are converging through data diversity, candidate generation, and preference alignment. The remaining unsolved cluster is Spotlight. A credible novel submission should target Spotlight with temporal memory, semantic uncertainty, counterfactual candidate generation, and model-side RFS evaluation.

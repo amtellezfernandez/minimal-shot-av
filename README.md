@@ -1,14 +1,17 @@
 # Minimal-Shot AV
 
-Submission scaffold for **SoTA Commission I: Minimal-Shot Autonomy**.
+Submission scaffold and benchmark harness for **SoTA Commission I:
+Minimal-Shot Autonomy**.
 
 This repo is intentionally split into two independent submission tracks:
 
-- **Grand Commission submission:** Spotlight Reflex, a minimal-shot autonomy architecture and runnable zero-AV-finetune policy slice.
-- **Minor Commission submission:** WOD-E2E procedural scenario generator, a randomized simulation environment for long-tail driving cases.
+- **Grand Commission submission candidate:** WOD-E2E model stack, including structured candidate generation and RFS evaluation.
+- **Minor Commission submission:** COMPASS/AlpaSim simulation stack, including Spotlight Reflex and randomized long-tail scenarios.
 
-The tracks share code, but can be submitted separately. See:
+The tracks must stay agnostic to avoid simulator/model bias. The simulator has
+its own trajectory selector, while WOD/RFS scoring is model-side only. See:
 
+- [`docs/architecture-boundaries.md`](docs/architecture-boundaries.md)
 - [`docs/grand-submission.md`](docs/grand-submission.md)
 - [`docs/minor-simulation-submission.md`](docs/minor-simulation-submission.md)
 
@@ -24,13 +27,24 @@ Commission constraints to keep visible:
 
 ## Thesis
 
-This project targets the Waymo Open Dataset for End-to-End Driving (WOD-E2E) with a deliberately strict claim:
+This project targets the Waymo Open Dataset for End-to-End Driving (WOD-E2E)
+with an intentionally conservative claim:
 
-> build an end-to-end driving policy for long-tail WOD-E2E scenes without fine-tuning any base model on AV-specific data.
+> build a fast, auditable WOD-E2E trajectory-prediction baseline and use it to
+> test whether experience-conditioned scene understanding improves rare-scene
+> trajectory choice.
 
-The proposed architecture is a **Predictive Reflex**: a zero-shot vision-language/world-model critic interprets the scene, a compact temporal state-space pilot compresses the driving history, and a latent maneuver library decodes the result into 5-second ego waypoints.
+The active model path is non-text: WOD-E2E ego history and route intent feed
+structured trajectory generators, residual proposal models, a lightweight
+world-model candidate source, and an RFS-calibrated numeric selector that
+outputs 5-second ego waypoints.
 
-The goal is not to claim a production AV stack. WOD-E2E is an open-loop trajectory benchmark. The goal is to demonstrate minimal-shot generalization on rare, safety-critical driving scenarios where memorized routes, nominal imitation, and ADE-only optimization are weakest.
+The goal is not to claim a production AV stack, strict zero-shot autonomy, or
+frontier-level scene reasoning. WOD-E2E is an open-loop trajectory benchmark.
+The current repo is strongest as infrastructure: parser, scorer, candidate
+evaluation, ablation harness, simulator evidence, and submission packaging.
+See [`docs/solution-reset.md`](docs/solution-reset.md) for the current
+solution bar and why the present world-model result is not yet strong enough.
 
 ## Target Benchmark
 
@@ -86,32 +100,44 @@ Current local data status:
 
 ## Architecture Direction
 
-The recommended submission architecture is:
+The active WOD-E2E model architecture is:
 
-1. **Scene Critic**
-   - Uses a general-purpose vision-language or world model without AV fine-tuning.
-   - Produces semantic scene tags, hazard hypotheses, route intent checks, and uncertainty notes.
+1. **WOD-E2E Adapter**
+   - Parses official `E2EDFrame` TFRecords with Waymo protos.
+   - Uses frame name, past ego trajectory, initial speed, route intent, and future labels where allowed.
 
-2. **Predictive State-Space Pilot**
-   - Maintains a compact temporal state over the 12-second visual and ego history.
-   - Uses linear-time recurrent memory rather than transformer-style full-context replay at every step.
+2. **Structured Trajectory Generators**
+   - Kinematic candidates provide constant-velocity, acceleration, heading-change, and hold-position baselines.
+   - Ridge residual candidates provide the current best learned non-text proposal set.
+   - Anchor-residual candidates are experimental and disabled by default until selected RFS improves, not only oracle RFS.
+   - Lightweight world-model candidates are experimental. Current official
+     validation-CV evidence shows only a tiny selected-RFS gain, so they are not
+     yet the central solution.
 
-3. **Latent Maneuver Library**
-   - Represents maneuvers such as yield, brake, nudge, lane-change, cut-in response, debris avoidance, and conservative fallback.
-   - Retrieves maneuver candidates from latent scene signatures instead of memorizing WOD-E2E routes.
+3. **RFS-Calibrated Selector**
+   - Trains a structured numeric selector on validation preference labels under segment-grouped cross-validation.
+   - Uses official RFS for confirmed benchmark reports.
+   - Includes source diagnostics so experimental proposal families cannot silently degrade the default path.
+   - Scores final candidate JSONL rows with `ranker_score` before submission packaging.
 
-4. **Trajectory Decoder and Safety Projector**
-   - Converts maneuver candidates into 20 future `(x, y)` waypoints.
-   - Enforces simple kinematic plausibility and route-command consistency.
-
-5. **Rater-Aware Selection**
-   - Scores candidates against validation-time RFS behavior where labels are available.
-   - Treats rater preference as the target, not just L2 imitation of the logged future.
-   - Pays special attention to 3s and 5s trajectory positions because RFS trust regions are evaluated at those times.
+4. **Submission Writer**
+   - Selects one `(20, 2)` trajectory per required frame by contextual ranker score.
+   - Packages and validates `E2EDChallengeSubmission` `.tar.gz` artifacts.
 
 ## Current Runnable System
 
-The runnable code in this repo is currently a lightweight 2D navigation harness plus two scenario generators:
+The runnable code in this repo is split into independent model and simulator tracks.
+
+Model track:
+
+- official WOD-E2E parser integration
+- non-text trajectory candidate generators
+- official/local RFS evaluation
+- segment-grouped validation CV
+- lightweight world-model candidate ablations
+- submission packaging and validation
+
+Simulator track:
 
 - procedurally generated lanes and obstacle fields
 - 11 WOD-E2E-inspired long-tail scenario clusters
@@ -119,14 +145,16 @@ The runnable code in this repo is currently a lightweight 2D navigation harness 
 - adversarial and hidden holdout suites for harder frozen-policy evaluation
 - a gauntlet suite with synchronized threats and quality-gated benchmark scoring
 - a baseline reactive policy for comparison
-- a Spotlight Reflex policy with deterministic maneuver candidates and exact RFS trust-region scoring
+- a Spotlight Reflex policy with deterministic maneuver candidates and simulator-native trajectory selector scoring
 - artifact generation for demos and documentation
 
-This is not a production AV stack and it is not a completed WOD-E2E leaderboard submission. It is a fast, reproducible prototype for the SoTA Commission brief: randomized scenario generation plus a minimal-shot autonomy policy demonstration.
+This is not a production AV stack and it is not yet a completed WOD-E2E leaderboard submission because train/test shards and the official frame list are still required locally.
 
 ## Repo Structure
 
-- `src/minimal_shot_av/`: simulation, scenario generation, baseline policy, and Spotlight Reflex
+- `src/minimal_shot_av/simulator/`: simulation, scenario generation, baseline policy, and Spotlight Reflex
+- `src/minimal_shot_av/model/`: WOD-E2E loading, structured trajectory candidates, rankers, and model-side evaluation
+- `src/minimal_shot_av/neutral/`: shared metrics and evidence parsing with no simulator/model imports
 - `scripts/run_demo.py`: generate baseline, WOD-style, or compositional rollout artifacts
 - `docs/`: WOD-E2E submission plan, write-up, video, and checklist
 - `models/`: base-model and architecture declaration
@@ -217,6 +245,13 @@ uv run --no-sync python scripts/evaluate_scenarios.py \
   --output-dir artifacts/eval_adversarial
 ```
 
+AlpaSim evidence import:
+
+```bash
+uv run alpasim-evidence alpasim_spotlight_run \
+  --output artifacts/alpasim_spotlight_evidence.json
+```
+
 Gauntlet benchmark sweep:
 
 ```bash
@@ -231,7 +266,7 @@ uv run --no-sync python scripts/evaluate_scenarios.py \
 COMPASS composite benchmark:
 
 ```bash
-PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.compass ladder \
+PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.simulator.compass ladder \
   --policy spotlight-reflex \
   --profile compass-v0 \
   --seed-start 1 \
@@ -242,7 +277,7 @@ PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.compass ladder \
 Config-driven stress benchmark:
 
 ```bash
-PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.compass ladder \
+PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.simulator.compass ladder \
   --policy spotlight-reflex \
   --profile-json configs/compass_stress.json \
   --seed-start 1 \
@@ -253,7 +288,7 @@ PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.compass ladder \
 SOTIF-aligned evidence package:
 
 ```bash
-PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.certification \
+PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.simulator.certification \
   --policy spotlight-reflex \
   --profile sotif-v0 \
   --seed-start 1 \

@@ -1,0 +1,137 @@
+{
+  "metadata": {
+    "alpasim_version": "26.2.158",
+    "camera_ids": [
+      "camera_front_wide_120fov"
+    ],
+    "context_length": 1,
+    "ego_history_hz": 10,
+    "evaluated_metric_scene_count": 20,
+    "evaluation_contract": "physicalai_nurec_alpasim_closed_loop",
+    "merged_metric_files": 20,
+    "output_horizon": "5.0s_20_waypoints_4hz",
+    "requested_scene_count": 20,
+    "route_command_source": "waypoint_commands",
+    "scenario_set": "first20_scene_smoke_complete20_merged_serial",
+    "score_backend": "alpasim",
+    "sensor_contract": "front_wide_120fov_only",
+    "source_runs": [
+      "spotlight_reflex_front_camera_10scene_merged_serial_recovery",
+      "spotlight_reflex_front_camera_scenes11_20_serial"
+    ]
+  },
+  "metrics": {
+    "avg_dist_between_incidents": {
+      "higher_is_better": true,
+      "unit": "m",
+      "value": 0.07
+    },
+    "avg_dist_between_incidents_at_fault": {
+      "higher_is_better": true,
+      "unit": "m",
+      "value": 0.29
+    },
+    "collision_any": {
+      "higher_is_better": false,
+      "unit": "rate",
+      "value": 0.45
+    },
+    "collision_at_fault": {
+      "higher_is_better": false,
+      "unit": "rate",
+      "value": 0.0
+    },
+    "collision_front": {
+      "higher_is_better": false,
+      "unit": "rate",
+      "value": 0.0
+    },
+    "collision_lateral": {
+      "higher_is_better": false,
+      "unit": "rate",
+      "value": 0.0
+    },
+    "collision_rear": {
+      "higher_is_better": false,
+      "unit": "rate",
+      "value": 0.45
+    },
+    "dist_to_gt_location": {
+      "higher_is_better": false,
+      "unit": "m",
+      "value": 29.66
+    },
+    "dist_to_gt_trajectory": {
+      "higher_is_better": false,
+      "unit": "m",
+      "value": 0.25
+    },
+    "dist_traveled_m": {
+      "higher_is_better": true,
+      "unit": "m",
+      "value": 43.04
+    },
+    "duration_frac_20s": {
+      "higher_is_better": true,
+      "unit": "fraction",
+      "value": 0.22
+    },
+    "eval_relevant": {
+      "higher_is_better": true,
+      "unit": "value",
+      "value": 1.0
+    },
+    "img_is_black": {
+      "higher_is_better": false,
+      "unit": "value",
+      "value": 0.0
+    },
+    "offroad": {
+      "higher_is_better": false,
+      "unit": "rate",
+      "value": 0.16
+    },
+    "offroad_or_collision": {
+      "higher_is_better": false,
+      "unit": "value",
+      "value": 0.63
+    },
+    "offroad_or_collision_at_fault": {
+      "higher_is_better": false,
+      "unit": "value",
+      "value": 0.16
+    },
+    "plan_deviation": {
+      "higher_is_better": false,
+      "unit": "m",
+      "value": 1.71
+    },
+    "progress": {
+      "higher_is_better": true,
+      "unit": "value",
+      "value": 0.29
+    },
+    "progress_rel": {
+      "higher_is_better": true,
+      "unit": "value",
+      "value": 0.64
+    },
+    "safety_monitor_triggered": {
+      "higher_is_better": false,
+      "unit": "rate",
+      "value": 0.0
+    },
+    "wrong_lane": {
+      "higher_is_better": false,
+      "unit": "value",
+      "value": 0.16
+    }
+  },
+  "notes": [
+    "Generated from runs/spotlight_reflex_front_camera_20scene_merged_serial/aggregate/metrics_results.txt.",
+    "Use only against reports from the same AlpaSim scenario set and scoring version."
+  ],
+  "source": "runs/spotlight_reflex_front_camera_20scene_merged_serial/aggregate/metrics_results.txt",
+  "suite": "physicalai_nurec_alpasim",
+  "system": "spotlight_reflex_front_camera_20scene_merged_serial"
+}

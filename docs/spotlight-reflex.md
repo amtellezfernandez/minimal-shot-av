@@ -2,11 +2,11 @@
 
 ## Thesis
 
-**Spotlight Reflex** is a zero-shot long-tail driving policy for WOD-E2E based on counterfactual maneuver retrieval and exact RFS-style trajectory selection.
+**Spotlight Reflex** is a simulation-side long-tail driving policy based on counterfactual maneuver retrieval and simulator-native trajectory selection.
 
 The core observation is that the WOD-E2E Spotlight cluster remains unsolved even by the best fine-tuned methods. In the supplied leaderboard snapshot, top overall methods reach about `8.05` RFS, while Spotlight tops out around `7.2`. This suggests Spotlight cases are not just ordinary imitation problems. They require recognizing unusual hazards, ambiguity, and counterfactual risk.
 
-> Spotlight Reflex targets the unsolved cluster directly: frozen scene understanding, counterfactual hypotheses, maneuver candidates, and exact trust-region selection.
+> Spotlight Reflex targets long-tail simulator scenes directly: scene uncertainty, counterfactual hypotheses, maneuver candidates, and bounded trajectory selection.
 
 ## Submission Claim
 
@@ -26,7 +26,7 @@ Important competition caveat:
 
 Short pitch:
 
-> A frozen VLM identifies hazards and uncertainty in 8-camera scenes; counterfactual hypotheses generate maneuver candidates; an exact RFS trust-region selector chooses the physically plausible trajectory most likely to be rater-acceptable.
+> Scene evidence identifies hazards and uncertainty; counterfactual hypotheses generate maneuver candidates; a simulator-native trajectory selector chooses a physically plausible trajectory.
 
 ## Architecture
 
@@ -48,7 +48,7 @@ Output:
 - scene uncertainty
 - suggested meta-behavior: proceed, slow, stop, yield, nudge, evade, lane-change, fallback
 
-The critic is not allowed to fine-tune on AV data. It can be prompted and audited.
+The current repo does not use a language critic in the active model path. Candidate scoring is numeric and audited.
 
 ### 2. Counterfactual Scene Hypotheses
 
@@ -83,9 +83,9 @@ The maneuver library emits physically plausible 5-second candidate trajectories:
 
 Every candidate must be exactly 20 `(x, y)` points at 4 Hz over `(0, 5s]`.
 
-### 4. Exact RFS-Aware Selector
+### 4. Simulator-Native Selector
 
-The selector is not a vague heuristic. It should implement the known RFS trust-region criterion.
+The selector is simulator-owned. It ranks deterministic maneuver candidates using bounded 3s/5s trajectory regions and simulator-derived references, without importing WOD/RFS metric code or model outputs.
 
 On validation frames with rater labels, use the official local utility:
 
@@ -103,7 +103,7 @@ rater_feedback_utils.get_rater_feedback_score(
 )
 ```
 
-At inference time without rater labels, use pseudo-rater trajectories produced by the maneuver library and scene critic. The same trust-region math ranks candidates by whether they land inside acceptable maneuver regions at 3s and 5s.
+At simulator inference time, use references produced by the maneuver library and scene state. The selector ranks candidates by whether they land inside acceptable maneuver regions at 3s and 5s.
 
 Metric-critical indices:
 
@@ -124,16 +124,16 @@ def speed_scale(speed_mps: float) -> float:
     return min(1.0, max(0.5, 0.5 + 0.5 * (speed_mps - 1.4) / (11.0 - 1.4)))
 ```
 
-Trust-region score sketch:
+Selection-region score sketch:
 
 ```python
-def trust_region_score(candidate, reference, reference_score, speed_mps, index):
+def selection_region_score(candidate, reference, reference_score, speed_mps, index):
     if index == 11:
         base_lat, base_lng = 1.0, 4.0
     elif index == 19:
         base_lat, base_lng = 1.8, 7.2
     else:
-        raise ValueError("RFS trust regions are defined at 3s and 5s")
+        raise ValueError("selection regions are defined at 3s and 5s")
 
     scale = speed_scale(speed_mps)
     lat_thresh = scale * base_lat
@@ -156,7 +156,7 @@ Candidate selection rule:
 - Generate pseudo-rater references from high-confidence maneuver hypotheses.
 - Score candidates against all references at 3s and 5s.
 - Penalize invalid trajectories, route-command violations, and excessive jerk.
-- Pick the candidate with highest combined trust-region score.
+- Pick the candidate with highest combined selector score.
 
 This is the inference-time analogue of Poutine's RFS-aligned GRPO, but without training.
 
@@ -166,7 +166,7 @@ The selector can be upgraded with a small verifier trained only on validation ra
 
 - Input: candidate trajectory, pseudo-rater references, initial speed, route intent, critic uncertainty, and simple trajectory features.
 - Target: validation rater score or pairwise preference induced by `preference_trajectories`.
-- Output: calibrated preference score used to rerank candidates after exact trust-region filtering.
+- Output: calibrated preference score used to rerank candidates after model-side WOD/RFS evaluation.
 
 This verifier is the highest-leverage metric-alignment component. It should be kept small and declared clearly:
 
@@ -177,7 +177,7 @@ This verifier is the highest-leverage metric-alignment component. It should be k
 
 If used, report two variants:
 
-- **Strict zero-shot:** frozen critic + maneuver library + exact trust-region selector, no learned verifier.
+- **Strict zero-shot:** frozen critic + maneuver library + simulator-native selector, no learned verifier.
 - **Preference-calibrated:** same system plus validation-trained RFS verifier.
 
 ## Why This Is Different From The Winners
@@ -190,7 +190,7 @@ DiffusionLTF / Open X-AV:
 Poutine:
 
 - Strong because it aligns to RFS with GRPO.
-- Spotlight Reflex uses exact RFS-style selection at inference time rather than learning the preference signal.
+- Spotlight Reflex uses simulator-native selection at inference time rather than learning the preference signal.
 
 UniPlan / RAP:
 
@@ -265,4 +265,4 @@ Qualitative evidence:
 
 ## Final Pitch
 
-> Spotlight Reflex is a zero-shot policy for WOD-E2E long-tail driving. It uses frozen multimodal scene understanding to generate counterfactual hazard hypotheses, retrieves physically plausible maneuver candidates, and selects trajectories with the exact RFS trust-region criterion. It does not attempt to out-scale fine-tuned planners. It targets the unsolved Spotlight gap directly.
+> Spotlight Reflex is a zero-shot policy for WOD-E2E long-tail driving. It uses frozen multimodal scene understanding to generate counterfactual hazard hypotheses, retrieves physically plausible maneuver candidates, and selects trajectories with the simulator-native trajectory selector criterion. It does not attempt to out-scale fine-tuned planners. It targets the unsolved Spotlight gap directly.

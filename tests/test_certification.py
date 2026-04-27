@@ -13,7 +13,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.certification import (
+from minimal_shot_av.simulator.certification import (
     DEFAULT_MIN_RANKED_RUNS_PER_LEVEL,
     EvidenceThresholds,
     OddSpec,
@@ -25,8 +25,8 @@ from minimal_shot_av.certification import (
     _proportion_interval,
     generate_evidence_report,
 )
-from minimal_shot_av.compass import _driving_quality_scores
-from minimal_shot_av.policy import Rollout, StepRecord
+from minimal_shot_av.simulator.compass import _driving_quality_scores
+from minimal_shot_av.simulator.policy import Rollout, StepRecord
 
 
 class CertificationEvidenceTests(unittest.TestCase):
@@ -41,7 +41,10 @@ class CertificationEvidenceTests(unittest.TestCase):
         sotif = profile_by_name("sotif-v0")
         smoke = profile_by_name("smoke")
         self.assertEqual(sotif.thresholds.max_collision_rate_upper_bound, 0.01)
-        self.assertGreater(smoke.thresholds.max_collision_rate_upper_bound, sotif.thresholds.max_collision_rate_upper_bound)
+        self.assertGreater(
+            smoke.thresholds.max_collision_rate_upper_bound,
+            sotif.thresholds.max_collision_rate_upper_bound,
+        )
         self.assertIn("not a legal certification", sotif.description)
 
     def test_wilson_interval_bounds_proportion(self) -> None:
@@ -86,7 +89,10 @@ class CertificationEvidenceTests(unittest.TestCase):
         self.assertEqual(report["evidence_status"], "insufficient_evidence_level_sample_size")
         self.assertTrue(all(level["minimum_ranked_runs"] > 30 for level in level_evidence))
         self.assertTrue(
-            any(failure["code"] == "insufficient_per_level_collision_confidence" for failure in report["evidence_failures"])
+            any(
+                failure["code"] == "insufficient_per_level_collision_confidence"
+                for failure in report["evidence_failures"]
+            )
         )
         self.assertIn("increase ranked runs per official evidence level", report["remaining_gaps"])
 
@@ -175,7 +181,7 @@ class CertificationEvidenceTests(unittest.TestCase):
                 [
                     sys.executable,
                     "-m",
-                    "minimal_shot_av.certification",
+                    "minimal_shot_av.simulator.certification",
                     "--policy",
                     "spotlight-reflex",
                     "--profile",
@@ -225,7 +231,7 @@ class CertificationEvidenceTests(unittest.TestCase):
                 [
                     sys.executable,
                     "-m",
-                    "minimal_shot_av.certification",
+                    "minimal_shot_av.simulator.certification",
                     "--policy",
                     "spotlight-reflex",
                     "--profile",

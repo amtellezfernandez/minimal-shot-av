@@ -1,0 +1,133 @@
+{
+  "baseline_system": "wod_contextual_r100_frame_delta_local_baseline",
+  "beats_all_shared_metrics": false,
+  "comparisons": [
+    {
+      "baseline_value": 9.06826801193207,
+      "beats_baseline": false,
+      "delta": 0.0,
+      "higher_is_better": true,
+      "metric": "combined_oracle_mean_rfs",
+      "relative_delta": 0.0,
+      "required_margin": 0.0,
+      "subject_value": 9.06826801193207,
+      "unit": "RFS"
+    },
+    {
+      "baseline_value": 0.5351121283350659,
+      "beats_baseline": true,
+      "delta": 0.02928007546385758,
+      "higher_is_better": true,
+      "metric": "combined_ranker_gain_vs_constant_velocity",
+      "relative_delta": 0.05471764498210656,
+      "required_margin": 0.0,
+      "subject_value": 0.5643922037989235,
+      "unit": "RFS"
+    },
+    {
+      "baseline_value": 7.665859831051599,
+      "beats_baseline": true,
+      "delta": 0.029280075463857358,
+      "higher_is_better": true,
+      "metric": "combined_ranker_mean_rfs",
+      "relative_delta": 0.0038195422443356533,
+      "required_margin": 0.0,
+      "subject_value": 7.695139906515457,
+      "unit": "RFS"
+    },
+    {
+      "baseline_value": 1.40240818088047,
+      "beats_baseline": true,
+      "delta": -0.029280075463857358,
+      "higher_is_better": false,
+      "metric": "combined_ranker_regret_to_oracle",
+      "relative_delta": -0.020878426026775265,
+      "required_margin": 0.0,
+      "subject_value": 1.3731281054166127,
+      "unit": "RFS"
+    },
+    {
+      "baseline_value": 0.40292275574112735,
+      "beats_baseline": false,
+      "delta": 0.0,
+      "higher_is_better": true,
+      "metric": "combined_ranker_top1_oracle_match_rate",
+      "relative_delta": 0.0,
+      "required_margin": 0.0,
+      "subject_value": 0.40292275574112735,
+      "unit": "rate"
+    },
+    {
+      "baseline_value": 0.096710039682586,
+      "beats_baseline": false,
+      "delta": 0.0,
+      "higher_is_better": true,
+      "metric": "learned_mean_gain_vs_constant_velocity",
+      "relative_delta": 0.0,
+      "required_margin": 0.0,
+      "subject_value": 0.096710039682586,
+      "unit": "RFS"
+    },
+    {
+      "baseline_value": 0.0,
+      "beats_baseline": false,
+      "delta": 0.0,
+      "higher_is_better": true,
+      "metric": "selected_anchor_rate",
+      "relative_delta": null,
+      "required_margin": 0.0,
+      "subject_value": 0.0,
+      "unit": "rate"
+    },
+    {
+      "baseline_value": 0.3653444676409186,
+      "beats_baseline": true,
+      "delta": 0.006263048016701467,
+      "higher_is_better": true,
+      "metric": "selected_kinematic_rate",
+      "relative_delta": 0.017142857142857158,
+      "required_margin": 0.0,
+      "subject_value": 0.37160751565762007,
+      "unit": "rate"
+    },
+    {
+      "baseline_value": 0.05010438413361169,
+      "beats_baseline": false,
+      "delta": -0.020876826722338208,
+      "higher_is_better": true,
+      "metric": "selected_learned_rate",
+      "relative_delta": -0.4166666666666667,
+      "required_margin": 0.0,
+      "subject_value": 0.029227557411273485,
+      "unit": "rate"
+    },
+    {
+      "baseline_value": 0.5845511482254697,
+      "beats_baseline": true,
+      "delta": 0.014613778705636737,
+      "higher_is_better": true,
+      "metric": "selected_temporal_rate",
+      "relative_delta": 0.02499999999999999,
+      "required_margin": 0.0,
+      "subject_value": 0.5991649269311065,
+      "unit": "rate"
+    }
+  ],
+  "notes": [
+    "Only shared metric names from the same benchmark suite are compared.",
+    "Missing metrics are not filled or inferred.",
+    "Generated from artifacts/wod_contextual_r175_fallback_router_speed_cv_local.json.",
+    "This is an internal held-out development benchmark, not a leaderboard/test score.",
+    "Use only against reports from the same WOD-E2E CV contract and score backend.",
+    "Generated from segment-grouped cross-validation over WOD-E2E validation preference frames.",
+    "Simulator code and simulator metrics were not used.",
+    "Simulator metrics are not used for model selection.",
+    "Generated from artifacts/wod_ridge30_contextual_r100_frame_delta_cv_local_full.json.",
+    "This is an internal held-out development benchmark, not a leaderboard/test score.",
+    "Use only against reports from the same WOD-E2E CV contract and score backend."
+  ],
+  "source_baseline": "artifacts/wod_ridge30_contextual_r100_frame_delta_cv_local_full.json",
+  "source_subject": "artifacts/wod_contextual_r175_fallback_router_speed_cv_local.json",
+  "subject_system": "wod_contextual_r175_speed_router_local",
+  "suite": "wod_e2e_val479_local_cv"
+}

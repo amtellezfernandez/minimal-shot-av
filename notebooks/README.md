@@ -141,7 +141,8 @@ Implement and evaluate these before architecture claims:
 - constant velocity: extrapolate from final past velocity
 - curvature extrapolation: fit recent ego path trend
 - intent template: straight/left/right kinematic templates
-- frozen scene critic plus hand-coded maneuver selection, if available
+- learned residual candidate model
+- source-aware RFS selector
 
 Report:
 
@@ -152,18 +153,18 @@ Report:
 - cluster-level RFS where tags are available
 - runtime per target frame
 
-## 8. Prompt and Scaffold Experiments
+## 8. Candidate and Selector Experiments
 
-For any frozen scene critic:
+For each model-side experiment:
 
-- record prompt text or prompt file
-- record camera montage format
-- record whether all 8 views or only a subset were used
-- record output schema
-- record failed prompt variants
-- record hallucination or uncertainty cases
+- record feature set and training split
+- record candidate sources enabled
+- record selector features enabled
+- record validation RFS, ADE at 3s, ADE at 5s, and invalid rate
+- record runtime per frame
+- record negative experiments and remove regressing features from the default path
 
-The notebook should make it clear which intelligence came from the frozen model and which behavior came from hand-coded trajectory logic.
+The notebook should make it clear which behavior came from candidate generation and which behavior came from RFS-based selection.
 
 ## 9. Failure Cases
 
@@ -181,7 +182,7 @@ For each failure:
 - past trajectory
 - predicted trajectory
 - rater trajectories and scores, if available
-- failed component: scene critic, temporal state, maneuver library, trajectory projector, or selector
+- failed component: candidate generator, temporal state, source ranker, trajectory projector, or selector
 
 ## 10. Final System Rationale
 

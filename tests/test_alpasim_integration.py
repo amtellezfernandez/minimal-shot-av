@@ -1,37 +1,110 @@
 from __future__ import annotations
 
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 from pathlib import Path
 import sys
-import tomllib
 import unittest
 
+import numpy as np
+
+from tests.pyproject_helpers import load_string_tables
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.alpasim_metrics import build_alpasim_evidence, load_alpasim_metrics
+from minimal_shot_av.neutral.alpasim_metrics import build_alpasim_evidence, load_alpasim_metrics
+from minimal_shot_av.simulator.alpasim_signal import extract_alpasim_signal, scenario_from_command
 
 
 class AlpaSimIntegrationTests(unittest.TestCase):
     def test_pyproject_registers_alpasim_plugin_entrypoints(self) -> None:
-        pyproject = tomllib.loads(Path("pyproject.toml").read_text())
+        pyproject = load_string_tables("pyproject.toml")
         self.assertEqual(
-            pyproject["project"]["entry-points"]["alpasim.models"]["spotlight_reflex"],
-            "minimal_shot_av.alpasim_spotlight:SpotlightReflexAlpaSimModel",
+            pyproject['project.entry-points."alpasim.models"']["spotlight_reflex"],
+            "minimal_shot_av.simulator.alpasim_spotlight:SpotlightReflexAlpaSimModel",
         )
         self.assertEqual(
-            pyproject["project"]["entry-points"]["alpasim.configs"]["spotlight_reflex"],
-            "minimal_shot_av.alpasim_configs",
+            pyproject['project.entry-points."alpasim.configs"']["spotlight_reflex"],
+            "minimal_shot_av.simulator.alpasim_configs",
         )
 
     def test_alpasim_driver_config_exists(self) -> None:
-        config_path = Path("src/minimal_shot_av/alpasim_configs/driver/spotlight_reflex.yaml")
+        config_path = Path("src/minimal_shot_av/simulator/alpasim_configs/driver/spotlight_reflex.yaml")
         config = config_path.read_text()
         self.assertIn("model_type: spotlight_reflex", config)
         self.assertIn("output_frequency_hz: 4", config)
+
+    def test_alpasim_signal_uses_structured_hazards(self) -> None:
+        prediction_input = SimpleNamespace(
+            camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+            speed=6.0,
+            acceleration=0.0,
+            ego_pose_history=[object()],
+            alpasignal={
+                "hazards": [
+                    {
+                        "forward_m": 12.0,
+                        "lateral_m": -1.5,
+                        "radius_m": 1.25,
+                        "type": "vehicle",
+                        "id": "cutin_0",
+                    }
+                ]
+            },
+        )
+
+        signal = extract_alpasim_signal(prediction_input)
+        scenario = scenario_from_command("straight", signal)
+
+        self.assertEqual(signal["structured_hazards"][0]["label"], "cutin_0")
+        self.assertEqual(len(scenario.obstacles), 1)
+        self.assertEqual(scenario.obstacles[0].x, 12.0)
+        self.assertEqual(scenario.obstacles[0].kind, "vehicle")
+
+    def test_alpasim_signal_adds_caution_zone_for_low_visibility_braking(self) -> None:
+        prediction_input = SimpleNamespace(
+            camera_images={"front": [SimpleNamespace(image=np.zeros((4, 4, 3), dtype=np.uint8))]},
+            speed=0.2,
+            acceleration=-3.0,
+            ego_pose_history=[],
+        )
+
+        signal = extract_alpasim_signal(prediction_input)
+        scenario = scenario_from_command("straight", signal)
+
+        self.assertGreaterEqual(signal["visibility_risk"], 0.5)
+        self.assertGreaterEqual(signal["dynamics_risk"], 0.5)
+        self.assertEqual(scenario.obstacles[0].label, "alpasim_signal_caution")
+
+    def test_alpasim_signal_preserves_moving_hazards_as_actors(self) -> None:
+        prediction_input = SimpleNamespace(
+            camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+            speed=8.0,
+            acceleration=0.0,
+            ego_pose_history=[],
+            traffic_hazards=[
+                {
+                    "x": 14.0,
+                    "y": 2.0,
+                    "radius": 1.0,
+                    "kind": "pedestrian",
+                    "label": "crossing_0",
+                    "vx": 0.0,
+                    "vy": -2.0,
+                }
+            ],
+        )
+
+        signal = extract_alpasim_signal(prediction_input)
+        scenario = scenario_from_command("straight", signal)
+
+        self.assertEqual(len(scenario.obstacles), 0)
+        self.assertEqual(len(scenario.actors), 1)
+        self.assertEqual(scenario.actors[0].role, "crossing_0")
+        self.assertEqual(scenario.actors[0].vy, -2.0)
 
     def test_imports_alpasim_aggregate_text_metrics(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -85,6 +158,37 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertFalse(evidence["gates"]["collision_rate"])
         self.assertFalse(evidence["gates"]["route_deviation_m"])
 
+    def test_imports_alpasim_csv_metrics(self) -> None:
+        with TemporaryDirectory() as tmp:
+            aggregate_dir = Path(tmp) / "aggregate"
+            aggregate_dir.mkdir()
+            metrics_file = aggregate_dir / "metrics_results.csv"
+            header = ",".join(
+                [
+                    "run_uuid",
+                    "n_clips",
+                    "n_rollouts",
+                    "collision_at_fault",
+                    "offroad",
+                    "dist_to_gt_trajectory",
+                    "safety_monitor_triggered",
+                ]
+            )
+            metrics_file.write_text(
+                "\n".join(
+                    [
+                        header,
+                        "a,2,1,0.0,0.0,1.0,0.0",
+                        "b,2,1,0.0,0.0,2.0,0.0",
+                    ]
+                )
+            )
+
+            evidence = build_alpasim_evidence(Path(tmp)).to_dict()
+
+        self.assertEqual(evidence["run_count"], 4)
+        self.assertEqual(evidence["metrics"]["dist_to_gt_trajectory"], 1.5)
+        self.assertTrue(all(value is True for value in evidence["gates"].values()))
 
 if __name__ == "__main__":
     unittest.main()

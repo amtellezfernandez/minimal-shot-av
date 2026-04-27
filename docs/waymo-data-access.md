@@ -59,6 +59,27 @@ Manual steps required:
    - `data/waymo/e2e/submission_frames/`
 7. Add those paths to local config or notebook parameters. Do not commit downloaded dataset files.
 
+Local command helper:
+
+```bash
+python3 scripts/prepare_wod_e2e_data.py
+```
+
+This prints the exact `gsutil -m cp -n` commands for missing WOD-E2E splits.
+Use `--execute` only on a machine with `gsutil` installed and authenticated to
+the Google account that accepted the Waymo Open Dataset terms.
+
+If the official challenge frame-list JSON is not available locally, generate a
+local all-frame list from downloaded test TFRecords for coverage checks:
+
+```bash
+PYTHONPATH=.wod-protos:src .venv-wod/bin/python scripts/build_wod_e2e_frame_list.py \
+  --data-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/test
+```
+
+This local file is not a substitute for the official challenge-provided frame
+list if the leaderboard requires one.
+
 Recommended `.gitignore` coverage:
 
 - `data/`

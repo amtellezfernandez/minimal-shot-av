@@ -16,8 +16,8 @@ WAYMO_SRC = ROOT / "waymo-open-dataset" / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.wod_e2e import load_preference_frames
-from minimal_shot_av.wod_preference import generate_preference_candidates
+from minimal_shot_av.model.wod_e2e import load_preference_frames
+from minimal_shot_av.model.wod_preference import generate_preference_candidates
 
 
 def main() -> int:

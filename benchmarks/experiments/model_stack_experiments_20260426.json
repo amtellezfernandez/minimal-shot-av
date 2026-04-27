@@ -1,0 +1,474 @@
+{
+  "date": "2026-04-26",
+  "scope": "zero_shot_model_stack",
+  "independence_contract": "No simulator policy, simulator scenario, or simulator score was used to tune these model-side experiments.",
+  "experiments": [
+    {
+      "name": "ranker_candidate_selection_path",
+      "goal": "Make multi-sample candidate selection deployable with a saved WOD preference ranker instead of validation-oracle RFS.",
+      "changed_surface": [
+        "src/minimal_shot_av/model/zero_shot_eval.py",
+        "tests/test_zero_shot_eval.py",
+        "tests/test_wod_ranker.py"
+      ],
+      "benchmark_type": "regression_and_contract",
+      "metrics": {
+        "focused_test_modules": 5,
+        "focused_pass": true,
+        "full_test_modules": 16,
+        "full_pass": true,
+        "full_runtime_s": 27.62
+      },
+      "commands": [
+        "python3 scripts/run_tests.py tests/test_zero_shot_eval.py tests/test_wod_ranker.py tests/test_code_quality.py tests/test_architecture_boundaries.py --workers auto",
+        "python3 scripts/run_tests.py --workers auto"
+      ],
+      "notes": [
+        "Selection mode 'best_validation' remains explicitly validation-only headroom.",
+        "Selection mode 'ranker' requires a saved WOD preference ranker and does not use true RFS during selection."
+      ]
+    },
+    {
+      "name": "wod20_output_validator",
+      "goal": "Fail fast on malformed model trajectories before RFS scoring.",
+      "changed_surface": [
+        "src/minimal_shot_av/model/trajectory_io.py",
+        "tests/test_trajectory_io.py"
+      ],
+      "benchmark_type": "regression_and_contract",
+      "metrics": {
+        "focused_test_modules": 4,
+        "focused_pass": true,
+        "full_test_modules": 16,
+        "full_pass": true,
+        "full_runtime_s": 32.88
+      },
+      "commands": [
+        "python3 scripts/run_tests.py tests/test_trajectory_io.py tests/test_zero_shot_eval.py tests/test_code_quality.py tests/test_architecture_boundaries.py --workers auto",
+        "python3 scripts/run_tests.py --workers auto"
+      ],
+      "notes": [
+        "Validator rejects wrong-length WOD trajectories.",
+        "Validator rejects non-finite points.",
+        "Validator accepts a stopped first future point of (0, 0); stopped vehicles can legitimately remain at the ego origin after 0.25s."
+      ]
+    },
+    {
+      "name": "non_text_kinematic_candidate_baseline",
+      "goal": "Add a model-side non-language trajectory baseline from WOD ego history.",
+      "changed_surface": [
+        "src/minimal_shot_av/model/kinematic_candidates.py",
+        "scripts/generate_wod_kinematic_candidates.py",
+        "tests/test_kinematic_candidates.py"
+      ],
+      "benchmark_type": "official_rfs_smoke",
+      "metrics": {
+        "smoke_frames": 1,
+        "candidates_per_frame": 4,
+        "first_candidate_official_rfs": 10.0,
+        "best_validation_official_rfs": 10.0
+      },
+      "commands": [
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/generate_wod_kinematic_candidates.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_kinematic_candidates_smoke.jsonl --max-preference-frames 1",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_zero_shot.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --candidate-jsonl artifacts/wod_kinematic_candidates_smoke.jsonl --output artifacts/wod_kinematic_candidates_smoke_first_official.json --rfs-backend official --candidate-selection first --max-preference-frames 1"
+      ],
+      "notes": [
+        "This is not a validation-set result.",
+        "The result shows that one easy smoke frame is solved by ego-history kinematics alone; any future controller must beat this baseline on the full validation set to be meaningful."
+      ]
+    },
+    {
+      "name": "non_text_kinematic_records2000_baseline",
+      "goal": "Measure the non-language ego-history baseline beyond the one-frame smoke without scanning the full validation set.",
+      "changed_surface": [
+        "src/minimal_shot_av/model/wod_e2e.py",
+        "scripts/generate_wod_kinematic_candidates.py"
+      ],
+      "benchmark_type": "official_rfs_bounded_validation",
+      "metrics": {
+        "raw_records_scanned": 2000,
+        "evaluated_preference_frames": 3,
+        "candidate_rows": 12,
+        "first_candidate_mean_official_rfs": 8.0,
+        "first_candidate_median_official_rfs": 9.0,
+        "first_candidate_min_official_rfs": 5.0,
+        "first_candidate_max_official_rfs": 10.0,
+        "best_validation_mean_official_rfs": 8.0
+      },
+      "commands": [
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/generate_wod_kinematic_candidates.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_kinematic_candidates_records2000.jsonl --max-records 2000",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_zero_shot.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --candidate-jsonl artifacts/wod_kinematic_candidates_records2000.jsonl --output artifacts/wod_kinematic_records2000_first_official.json --rfs-backend official --candidate-selection first --max-records 2000"
+      ],
+      "notes": [
+        "This is a bounded validation subset, not the full 479-frame validation set.",
+        "Image loading was disabled for this non-text baseline because the generator uses only ego history.",
+        "A prior full 479 preference-frame scan attempt was too slow before image skipping was added and produced no rows."
+      ]
+    },
+    {
+      "name": "non_text_kinematic_val479_baseline",
+      "goal": "Establish a full WOD-E2E validation baseline for non-language ego-history candidates.",
+      "changed_surface": [
+        "src/minimal_shot_av/model/wod_e2e.py",
+        "src/minimal_shot_av/model/kinematic_candidates.py",
+        "scripts/generate_wod_kinematic_candidates.py"
+      ],
+      "benchmark_type": "official_rfs_full_validation",
+      "metrics": {
+        "evaluated_preference_frames": 479,
+        "candidate_rows": 1916,
+        "first_candidate_mean_official_rfs": 7.02235769749286,
+        "first_candidate_median_official_rfs": 7.441072996771592,
+        "first_candidate_min_official_rfs": 3.0,
+        "first_candidate_max_official_rfs": 10.0,
+        "best_validation_mean_official_rfs": 7.852351864082588,
+        "mean_selection_regret": 0.8299941665897286
+      },
+      "commands": [
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/generate_wod_kinematic_candidates.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_kinematic_candidates_val479.jsonl --max-preference-frames 479",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_zero_shot.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --candidate-jsonl artifacts/wod_kinematic_candidates_val479.jsonl --output artifacts/wod_kinematic_val479_first_official.json --rfs-backend official --candidate-selection first --max-preference-frames 479"
+      ],
+      "notes": [
+        "This is the first full 479-frame official-RFS baseline in the repo.",
+        "The 7.85 oracle headroom shows that candidate selection is already a material bottleneck even for cheap kinematic candidates.",
+        "A zero-shot VLM trajectory generator must beat 7.02 mean RFS on the same 479 frames before it is useful as a controller."
+      ]
+    },
+    {
+      "name": "non_text_kinematic_val479_ranker_selection",
+      "goal": "Test whether the saved WOD preference ranker improves selection over the first candidate on the same four-candidate kinematic set.",
+      "changed_surface": [
+        "src/minimal_shot_av/model/zero_shot_eval.py",
+        "tests/test_zero_shot_eval.py"
+      ],
+      "benchmark_type": "official_rfs_full_validation",
+      "metrics": {
+        "evaluated_preference_frames": 479,
+        "candidate_rows": 1916,
+        "ranker_selected_mean_official_rfs": 7.02235769749286,
+        "first_candidate_mean_official_rfs": 7.02235769749286,
+        "best_validation_mean_official_rfs": 7.852351864082588,
+        "mean_selection_regret": 0.8299941665897286,
+        "ranker_selected_candidate_0_frames": 479,
+        "oracle_candidate_0_frames": 305
+      },
+      "commands": [
+        "PYTHONPATH=src:.wod-protos .venv-wod/bin/python -m minimal_shot_av.model.zero_shot_eval --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --candidate-jsonl artifacts/wod_kinematic_candidates_val479.jsonl --ranker artifacts/wod_preference_ranker.full.json --candidate-selection ranker --rfs-backend official --waymo-src waymo-open-dataset/src --output artifacts/wod_kinematic_val479_ranker_official.json",
+        "PYTHONPATH=src python3 -m minimal_shot_av.neutral.benchmark_reports wod-eval artifacts/wod_kinematic_val479_ranker_official.json --system wod_kinematic_non_text_val479_ranker --suite wod_e2e_val479 --output benchmarks/current/wod_kinematic_non_text_val479_ranker.json"
+      ],
+      "notes": [
+        "This did not improve over first-candidate selection.",
+        "The saved ranker selected candidate index 0 on all 479 frames, while the validation oracle selected index 0 on only 305 frames.",
+        "The artifact now reports unseen ranker candidate names: constant_acceleration, constant_heading_change, and hold_position.",
+        "The next improvement should train or cross-validate a selector on the exact candidate distribution being evaluated, not change trajectory parameters by hand."
+      ]
+    },
+    {
+      "name": "non_text_kinematic_val479_distribution_matched_ranker",
+      "goal": "Train and cross-validate a selector on the exact four-candidate kinematic distribution instead of reusing a mismatched preference-candidate ranker.",
+      "changed_surface": [
+        "scripts/build_wod_candidate_score_dataset.py",
+        "scripts/train_wod_preference_ranker.py",
+        "tests/test_wod_candidate_score_dataset.py",
+        "tests/test_wod_preference_ranker.py"
+      ],
+      "benchmark_type": "official_rfs_segment_grouped_cross_validation",
+      "metrics": {
+        "evaluated_preference_frames": 479,
+        "candidate_rows": 1916,
+        "folds": 5,
+        "baseline_candidate_name": "constant_velocity",
+        "baseline_mean_official_rfs": 7.02235769749286,
+        "cross_validated_ranker_mean_official_rfs": 7.096202559469913,
+        "absolute_mean_rfs_gain": 0.0738448619770528,
+        "oracle_mean_official_rfs": 7.852351864082588,
+        "mean_selection_regret": 0.7561493046126756,
+        "top1_oracle_match_rate": 0.6534446764091858
+      },
+      "commands": [
+        "PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/build_wod_candidate_score_dataset.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --candidate-jsonl artifacts/wod_kinematic_candidates_val479.jsonl --output artifacts/wod_kinematic_candidate_scores_val479.jsonl --rfs-backend official --max-preference-frames 479",
+        "python3 scripts/train_wod_preference_ranker.py --input artifacts/wod_kinematic_candidate_scores_val479.jsonl --output artifacts/wod_kinematic_ranker_val479.json --folds 5 --baseline-candidate constant_velocity --ridge 1.0"
+      ],
+      "notes": [
+        "This is the first measured selector improvement on the full 479-frame validation preference set.",
+        "The improvement comes from matching the selector training distribution to the evaluated candidates, not from changing trajectory parameters.",
+        "The saved final ranker is trained on all 479 validation frames for future held-out/test inference; the reported validation number is the segment-grouped cross-validation metric."
+      ]
+    },
+    {
+      "name": "non_text_ridge_trajectory_model_smoke",
+      "goal": "Add a trainable non-text trajectory proposal path so future improvements can change learned candidates instead of hand-tuning kinematic constants.",
+      "changed_surface": [
+        "src/minimal_shot_av/model/learned_trajectory_model.py",
+        "src/minimal_shot_av/model/wod_e2e.py",
+        "scripts/train_wod_trajectory_model.py",
+        "scripts/generate_wod_learned_candidates.py",
+        "tests/test_learned_trajectory_model.py"
+      ],
+      "benchmark_type": "pipeline_smoke_not_fair_score",
+      "metrics": {
+        "train_rows": 200,
+        "generated_candidate_rows": 5,
+        "evaluated_preference_frames": 1,
+        "best_validation_official_rfs": 4.0
+      },
+      "commands": [
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/train_wod_trajectory_model.py --train-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_model_smoke.json --max-records 200 --ridge 10 --residual-modes 2",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/generate_wod_learned_candidates.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --model artifacts/wod_ridge_trajectory_model_smoke.json --output artifacts/wod_learned_candidates_smoke.jsonl --max-records 2000 --max-preference-frames 1 --max-residual-modes 2",
+        "PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/evaluate_wod_zero_shot.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --candidate-jsonl artifacts/wod_learned_candidates_smoke.jsonl --output artifacts/wod_learned_candidates_smoke_official.json --rfs-backend official --waymo-src waymo-open-dataset/src --candidate-selection best_validation --max-records 2000"
+      ],
+      "notes": [
+        "This is a wiring smoke only because the model was trained on local validation shards.",
+        "Do not report this as a validation score.",
+        "The fair next run is to train this model on WOD-E2E train shards, then evaluate on the 479 validation preference frames."
+      ]
+    },
+    {
+      "name": "non_text_ridge_trajectory_val479_segment_cv",
+      "goal": "Measure whether the learned non-text trajectory generator improves held-out WOD-E2E RFS candidates before adding a selector.",
+      "changed_surface": [
+        "scripts/evaluate_wod_trajectory_model_cv.py",
+        "tests/test_wod_trajectory_model_cv.py",
+        "benchmarks/current/wod_ridge_trajectory_cv_official.json"
+      ],
+      "benchmark_type": "official_rfs_segment_grouped_cross_validation",
+      "metrics": {
+        "evaluated_preference_frames": 479,
+        "folds": 5,
+        "ridge": 10.0,
+        "residual_modes": 3,
+        "kinematic_constant_velocity_mean_official_rfs": 7.0223571581211495,
+        "kinematic_oracle_mean_official_rfs": 7.852350011169479,
+        "learned_mean_candidate_mean_official_rfs": 7.208185518221362,
+        "learned_oracle_mean_official_rfs": 8.397944748579517,
+        "combined_oracle_mean_official_rfs": 8.821688017923222,
+        "combined_ranker_mean_official_rfs": 7.44458649700071,
+        "learned_mean_gain_vs_constant_velocity": 0.1858283601002129,
+        "learned_oracle_gain_vs_kinematic_oracle": 0.5455947374100377,
+        "combined_oracle_gain_vs_kinematic_oracle": 0.9693380067537427,
+        "combined_ranker_gain_vs_constant_velocity": 0.42222933887955927,
+        "combined_ranker_regret_to_oracle": 1.3771015209225128,
+        "combined_ranker_top1_oracle_match_rate": 0.42588726513569936
+      },
+      "commands": [
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 1 --residual-modes 3",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_r001.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 0.01 --residual-modes 3",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_r01.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 0.1 --residual-modes 3",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_r10.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 10 --residual-modes 3",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_r100.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 100 --residual-modes 3",
+        "PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_official_r100.json --rfs-backend official --waymo-src waymo-open-dataset/src --folds 5 --ridge 10 --selector-ridge 100 --residual-modes 3",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_frame_delta.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 100 --selector-target frame_delta --residual-modes 3",
+        "PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_official_frame_delta.json --rfs-backend official --waymo-src waymo-open-dataset/src --folds 5 --ridge 10 --selector-ridge 100 --selector-target frame_delta --residual-modes 3",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_squared.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 100 --selector-target frame_delta --selector-features squared --residual-modes 3",
+        "PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_official_squared.json --rfs-backend official --waymo-src waymo-open-dataset/src --folds 5 --ridge 10 --selector-ridge 100 --selector-target frame_delta --selector-features squared --residual-modes 3"
+      ],
+      "notes": [
+        "This is the first held-out official-RFS evidence that the learned generator improves over the kinematic mean candidate.",
+        "Selector ridge 100 was selected by local-RFS sweep before official-RFS confirmation.",
+        "Frame-delta selector targets improved both local and official RFS, so the recorded best uses that target.",
+        "Squared selector features improved both local and official RFS, so the recorded best uses squared selector features.",
+        "The result is cross-validation on validation preference frames, not a leaderboard score.",
+        "The combined ranker improves over constant velocity and learned-mean selection, but the oracle gap shows selector quality is still the main bottleneck."
+      ]
+    },
+    {
+      "name": "non_text_ridge_residual_mode_sweep",
+      "goal": "Check whether changing learned residual candidate diversity improves the combined learned+kinematic selector without hand-tuning trajectory constants.",
+      "changed_surface": [
+        "benchmarks/experiments/model_stack_experiments_20260426.json"
+      ],
+      "benchmark_type": "local_sweep_with_official_confirmation",
+      "metrics": {
+        "selector_ridge": 100.0,
+        "baseline_residual_modes": 3,
+        "baseline_local_combined_ranker_mean_rfs": 7.4279974697455815,
+        "baseline_official_combined_ranker_mean_rfs": 7.314525614934775,
+        "modes_1_local_combined_ranker_mean_rfs": 7.408725100164267,
+        "modes_2_local_combined_ranker_mean_rfs": 7.442713232915854,
+        "modes_2_official_combined_ranker_mean_rfs": 7.2919539375111055,
+        "modes_4_local_combined_ranker_mean_rfs": 7.400225256809983,
+        "modes_5_local_combined_ranker_mean_rfs": 7.386338462480314,
+        "official_delta_modes_2_vs_modes_3": -0.02257167742366978
+      },
+      "commands": [
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_modes1.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 100 --residual-modes 1",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_modes2.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 100 --residual-modes 2",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_modes4.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 100 --residual-modes 4",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_modes5.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 100 --residual-modes 5",
+        "PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_official_modes2.json --rfs-backend official --waymo-src waymo-open-dataset/src --folds 5 --ridge 10 --selector-ridge 100 --residual-modes 2"
+      ],
+      "notes": [
+        "Residual modes 2 won the local-RFS sweep but failed official-RFS confirmation.",
+        "Keep the recorded best at residual modes 3 and selector ridge 100.",
+        "This sweep changes only experimentally selected model-side hyperparameters; simulator code and metrics were not used."
+      ]
+    },
+    {
+      "name": "non_text_ridge_trajectory_regularization_sweep",
+      "goal": "Check whether changing trajectory-model ridge regularization improves the combined learned+kinematic selector without changing trajectory constants.",
+      "changed_surface": [
+        "benchmarks/experiments/model_stack_experiments_20260426.json"
+      ],
+      "benchmark_type": "local_sweep_no_official_confirmation",
+      "metrics": {
+        "selector_ridge": 100.0,
+        "residual_modes": 3,
+        "baseline_model_ridge": 10.0,
+        "baseline_local_combined_ranker_mean_rfs": 7.4279974697455815,
+        "model_ridge_0_1_local_combined_ranker_mean_rfs": 7.312771607723747,
+        "model_ridge_1_local_combined_ranker_mean_rfs": 7.393656355092433,
+        "model_ridge_100_local_combined_ranker_mean_rfs": 7.11568101066861,
+        "model_ridge_1000_local_combined_ranker_mean_rfs": 7.051690084481281
+      },
+      "commands": [
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_modelridge01.json --rfs-backend local --folds 5 --ridge 0.1 --selector-ridge 100 --residual-modes 3",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_modelridge1.json --rfs-backend local --folds 5 --ridge 1 --selector-ridge 100 --residual-modes 3",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_modelridge100.json --rfs-backend local --folds 5 --ridge 100 --selector-ridge 100 --residual-modes 3",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_modelridge1000.json --rfs-backend local --folds 5 --ridge 1000 --selector-ridge 100 --residual-modes 3"
+      ],
+      "notes": [
+        "No swept model-ridge value beat the current local baseline at ridge 10.",
+        "No official-RFS confirmation was run because the local selection criterion did not improve.",
+        "Keep the recorded best at model ridge 10, selector ridge 100, residual modes 3."
+      ]
+    },
+    {
+      "name": "non_text_selector_target_zscore_check",
+      "goal": "Check whether standardizing selector targets within each frame improves ranking beyond frame-delta targets.",
+      "changed_surface": [
+        "scripts/evaluate_wod_trajectory_model_cv.py",
+        "tests/test_wod_trajectory_model_cv.py",
+        "benchmarks/experiments/model_stack_experiments_20260426.json"
+      ],
+      "benchmark_type": "local_improvement_failed_official_confirmation",
+      "metrics": {
+        "model_ridge": 10.0,
+        "selector_ridge": 100.0,
+        "residual_modes": 3,
+        "frame_delta_local_combined_ranker_mean_rfs": 7.517174022112411,
+        "frame_delta_official_combined_ranker_mean_rfs": 7.399170049707376,
+        "frame_zscore_local_combined_ranker_mean_rfs": 7.527523145061339,
+        "frame_zscore_official_combined_ranker_mean_rfs": 7.398895788615071,
+        "official_delta_zscore_vs_delta": -0.0002742610923045433
+      },
+      "commands": [
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_frame_zscore.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 100 --selector-target frame_zscore --residual-modes 3",
+        "PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_official_frame_zscore.json --rfs-backend official --waymo-src waymo-open-dataset/src --folds 5 --ridge 10 --selector-ridge 100 --selector-target frame_zscore --residual-modes 3"
+      ],
+      "notes": [
+        "Frame z-score target beat frame-delta locally but failed official-RFS confirmation by a small margin.",
+        "Keep the recorded best at selector target frame_delta.",
+        "This is a selector-target experiment only; simulator code and metrics were not used."
+      ]
+    },
+    {
+      "name": "non_text_selector_target_oracle_binary_check",
+      "goal": "Check whether directly training the selector to identify the per-frame oracle candidate improves held-out RFS selection.",
+      "changed_surface": [
+        "scripts/evaluate_wod_trajectory_model_cv.py",
+        "tests/test_wod_trajectory_model_cv.py",
+        "benchmarks/experiments/model_stack_experiments_20260426.json"
+      ],
+      "benchmark_type": "local_sweep_no_official_confirmation",
+      "metrics": {
+        "model_ridge": 10.0,
+        "selector_ridge": 100.0,
+        "residual_modes": 3,
+        "frame_delta_local_combined_ranker_mean_rfs": 7.517174022112411,
+        "oracle_binary_local_combined_ranker_mean_rfs": 7.357127848149859,
+        "local_delta_oracle_binary_vs_frame_delta": -0.16004617396255178
+      },
+      "commands": [
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_oracle_binary.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 100 --selector-target oracle_binary --residual-modes 3"
+      ],
+      "notes": [
+        "Oracle-binary target underperformed frame-delta locally, so no official-RFS confirmation was run.",
+        "Keep the recorded best at selector target frame_delta.",
+        "This is a selector-target experiment only; simulator code and metrics were not used."
+      ]
+    },
+    {
+      "name": "non_text_squared_selector_ridge_sweep",
+      "goal": "Check whether the higher-capacity squared selector needs a different ridge regularization strength.",
+      "changed_surface": [
+        "benchmarks/experiments/model_stack_experiments_20260426.json"
+      ],
+      "benchmark_type": "local_improvement_failed_official_confirmation",
+      "metrics": {
+        "model_ridge": 10.0,
+        "selector_target": "frame_delta",
+        "selector_features": "squared",
+        "residual_modes": 3,
+        "baseline_selector_ridge": 100.0,
+        "baseline_local_combined_ranker_mean_rfs": 7.56324006766627,
+        "baseline_official_combined_ranker_mean_rfs": 7.44458649700071,
+        "selector_ridge_10_local_combined_ranker_mean_rfs": 7.5193848647676385,
+        "selector_ridge_300_local_combined_ranker_mean_rfs": 7.582374766949849,
+        "selector_ridge_300_official_combined_ranker_mean_rfs": 7.440155308522619,
+        "selector_ridge_1000_local_combined_ranker_mean_rfs": 7.552135095611852,
+        "selector_ridge_3000_local_combined_ranker_mean_rfs": 7.53778011115245,
+        "official_delta_ridge_300_vs_100": -0.004431188478090999
+      },
+      "commands": [
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_squared_r10.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 10 --selector-target frame_delta --selector-features squared --residual-modes 3",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_squared_r300.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 300 --selector-target frame_delta --selector-features squared --residual-modes 3",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_squared_r1000.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 1000 --selector-target frame_delta --selector-features squared --residual-modes 3",
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_squared_r3000.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 3000 --selector-target frame_delta --selector-features squared --residual-modes 3",
+        "PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_official_squared_r300.json --rfs-backend official --waymo-src waymo-open-dataset/src --folds 5 --ridge 10 --selector-ridge 300 --selector-target frame_delta --selector-features squared --residual-modes 3"
+      ],
+      "notes": [
+        "Selector ridge 300 won the local-RFS sweep but failed official-RFS confirmation.",
+        "Keep the recorded best at squared selector features with selector ridge 100.",
+        "This is a selector-regularization experiment only; simulator code and metrics were not used."
+      ]
+    },
+    {
+      "name": "non_text_pairwise_residual_candidate_check",
+      "goal": "Check whether pairwise combinations of learned residual modes improve selection by increasing candidate diversity.",
+      "changed_surface": [
+        "src/minimal_shot_av/model/learned_trajectory_model.py",
+        "scripts/evaluate_wod_trajectory_model_cv.py",
+        "scripts/generate_wod_learned_candidates.py",
+        "tests/test_learned_trajectory_model.py",
+        "benchmarks/experiments/model_stack_experiments_20260426.json"
+      ],
+      "benchmark_type": "local_sweep_no_official_confirmation",
+      "metrics": {
+        "model_ridge": 10.0,
+        "selector_ridge": 100.0,
+        "selector_target": "frame_delta",
+        "selector_features": "squared",
+        "residual_modes": 3,
+        "baseline_local_combined_ranker_mean_rfs": 7.56324006766627,
+        "pairwise_local_combined_ranker_mean_rfs": 7.5084179421841295,
+        "baseline_local_combined_oracle_mean_rfs": 8.887000521599274,
+        "pairwise_local_combined_oracle_mean_rfs": 8.985046666040494,
+        "local_ranker_delta_pairwise_vs_baseline": -0.05482212548214014,
+        "local_oracle_delta_pairwise_vs_baseline": 0.09804614444121963
+      },
+      "commands": [
+        "PYTHONPATH=.wod-protos .venv-wod/bin/python scripts/evaluate_wod_trajectory_model_cv.py --val-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/val --output artifacts/wod_ridge_trajectory_selector_cv_local_pairwise.json --rfs-backend local --folds 5 --ridge 10 --selector-ridge 100 --selector-target frame_delta --selector-features squared --residual-modes 3 --pairwise-residuals"
+      ],
+      "notes": [
+        "Pairwise residuals improved oracle headroom but worsened the actual selector locally.",
+        "No official-RFS confirmation was run because the local selection criterion did not improve.",
+        "This suggests candidate diversity is outpacing selector quality."
+      ]
+    }
+  ],
+  "score_benchmarks_created": [
+    "benchmarks/current/wod_preference_oracle_candidate_smoke.json",
+    "benchmarks/current/wod_best_preference_candidate_smoke.json",
+    "benchmarks/current/wod_kinematic_non_text_smoke_first.json",
+    "benchmarks/current/wod_kinematic_non_text_records2000_first.json",
+    "benchmarks/current/wod_kinematic_non_text_val479_first.json",
+    "benchmarks/current/wod_kinematic_non_text_val479_ranker.json",
+    "benchmarks/current/wod_kinematic_ranker_val479_cv.json",
+    "benchmarks/current/wod_ridge_trajectory_cv_official.json"
+  ],
+  "limitations": [
+    "These engineering experiments are not leaderboard score improvements.",
+    "Smoke checks must not be reported as validation-set performance.",
+    "The distribution-matched ranker result is a selector diagnostic; it is not a leaderboard score."
+  ]
+}

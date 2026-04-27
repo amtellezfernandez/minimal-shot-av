@@ -14,13 +14,13 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.compositional_scenarios import (
+from minimal_shot_av.simulator.compositional_scenarios import (
     COMPOSITIONAL_SUITES,
     generate_compositional_scenario,
 )
-from minimal_shot_av.environment import Scenario
-from minimal_shot_av.policy import Rollout, run_policy, run_spotlight_reflex_policy
-from minimal_shot_av.wod_scenarios import WOD_E2E_CLUSTERS, generate_wod_scenario
+from minimal_shot_av.simulator.environment import Scenario
+from minimal_shot_av.simulator.policy import Rollout, run_policy, run_spotlight_reflex_policy
+from minimal_shot_av.simulator.wod_scenarios import WOD_E2E_CLUSTERS, generate_wod_scenario
 
 
 ScenarioGenerator = Callable[[str, int], Scenario]

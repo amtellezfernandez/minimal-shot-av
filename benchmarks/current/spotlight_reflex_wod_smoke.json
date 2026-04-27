@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "evaluation_contract": "wod_e2e_rfs",
+    "frame_count": 1,
+    "score_backend": "official_waymo_rfs",
+    "selection_mode": "logged_future_diagnostic",
+    "split": "validation_smoke"
+  },
+  "metrics": {
+    "evaluated_frames": {
+      "higher_is_better": true,
+      "unit": "frames",
+      "value": 1.0
+    },
+    "max_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 4.793513563812969
+    },
+    "mean_latency_ms": {
+      "higher_is_better": false,
+      "unit": "ms",
+      "value": 0.0
+    },
+    "median_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 4.793513563812969
+    },
+    "min_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 4.793513563812969
+    },
+    "rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 4.793513563812969
+    }
+  },
+  "notes": [
+    "Generated from artifacts/model_diagnostic_logged_future_official.json.",
+    "Use only against reports from the same WOD-E2E evaluation contract."
+  ],
+  "source": "artifacts/model_diagnostic_logged_future_official.json",
+  "suite": "wod_e2e_smoke_frame",
+  "system": "spotlight_reflex_logged_future_smoke"
+}

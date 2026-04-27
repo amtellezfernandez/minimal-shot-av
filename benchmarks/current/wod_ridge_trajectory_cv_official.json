@@ -1,0 +1,103 @@
+{
+  "system": "wod_ridge_trajectory_non_text_cv",
+  "suite": "wod_e2e_val479_segment_grouped_cv",
+  "source": "artifacts/wod_ridge30_contextual_r100_frame_delta_cv_official_full.json",
+  "metrics": {
+    "kinematic_constant_velocity_mean_rfs": {
+      "value": 7.0223571581211495,
+      "higher_is_better": true,
+      "unit": "RFS"
+    },
+    "kinematic_oracle_mean_rfs": {
+      "value": 7.852350011169479,
+      "higher_is_better": true,
+      "unit": "RFS"
+    },
+    "learned_mean_candidate_mean_rfs": {
+      "value": 7.079800812184246,
+      "higher_is_better": true,
+      "unit": "RFS"
+    },
+    "learned_oracle_mean_rfs": {
+      "value": 8.344600502723958,
+      "higher_is_better": true,
+      "unit": "RFS"
+    },
+    "combined_oracle_mean_rfs": {
+      "value": 9.015857402777051,
+      "higher_is_better": true,
+      "unit": "RFS"
+    },
+    "combined_ranker_mean_rfs": {
+      "value": 7.602814916652251,
+      "higher_is_better": true,
+      "unit": "RFS"
+    },
+    "learned_mean_gain_vs_constant_velocity": {
+      "value": 0.05744365406309568,
+      "higher_is_better": true,
+      "unit": "RFS"
+    },
+    "learned_oracle_gain_vs_kinematic_oracle": {
+      "value": 0.4922504915544789,
+      "higher_is_better": true,
+      "unit": "RFS"
+    },
+    "combined_oracle_gain_vs_kinematic_oracle": {
+      "value": 1.1635073916075722,
+      "higher_is_better": true,
+      "unit": "RFS"
+    },
+    "combined_ranker_gain_vs_constant_velocity": {
+      "value": 0.5804577585311017,
+      "higher_is_better": true,
+      "unit": "RFS"
+    },
+    "combined_ranker_regret_to_oracle": {
+      "value": 1.4130424861247997,
+      "higher_is_better": false,
+      "unit": "RFS"
+    },
+    "combined_ranker_top1_oracle_match_rate": {
+      "value": 0.4133611691022965,
+      "higher_is_better": true,
+      "unit": "rate"
+    }
+  },
+  "metadata": {
+    "evaluation_contract": "wod_e2e_rfs",
+    "split": "validation_479_preference_frames_segment_grouped_cv",
+    "frame_count": 479,
+    "score_backend": "official_waymo_rfs",
+    "selection_mode": "cross_validated_candidate_generator_oracle_diagnostics",
+    "fold_count": 5,
+    "ridge": 30.0,
+    "feature_set": "base",
+    "aux_feature_set": "temporal_summary",
+    "selector_ridge": 100.0,
+    "selector_target": "frame_delta",
+    "selector_features": "contextual",
+    "residual_modes": 3,
+    "source_indicator_features": true,
+    "selected_source_rates": {
+      "learned": 0.03966597077244259,
+      "temporal": 0.5949895615866388,
+      "kinematic": 0.3653444676409186,
+      "anchor": 0.0
+    }
+  },
+  "notes": [
+    "Generated from a segment-grouped cross-validation experiment over the 479 WOD-E2E validation preference frames.",
+    "Selector ridge 100.0 was chosen by a local-RFS sweep over 0.01, 0.1, 1.0, 10.0, and 100.0 before official-RFS confirmation.",
+    "Selector target frame_delta was chosen by local-RFS improvement before official-RFS confirmation.",
+    "Squared selector features improved earlier selector sweeps, but contextual source-by-speed and source-by-intent features beat the squared current baseline in matched official-RFS CV.",
+    "Source indicator features were added after a matched local-RFS smoke improved the no-anchor baseline, then confirmed on official RFS.",
+    "Temporal-summary proposal candidates improved a matched official-RFS 100-frame smoke from 6.9623 to 7.1977 selected RFS.",
+    "Base plus temporal-summary candidates improved the full 479-frame official-RFS CV selected score from 7.4463 to 7.4738.",
+    "Contextual selector features improved the matched full 479-frame official-RFS CV selected score from 7.4738 to 7.5438.",
+    "Trajectory ridge 30.0 improved the matched full 479-frame official-RFS CV selected score from 7.5438 to 7.6028 after a local-RFS sweep over ridge 1.0, 30.0, and 100.0.",
+    "Replacing the base feature set with temporal_summary alone regressed full selected RFS to 7.4275, so temporal is used only as an auxiliary candidate source.",
+    "This is an internal held-out development benchmark, not a leaderboard score.",
+    "Simulator code and simulator metrics were not used."
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "system": "wod_e2e_public_baseline",
+  "suite": "wod_e2e_leaderboard",
+  "source": "docs/leaderboard.md",
+  "metadata": {
+    "evaluation_contract": "wod_e2e_rfs",
+    "split": "test_leaderboard",
+    "frame_count": "leaderboard_hidden",
+    "score_backend": "official_waymo_rfs",
+    "selection_mode": "leaderboard_submission"
+  },
+  "metrics": {
+    "rfs_overall": {
+      "value": 6.2365,
+      "higher_is_better": true,
+      "unit": "RFS"
+    },
+    "spotlight_rfs": {
+      "value": 5.4946,
+      "higher_is_better": true,
+      "unit": "RFS"
+    },
+    "ade_5s": {
+      "value": 3.6104,
+      "higher_is_better": false,
+      "unit": "m"
+    },
+    "ade_3s": {
+      "value": 1.5713,
+      "higher_is_better": false,
+      "unit": "m"
+    }
+  },
+  "notes": [
+    "Leaderboard row from the manually supplied project snapshot in docs/leaderboard.md.",
+    "Use only against official WOD-E2E leaderboard or validation metrics computed over the same evaluation contract."
+  ]
+}

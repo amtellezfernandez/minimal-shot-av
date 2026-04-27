@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "excludes_io_and_training": true,
+    "frames": 5000,
+    "runtime_contract": "online_wod_non_text_runtime",
+    "warmup": 200
+  },
+  "metrics": {
+    "candidate_count_mean": {
+      "higher_is_better": true,
+      "unit": "candidates",
+      "value": 14.0
+    },
+    "mean_total_latency_ms": {
+      "higher_is_better": false,
+      "unit": "ms",
+      "value": 1.2839408534
+    },
+    "p95_feature_ms": {
+      "higher_is_better": false,
+      "unit": "ms",
+      "value": 0.7774674000000001
+    },
+    "p95_generation_ms": {
+      "higher_is_better": false,
+      "unit": "ms",
+      "value": 0.47147530000000004
+    },
+    "p95_selection_ms": {
+      "higher_is_better": false,
+      "unit": "ms",
+      "value": 0.17153815
+    },
+    "p95_total_latency_ms": {
+      "higher_is_better": false,
+      "unit": "ms",
+      "value": 1.40214185
+    },
+    "throughput_fps": {
+      "higher_is_better": true,
+      "unit": "fps",
+      "value": 759.6528576237298
+    }
+  },
+  "notes": [
+    "Generated from benchmarks/current/wod_online_runtime.json.",
+    "Runtime report measures online numeric controller latency only.",
+    "Do not compare against model-card quality scores or closed-loop simulator metrics."
+  ],
+  "source": "benchmarks/current/wod_online_runtime.json",
+  "suite": "wod_e2e_online_runtime",
+  "system": "wod_ridge_trajectory_non_text_runtime"
+}

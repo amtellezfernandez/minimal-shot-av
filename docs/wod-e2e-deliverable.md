@@ -99,7 +99,7 @@ Dataset page facts:
 Architecture implication:
 
 - A single front camera is not enough for this benchmark. Cut-ins, debris, pedestrians, special vehicles, and rear/side interactions can depend on non-front views.
-- The scene critic should consume either all 8 views or a declared camera montage that preserves view identity.
+- Any future visual encoder should consume either all 8 views or a declared camera montage that preserves view identity.
 - Any visualization should label camera names explicitly to avoid confusing left/right evidence.
 
 ## Ego State
@@ -267,7 +267,7 @@ Cluster-specific implications:
 - Multi-lane maneuver: route command and side cameras matter. Candidate library needs lane-change and abort-lane-change options.
 - Single-lane maneuver: progress versus caution dominates. Constant stop may be safe-looking but rater-poor.
 - Cut-in: side/front temporal evidence matters. A frame-only policy can miss the setup.
-- Foreign object debris: recognition may depend on rare object semantics. Frozen scene critic is most relevant here.
+- Foreign object debris: recognition may depend on rare object semantics. This is a priority case for any future visual encoder.
 - Special vehicle: unusual actor identity matters, including emergency, service, or oversized vehicles.
 - Spotlight: manually selected hard cases should be treated as failure-analysis targets.
 - Others: avoid overfitting cluster-specific heuristics; report separately.
@@ -276,15 +276,15 @@ Cluster-specific implications:
 
 The dataset pushes the architecture toward this contract:
 
-- **Frozen scene critic:** interpret 8-camera long-tail evidence and produce auditable hazard notes.
-- **Temporal state:** compress 12 seconds of camera and ego context, plus the 4-second ego state history.
-- **Latent maneuver library:** enumerate plausible behavior families instead of directly regressing one path.
+- **Structured candidate generators:** enumerate plausible 20-point futures from ego history and route intent.
+- **Temporal state:** compress the 4-second ego state history and any declared context features.
+- **Residual/anchor proposal models:** broaden the candidate set while staying benchmark-gated.
 - **Trajectory projector:** emit exactly 20 future vehicle-frame waypoints with smooth dynamics.
 - **RFS-aware selector:** choose the single submitted trajectory from candidates using validation-time RFS analysis.
 
 The important claim is not "real-time self-driving." WOD-E2E is open-loop. The credible claim is:
 
-> frozen general visual reasoning plus structured maneuver generation can produce rater-plausible long-tail trajectories without AV-specific model fine-tuning.
+> fast candidate generation plus RFS-calibrated selection can produce rater-plausible long-tail trajectories with a fully declared WOD-E2E training boundary.
 
 ## Baselines
 
@@ -294,7 +294,8 @@ Minimum baselines before claiming architecture value:
 - constant velocity: extrapolate from final past velocity
 - curvature extrapolation: fit recent ego path trend
 - intent template: straight/left/right kinematic templates
-- scene-critic maneuver baseline: frozen scene summary selects from hand-coded templates
+- learned residual candidate model
+- source-aware RFS selector
 
 Report for each:
 

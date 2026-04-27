@@ -1,0 +1,30 @@
+{
+  "baseline_system": "realtime_14ms_budget",
+  "beats_all_shared_metrics": true,
+  "comparisons": [
+    {
+      "baseline_value": 14.0,
+      "beats_baseline": true,
+      "delta": -12.59785815,
+      "higher_is_better": false,
+      "metric": "p95_total_latency_ms",
+      "relative_delta": -0.8998470107142857,
+      "required_margin": 0.0,
+      "subject_value": 1.40214185,
+      "unit": "ms"
+    }
+  ],
+  "notes": [
+    "Only shared metric names from the same benchmark suite are compared.",
+    "Missing metrics are not filled or inferred.",
+    "Generated from benchmarks/current/wod_online_runtime.json.",
+    "Runtime report measures online numeric controller latency only.",
+    "Do not compare against model-card quality scores or closed-loop simulator metrics.",
+    "Strict online-controller latency budget used as a deployment sanity target.",
+    "This is not an Alpamayo measured latency; no same-contract Alpamayo runtime artifact is available in this repo."
+  ],
+  "source_baseline": "repo realtime target",
+  "source_subject": "benchmarks/current/wod_online_runtime.json",
+  "subject_system": "wod_ridge_trajectory_non_text_runtime",
+  "suite": "wod_e2e_online_runtime"
+}

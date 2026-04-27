@@ -10,9 +10,9 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.spotlight_reflex import RfsReference
-from minimal_shot_av.wod_e2e import WodE2EPreferenceFrame
-from minimal_shot_av.wod_preference import generate_preference_candidates, trajectory_features
+from minimal_shot_av.model.rfs_metric import RfsReference
+from minimal_shot_av.model.wod_e2e import WodE2EPreferenceFrame
+from minimal_shot_av.model.wod_preference import generate_preference_candidates, trajectory_features
 
 
 def make_frame() -> WodE2EPreferenceFrame:
@@ -45,6 +45,25 @@ class WodPreferenceCandidateTests(unittest.TestCase):
             self.assertIn("candidate_family", candidate.features)
             self.assertEqual(candidate.features["intent"], 1)
             self.assertEqual(candidate.features["init_speed_mps"], 4.0)
+
+    def test_trajectory_features_groups_learned_candidate_families(self) -> None:
+        trajectory = [(float(index), 0.0) for index in range(1, 21)]
+
+        anchor_features = trajectory_features(
+            trajectory,
+            candidate_name="anchor_residual_3_rank0_pc1_plus",
+            intent=1,
+            init_speed_mps=4.0,
+        )
+        ridge_features = trajectory_features(
+            trajectory,
+            candidate_name="ridge_residual_pc1_plus",
+            intent=1,
+            init_speed_mps=4.0,
+        )
+
+        self.assertEqual("anchor", anchor_features["candidate_family"])
+        self.assertEqual("ridge_residual", ridge_features["candidate_family"])
 
     def test_logged_future_candidate_preserves_future_trajectory(self) -> None:
         frame = make_frame()

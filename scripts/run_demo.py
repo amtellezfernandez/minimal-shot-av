@@ -9,11 +9,11 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.compositional_scenarios import COMPOSITIONAL_SUITES, generate_compositional_scenario
-from minimal_shot_av.environment import generate_scenario, scenario_to_dict, write_rollout
-from minimal_shot_av.policy import run_policy, run_spotlight_reflex_policy
-from minimal_shot_av.render import render_svg
-from minimal_shot_av.wod_scenarios import WOD_E2E_CLUSTERS, generate_wod_scenario
+from minimal_shot_av.simulator.compositional_scenarios import COMPOSITIONAL_SUITES, generate_compositional_scenario
+from minimal_shot_av.simulator.environment import generate_scenario, scenario_to_dict, write_rollout
+from minimal_shot_av.simulator.policy import run_policy, run_spotlight_reflex_policy
+from minimal_shot_av.simulator.render import render_svg
+from minimal_shot_av.simulator.wod_scenarios import WOD_E2E_CLUSTERS, generate_wod_scenario
 
 
 def main() -> None:
@@ -50,8 +50,10 @@ def main() -> None:
         scenario_source = "WOD-E2E procedural cluster generator"
     if args.policy == "spotlight-reflex":
         rollout = run_spotlight_reflex_policy(scenario)
-        planner_description = "deterministic maneuver library with exact RFS trust-region reference selection"
-        safety_description = "RFS-selected action with existing uncertainty-aware safety filter"
+        planner_description = (
+            "deterministic maneuver library with simulator-native trajectory selector reference selection"
+        )
+        safety_description = "selector-chosen action with existing uncertainty-aware safety filter"
     else:
         rollout = run_policy(scenario)
         planner_description = "candidate trajectory search toward target waypoint"

@@ -1,4 +1,4 @@
-from minimal_shot_av.alpasim_metrics import main
+from minimal_shot_av.neutral.alpasim_metrics import main
 
 
 if __name__ == "__main__":

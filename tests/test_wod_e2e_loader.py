@@ -11,8 +11,9 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.wod_e2e import (
+from minimal_shot_av.model.wod_e2e import (
     align_preference_trajectory,
+    camera_images_from_frame,
     init_speed_from_states,
     preference_frame_from_proto,
     trajectory_from_states,
@@ -42,6 +43,13 @@ class FakeContext:
 @dataclass
 class FakeFramePayload:
     context: FakeContext
+    images: list[object] = field(default_factory=list)
+
+
+@dataclass
+class FakeImage:
+    name: int
+    image: bytes
 
 
 @dataclass
@@ -129,6 +137,41 @@ class WodE2ELoaderTests(unittest.TestCase):
         self.assertEqual(len(parsed.references[0].trajectory), 20)
         self.assertEqual(parsed.references[0].trajectory[0], (0.0, 0.0))
 
+    def test_preference_frame_from_proto_can_skip_camera_images(self) -> None:
+        future = FakeStates([float(i) for i in range(1, 21)], [0.0] * 20)
+        preference = FakeStates([float(i) for i in range(20)], [0.0] * 20, preference_score=8.0, has_score=True)
+        frame = FakeE2EDFrame(
+            frame=FakeFramePayload(FakeContext("segment"), images=[FakeImage(1, b"front")]),
+            past_states=FakeStates([0.0, 1.0], [0.0, 0.0]),
+            future_states=future,
+            intent=1,
+            preference_trajectories=[preference],
+        )
+
+        parsed = preference_frame_from_proto(frame, include_camera_images=False)
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(parsed.camera_images, [])
+
+    def test_preference_frame_from_proto_accepts_unlabeled_test_frame(self) -> None:
+        frame = FakeE2EDFrame(
+            frame=FakeFramePayload(FakeContext("test-segment")),
+            past_states=FakeStates([0.0, 1.0], [0.0, 0.0], vel_x=[4.0], vel_y=[0.0]),
+            future_states=FakeStates([], []),
+            intent=3,
+            preference_trajectories=[],
+        )
+
+        parsed = preference_frame_from_proto(frame, require_preferences=False, include_camera_images=False)
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual("test-segment", parsed.frame_name)
+        self.assertEqual([], parsed.future_trajectory)
+        self.assertEqual([], parsed.references)
+        self.assertEqual(4.0, parsed.init_speed_mps)
+
     def test_preference_frame_from_proto_skips_empty_valid_scored_preference(self) -> None:
         future = FakeStates([float(i) for i in range(1, 21)], [0.0] * 20)
         past = FakeStates([0.0, 0.75], [0.0, 1.0])
@@ -162,6 +205,20 @@ class WodE2ELoaderTests(unittest.TestCase):
     def test_trajectory_from_states_pairs_xy_values(self) -> None:
         states = FakeStates([1, 2, 3], [4, 5])
         self.assertEqual(trajectory_from_states(states), [(1.0, 4.0), (2.0, 5.0)])
+
+    def test_camera_images_from_frame_exports_named_jpegs(self) -> None:
+        frame = FakeE2EDFrame(
+            frame=FakeFramePayload(FakeContext("segment"), images=[FakeImage(1, b"front"), FakeImage(7, b"rear")]),
+            past_states=FakeStates([], []),
+            future_states=FakeStates([], []),
+            intent=0,
+            preference_trajectories=[],
+        )
+
+        images = camera_images_from_frame(frame)
+
+        self.assertEqual([image.name for image in images], ["FRONT", "REAR"])
+        self.assertEqual(images[0].jpeg, b"front")
 
 
 if __name__ == "__main__":

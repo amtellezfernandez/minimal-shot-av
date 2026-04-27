@@ -1,0 +1,44 @@
+{
+  "metadata": {
+    "evaluation_contract": "wod_e2e_rfs_segment_grouped_cv",
+    "frame_count": 479,
+    "score_backend": "official_waymo_rfs",
+    "selection_mode": "ranker_cross_validated",
+    "split": "validation_479_preference_frames"
+  },
+  "metrics": {
+    "baseline_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 7.02235769749286
+    },
+    "oracle_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 7.852351864082588
+    },
+    "rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 7.096202559469913
+    },
+    "selection_regret": {
+      "higher_is_better": false,
+      "unit": "RFS",
+      "value": 0.7561493046126756
+    },
+    "top1_oracle_match_rate": {
+      "higher_is_better": true,
+      "unit": "rate",
+      "value": 0.6534446764091858
+    }
+  },
+  "notes": [
+    "Generated from artifacts/wod_kinematic_ranker_val479.json cv_metrics.",
+    "Segment-grouped 5-fold cross-validation on official RFS labels for artifacts/wod_kinematic_candidate_scores_val479.jsonl.",
+    "This is selector validation evidence, not a leaderboard-test result."
+  ],
+  "source": "artifacts/wod_kinematic_ranker_val479.json",
+  "suite": "wod_e2e_val479_cv",
+  "system": "wod_kinematic_ranker_val479_cv"
+}

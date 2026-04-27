@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "evaluation_contract": "wod_e2e_rfs",
+    "fold_count": 5,
+    "frame_count": 479,
+    "ridge": 30.0,
+    "score_backend": "local_rfs_metric",
+    "selected_source_rates": {
+      "anchor": 0.0,
+      "kinematic": 0.37160751565762007,
+      "learned": 0.029227557411273485,
+      "temporal": 0.5991649269311065
+    },
+    "selection_mode": "segment_grouped_cv_candidate_ranker",
+    "selector_fallback_router": "speed",
+    "selector_features": "contextual",
+    "selector_ridge": 175.0,
+    "selector_target": "frame_delta",
+    "split": "validation_479_preference_frames_segment_grouped_cv"
+  },
+  "metrics": {
+    "combined_oracle_mean_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 9.06826801193207
+    },
+    "combined_ranker_gain_vs_constant_velocity": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 0.5643922037989235
+    },
+    "combined_ranker_mean_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 7.695139906515457
+    },
+    "combined_ranker_regret_to_oracle": {
+      "higher_is_better": false,
+      "unit": "RFS",
+      "value": 1.3731281054166127
+    },
+    "combined_ranker_top1_oracle_match_rate": {
+      "higher_is_better": true,
+      "unit": "rate",
+      "value": 0.40292275574112735
+    },
+    "learned_mean_gain_vs_constant_velocity": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 0.096710039682586
+    },
+    "selected_anchor_rate": {
+      "higher_is_better": true,
+      "unit": "rate",
+      "value": 0.0
+    },
+    "selected_kinematic_rate": {
+      "higher_is_better": true,
+      "unit": "rate",
+      "value": 0.37160751565762007
+    },
+    "selected_learned_rate": {
+      "higher_is_better": true,
+      "unit": "rate",
+      "value": 0.029227557411273485
+    },
+    "selected_temporal_rate": {
+      "higher_is_better": true,
+      "unit": "rate",
+      "value": 0.5991649269311065
+    }
+  },
+  "notes": [
+    "Generated from artifacts/wod_contextual_r175_fallback_router_speed_cv_local.json.",
+    "This is an internal held-out development benchmark, not a leaderboard/test score.",
+    "Use only against reports from the same WOD-E2E CV contract and score backend.",
+    "Generated from segment-grouped cross-validation over WOD-E2E validation preference frames.",
+    "Simulator code and simulator metrics were not used.",
+    "Simulator metrics are not used for model selection."
+  ],
+  "source": "artifacts/wod_contextual_r175_fallback_router_speed_cv_local.json",
+  "suite": "wod_e2e_val479_local_cv",
+  "system": "wod_contextual_r175_speed_router_local"
+}

@@ -1,0 +1,741 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+from pathlib import Path
+import sys
+from tempfile import TemporaryDirectory
+import unittest
+from unittest.mock import patch
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPT = ROOT / "scripts" / "evaluate_wod_trajectory_model_cv.py"
+
+
+def load_cv_module():
+    spec = importlib.util.spec_from_file_location("evaluate_wod_trajectory_model_cv", SCRIPT)
+    if spec is None or spec.loader is None:
+        raise ImportError(SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+try:
+    cv = load_cv_module()
+except ModuleNotFoundError as exc:
+    if exc.name != "numpy":
+        raise
+    cv = None
+
+if cv is not None:
+    from minimal_shot_av.model.rfs_metric import RfsReference
+    from minimal_shot_av.model.wod_e2e import WodCameraImage
+    from minimal_shot_av.model.world_model import (
+        attach_external_embedding_cache,
+        scene_token_features,
+        write_external_embedding_cache,
+    )
+
+
+def sample_frame(frame_name: str, *, step: float, camera_payload: bytes | None = None) -> object:
+    return cv.WodE2EPreferenceFrame(
+        frame_name=frame_name,
+        past_trajectory=[(-2.0 * step, 0.0), (-1.0 * step, 0.0), (0.0, 0.0)],
+        future_trajectory=[(float(index) * step, 0.0) for index in range(1, 21)],
+        intent=1,
+        init_speed_mps=step * 4.0,
+        references=[
+            RfsReference(
+                "human",
+                [(float(index) * step, 0.0) for index in range(1, 21)],
+                9.0,
+            )
+        ],
+        camera_images=(
+            []
+            if camera_payload is None
+            else [WodCameraImage(name="FRONT", jpeg=camera_payload)]
+        ),
+    )
+
+
+class WodTrajectoryModelCvTests(unittest.TestCase):
+    def test_segment_split_keeps_segment_frames_together(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frames = [
+            sample_frame("segment-a-100", step=1.0),
+            sample_frame("segment-a-101", step=1.0),
+            sample_frame("segment-b-100", step=1.5),
+            sample_frame("segment-c-100", step=2.0),
+        ]
+
+        folds = cv._split_frame_names_by_segment(frames, folds=2, seed=3)
+
+        self.assertEqual(2, len(folds))
+        self.assertFalse(folds[0] & folds[1])
+        segment_a_fold_count = sum("segment-a-100" in fold or "segment-a-101" in fold for fold in folds)
+        self.assertEqual(1, segment_a_fold_count)
+
+    def test_cross_validation_reports_candidate_generator_metrics(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frames = [sample_frame(f"segment-{index}-100", step=0.5 + index * 0.25) for index in range(6)]
+
+        report = cv.cross_validate_trajectory_model(
+            frames,
+            folds=3,
+            seed=5,
+            ridge=1.0,
+            feature_set=cv.FEATURE_SET_TEMPORAL,
+            residual_modes=1,
+            scorer=cv._local_rfs_score,
+        )
+
+        self.assertEqual(6, report["frames"])
+        self.assertEqual(3, report["fold_count"])
+        self.assertEqual(cv.FEATURE_SET_TEMPORAL, report["feature_set"])
+        self.assertEqual("base", report["kinematic_profile"])
+        self.assertIn("learned_mean_candidate_mean_rfs", report)
+        self.assertIn("combined_oracle_gain_vs_kinematic_oracle", report)
+        self.assertIn("selected_learned_rate", report)
+        self.assertIn("slices", report)
+        self.assertTrue(any(key.startswith("speed:") for key in report["slices"]))
+        self.assertTrue(any(key.startswith("intent:") for key in report["slices"]))
+        first_slice = next(iter(report["slices"].values()))
+        self.assertIn("mean_regret", first_slice)
+        self.assertIn("selected_source_rates", first_slice)
+        self.assertNotIn("frame_diagnostics", report["folds_detail"][0])
+        self.assertFalse(report["frame_diagnostics_enabled"])
+        self.assertEqual(0, report["frame_diagnostics_count"])
+
+    def test_cross_validation_can_include_frame_diagnostics(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frames = [sample_frame(f"segment-{index}-100", step=0.5 + index * 0.25) for index in range(6)]
+
+        report = cv.cross_validate_trajectory_model(
+            frames,
+            folds=3,
+            seed=5,
+            ridge=1.0,
+            feature_set=cv.FEATURE_SET_TEMPORAL,
+            residual_modes=1,
+            include_frame_diagnostics=True,
+            scorer=cv._local_rfs_score,
+        )
+
+        diagnostics = [
+            diagnostic
+            for fold in report["folds_detail"]
+            for diagnostic in fold["frame_diagnostics"]
+        ]
+        self.assertEqual(6, len(diagnostics))
+        self.assertTrue(report["frame_diagnostics_enabled"])
+        self.assertEqual(report["frames"], report["frame_diagnostics_count"])
+        self.assertEqual(report["frames"], len(diagnostics))
+        first = diagnostics[0]
+        self.assertIn("frame_name", first)
+        self.assertIn("selected_source", first)
+        self.assertIn("oracle_source", first)
+        self.assertIn("regret", first)
+        for diagnostic in diagnostics:
+            expected_regret = float(diagnostic["oracle_score"]) - float(diagnostic["selected_score"])
+            self.assertAlmostEqual(expected_regret, float(diagnostic["regret"]))
+            self.assertGreaterEqual(float(diagnostic["regret"]), 0.0)
+
+    def test_cross_validation_can_add_ego_world_model_candidates(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frames = [sample_frame(f"segment-{index}-100", step=0.5 + index * 0.25) for index in range(6)]
+
+        report = cv.cross_validate_trajectory_model(
+            frames,
+            folds=3,
+            seed=5,
+            ridge=1.0,
+            feature_set=cv.FEATURE_SET_TEMPORAL,
+            residual_modes=1,
+            scorer=cv._local_rfs_score,
+            world_model_mode=cv.FEATURE_MODE_EGO_TEMPORAL,
+            world_latent_dim=2,
+            world_ridge=1.0,
+            world_memory_top_k=1,
+            world_max_neighbor_distance=100.0,
+        )
+
+        self.assertEqual(cv.FEATURE_MODE_EGO_TEMPORAL, report["world_model"])
+        self.assertEqual(100.0, report["world_max_neighbor_distance"])
+        self.assertIn("world_imagined_mean_rfs", report)
+        self.assertIn("world_oracle_mean_rfs", report)
+        self.assertIn("selected_world_rate", report)
+        self.assertIn("oracle_world_rate", report)
+        first_fold = report["folds_detail"][0]
+        self.assertIn("world_imagined_mean_rfs", first_fold)
+        first_slice = next(iter(report["slices"].values()))
+        self.assertIn("world", first_slice["selected_source_rates"])
+
+    def test_cross_validation_can_add_scene_token_world_model_candidates(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frames = [
+            sample_frame(f"segment-{index}-100", step=1.0, camera_payload=bytes([index + 1]) * 8)
+            for index in range(6)
+        ]
+
+        report = cv.cross_validate_trajectory_model(
+            frames,
+            folds=3,
+            seed=5,
+            ridge=1.0,
+            feature_set=cv.FEATURE_SET_TEMPORAL,
+            residual_modes=1,
+            scorer=cv._local_rfs_score,
+            world_model_mode=cv.FEATURE_MODE_SCENE_TOKENS,
+            world_latent_dim=2,
+            world_ridge=1.0,
+            world_memory_top_k=0,
+        )
+
+        self.assertEqual(cv.FEATURE_MODE_SCENE_TOKENS, report["world_model"])
+        self.assertIn("combined_with_world_ranker_mean_rfs", report)
+        self.assertIn("combined_with_world_oracle_mean_rfs", report)
+
+    def test_scene_token_cache_can_feed_scene_world_model_without_camera_payloads(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        camera_frames = [
+            sample_frame(f"segment-{index}-100", step=1.0, camera_payload=bytes([index + 1]) * 8)
+            for index in range(6)
+        ]
+        cache = {
+            frame.frame_name: scene_token_features(frame)
+            for frame in camera_frames
+        }
+        frames = [
+            sample_frame(f"segment-{index}-100", step=1.0)
+            for index in range(6)
+        ]
+        frames = cv.attach_scene_token_cache(frames, cache)
+
+        report = cv.cross_validate_trajectory_model(
+            frames,
+            folds=3,
+            seed=5,
+            ridge=1.0,
+            feature_set=cv.FEATURE_SET_TEMPORAL,
+            residual_modes=1,
+            scorer=cv._local_rfs_score,
+            world_model_mode=cv.FEATURE_MODE_SCENE_TOKENS,
+            world_latent_dim=2,
+            world_ridge=1.0,
+        )
+
+        self.assertEqual(cv.FEATURE_MODE_SCENE_TOKENS, report["world_model"])
+        self.assertTrue(all(frame.scene_tokens is not None for frame in frames))
+        self.assertTrue(all(not frame.camera_images for frame in frames))
+
+    def test_external_embedding_cache_can_feed_world_model_without_camera_payloads(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frames = [
+            sample_frame(f"segment-{index}-100", step=1.0 + index * 0.1)
+            for index in range(6)
+        ]
+        frames = attach_external_embedding_cache(
+            frames,
+            {frame.frame_name: [float(index), float(index % 2)] for index, frame in enumerate(frames)},
+        )
+
+        report = cv.cross_validate_trajectory_model(
+            frames,
+            folds=3,
+            seed=5,
+            ridge=1.0,
+            feature_set=cv.FEATURE_SET_TEMPORAL,
+            residual_modes=1,
+            scorer=cv._local_rfs_score,
+            world_model_mode=cv.FEATURE_MODE_EXTERNAL_EMBEDDINGS,
+            world_latent_dim=2,
+            world_ridge=1.0,
+            external_embedding_source="cosmos-test",
+        )
+
+        self.assertEqual(cv.FEATURE_MODE_EXTERNAL_EMBEDDINGS, report["world_model"])
+        self.assertEqual("all", report["world_latent_source"])
+        self.assertEqual("cosmos-test", report["embedding_source"])
+        self.assertEqual(2, report["embedding_dimension"])
+        self.assertEqual(6, report["embedding_frame_count"])
+        self.assertIn("combined_with_world_ranker_mean_rfs", report)
+        self.assertTrue(all(frame.external_embedding is not None for frame in frames))
+
+    def test_cli_requires_external_embedding_cache_for_external_world_model(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        argv = [
+            "evaluate_wod_trajectory_model_cv.py",
+            "--world-model",
+            cv.FEATURE_MODE_EXTERNAL_EMBEDDINGS,
+            "--rfs-backend",
+            "local",
+        ]
+        with patch.object(sys, "argv", argv), patch.object(
+            cv,
+            "load_preference_frames",
+            return_value=[sample_frame("segment-0-100", step=1.0), sample_frame("segment-1-100", step=1.1)],
+        ):
+            with self.assertRaisesRegex(ValueError, "--external-embedding-cache is required"):
+                cv.main()
+
+    def test_cli_external_embeddings_preserve_image_contextual_features(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frames = [
+            sample_frame(f"segment-{index}-100", step=1.0 + index * 0.1, camera_payload=bytes([index + 1]) * 8)
+            for index in range(6)
+        ]
+        with TemporaryDirectory() as tmp:
+            embedding_path = Path(tmp) / "embeddings.json"
+            output_path = Path(tmp) / "report.json"
+            write_external_embedding_cache(
+                {frame.frame_name: [float(index), float(index % 2)] for index, frame in enumerate(frames)},
+                embedding_path,
+                source="cosmos-test",
+            )
+            argv = [
+                "evaluate_wod_trajectory_model_cv.py",
+                "--world-model",
+                cv.FEATURE_MODE_EXTERNAL_EMBEDDINGS,
+                "--external-embedding-cache",
+                str(embedding_path),
+                "--selector-features",
+                "image_contextual",
+                "--rfs-backend",
+                "local",
+                "--folds",
+                "3",
+                "--residual-modes",
+                "1",
+                "--output",
+                str(output_path),
+            ]
+            with patch.object(sys, "argv", argv), patch.object(cv, "load_preference_frames", return_value=frames):
+                cv.main()
+
+            self.assertTrue(all(frame.camera_images for frame in frames))
+            report = json.loads(output_path.read_text(encoding="utf-8"))
+
+        self.assertEqual("cosmos-test", report["embedding_source"])
+        self.assertEqual("image_contextual", report["selector_features"])
+        self.assertEqual(2, report["embedding_dimension"])
+
+    def test_selector_targets_can_use_frame_delta(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        rows = [
+            {"frame_name": "a", "rfs_score": 4.0},
+            {"frame_name": "a", "rfs_score": 6.0},
+            {"frame_name": "b", "rfs_score": 10.0},
+        ]
+
+        targets = cv._selector_targets(rows, "frame_delta")
+
+        self.assertEqual([-1.0, 1.0, 0.0], targets.tolist())
+
+    def test_selector_targets_can_use_frame_zscore(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        rows = [
+            {"frame_name": "a", "rfs_score": 4.0},
+            {"frame_name": "a", "rfs_score": 6.0},
+            {"frame_name": "b", "rfs_score": 10.0},
+        ]
+
+        targets = cv._selector_targets(rows, "frame_zscore")
+
+        self.assertEqual([-1.0, 1.0, 0.0], targets.tolist())
+
+    def test_selector_targets_can_use_oracle_binary(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        rows = [
+            {"frame_name": "a", "rfs_score": 4.0},
+            {"frame_name": "a", "rfs_score": 6.0},
+            {"frame_name": "b", "rfs_score": 10.0},
+        ]
+
+        targets = cv._selector_targets(rows, "oracle_binary")
+
+        self.assertEqual([0.0, 1.0, 1.0], targets.tolist())
+
+    def test_selector_targets_can_use_frame_rank(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        rows = [
+            {"frame_name": "a", "rfs_score": 4.0},
+            {"frame_name": "a", "rfs_score": 8.0},
+            {"frame_name": "a", "rfs_score": 6.0},
+            {"frame_name": "b", "rfs_score": 10.0},
+        ]
+
+        targets = cv._selector_targets(rows, "frame_rank")
+
+        self.assertEqual([0.0, 1.0, 0.5, 0.0], targets.tolist())
+
+    def test_pairwise_selector_prefers_better_same_frame_candidate(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frame = sample_frame("segment-a-100", step=1.0)
+        rows = []
+        for index, (name, source, score) in enumerate(
+            [
+                ("constant_velocity", "kinematic", 4.0),
+                ("ridge_mean", "learned", 8.0),
+                ("temporal_ridge_mean", "temporal", 6.0),
+            ]
+        ):
+            row = cv.candidate_ranker_row(
+                frame=frame,
+                trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                candidate_name=name,
+                candidate_index=index,
+                source=source,
+            )
+            row["source"] = source
+            row["rfs_score"] = score
+            rows.append(row)
+
+        selector = cv._fit_selector(
+            rows,
+            ridge=0.01,
+            target_mode="pairwise_delta",
+            feature_mode="contextual",
+        )
+
+        self.assertEqual("ridge_mean", selector.select_row(rows)["candidate_name"])
+
+    def test_listwise_selector_prefers_better_same_frame_candidate(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frame = sample_frame("segment-a-100", step=1.0)
+        rows = []
+        for index, (name, source, score) in enumerate(
+            [
+                ("constant_velocity", "kinematic", 4.0),
+                ("ridge_mean", "learned", 8.0),
+                ("temporal_ridge_mean", "temporal", 6.0),
+            ]
+        ):
+            row = cv.candidate_ranker_row(
+                frame=frame,
+                trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                candidate_name=name,
+                candidate_index=index,
+                source=source,
+            )
+            row["source"] = source
+            row["rfs_score"] = score
+            rows.append(row)
+
+        selector = cv._fit_selector(
+            rows,
+            ridge=0.01,
+            target_mode="frame_delta",
+            feature_mode="contextual",
+            model_family="listwise_softmax",
+            listwise_iterations=80,
+            listwise_lr=0.3,
+            listwise_temperature=0.5,
+        )
+
+        self.assertEqual("ridge_mean", selector.select_row(rows)["candidate_name"])
+
+    def test_kinematic_fallback_threshold_uses_train_margin(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frame = sample_frame("segment-a-100", step=1.0)
+        rows = []
+        for index, (name, source, score) in enumerate(
+            [
+                ("constant_velocity", "kinematic", 8.0),
+                ("ridge_mean", "learned", 4.0),
+            ]
+        ):
+            row = cv.candidate_ranker_row(
+                frame=frame,
+                trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                candidate_name=name,
+                candidate_index=index,
+                source=source,
+            )
+            row["source"] = source
+            row["rfs_score"] = score
+            rows.append(row)
+        selector = cv._fit_selector(rows, ridge=0.01, target_mode="absolute", feature_mode="contextual")
+
+        threshold = cv._fit_kinematic_fallback_threshold(rows, selector, mode="train_margin")
+        selected = cv._select_with_policy(
+            selector,
+            rows,
+            source_guard=None,
+            fallback_policy={
+                "router": "off",
+                "threshold": threshold,
+                "sources": ["kinematic"],
+            },
+        )
+
+        self.assertIsNotNone(threshold)
+        self.assertEqual("constant_velocity", selected["candidate_name"])
+
+    def test_speed_routed_fallback_can_learn_always_fallback_policy(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        class FakeSelector:
+            def select_row(self, rows):
+                learned_rows = [row for row in rows if row["source"] == "learned"]
+                return learned_rows[0] if learned_rows else rows[0]
+
+            def predict_row(self, row):
+                return 1.0 if row["source"] == "learned" else 0.0
+
+        rows = []
+        for index, (name, source, score) in enumerate(
+            [
+                ("constant_velocity", "kinematic", 9.0),
+                ("ridge_mean", "learned", 1.0),
+            ]
+        ):
+            row = cv.candidate_ranker_row(
+                frame=sample_frame("segment-a-100", step=1.0),
+                trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                candidate_name=name,
+                candidate_index=index,
+                source=source,
+            )
+            row["source"] = source
+            row["rfs_score"] = score
+            rows.append(row)
+
+        policy = cv._fit_fallback_policy(
+            rows,
+            FakeSelector(),
+            mode="train_margin",
+            fallback_sources=("kinematic",),
+            router="speed",
+            source_options=(("kinematic",),),
+        )
+        selected = cv._select_with_policy(
+            FakeSelector(),
+            rows,
+            source_guard=None,
+            fallback_policy=policy,
+        )
+
+        route = policy["routes"]["speed:slow"]
+        self.assertEqual("always", route["decision"])
+        self.assertEqual("constant_velocity", selected["candidate_name"])
+
+    def test_scene_gate_learns_positive_scene_override(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        class FakeSelector:
+            def select_row(self, rows):
+                return max(rows, key=self.predict_row)
+
+            def predict_row(self, row):
+                return float(row["predicted_selector_score"])
+
+        rows = []
+        for frame_name, scene_pred, baseline_rfs, scene_rfs in (
+            ("segment-a-100", 2.0, 4.0, 9.0),
+            ("segment-b-100", -1.0, 9.0, 4.0),
+        ):
+            frame = sample_frame(frame_name, step=1.0)
+            for index, (name, source, predicted, score) in enumerate(
+                [
+                    ("ridge_mean", "learned", 0.0, baseline_rfs),
+                    ("scene_aux_ridge_mean", "scene", scene_pred, scene_rfs),
+                ]
+            ):
+                row = cv.candidate_ranker_row(
+                    frame=frame,
+                    trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                    candidate_name=name,
+                    candidate_index=index,
+                    source=source,
+                )
+                row["source"] = source
+                row["rfs_score"] = score
+                row["predicted_selector_score"] = predicted
+                rows.append(row)
+
+        policy = cv._fit_scene_gate_policy(
+            rows,
+            FakeSelector(),
+            mode="train_margin",
+            margin=0.0,
+            router="off",
+            ridge=0.01,
+            max_rate=0.5,
+            source_calibration=None,
+            fallback_policy=None,
+            fallback_selectors=None,
+        )
+        rows_by_frame = {}
+        for row in rows:
+            rows_by_frame.setdefault(row["frame_name"], []).append(row)
+
+        selected_positive = cv._apply_scene_gate(
+            policy,
+            FakeSelector(),
+            rows_by_frame["segment-a-100"],
+            rows_by_frame["segment-a-100"][0],
+            source_calibration=None,
+        )
+        selected_negative = cv._apply_scene_gate(
+            policy,
+            FakeSelector(),
+            rows_by_frame["segment-b-100"],
+            rows_by_frame["segment-b-100"][0],
+            source_calibration=None,
+        )
+
+        self.assertEqual("scene", selected_positive["source"])
+        self.assertEqual("learned", selected_negative["source"])
+
+    def test_scene_gate_off_preserves_default_selection(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frames = [sample_frame(f"segment-{index}-100", step=0.5 + index * 0.25) for index in range(6)]
+
+        default_report = cv.cross_validate_trajectory_model(
+            frames,
+            folds=3,
+            seed=5,
+            ridge=1.0,
+            feature_set=cv.FEATURE_SET_TEMPORAL,
+            residual_modes=1,
+            scorer=cv._local_rfs_score,
+        )
+        off_report = cv.cross_validate_trajectory_model(
+            frames,
+            folds=3,
+            seed=5,
+            ridge=1.0,
+            feature_set=cv.FEATURE_SET_TEMPORAL,
+            residual_modes=1,
+            scene_gate="off",
+            scorer=cv._local_rfs_score,
+        )
+
+        self.assertEqual(default_report["combined_ranker_mean_rfs"], off_report["combined_ranker_mean_rfs"])
+        self.assertFalse(off_report["scene_gate_enabled"])
+
+    def test_source_calibration_can_offset_overconfident_source(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        class FakeSelector:
+            def select_row(self, rows):
+                return max(rows, key=self.predict_row)
+
+            def predict_row(self, row):
+                return 1.0 if row["source"] == "temporal" else 0.0
+
+        frame = sample_frame("segment-a-100", step=1.0)
+        rows = []
+        for index, (name, source, score) in enumerate(
+            [
+                ("constant_velocity", "kinematic", 9.0),
+                ("temporal_ridge_mean", "temporal", 1.0),
+            ]
+        ):
+            row = cv.candidate_ranker_row(
+                frame=frame,
+                trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                candidate_name=name,
+                candidate_index=index,
+                source=source,
+            )
+            row["source"] = source
+            row["rfs_score"] = score
+            rows.append(row)
+
+        calibration = cv._fit_source_calibration(rows, mode="speed")
+        selected = cv._select_with_policy(
+            FakeSelector(),
+            rows,
+            source_guard=None,
+            fallback_policy=None,
+            source_calibration=calibration,
+        )
+
+        self.assertEqual("constant_velocity", selected["candidate_name"])
+
+    def test_split_sources_rejects_empty_fallback_source_list(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        self.assertEqual(["kinematic", "temporal"], cv._split_sources("kinematic, temporal"))
+        self.assertEqual(
+            [("kinematic",), ("kinematic", "temporal")],
+            cv._split_source_options("kinematic;kinematic, temporal"),
+        )
+        with self.assertRaisesRegex(ValueError, "at least one fallback source"):
+            cv._split_sources(" , ")
+
+    def test_fallback_router_key_can_use_speed_and_intent_speed(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        row = cv.candidate_ranker_row(
+            frame=sample_frame("segment-a-100", step=1.0),
+            trajectory=[(float(step), 0.0) for step in range(1, 21)],
+            candidate_name="constant_velocity",
+            candidate_index=0,
+            source="kinematic",
+        )
+
+        self.assertEqual("speed:slow", cv._fallback_router_key(row, "speed"))
+        self.assertEqual("intent:1|speed:slow", cv._fallback_router_key(row, "intent_speed"))
+
+    def test_selector_numeric_features_can_include_squares(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        features = cv._selector_numeric_features("squared")
+
+        self.assertIn("endpoint_distance", features)
+        self.assertIn("sq_endpoint_distance", features)
+        self.assertIn("source_learned", features)
+        self.assertIn("sq_source_learned", features)
+
+    def test_selector_numeric_features_can_include_context_interactions(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        features = cv._selector_numeric_features("contextual")
+
+        self.assertIn("source_temporal", features)
+        self.assertIn("speed_bin_slow", features)
+        self.assertIn("intent_2", features)
+        self.assertIn("source_temporal_x_speed_bin_slow", features)
+        self.assertIn("source_kinematic_x_intent_2", features)
+
+    def test_selector_numeric_features_can_include_world_confidence(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        features = cv._selector_numeric_features("world_contextual")
+
+        self.assertIn("source_world", features)
+        self.assertIn("world_nearest_distance_log", features)
+        self.assertIn("source_world_x_world_nearest_distance_log", features)
+
+if __name__ == "__main__":
+    unittest.main()

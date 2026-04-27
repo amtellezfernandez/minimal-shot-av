@@ -8,33 +8,25 @@ version = "0.1.0"
 description = "Submission scaffold and baseline simulator for SoTA Commission I"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["numpy>=1.26"]
 
 [project.optional-dependencies]
 sim-viz = ["Pillow>=10"]
 alpasim = ["numpy", "torch"]
-qwen-grpo = [
-    "accelerate>=1.0",
-    "datasets>=3.0",
-    "numpy>=1.26",
-    "peft>=0.13",
-    "pillow>=10",
-    "qwen-vl-utils>=0.0.8",
-    "torch>=2.4",
-    "torchvision>=0.19",
-    "transformers>=4.57",
-    "trl>=0.12",
-]
 
 [project.entry-points."alpasim.models"]
-spotlight_reflex = "minimal_shot_av.alpasim_spotlight:SpotlightReflexAlpaSimModel"
+spotlight_reflex = "minimal_shot_av.simulator.alpasim_spotlight:SpotlightReflexAlpaSimModel"
 
 [project.entry-points."alpasim.configs"]
-spotlight_reflex = "minimal_shot_av.alpasim_configs"
+spotlight_reflex = "minimal_shot_av.simulator.alpasim_configs"
 
 [project.scripts]
-compass = "minimal_shot_av.compass:main"
-compass-evidence = "minimal_shot_av.certification:main"
+compass = "minimal_shot_av.simulator.compass:main"
+compass-evidence = "minimal_shot_av.simulator.certification:main"
+alpasim-evidence = "minimal_shot_av.neutral.alpasim_metrics:main"
+benchmark-compare = "minimal_shot_av.neutral.benchmark_compare:main"
+benchmark-report = "minimal_shot_av.neutral.benchmark_reports:main"
+wod-zero-shot-eval = "minimal_shot_av.model.zero_shot_eval:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -43,4 +35,16 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.setuptools.package-data]
-"minimal_shot_av.alpasim_configs" = ["**/*.yaml"]
+"minimal_shot_av.simulator.alpasim_configs" = ["**/*.yaml"]
+
+[tool.minimal_shot_av.quality]
+max_line_length = 120
+forbidden_python310_tokens = [
+    "StrEnum",
+    "import tomllib",
+    "from tomllib import",
+    "typing.Self",
+    "from typing import Self",
+    "Path.walk(",
+    "itertools.batched",
+]

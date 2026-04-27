@@ -4,7 +4,7 @@
 
 Position the submission as a minimal-shot autonomy architecture for **WOD-E2E long-tail driving**, not as a simulator or route-following demo.
 
-The strongest deliverable is an end-to-end policy that operates on WOD-E2E without fine-tuning any base model on AV-specific data. The judged contribution should be the architecture and analysis: how the system uses general visual reasoning, temporal memory, and maneuver priors to produce plausible 5-second ego trajectories in rare scenarios.
+The strongest deliverable is an end-to-end policy that operates on WOD-E2E with a fully declared training and evaluation boundary. The judged contribution should be the architecture and analysis: how the system uses ego motion, route intent, candidate diversity, and rater-aligned selection to produce plausible 5-second ego trajectories in rare scenarios.
 
 ## Benchmark Grounding
 
@@ -32,9 +32,9 @@ Access and implementation must follow `docs/waymo-data-access.md`, the dataset d
 
 ## Strongest Pitch
 
-> We reject route memorization and slow per-frame deliberation. We propose a Predictive Reflex: a frozen general-purpose scene critic reads the long-tail event, a state-space pilot compresses temporal context, and a latent maneuver library emits rater-aligned future waypoints without AV dataset fine-tuning.
+> We reject route memorization and slow per-frame deliberation. We propose a Predictive Reflex: non-text trajectory generators produce diverse futures from ego history and route intent, and a source-aware RFS selector chooses the rater-plausible 5-second waypoint path.
 
-This is more credible than claiming a production driver. It targets the actual WOD-E2E question: can a model reason about rare visual situations and choose a human-preferred future path with minimal AV supervision?
+This is more credible than claiming a production driver. It targets the actual WOD-E2E question: can a compact, fast policy choose a human-preferred future path in long-tail scenes with minimal task-specific machinery?
 
 ## Recommended Stack
 
@@ -48,29 +48,30 @@ Parse the official records into the submission system:
 - scenario tags and rater feedback labels for validation
 - output writer for `E2EDChallengeSubmission` protos
 
-### 2. Frozen Scene Critic
+### 2. Non-Text Candidate Generators
 
-Use a declared base model without AV fine-tuning to produce:
+Generate a diverse set of candidate trajectories from structured signals:
 
-- scenario summary
-- hazard inventory
-- unusual actor or object hypotheses
-- route-command consistency notes
-- uncertainty and visibility warnings
+- kinematic extrapolations
+- route-intent templates
+- ridge residual proposals
+- learned anchor/residual proposals as an experimental branch
+- conservative fallbacks
 
-This component may be prompted or scaffolded, but it must be declared clearly in `models/DECLARATION.md`.
+All active candidates must produce numeric trajectories directly, without text prompts or language-mediated trajectory parsing.
 
-### 3. Predictive State-Space Pilot
+### 3. Temporal Motion State
 
 Maintain temporal state over the 12-second context:
 
 - ego motion trend
 - route intent
-- hazard persistence
-- scene entropy
-- maneuver readiness
+- speed and acceleration profile
+- curvature trend
+- stop/progress tendency
+- candidate-source reliability
 
-The SSM claim should be bounded: linear-time temporal compression and stable recurrent memory, not unmeasured "zero latency."
+The latency claim should be bounded and measured: parse records, generate candidates, rank, and write the single `(20, 2)` output.
 
 ### 4. Latent Maneuver Library
 
@@ -130,6 +131,6 @@ The failure case is not optional. It is evidence that the analysis was real.
 
 1. Keep the current simulator as an architecture sketch and demo fallback.
 2. Add a `wod_e2e/` data adapter and notebook-first workflow.
-3. Build a frozen-model scene critic baseline before adding any learned SSM.
-4. Implement a small maneuver library and trajectory projector.
+3. Build learned residual and anchor proposal baselines behind benchmark gates.
+4. Implement learned candidate generators and keep each experiment benchmarked.
 5. Compare against simple baselines: constant velocity, route-following, and logged-history extrapolation.

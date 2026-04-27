@@ -1,0 +1,20 @@
+{
+  "system": "realtime_14ms_budget",
+  "suite": "wod_e2e_online_runtime",
+  "source": "repo realtime target",
+  "metrics": {
+    "p95_total_latency_ms": {
+      "value": 14.0,
+      "higher_is_better": false,
+      "unit": "ms"
+    }
+  },
+  "metadata": {
+    "runtime_contract": "online_wod_non_text_runtime",
+    "excludes_io_and_training": true
+  },
+  "notes": [
+    "Strict online-controller latency budget used as a deployment sanity target.",
+    "This is not an Alpamayo measured latency; no same-contract Alpamayo runtime artifact is available in this repo."
+  ]
+}

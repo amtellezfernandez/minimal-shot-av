@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "evaluation_contract": "wod_e2e_rfs",
+    "frame_count": 479,
+    "score_backend": "official_waymo_rfs",
+    "selection_mode": "first",
+    "split": "validation_479_preference_frames"
+  },
+  "metrics": {
+    "best_candidate_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 7.852351864082588
+    },
+    "evaluated_frames": {
+      "higher_is_better": true,
+      "unit": "frames",
+      "value": 479.0
+    },
+    "max_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 10.0
+    },
+    "median_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 7.441072996771592
+    },
+    "min_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 3.0
+    },
+    "rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 7.02235769749286
+    },
+    "selection_regret": {
+      "higher_is_better": false,
+      "unit": "RFS",
+      "value": 0.8299941665897286
+    }
+  },
+  "notes": [
+    "Generated from artifacts/wod_kinematic_val479_first_official.json.",
+    "Use only against reports from the same WOD-E2E evaluation contract."
+  ],
+  "source": "artifacts/wod_kinematic_val479_first_official.json",
+  "suite": "wod_e2e_val479",
+  "system": "wod_kinematic_non_text_val479_first"
+}

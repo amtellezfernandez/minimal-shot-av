@@ -93,8 +93,49 @@ class WodPreferenceRankerTests(unittest.TestCase):
         metrics = trainer._evaluate(rows, model, candidate_names, candidate_families)
 
         self.assertEqual(metrics["selected_mean_rfs"], 1.0)
+        self.assertEqual(metrics["baseline_mean_rfs"], 5.0)
         self.assertEqual(metrics["oracle_mean_rfs"], 10.0)
         self.assertEqual(metrics["top1_oracle_match_rate"], 0.0)
+
+    def test_evaluate_baseline_falls_back_to_candidate_index_zero(self) -> None:
+        if trainer is None:
+            self.skipTest("numpy is not installed")
+        candidate_names = ["constant_velocity", "hold_position"]
+        candidate_families: list[str] = []
+        feature_count = len(trainer.NUMERIC_FEATURES) + len(candidate_names)
+        model = {
+            "bias": 0.0,
+            "weights": trainer.np.zeros(feature_count),
+            "mean": trainer.np.zeros(feature_count),
+            "scale": trainer.np.ones(feature_count),
+        }
+        base_features = {name: 0.0 for name in trainer.NUMERIC_FEATURES}
+        rows = [
+            {
+                "frame_name": "segment-1-100",
+                "candidate_name": "constant_velocity",
+                "candidate_index": 0,
+                "rfs_score": 7.0,
+                "features": {**base_features, "candidate_name": "constant_velocity"},
+            },
+            {
+                "frame_name": "segment-1-100",
+                "candidate_name": "hold_position",
+                "candidate_index": 1,
+                "rfs_score": 9.0,
+                "features": {**base_features, "candidate_name": "hold_position"},
+            },
+        ]
+
+        metrics = trainer._evaluate(
+            rows,
+            model,
+            candidate_names,
+            candidate_families,
+            baseline_candidate_name="logged_future",
+        )
+
+        self.assertEqual(metrics["baseline_mean_rfs"], 7.0)
 
     def test_cross_validate_returns_weighted_metrics(self) -> None:
         if trainer is None:

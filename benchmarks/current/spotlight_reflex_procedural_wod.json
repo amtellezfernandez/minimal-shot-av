@@ -1,0 +1,51 @@
+{
+  "metrics": {
+    "benchmark_pass_rate": {
+      "higher_is_better": true,
+      "unit": "rate",
+      "value": 1.0
+    },
+    "collision_rate": {
+      "higher_is_better": false,
+      "unit": "rate",
+      "value": 0.0
+    },
+    "mean_avg_progress": {
+      "higher_is_better": true,
+      "unit": "m/step",
+      "value": 1.0305554545454545
+    },
+    "mean_intervention_rate": {
+      "higher_is_better": false,
+      "unit": "rate",
+      "value": 0.040338181818181815
+    },
+    "mean_min_clearance_m": {
+      "higher_is_better": true,
+      "unit": "m",
+      "value": 2.9586
+    },
+    "mean_p05_clearance_m": {
+      "higher_is_better": true,
+      "unit": "m",
+      "value": 3.989309090909091
+    },
+    "run_count": {
+      "higher_is_better": true,
+      "unit": "runs",
+      "value": 110.0
+    },
+    "success_rate": {
+      "higher_is_better": true,
+      "unit": "rate",
+      "value": 1.0
+    }
+  },
+  "notes": [
+    "Generated from artifacts/agnostic_sim_eval_wod_1_10/scenario_eval.json.",
+    "Procedural simulator metrics are not WOD-E2E RFS and are not comparable to AlpaSim model-card scores."
+  ],
+  "source": "artifacts/agnostic_sim_eval_wod_1_10/scenario_eval.json",
+  "suite": "procedural_wod_simulator",
+  "system": "spotlight_reflex_procedural_wod"
+}

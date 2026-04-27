@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "evaluation_contract": "wod_e2e_rfs",
+    "frame_count": 3,
+    "score_backend": "official_waymo_rfs",
+    "selection_mode": "first",
+    "split": "validation_first_2000_raw_records"
+  },
+  "metrics": {
+    "best_candidate_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 8.0
+    },
+    "evaluated_frames": {
+      "higher_is_better": true,
+      "unit": "frames",
+      "value": 3.0
+    },
+    "max_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 10.0
+    },
+    "median_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 9.0
+    },
+    "min_rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 5.0
+    },
+    "rfs": {
+      "higher_is_better": true,
+      "unit": "RFS",
+      "value": 8.0
+    },
+    "selection_regret": {
+      "higher_is_better": false,
+      "unit": "RFS",
+      "value": 0.0
+    }
+  },
+  "notes": [
+    "Generated from artifacts/wod_kinematic_records2000_first_official.json.",
+    "Use only against reports from the same WOD-E2E evaluation contract."
+  ],
+  "source": "artifacts/wod_kinematic_records2000_first_official.json",
+  "suite": "wod_e2e_val_records2000",
+  "system": "wod_kinematic_non_text_records2000_first"
+}

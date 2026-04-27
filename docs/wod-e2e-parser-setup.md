@@ -104,7 +104,7 @@ human-rated preference trajectories.
 The reusable loader is:
 
 ```text
-src/minimal_shot_av/wod_e2e.py
+src/minimal_shot_av/model/wod_e2e.py
 ```
 
 It lazily imports TensorFlow and the generated official Waymo protos, so normal
@@ -217,7 +217,7 @@ as an evaluation tie-breaker. Earlier contaminated numbers should be ignored.
 The saved ranker can be loaded at runtime through:
 
 ```text
-src/minimal_shot_av/wod_ranker.py
+src/minimal_shot_av/model/wod_ranker.py
 ```
 
 Evaluate a saved ranker on any candidate JSONL file with:

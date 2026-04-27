@@ -1,0 +1,183 @@
+{
+  "audit_type": "wod_model_bias",
+  "benchmark": "artifacts/wod_contextual_r175_fallback_router_speed_cv_local.json",
+  "declaration": "/home/amdev/sota/minimal-shot-av/models/DECLARATION.md",
+  "mitigations": [
+    {
+      "detail": "Declaration explicitly marks validation RFS as internal development evidence.",
+      "id": "leaderboard_claim_blocked"
+    },
+    {
+      "detail": "Benchmark uses segment-grouped cross-validation with 5 folds.",
+      "id": "segment_grouped_cv"
+    },
+    {
+      "detail": "Largest selected source share is temporal at 59.9%.",
+      "id": "source_diversity"
+    },
+    {
+      "detail": "Benchmark and declaration both state simulator metrics were not used for model selection.",
+      "id": "simulator_independence_declared"
+    }
+  ],
+  "risks": [
+    {
+      "detail": "Selector development uses WOD-E2E validation preference labels, so the score is calibration evidence, not a strict zero-shot claim.",
+      "id": "validation_preference_bias",
+      "severity": "high"
+    },
+    {
+      "detail": "The active model is ego-history-only, so it is biased toward motion priors and cannot react to visual hazards such as debris, pedestrians, signals, or cross-traffic.",
+      "id": "visual_blindness_bias",
+      "severity": "high"
+    },
+    {
+      "detail": "Candidate oracle exceeds selected RFS by 1.3731; the selector is still biased toward the wrong candidate family on many frames.",
+      "id": "selector_oracle_gap",
+      "severity": "medium"
+    },
+    {
+      "detail": "Worst slice is intent:3 with mean regret 1.7240; global RFS hides uneven selector quality.",
+      "id": "slice_regret_bias",
+      "severity": "medium"
+    }
+  ],
+  "slice_summary": {
+    "available": true,
+    "top_regret_slices": [
+      {
+        "frames": 29,
+        "mean_regret": 1.7239743433405623,
+        "oracle_mean_rfs": 8.030133377574096,
+        "oracle_source_rates": {
+          "anchor": 0.0,
+          "kinematic": 0.5517241379310345,
+          "learned": 0.27586206896551724,
+          "temporal": 0.1724137931034483,
+          "world": 0.0
+        },
+        "selected_mean_rfs": 6.3061590342335325,
+        "selected_source_rates": {
+          "anchor": 0.0,
+          "kinematic": 0.6551724137931034,
+          "learned": 0.1724137931034483,
+          "temporal": 0.1724137931034483,
+          "world": 0.0
+        },
+        "slice": "intent:3"
+      },
+      {
+        "frames": 133,
+        "mean_regret": 1.5770074643223835,
+        "oracle_mean_rfs": 8.902815264916285,
+        "oracle_source_rates": {
+          "anchor": 0.0,
+          "kinematic": 0.3609022556390977,
+          "learned": 0.38345864661654133,
+          "temporal": 0.2556390977443609,
+          "world": 0.0
+        },
+        "selected_mean_rfs": 7.325807800593902,
+        "selected_source_rates": {
+          "anchor": 0.0,
+          "kinematic": 0.07518796992481203,
+          "learned": 0.08270676691729323,
+          "temporal": 0.8421052631578947,
+          "world": 0.0
+        },
+        "slice": "speed:slow"
+      },
+      {
+        "frames": 44,
+        "mean_regret": 1.5350917921006564,
+        "oracle_mean_rfs": 9.219340159531779,
+        "oracle_source_rates": {
+          "anchor": 0.0,
+          "kinematic": 0.6818181818181818,
+          "learned": 0.20454545454545456,
+          "temporal": 0.11363636363636363,
+          "world": 0.0
+        },
+        "selected_mean_rfs": 7.684248367431123,
+        "selected_source_rates": {
+          "anchor": 0.0,
+          "kinematic": 0.022727272727272728,
+          "learned": 0.0,
+          "temporal": 0.9772727272727273,
+          "world": 0.0
+        },
+        "slice": "speed:fast"
+      },
+      {
+        "frames": 23,
+        "mean_regret": 1.52338405261726,
+        "oracle_mean_rfs": 8.600556223936655,
+        "oracle_source_rates": {
+          "anchor": 0.0,
+          "kinematic": 0.4782608695652174,
+          "learned": 0.13043478260869565,
+          "temporal": 0.391304347826087,
+          "world": 0.0
+        },
+        "selected_mean_rfs": 7.077172171319397,
+        "selected_source_rates": {
+          "anchor": 0.0,
+          "kinematic": 0.8695652173913043,
+          "learned": 0.043478260869565216,
+          "temporal": 0.08695652173913043,
+          "world": 0.0
+        },
+        "slice": "intent:2"
+      },
+      {
+        "frames": 427,
+        "mean_regret": 1.3412067291041778,
+        "oracle_mean_rfs": 9.16396654945028,
+        "oracle_source_rates": {
+          "anchor": 0.0,
+          "kinematic": 0.49414519906323184,
+          "learned": 0.3161592505854801,
+          "temporal": 0.18969555035128804,
+          "world": 0.0
+        },
+        "selected_mean_rfs": 7.822759820346102,
+        "selected_source_rates": {
+          "anchor": 0.0,
+          "kinematic": 0.3255269320843091,
+          "learned": 0.01873536299765808,
+          "temporal": 0.6557377049180327,
+          "world": 0.0
+        },
+        "slice": "intent:1"
+      }
+    ],
+    "worst_regret_slice": {
+      "frames": 29,
+      "mean_regret": 1.7239743433405623,
+      "oracle_mean_rfs": 8.030133377574096,
+      "oracle_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.5517241379310345,
+        "learned": 0.27586206896551724,
+        "temporal": 0.1724137931034483,
+        "world": 0.0
+      },
+      "selected_mean_rfs": 6.3061590342335325,
+      "selected_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.6551724137931034,
+        "learned": 0.1724137931034483,
+        "temporal": 0.1724137931034483,
+        "world": 0.0
+      },
+      "slice": "intent:3"
+    }
+  },
+  "status": "warn",
+  "summary": {
+    "mitigation_count": 4,
+    "risk_count": 4,
+    "score_is_leaderboard_claim": false,
+    "strict_zero_shot_claim_allowed": false
+  }
+}

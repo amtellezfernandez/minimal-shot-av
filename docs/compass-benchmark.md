@@ -18,7 +18,7 @@ It is the benchmark layer above the abstract simulator. It adds:
 Official calibrated ladder:
 
 ```bash
-PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.compass ladder \
+PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.simulator.compass ladder \
   --policy spotlight-reflex \
   --seed-start 1 \
   --seed-end 10 \
@@ -28,7 +28,7 @@ PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.compass ladder \
 Single-suite probe:
 
 ```bash
-PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.compass run \
+PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.simulator.compass run \
   --policy spotlight-reflex \
   --suite gauntlet \
   --seed-start 1 \
@@ -45,7 +45,7 @@ uv run compass run --policy spotlight-reflex --suite gauntlet --seed-start 1 --s
 Generate the SOTIF-aligned evidence package:
 
 ```bash
-PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.certification \
+PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.simulator.certification \
   --policy spotlight-reflex \
   --profile sotif-v0 \
   --seed-start 1 \
@@ -73,8 +73,8 @@ Profiles make the certification assumptions explicit:
 
 Use `--odd-spec odd.json` and `--thresholds thresholds.json` to evaluate a
 different ODD or evidence standard without changing source code. Use
-`minimal_shot_av.compass ladder --profile-json compass_profile.json`, or
-`minimal_shot_av.certification --compass-profile-json compass_profile.json`, to
+`minimal_shot_av.simulator.compass ladder --profile-json compass_profile.json`, or
+`minimal_shot_av.simulator.certification --compass-profile-json compass_profile.json`, to
 override benchmark levels, official weights, trajectory scoring constants,
 suite penalties, coverage gates, minimum ranked runs, and scenario-generation
 settings. The `scenario_generation` block controls suite seed offsets, suite

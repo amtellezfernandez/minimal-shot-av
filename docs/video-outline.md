@@ -6,7 +6,7 @@ Project title: **Predictive Reflex for Minimal-Shot AV**.
 
 One sentence:
 
-> A frozen scene critic plus state-space maneuver policy predicts WOD-E2E long-tail trajectories without AV-specific fine-tuning.
+> A fast structured trajectory policy predicts WOD-E2E long-tail trajectories with non-text candidate generators and an RFS-calibrated selector.
 
 ## Slide 2: Why WOD-E2E
 
@@ -30,21 +30,20 @@ State the hard rule:
 
 Show the pipeline:
 
-- WOD-E2E cameras and ego history
-- frozen scene critic
-- predictive SSM state
-- latent maneuver library
-- trajectory decoder
-- safety projector
+- WOD-E2E ego history and route intent
+- kinematic and learned residual candidate generators
+- anchor/residual proposal experiments
+- source-aware numeric ranker
+- RFS trust-region verifier
 - `(20, 2)` waypoint output
 
-## Slide 5: Scene Demo
+## Slide 5: Validation Demo
 
 Show one WOD-E2E-like case:
 
-- camera/context montage or rendered proxy
-- critic summary
-- selected maneuver
+- past ego trajectory and route intent
+- candidate trajectory set
+- selector scores
 - generated future path
 - why the choice is plausible under RFS
 
@@ -63,7 +62,8 @@ Include the smallest honest table available:
 
 - constant-velocity baseline
 - route-following baseline
-- frozen critic plus maneuver library
+- kinematic candidate baseline
+- ridge residual candidate baseline
 - full Predictive Reflex, if implemented
 
 Report:
@@ -81,5 +81,5 @@ State what the prize enables:
 - complete WOD-E2E submission writer and proto validator
 - reproducible notebook
 - stronger rater-aware selector
-- edge-sized SSM pilot
+- edge-sized trajectory decoder
 - deeper failure analysis across scenario clusters

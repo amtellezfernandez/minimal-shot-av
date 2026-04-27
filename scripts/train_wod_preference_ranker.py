@@ -17,7 +17,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.wod_ranker import DEFAULT_NUMERIC_FEATURES, WodPreferenceRanker, raw_features
+from minimal_shot_av.model.wod_ranker import DEFAULT_NUMERIC_FEATURES, WodPreferenceRanker, raw_features
 
 
 NUMERIC_FEATURES = DEFAULT_NUMERIC_FEATURES
@@ -32,7 +32,17 @@ def main() -> int:
     parser.add_argument("--ridge", type=float, default=1.0)
     parser.add_argument("--test-fraction", type=float, default=0.2)
     parser.add_argument("--seed", type=int, default=17)
-    parser.add_argument("--folds", type=int, default=1, help="Run segment-grouped K-fold evaluation before saving the final model.")
+    parser.add_argument(
+        "--folds",
+        type=int,
+        default=1,
+        help="Run segment-grouped K-fold evaluation before saving the final model.",
+    )
+    parser.add_argument(
+        "--baseline-candidate",
+        default="logged_future",
+        help="Candidate name used as the non-ranker baseline; falls back to candidate_index=0 when absent.",
+    )
     args = parser.parse_args()
 
     rows = _load_rows(args.input)
@@ -40,12 +50,20 @@ def main() -> int:
     candidate_families = sorted({str(row["features"].get("candidate_family", row["candidate_name"])) for row in rows})
     cv_metrics = None
     if args.folds > 1:
-        cv_metrics = _cross_validate(rows, candidate_names, candidate_families, folds=args.folds, seed=args.seed, ridge=args.ridge)
+        cv_metrics = _cross_validate(
+            rows,
+            candidate_names,
+            candidate_families,
+            folds=args.folds,
+            seed=args.seed,
+            ridge=args.ridge,
+            baseline_candidate_name=args.baseline_candidate,
+        )
         print(
             "cv "
             f"folds={cv_metrics['folds']} frames={cv_metrics['frames']} "
             f"selected_mean={cv_metrics['selected_mean_rfs']:.3f} "
-            f"logged_mean={cv_metrics['logged_mean_rfs']:.3f} "
+            f"baseline_mean={cv_metrics['baseline_mean_rfs']:.3f} "
             f"oracle_mean={cv_metrics['oracle_mean_rfs']:.3f} "
             f"top1={cv_metrics['top1_oracle_match_rate']:.3f}"
         )
@@ -57,8 +75,20 @@ def main() -> int:
         raise ValueError("need at least one train and one test frame")
 
     split_model = _fit_ridge(train_rows, candidate_names, candidate_families, ridge=args.ridge)
-    train_metrics = _evaluate(train_rows, split_model, candidate_names, candidate_families)
-    test_metrics = _evaluate(test_rows, split_model, candidate_names, candidate_families)
+    train_metrics = _evaluate(
+        train_rows,
+        split_model,
+        candidate_names,
+        candidate_families,
+        baseline_candidate_name=args.baseline_candidate,
+    )
+    test_metrics = _evaluate(
+        test_rows,
+        split_model,
+        candidate_names,
+        candidate_families,
+        baseline_candidate_name=args.baseline_candidate,
+    )
     final_model = _fit_ridge(rows, candidate_names, candidate_families, ridge=args.ridge)
 
     payload = {
@@ -69,6 +99,7 @@ def main() -> int:
         "ridge": args.ridge,
         "seed": args.seed,
         "folds": args.folds,
+        "baseline_candidate_name": args.baseline_candidate,
         "feature_mean": final_model["mean"].tolist(),
         "feature_scale": final_model["scale"].tolist(),
         "weights": final_model["weights"].tolist(),
@@ -83,14 +114,14 @@ def main() -> int:
     print(
         "train "
         f"frames={train_metrics['frames']} selected_mean={train_metrics['selected_mean_rfs']:.3f} "
-        f"logged_mean={train_metrics['logged_mean_rfs']:.3f} "
+        f"baseline_mean={train_metrics['baseline_mean_rfs']:.3f} "
         f"oracle_mean={train_metrics['oracle_mean_rfs']:.3f} "
         f"top1={train_metrics['top1_oracle_match_rate']:.3f}"
     )
     print(
         "test "
         f"frames={test_metrics['frames']} selected_mean={test_metrics['selected_mean_rfs']:.3f} "
-        f"logged_mean={test_metrics['logged_mean_rfs']:.3f} "
+        f"baseline_mean={test_metrics['baseline_mean_rfs']:.3f} "
         f"oracle_mean={test_metrics['oracle_mean_rfs']:.3f} "
         f"top1={test_metrics['top1_oracle_match_rate']:.3f}"
     )
@@ -146,6 +177,7 @@ def _cross_validate(
     folds: int,
     seed: int,
     ridge: float,
+    baseline_candidate_name: str = "logged_future",
 ) -> dict[str, float | int]:
     if folds < 2:
         raise ValueError("--folds must be at least 2")
@@ -168,7 +200,13 @@ def _cross_validate(
         train_rows = [row for row in rows if row["frame_name"] not in test_frames]
         test_rows = [row for row in rows if row["frame_name"] in test_frames]
         model = _fit_ridge(train_rows, candidate_names, candidate_families, ridge=ridge)
-        metrics = _evaluate(test_rows, model, candidate_names, candidate_families)
+        metrics = _evaluate(
+            test_rows,
+            model,
+            candidate_names,
+            candidate_families,
+            baseline_candidate_name=baseline_candidate_name,
+        )
         fold_metrics.append(metrics)
 
     total_frames = sum(int(metrics["frames"]) for metrics in fold_metrics)
@@ -176,6 +214,7 @@ def _cross_validate(
         "folds": folds,
         "frames": total_frames,
         "selected_mean_rfs": _weighted_mean(fold_metrics, "selected_mean_rfs"),
+        "baseline_mean_rfs": _weighted_mean(fold_metrics, "baseline_mean_rfs"),
         "logged_mean_rfs": _weighted_mean(fold_metrics, "logged_mean_rfs"),
         "oracle_mean_rfs": _weighted_mean(fold_metrics, "oracle_mean_rfs"),
         "mean_regret": _weighted_mean(fold_metrics, "mean_regret"),
@@ -213,26 +252,28 @@ def _evaluate(
     model: dict[str, Any],
     candidate_names: list[str],
     candidate_families: list[str],
+    *,
+    baseline_candidate_name: str = "logged_future",
 ) -> dict[str, float | int]:
     by_frame: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
         by_frame[str(row["frame_name"])].append(row)
 
     selected_scores: list[float] = []
-    logged_scores: list[float] = []
+    baseline_scores: list[float] = []
     oracle_scores: list[float] = []
     top1_matches = 0
 
     for frame_rows in by_frame.values():
         ranker = _ranker_from_model(model, candidate_names, candidate_families)
         selected = ranker.select_row(frame_rows)
-        logged = next(row for row in frame_rows if row["candidate_name"] == "logged_future")
+        baseline = _baseline_row(frame_rows, baseline_candidate_name)
         oracle = max(frame_rows, key=lambda row: float(row["rfs_score"]))
 
         selected_score = float(selected["rfs_score"])
         oracle_score = float(oracle["rfs_score"])
         selected_scores.append(selected_score)
-        logged_scores.append(float(logged["rfs_score"]))
+        baseline_scores.append(float(baseline["rfs_score"]))
         oracle_scores.append(oracle_score)
         if selected_score == oracle_score:
             top1_matches += 1
@@ -241,11 +282,19 @@ def _evaluate(
     return {
         "frames": count,
         "selected_mean_rfs": float(sum(selected_scores) / count),
-        "logged_mean_rfs": float(sum(logged_scores) / count),
+        "baseline_mean_rfs": float(sum(baseline_scores) / count),
+        "logged_mean_rfs": float(sum(baseline_scores) / count),
         "oracle_mean_rfs": float(sum(oracle_scores) / count),
         "mean_regret": float(sum(o - s for o, s in zip(oracle_scores, selected_scores)) / count),
         "top1_oracle_match_rate": float(top1_matches / count),
     }
+
+
+def _baseline_row(frame_rows: list[dict[str, Any]], baseline_candidate_name: str) -> dict[str, Any]:
+    for row in frame_rows:
+        if str(row["candidate_name"]) == baseline_candidate_name:
+            return row
+    return min(frame_rows, key=lambda row: int(row.get("candidate_index", 0)))
 
 
 def predict(
@@ -257,7 +306,11 @@ def predict(
     return _ranker_from_model(model, candidate_names, candidate_families or []).predict_row(row)
 
 
-def _raw_features(row: dict[str, Any], candidate_names: list[str], candidate_families: list[str] | None = None) -> list[float]:
+def _raw_features(
+    row: dict[str, Any],
+    candidate_names: list[str],
+    candidate_families: list[str] | None = None,
+) -> list[float]:
     return raw_features(row, NUMERIC_FEATURES, candidate_names, candidate_families or [])
 
 
