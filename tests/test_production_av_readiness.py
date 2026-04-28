@@ -52,6 +52,12 @@ class ProductionAvReadinessTests(unittest.TestCase):
         self.assertFalse(report["gates"]["score_near_normalized_ceiling"])
         self.assertFalse(report["gates"]["score_near_oracle"])
         self.assertFalse(report["gates"]["generalization_beyond_local_frame_cache"])
+        self.assertEqual("no_go", report["deployment_authorization"]["decision"])
+        self.assertFalse(report["deployment_authorization"]["real_vehicle_control_authorized"])
+        self.assertIn(
+            "do_not_connect_model_output_to_steering_throttle_or_brake",
+            report["deployment_authorization"]["mandatory_controls"],
+        )
         self.assertAlmostEqual(
             1.387413,
             report["trajectory_metrics"]["rfs_gap_to_oracle"],
@@ -263,6 +269,10 @@ class ProductionAvReadinessTests(unittest.TestCase):
         self.assertEqual("production_claim_evidence_complete", report["disposition"])
         self.assertTrue(all(report["gates"].values()))
         self.assertEqual([], report["blockers"])
+        self.assertEqual("go", report["deployment_authorization"]["decision"])
+        self.assertTrue(report["deployment_authorization"]["real_vehicle_control_authorized"])
+        self.assertEqual([], report["deployment_authorization"]["failed_gates"])
+        self.assertEqual([], report["deployment_authorization"]["mandatory_controls"])
 
 
 if __name__ == "__main__":

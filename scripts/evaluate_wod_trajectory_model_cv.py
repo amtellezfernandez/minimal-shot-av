@@ -65,6 +65,11 @@ def main() -> int:
         default=ROOT / "waymo_open_dataset_end_to_end_camera_v_1_0_0" / "val",
     )
     parser.add_argument("--output", type=Path, default=ROOT / "artifacts" / "wod_ridge_trajectory_cv.json")
+    parser.add_argument(
+        "--selector-audit-output",
+        type=Path,
+        help="Optional JSONL export of per-frame selector/oracle audit rows.",
+    )
     parser.add_argument("--folds", type=int, default=5)
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--ridge", type=float, default=30.0)
@@ -91,6 +96,8 @@ def main() -> int:
             "absolute_normalized",
             "frame_delta",
             "frame_delta_normalized",
+            "frame_delta_oracle_weighted",
+            "frame_delta_normalized_oracle_weighted",
             "frame_zscore",
             "frame_zscore_normalized",
             "frame_rank",
@@ -148,6 +155,19 @@ def main() -> int:
         default="off",
         help="Add train-fold source reliability offsets to selector scores by group.",
     )
+    parser.add_argument(
+        "--selector-source-policy",
+        choices=("off", "oracle_source"),
+        default="off",
+        help="Optionally select source first from train-fold oracle-source reliability, then rank within source.",
+    )
+    parser.add_argument(
+        "--selector-family-calibration",
+        choices=("off", "speed_source_family"),
+        default="off",
+        help="Apply conservative held-out reliability offsets by speed, source, and candidate family.",
+    )
+    parser.add_argument("--selector-family-calibration-min-count", type=int, default=8)
     parser.add_argument(
         "--selector-kinematic-fallback",
         choices=("off", "train_margin"),
@@ -235,6 +255,12 @@ def main() -> int:
     )
     parser.add_argument("--source-gate-ridge", type=float, default=1.0)
     parser.add_argument("--source-gate-max-rate", type=float, default=0.25)
+    parser.add_argument(
+        "--source-gate-min-precision",
+        type=float,
+        default=0.0,
+        help="Minimum train-fold positive-gain precision required while fitting source-gate thresholds.",
+    )
     parser.add_argument(
         "--kinematic-profile",
         choices=("base", "expanded"),
@@ -407,7 +433,7 @@ def main() -> int:
         residual_modes=args.residual_modes,
         residual_grouping=args.residual_grouping,
         include_pairwise_residuals=args.pairwise_residuals,
-        include_frame_diagnostics=args.include_frame_diagnostics,
+        include_frame_diagnostics=args.include_frame_diagnostics or bool(args.selector_audit_output),
         anchor_count=args.anchor_count,
         anchor_top_k=args.anchor_top_k,
         anchor_residual_modes_per_anchor=args.anchor_residual_modes_per_anchor,
@@ -426,6 +452,9 @@ def main() -> int:
         selector_source_guard=args.selector_source_guard,
         selector_source_guard_margin=args.selector_source_guard_margin,
         selector_source_calibration=args.selector_source_calibration,
+        selector_source_policy=args.selector_source_policy,
+        selector_family_calibration=args.selector_family_calibration,
+        selector_family_calibration_min_count=args.selector_family_calibration_min_count,
         selector_kinematic_fallback=args.selector_kinematic_fallback,
         selector_fallback_sources=tuple(_split_sources(args.selector_fallback_sources)),
         selector_fallback_router=args.selector_fallback_router,
@@ -444,6 +473,7 @@ def main() -> int:
         source_gate_router=args.source_gate_router,
         source_gate_ridge=args.source_gate_ridge,
         source_gate_max_rate=args.source_gate_max_rate,
+        source_gate_min_precision=args.source_gate_min_precision,
         kinematic_profile=args.kinematic_profile,
         blend_candidates=args.blend_candidates,
         progress_every_fold=args.progress_every_fold,
@@ -452,6 +482,8 @@ def main() -> int:
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if args.selector_audit_output:
+        _write_selector_audit_rows(report, args.selector_audit_output)
     print(json.dumps({key: value for key, value in report.items() if key != "folds_detail"}, indent=2))
     print(f"wrote {args.output}")
     return 0
@@ -464,6 +496,18 @@ def _write_frame_cache(frames: list[WodE2EPreferenceFrame], path: Path) -> None:
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _write_selector_audit_rows(report: dict[str, object], path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as handle:
+        for fold in report.get("folds_detail", []):
+            fold_dict = dict(fold)
+            fold_index = int(fold_dict.get("fold_index", -1))
+            for diagnostic in fold_dict.get("frame_diagnostics", []):
+                row = dict(diagnostic)
+                row["fold_index"] = fold_index
+                handle.write(json.dumps(row, sort_keys=True) + "\n")
 
 
 def _load_frame_cache(path: Path) -> list[WodE2EPreferenceFrame]:
@@ -596,6 +640,9 @@ def cross_validate_trajectory_model(
     selector_source_guard: str = "off",
     selector_source_guard_margin: float = 0.0,
     selector_source_calibration: str = "off",
+    selector_source_policy: str = "off",
+    selector_family_calibration: str = "off",
+    selector_family_calibration_min_count: int = 8,
     selector_kinematic_fallback: str = "off",
     selector_fallback_sources: tuple[str, ...] = ("kinematic",),
     selector_fallback_router: str = "off",
@@ -614,6 +661,7 @@ def cross_validate_trajectory_model(
     source_gate_router: str = "speed",
     source_gate_ridge: float = 1.0,
     source_gate_max_rate: float = 0.25,
+    source_gate_min_precision: float = 0.0,
     kinematic_profile: str = "base",
     blend_candidates: str = "off",
     progress_every_fold: bool = False,
@@ -776,6 +824,12 @@ def cross_validate_trajectory_model(
             selector_train_rows,
             mode=selector_source_calibration,
         )
+        source_policy = _fit_source_policy(selector_train_rows, mode=selector_source_policy)
+        family_calibration = _fit_family_calibration(
+            selector_train_rows,
+            mode=selector_family_calibration,
+            min_count=selector_family_calibration_min_count,
+        )
         fallback_selectors = (
             _fit_fallback_selectors(
                 selector_train_rows,
@@ -833,6 +887,7 @@ def cross_validate_trajectory_model(
             router=source_gate_router,
             ridge=source_gate_ridge,
             max_rate=source_gate_max_rate,
+            min_precision=source_gate_min_precision,
             source_calibration=source_calibration,
             fallback_policy=fallback_policy,
             fallback_selectors=fallback_selectors,
@@ -846,6 +901,8 @@ def cross_validate_trajectory_model(
                 source_guard=source_guard,
                 fallback_policy=fallback_policy,
                 source_calibration=source_calibration,
+                source_policy=source_policy,
+                family_calibration=family_calibration,
                 fallback_selectors=fallback_selectors,
                 scene_gate_policy=scene_gate_policy,
                 source_gate_policy=source_gate_policy,
@@ -912,6 +969,9 @@ def cross_validate_trajectory_model(
         "selector_source_guard": selector_source_guard,
         "selector_source_guard_margin": float(selector_source_guard_margin),
         "selector_source_calibration": selector_source_calibration,
+        "selector_source_policy": selector_source_policy,
+        "selector_family_calibration": selector_family_calibration,
+        "selector_family_calibration_min_count": int(selector_family_calibration_min_count),
         "selector_kinematic_fallback": selector_kinematic_fallback,
         "selector_fallback_sources": _effective_fallback_sources(
             selector_fallback_sources,
@@ -940,6 +1000,7 @@ def cross_validate_trajectory_model(
         "source_gate_router": source_gate_router,
         "source_gate_ridge": float(source_gate_ridge),
         "source_gate_max_rate": float(source_gate_max_rate),
+        "source_gate_min_precision": float(source_gate_min_precision),
         "source_gate_enabled": source_gate != "off",
         "source_gate_selected_rate": _weighted_mean(fold_reports, "source_gate_selected_rate"),
         "source_gate_precision": _weighted_mean(fold_reports, "source_gate_precision"),
@@ -1031,6 +1092,7 @@ def cross_validate_trajectory_model(
         "oracle_memory_rate": _weighted_mean(fold_reports, "oracle_memory_rate"),
         "slices": _aggregate_fold_slices(fold_reports),
         "selector_regret_buckets": _aggregate_fold_regret_buckets(fold_reports),
+        "selector_opportunity_buckets": _aggregate_fold_opportunity_buckets(fold_reports),
         "folds_detail": fold_reports,
     }
     if world_model_mode != WORLD_MODEL_OFF:
@@ -1070,6 +1132,8 @@ def _evaluate_fold(
     source_guard: dict[tuple[str, ...], set[str]] | None = None,
     fallback_policy: dict[str, object] | None = None,
     source_calibration: dict[str, dict[str, float]] | None = None,
+    source_policy: dict[str, object] | None = None,
+    family_calibration: dict[str, object] | None = None,
     fallback_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None = None,
     scene_gate_policy: dict[str, object] | None = None,
     source_gate_policy: dict[str, object] | None = None,
@@ -1111,6 +1175,7 @@ def _evaluate_fold(
     source_gate_false_positive_losses: list[float] = []
     source_gate_override_count = 0
     source_gate_true_positive_count = 0
+    opportunity_accumulators: dict[str, dict[str, object]] = {}
     top1_matches = 0
     selected_source_counts: dict[str, int] = defaultdict(int)
     oracle_source_counts: dict[str, int] = defaultdict(int)
@@ -1147,6 +1212,8 @@ def _evaluate_fold(
             source_guard=source_guard,
             fallback_policy=fallback_policy,
             source_calibration=source_calibration,
+            source_policy=source_policy,
+            family_calibration=family_calibration,
             fallback_selectors=fallback_selectors,
         )
         baseline_selected = selected
@@ -1215,8 +1282,9 @@ def _evaluate_fold(
         _add_slice_observation(slice_accumulators, f"speed:{_speed_bin(frame.init_speed_mps)}", selected, oracle)
         _add_slice_observation(slice_accumulators, f"intent:{int(frame.intent)}", selected, oracle)
         _add_regret_observations(regret_accumulators, frame, selected, oracle)
+        _add_opportunity_observations(opportunity_accumulators, frame, selected, rows)
         if include_frame_diagnostics:
-            frame_diagnostics.append(_frame_diagnostic(frame, selected, oracle))
+            frame_diagnostics.append(_frame_diagnostic(frame, selected, oracle, rows))
     report = {
         "fold_index": fold_index,
         "frames": len(frames),
@@ -1268,6 +1336,7 @@ def _evaluate_fold(
         "oracle_memory_rate": oracle_source_counts["memory"] / len(frames),
         "slices": _finalize_slices(slice_accumulators),
         "selector_regret_buckets": _finalize_regret_buckets(regret_accumulators),
+        "selector_opportunity_buckets": _finalize_opportunity_buckets(opportunity_accumulators),
     }
     if include_frame_diagnostics:
         report["frame_diagnostics"] = frame_diagnostics
@@ -1322,9 +1391,11 @@ def _frame_diagnostic(
     frame: WodE2EPreferenceFrame,
     selected: dict[str, object],
     oracle: dict[str, object],
+    rows: list[dict[str, object]] | None = None,
 ) -> dict[str, object]:
     selected_score = float(selected["rfs_score"])
     oracle_score = float(oracle["rfs_score"])
+    best_by_source = _best_rows_by_source(rows or [])
     return {
         "frame_name": frame.frame_name,
         "intent": int(frame.intent),
@@ -1332,12 +1403,23 @@ def _frame_diagnostic(
         "init_speed_mps": float(frame.init_speed_mps),
         "selected_source": str(selected["source"]),
         "selected_candidate": str(selected["candidate_name"]),
+        "selected_family": _candidate_family(selected),
         "selected_score": selected_score,
         "oracle_source": str(oracle["source"]),
         "oracle_candidate": str(oracle["candidate_name"]),
+        "oracle_family": _candidate_family(oracle),
         "oracle_score": oracle_score,
         "regret": oracle_score - selected_score,
         "oracle_matched": selected_score == oracle_score,
+        "top_candidates_by_source": {
+            source: {
+                "candidate": str(row["candidate_name"]),
+                "family": _candidate_family(row),
+                "score": float(row["rfs_score"]),
+                "gap_vs_selected": float(row["rfs_score"]) - selected_score,
+            }
+            for source, row in sorted(best_by_source.items())
+        },
     }
 
 
@@ -2153,6 +2235,112 @@ def _fit_source_calibration(
     return calibration
 
 
+def _fit_source_policy(rows: list[dict[str, object]], *, mode: str) -> dict[str, object] | None:
+    if mode == "off":
+        return None
+    if mode != "oracle_source":
+        raise ValueError(f"unsupported selector source policy: {mode}")
+    rows_by_frame: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        rows_by_frame[str(row["frame_name"])].append(row)
+    source_wins_by_route: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    source_scores: dict[str, float] = defaultdict(float)
+    source_counts: dict[str, int] = defaultdict(int)
+    for frame_rows in rows_by_frame.values():
+        oracle = max(frame_rows, key=lambda row: float(row["rfs_score"]))
+        route = _source_policy_route_key(frame_rows, {"router": "speed"})
+        oracle_source = str(oracle["source"])
+        source_wins_by_route[route][oracle_source] += 1
+        for source, source_row in _best_rows_by_source(frame_rows).items():
+            source_scores[source] += float(source_row["rfs_score"])
+            source_counts[source] += 1
+    global_source_scores = {
+        source: float(source_scores[source] / source_counts[source])
+        for source in source_scores
+        if source_counts[source]
+    }
+    routes = {}
+    for route, source_counts_by_route in source_wins_by_route.items():
+        total = sum(source_counts_by_route.values())
+        routes[route] = {
+            source: float(count / total)
+            for source, count in source_counts_by_route.items()
+            if total
+        }
+    return {
+        "mode": mode,
+        "router": "speed",
+        "routes": routes,
+        "global_source_scores": global_source_scores,
+    }
+
+
+def _source_policy_route_key(rows: list[dict[str, object]], source_policy: dict[str, object]) -> str:
+    if not rows:
+        return "__all__"
+    router = str(source_policy.get("router", "speed"))
+    if router == "off":
+        return "__all__"
+    return _fallback_router_key(rows[0], router)
+
+
+def _fit_family_calibration(
+    rows: list[dict[str, object]],
+    *,
+    mode: str,
+    min_count: int,
+) -> dict[str, object] | None:
+    if mode == "off":
+        return None
+    if mode != "speed_source_family":
+        raise ValueError(f"unsupported selector family calibration: {mode}")
+    if min_count <= 0:
+        raise ValueError("--selector-family-calibration-min-count must be positive")
+    rows_by_frame: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        rows_by_frame[str(row["frame_name"])].append(row)
+    gains_by_key: dict[str, list[float]] = defaultdict(list)
+    gains_by_source: dict[str, list[float]] = defaultdict(list)
+    for frame_rows in rows_by_frame.values():
+        frame_mean = _mean([float(row["rfs_score"]) for row in frame_rows])
+        for row in frame_rows:
+            gain = float(row["rfs_score"]) - frame_mean
+            key = _family_calibration_key(row)
+            gains_by_key[key].append(gain)
+            gains_by_source[str(row["source"])].append(gain)
+    source_offsets = {
+        source: float(np.clip(_mean(values), -1.0, 1.0))
+        for source, values in gains_by_source.items()
+        if values
+    }
+    offsets = {
+        key: float(np.clip(_mean(values), -1.0, 1.0))
+        for key, values in gains_by_key.items()
+        if len(values) >= min_count
+    }
+    counts = {key: len(values) for key, values in gains_by_key.items()}
+    return {
+        "mode": mode,
+        "min_count": int(min_count),
+        "offsets": offsets,
+        "source_offsets": source_offsets,
+        "counts": counts,
+    }
+
+
+def _family_calibration_key(row: dict[str, object]) -> str:
+    return f"{_fallback_router_key(row, 'speed')}|{row['source']}|{_candidate_family(row)}"
+
+
+def _family_calibration_offset(row: dict[str, object], family_calibration: dict[str, object]) -> float:
+    key = _family_calibration_key(row)
+    offsets = dict(family_calibration.get("offsets", {}))
+    if key in offsets:
+        return float(offsets[key])
+    source_offsets = dict(family_calibration.get("source_offsets", {}))
+    return float(source_offsets.get(str(row["source"]), 0.0))
+
+
 def _selector_training_rows_for_gates(
     rows: list[dict[str, object]],
     *,
@@ -2463,6 +2651,7 @@ def _fit_source_gate_policy(
     router: str,
     ridge: float,
     max_rate: float,
+    min_precision: float,
     source_calibration: dict[str, dict[str, float]] | None,
     fallback_policy: dict[str, object] | None,
     fallback_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None,
@@ -2477,6 +2666,8 @@ def _fit_source_gate_policy(
         raise ValueError("--source-gate-ridge must be positive")
     if max_rate <= 0.0 or max_rate > 1.0:
         raise ValueError("--source-gate-max-rate must be in (0, 1]")
+    if min_precision < 0.0 or min_precision > 1.0:
+        raise ValueError("--source-gate-min-precision must be in [0, 1]")
     source_names = tuple(dict.fromkeys(str(source) for source in sources))
     if not source_names:
         raise ValueError("at least one source-gate source is required")
@@ -2555,6 +2746,7 @@ def _fit_source_gate_policy(
             allowed_routes=allowed_routes,
             margin=margin,
             max_rate=max_rate,
+            min_precision=min_precision,
             ridge=ridge,
         )
     mean, scale, weights, _predicted_gains = _fit_gate_linear_model(observations, ridge=ridge)
@@ -2582,6 +2774,7 @@ def _fit_source_gate_policy(
                 threshold_gains[indices],
                 margin=margin,
                 max_rate=max_rate,
+                min_precision=min_precision,
             )
         )
     global_observations = [{**observation, "scene_score": observation["source_score"]} for observation in observations]
@@ -2590,6 +2783,7 @@ def _fit_source_gate_policy(
         threshold_gains,
         margin=margin,
         max_rate=max_rate,
+        min_precision=min_precision,
     )
     return {
         "mode": mode,
@@ -2599,6 +2793,7 @@ def _fit_source_gate_policy(
         "route_allowlist": sorted(allowed_routes),
         "margin": float(margin),
         "max_rate": float(max_rate),
+        "min_precision": float(min_precision),
         "feature_mean": mean.tolist(),
         "feature_scale": scale.tolist(),
         "weights": weights[1:].tolist(),
@@ -2639,6 +2834,7 @@ def _fit_independent_source_gate_policy(
     allowed_routes: frozenset[str],
     margin: float,
     max_rate: float,
+    min_precision: float,
     ridge: float,
 ) -> dict[str, object]:
     source_models: dict[str, dict[str, object]] = {}
@@ -2678,6 +2874,7 @@ def _fit_independent_source_gate_policy(
             predicted_gains,
             margin=margin,
             max_rate=max_rate,
+            min_precision=min_precision,
         )
         global_decisions[source] = _scene_gate_route_payload(global_threshold)
         for group in sorted({str(observation["group"]) for observation in source_observations}):
@@ -2697,6 +2894,7 @@ def _fit_independent_source_gate_policy(
                     predicted_gains[indices],
                     margin=margin,
                     max_rate=max_rate,
+                    min_precision=min_precision,
                 )
             )
     return {
@@ -2707,6 +2905,7 @@ def _fit_independent_source_gate_policy(
         "route_allowlist": sorted(allowed_routes),
         "margin": float(margin),
         "max_rate": float(max_rate),
+        "min_precision": float(min_precision),
         "source_models": source_models,
         "source_decisions": global_decisions,
         "routes": {} if router == "off" else routes,
@@ -2776,6 +2975,7 @@ def _fit_scene_gate_threshold(
     *,
     margin: float,
     max_rate: float,
+    min_precision: float = 0.0,
 ) -> float | None:
     if not observations:
         return None
@@ -2785,13 +2985,18 @@ def _fit_scene_gate_threshold(
     for threshold in thresholds:
         adjusted_scores = []
         override_count = 0
+        positive_override_count = 0
         for observation, predicted_gain in zip(observations, predicted_gains):
             if float(predicted_gain) >= threshold:
                 override_count += 1
+                if float(observation["scene_score"]) > float(observation["baseline_score"]):
+                    positive_override_count += 1
                 adjusted_scores.append(float(observation["scene_score"]) - float(margin))
             else:
                 adjusted_scores.append(float(observation["baseline_score"]))
         if override_count / len(observations) > float(max_rate):
+            continue
+        if override_count and positive_override_count / override_count < float(min_precision):
             continue
         mean_score = _mean(adjusted_scores)
         if mean_score > best_mean:
@@ -3056,9 +3261,11 @@ def _select_with_policy(
     source_guard: dict[tuple[str, ...], set[str]] | None,
     fallback_policy: dict[str, object] | None,
     source_calibration: dict[str, dict[str, float]] | None = None,
+    source_policy: dict[str, object] | None = None,
+    family_calibration: dict[str, object] | None = None,
     fallback_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None = None,
 ) -> dict[str, object]:
-    selected = _select_by_calibrated_score(selector, rows, source_calibration)
+    selected = _select_with_source_policy(selector, rows, source_policy, source_calibration, family_calibration)
     route = _fallback_route_for_rows(fallback_policy, selected)
     if route is not None:
         decision = _fallback_decision(route)
@@ -3067,11 +3274,17 @@ def _select_with_policy(
         fallback_rows = [row for row in rows if str(row["source"]) in fallback_sources]
         if fallback_rows:
             fallback_selector = _fallback_selector_for_sources(fallback_selectors, fallback_sources) or selector
-            fallback = _select_by_calibrated_score(fallback_selector, fallback_rows, source_calibration)
-            margin = _calibrated_score(selector, selected, source_calibration) - _calibrated_score(
+            fallback = _select_by_calibrated_score(
+                fallback_selector,
+                fallback_rows,
+                source_calibration,
+                family_calibration,
+            )
+            margin = _calibrated_score(selector, selected, source_calibration, family_calibration) - _calibrated_score(
                 selector,
                 fallback,
                 source_calibration,
+                family_calibration,
             )
             if decision == "always" or (decision == "margin" and threshold is not None and margin < threshold):
                 selected = fallback
@@ -3081,21 +3294,49 @@ def _select_with_policy(
         if allowed and str(selected["source"]) not in allowed:
             guarded_rows = [row for row in rows if str(row["source"]) in allowed]
             if guarded_rows:
-                selected = _select_by_calibrated_score(selector, guarded_rows, source_calibration)
+                selected = _select_by_calibrated_score(selector, guarded_rows, source_calibration, family_calibration)
     return selected
+
+
+def _select_with_source_policy(
+    selector: WodPreferenceRanker,
+    rows: list[dict[str, object]],
+    source_policy: dict[str, object] | None,
+    source_calibration: dict[str, dict[str, float]] | None,
+    family_calibration: dict[str, object] | None,
+) -> dict[str, object]:
+    if not source_policy:
+        return _select_by_calibrated_score(selector, rows, source_calibration, family_calibration)
+    if source_policy.get("mode") != "oracle_source":
+        raise ValueError(f"unsupported selector source policy: {source_policy.get('mode')}")
+    route_key = _source_policy_route_key(rows, source_policy)
+    route_scores = dict(dict(source_policy.get("routes", {})).get(route_key, {}))
+    source_scores = route_scores or dict(source_policy.get("global_source_scores", {}))
+    available_sources = sorted({str(row["source"]) for row in rows})
+    ranked_sources = sorted(
+        available_sources,
+        key=lambda source: (float(source_scores.get(source, 0.0)), source),
+        reverse=True,
+    )
+    for source in ranked_sources:
+        source_rows = [row for row in rows if str(row["source"]) == source]
+        if source_rows:
+            return _select_by_calibrated_score(selector, source_rows, source_calibration, family_calibration)
+    return _select_by_calibrated_score(selector, rows, source_calibration, family_calibration)
 
 
 def _select_by_calibrated_score(
     selector: WodPreferenceRanker,
     rows: list[dict[str, object]],
     source_calibration: dict[str, dict[str, float]] | None,
+    family_calibration: dict[str, object] | None = None,
 ) -> dict[str, object]:
     if not rows:
         raise ValueError("at least one candidate row is required")
     return max(
         rows,
         key=lambda row: (
-            _calibrated_score(selector, row, source_calibration),
+            _calibrated_score(selector, row, source_calibration, family_calibration),
             -int(row.get("candidate_index", 0)),
             str(row["candidate_name"]),
         ),
@@ -3115,14 +3356,16 @@ def _calibrated_score(
     selector: WodPreferenceRanker,
     row: dict[str, object],
     source_calibration: dict[str, dict[str, float]] | None,
+    family_calibration: dict[str, object] | None = None,
 ) -> float:
     score = selector.predict_row(row)
-    if not source_calibration:
-        return score
-    group_offsets = source_calibration.get(_source_calibration_key(row, source_calibration))
-    if not group_offsets:
-        return score
-    return float(score + group_offsets.get(str(row["source"]), 0.0))
+    if source_calibration:
+        group_offsets = source_calibration.get(_source_calibration_key(row, source_calibration))
+        if group_offsets:
+            score += group_offsets.get(str(row["source"]), 0.0)
+    if family_calibration:
+        score += _family_calibration_offset(row, family_calibration)
+    return float(score)
 
 
 def _source_calibration_key(
@@ -3228,8 +3471,10 @@ def _selector_numeric_features(feature_mode: str) -> list[str]:
 
 
 def _selector_targets(rows: list[dict[str, object]], target_mode: str) -> np.ndarray:
-    score_key = "rfs_score_normalized" if target_mode.endswith("_normalized") else "rfs_score"
-    base_target_mode = target_mode.removesuffix("_normalized")
+    oracle_weighted = target_mode.endswith("_oracle_weighted")
+    unweighted_target_mode = target_mode.removesuffix("_oracle_weighted") if oracle_weighted else target_mode
+    score_key = "rfs_score_normalized" if unweighted_target_mode.endswith("_normalized") else "rfs_score"
+    base_target_mode = unweighted_target_mode.removesuffix("_normalized")
     scores = np.asarray([float(row.get(score_key, row["rfs_score"])) for row in rows], dtype=np.float64)
     if base_target_mode == "absolute":
         return scores
@@ -3267,7 +3512,33 @@ def _selector_targets(rows: list[dict[str, object]], target_mode: str) -> np.nda
     targets = [float(score) - mean_by_frame[str(row["frame_name"])] for row, score in zip(rows, scores)]
     if base_target_mode == "frame_zscore":
         targets = [target / scale_by_frame[str(row["frame_name"])] for row, target in zip(rows, targets)]
-    return np.asarray(targets, dtype=np.float64)
+    targets_array = np.asarray(targets, dtype=np.float64)
+    if oracle_weighted:
+        if base_target_mode != "frame_delta":
+            raise ValueError(f"oracle-weighted selector target requires frame_delta mode: {target_mode}")
+        targets_array = targets_array * _selector_oracle_gap_weights(rows, scores)
+    return targets_array
+
+
+def _selector_oracle_gap_weights(rows: list[dict[str, object]], scores: np.ndarray) -> np.ndarray:
+    frame_scores: dict[str, list[float]] = defaultdict(list)
+    for row, score in zip(rows, scores):
+        frame_scores[str(row["frame_name"])].append(float(score))
+    gap_by_frame: dict[str, float] = {}
+    for frame_name, values in frame_scores.items():
+        best = max(values)
+        mean = sum(values) / len(values)
+        gap_by_frame[frame_name] = max(0.0, best - mean)
+    positive_gaps = [gap for gap in gap_by_frame.values() if gap > 1e-8]
+    if not positive_gaps:
+        return np.ones(len(rows), dtype=np.float64)
+    median_gap = float(np.median(np.asarray(positive_gaps, dtype=np.float64)))
+    if median_gap <= 1e-8:
+        median_gap = 1.0
+    return np.asarray(
+        [min(3.0, max(1.0, gap_by_frame[str(row["frame_name"])] / median_gap)) for row in rows],
+        dtype=np.float64,
+    )
 
 
 def _record(
@@ -3400,6 +3671,53 @@ def _add_regret_observations(
         accumulator["selected_source_counts"][str(selected["source"])] += 1
 
 
+def _add_opportunity_observations(
+    accumulators: dict[str, dict[str, object]],
+    frame: WodE2EPreferenceFrame,
+    selected: dict[str, object],
+    rows: list[dict[str, object]],
+) -> None:
+    selected_score = float(selected["rfs_score"])
+    best_by_source = _best_rows_by_source(rows)
+    for candidate in best_by_source.values():
+        gain = float(candidate["rfs_score"]) - selected_score
+        if gain <= 0.0:
+            continue
+        bucket_keys = (
+            f"speed:{_speed_bin(frame.init_speed_mps)}",
+            f"intent:{int(frame.intent)}",
+            f"opportunity_source:{candidate['source']}",
+            f"opportunity_family:{_candidate_family(candidate)}",
+            f"source_pair:{selected['source']}->{candidate['source']}",
+        )
+        for key in bucket_keys:
+            accumulator = accumulators.setdefault(
+                key,
+                {
+                    "opportunities": 0,
+                    "total_potential_gain": 0.0,
+                    "max_potential_gain": 0.0,
+                    "candidate_source_counts": defaultdict(int),
+                    "selected_source_counts": defaultdict(int),
+                },
+            )
+            accumulator["opportunities"] = int(accumulator["opportunities"]) + 1
+            accumulator["total_potential_gain"] = float(accumulator["total_potential_gain"]) + gain
+            accumulator["max_potential_gain"] = max(float(accumulator["max_potential_gain"]), gain)
+            accumulator["candidate_source_counts"][str(candidate["source"])] += 1
+            accumulator["selected_source_counts"][str(selected["source"])] += 1
+
+
+def _best_rows_by_source(rows: list[dict[str, object]]) -> dict[str, dict[str, object]]:
+    best_by_source: dict[str, dict[str, object]] = {}
+    for row in rows:
+        source = str(row["source"])
+        previous = best_by_source.get(source)
+        if previous is None or float(row["rfs_score"]) > float(previous["rfs_score"]):
+            best_by_source[source] = row
+    return best_by_source
+
+
 def _candidate_family(row: dict[str, object]) -> str:
     features = row.get("features", {})
     if isinstance(features, dict) and features.get("candidate_family") is not None:
@@ -3428,6 +3746,30 @@ def _finalize_regret_buckets(
             }
         )
     buckets.sort(key=lambda item: (-float(item["total_regret"]), str(item["bucket"])))
+    return buckets[:limit]
+
+
+def _finalize_opportunity_buckets(
+    accumulators: dict[str, dict[str, object]],
+    *,
+    limit: int = 24,
+) -> list[dict[str, object]]:
+    buckets = []
+    for key, accumulator in accumulators.items():
+        opportunities = int(accumulator["opportunities"])
+        total_gain = float(accumulator["total_potential_gain"])
+        buckets.append(
+            {
+                "bucket": key,
+                "opportunities": opportunities,
+                "total_potential_gain": total_gain,
+                "mean_potential_gain": total_gain / opportunities if opportunities else 0.0,
+                "max_potential_gain": float(accumulator["max_potential_gain"]),
+                "selected_source_rates": _source_rates(accumulator["selected_source_counts"], opportunities),
+                "candidate_source_rates": _source_rates(accumulator["candidate_source_counts"], opportunities),
+            }
+        )
+    buckets.sort(key=lambda item: (-float(item["total_potential_gain"]), str(item["bucket"])))
     return buckets[:limit]
 
 
@@ -3511,6 +3853,38 @@ def _aggregate_fold_regret_buckets(fold_reports: list[dict[str, object]]) -> lis
             for source, rate in dict(bucket_dict["oracle_source_rates"]).items():
                 accumulator["oracle_source_counts"][str(source)] += float(rate) * frames
     return _finalize_regret_buckets(accumulators)
+
+
+def _aggregate_fold_opportunity_buckets(fold_reports: list[dict[str, object]]) -> list[dict[str, object]]:
+    accumulators: dict[str, dict[str, object]] = {}
+    for fold in fold_reports:
+        for bucket in list(fold.get("selector_opportunity_buckets", [])):
+            bucket_dict = dict(bucket)
+            key = str(bucket_dict["bucket"])
+            opportunities = int(bucket_dict["opportunities"])
+            accumulator = accumulators.setdefault(
+                key,
+                {
+                    "opportunities": 0,
+                    "total_potential_gain": 0.0,
+                    "max_potential_gain": 0.0,
+                    "selected_source_counts": defaultdict(float),
+                    "candidate_source_counts": defaultdict(float),
+                },
+            )
+            accumulator["opportunities"] = int(accumulator["opportunities"]) + opportunities
+            accumulator["total_potential_gain"] = float(accumulator["total_potential_gain"]) + float(
+                bucket_dict["total_potential_gain"]
+            )
+            accumulator["max_potential_gain"] = max(
+                float(accumulator["max_potential_gain"]),
+                float(bucket_dict["max_potential_gain"]),
+            )
+            for source, rate in dict(bucket_dict["selected_source_rates"]).items():
+                accumulator["selected_source_counts"][str(source)] += float(rate) * opportunities
+            for source, rate in dict(bucket_dict["candidate_source_rates"]).items():
+                accumulator["candidate_source_counts"][str(source)] += float(rate) * opportunities
+    return _finalize_opportunity_buckets(accumulators)
 
 
 def _mean(values: list[float]) -> float:

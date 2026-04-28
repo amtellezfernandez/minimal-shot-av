@@ -151,6 +151,8 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         self.assertIn("selected_source", first)
         self.assertIn("oracle_source", first)
         self.assertIn("regret", first)
+        self.assertIn("selector_opportunity_buckets", report)
+        self.assertIsInstance(report["selector_opportunity_buckets"], list)
         for diagnostic in diagnostics:
             expected_regret = float(diagnostic["oracle_score"]) - float(diagnostic["selected_score"])
             self.assertAlmostEqual(expected_regret, float(diagnostic["regret"]))
@@ -416,6 +418,20 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         targets = cv._selector_targets(rows, "frame_delta_normalized")
 
         self.assertEqual([-1.0, 1.0, 0.0], targets.tolist())
+
+    def test_selector_targets_can_weight_frame_delta_by_oracle_gap(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        rows = [
+            {"frame_name": "a", "rfs_score": 4.0},
+            {"frame_name": "a", "rfs_score": 6.0},
+            {"frame_name": "b", "rfs_score": 0.0},
+            {"frame_name": "b", "rfs_score": 10.0},
+        ]
+
+        targets = cv._selector_targets(rows, "frame_delta_oracle_weighted")
+
+        self.assertEqual([-1.0, 1.0, -8.333333333333334, 8.333333333333334], targets.tolist())
 
     def test_selector_targets_can_use_frame_zscore(self) -> None:
         if cv is None:
@@ -752,6 +768,7 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
             router="off",
             ridge=0.01,
             max_rate=1.0,
+            min_precision=0.0,
             source_calibration=None,
             fallback_policy=None,
             fallback_selectors=None,
@@ -767,6 +784,34 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         self.assertEqual("independent_train_margin", policy["mode"])
         self.assertEqual({"kinematic", "memory"}, set(policy["source_models"]))
         self.assertEqual("constant_velocity", selected["candidate_name"])
+
+    def test_source_gate_min_precision_can_reject_noisy_thresholds(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        observations = [
+            {"baseline_score": 5.0, "scene_score": 7.0},
+            {"baseline_score": 5.0, "scene_score": 4.0},
+        ]
+        predicted = cv.np.asarray([1.0, 1.0], dtype=cv.np.float64)
+
+        permissive = cv._fit_scene_gate_threshold(
+            observations,
+            predicted,
+            margin=0.0,
+            max_rate=1.0,
+            min_precision=0.0,
+        )
+        strict = cv._fit_scene_gate_threshold(
+            observations,
+            predicted,
+            margin=0.0,
+            max_rate=1.0,
+            min_precision=0.75,
+        )
+
+        self.assertIsNotNone(permissive)
+        self.assertIsNone(strict)
 
     def test_source_calibration_can_offset_overconfident_source(self) -> None:
         if cv is None:
@@ -808,6 +853,102 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         )
 
         self.assertEqual("constant_velocity", selected["candidate_name"])
+
+    def test_source_policy_selects_oracle_source_before_candidate(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        class FakeSelector:
+            def predict_row(self, row):
+                return float(row["selector_score"])
+
+        rows = []
+        for frame_index in range(3):
+            frame = sample_frame(f"segment-{frame_index}-100", step=1.0)
+            for index, (name, source, selector_score, rfs_score) in enumerate(
+                [
+                    ("temporal_ridge_mean", "temporal", 10.0, 4.0),
+                    ("constant_velocity", "kinematic", 1.0, 9.0),
+                ]
+            ):
+                row = cv.candidate_ranker_row(
+                    frame=frame,
+                    trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                    candidate_name=name,
+                    candidate_index=index,
+                    source=source,
+                )
+                row["source"] = source
+                row["selector_score"] = selector_score
+                row["rfs_score"] = rfs_score
+                rows.append(row)
+
+        policy = cv._fit_source_policy(rows, mode="oracle_source")
+        selected = cv._select_with_policy(
+            FakeSelector(),
+            rows[:2],
+            source_guard=None,
+            fallback_policy=None,
+            source_policy=policy,
+        )
+
+        self.assertEqual("constant_velocity", selected["candidate_name"])
+
+    def test_family_calibration_falls_back_to_source_offset_for_sparse_bucket(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        frame = sample_frame("segment-a-100", step=1.0)
+        rows = []
+        for index, (name, source, score) in enumerate(
+            [
+                ("constant_velocity", "kinematic", 9.0),
+                ("temporal_ridge_mean", "temporal", 1.0),
+            ]
+        ):
+            row = cv.candidate_ranker_row(
+                frame=frame,
+                trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                candidate_name=name,
+                candidate_index=index,
+                source=source,
+            )
+            row["source"] = source
+            row["rfs_score"] = score
+            rows.append(row)
+
+        calibration = cv._fit_family_calibration(rows, mode="speed_source_family", min_count=3)
+
+        self.assertEqual({}, calibration["offsets"])
+        self.assertGreater(calibration["source_offsets"]["kinematic"], 0.0)
+        self.assertLess(calibration["source_offsets"]["temporal"], 0.0)
+
+    def test_selector_audit_export_writes_jsonl_diagnostics(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "audit.jsonl"
+            report = {
+                "folds_detail": [
+                    {
+                        "fold_index": 2,
+                        "frame_diagnostics": [
+                            {
+                                "frame_name": "segment-a-100",
+                                "selected_source": "temporal",
+                                "oracle_source": "kinematic",
+                            }
+                        ],
+                    }
+                ]
+            }
+
+            cv._write_selector_audit_rows(report, path)
+
+            rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+        self.assertEqual(1, len(rows))
+        self.assertEqual(2, rows[0]["fold_index"])
+        self.assertEqual("segment-a-100", rows[0]["frame_name"])
 
     def test_split_sources_rejects_empty_fallback_source_list(self) -> None:
         if cv is None:

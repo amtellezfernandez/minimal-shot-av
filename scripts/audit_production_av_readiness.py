@@ -28,6 +28,11 @@ def main() -> int:
     parser.add_argument("--integration-manifest", type=Path, default=DEFAULT_INTEGRATION_MANIFEST)
     parser.add_argument("--min-normalized-score", type=float, default=9.0)
     parser.add_argument("--min-oracle-capture", type=float, default=0.95)
+    parser.add_argument(
+        "--deployment-check",
+        action="store_true",
+        help="Exit as a deployment authorization check: 0 when authorized, 2 when explicitly blocked.",
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
@@ -45,6 +50,8 @@ def main() -> int:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(text + "\n", encoding="utf-8")
     print(text)
+    if args.deployment_check:
+        return 0 if report["deployment_authorization"]["real_vehicle_control_authorized"] else 2
     return 0 if report["production_ready"] else 1
 
 
@@ -84,6 +91,7 @@ def production_readiness_report(
         min_normalized_score=min_normalized_score,
         min_oracle_capture=min_oracle_capture,
     )
+    deployment_authorization = _deployment_authorization(gates, blockers)
     return {
         "schema": "production_av_readiness_audit_v1",
         "claim": "production_av_stack_readiness",
@@ -102,7 +110,32 @@ def production_readiness_report(
         },
         "blockers": blockers,
         "next_actions": next_actions,
+        "deployment_authorization": deployment_authorization,
         "disposition": "research_harness_only" if blockers else "production_claim_evidence_complete",
+    }
+
+
+def _deployment_authorization(gates: dict[str, bool], blockers: list[str]) -> dict[str, Any]:
+    failed_gates = sorted(gate for gate, passed in gates.items() if not passed)
+    authorized = not failed_gates
+    return {
+        "decision": "go" if authorized else "no_go",
+        "real_vehicle_control_authorized": authorized,
+        "public_road_deployment_authorized": authorized,
+        "human_subject_or_bystander_risk_authorized": authorized,
+        "required_gate_count": len(gates),
+        "passed_gate_count": len(gates) - len(failed_gates),
+        "failed_gates": failed_gates,
+        "blocking_reasons": list(blockers),
+        "mandatory_controls": []
+        if authorized
+        else [
+            "do_not_connect_model_output_to_steering_throttle_or_brake",
+            "simulation_and_offline_analysis_only",
+            "require_independent_safety_case_before_vehicle_tests",
+            "require_validated_perception_prediction_planning_control_manifest",
+            "require_hidden_test_or_blind_generalization_evidence",
+        ],
     }
 
 
