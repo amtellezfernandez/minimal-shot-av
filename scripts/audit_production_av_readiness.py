@@ -81,6 +81,7 @@ def production_readiness_report(
         "score_near_normalized_ceiling": trajectory["combined_ranker_mean_normalized_rfs"] >= min_normalized_score,
     }
     blockers = _blockers(gates, trajectory, leaderboard, closed_loop, safety, integration)
+    solved_gates = _solved_gates(gates, trajectory, leaderboard, closed_loop, safety, integration)
     next_actions = _next_actions(
         gates,
         trajectory,
@@ -109,6 +110,7 @@ def production_readiness_report(
             "integration": integration,
         },
         "blockers": blockers,
+        "solved_gates": solved_gates,
         "next_actions": next_actions,
         "deployment_authorization": deployment_authorization,
         "disposition": "research_harness_only" if blockers else "production_claim_evidence_complete",
@@ -137,6 +139,76 @@ def _deployment_authorization(gates: dict[str, bool], blockers: list[str]) -> di
             "require_hidden_test_or_blind_generalization_evidence",
         ],
     }
+
+
+def _solved_gates(
+    gates: dict[str, bool],
+    trajectory: dict[str, Any],
+    leaderboard: dict[str, Any],
+    closed_loop: dict[str, Any],
+    safety: dict[str, Any],
+    integration: dict[str, Any],
+) -> list[dict[str, Any]]:
+    solved: list[dict[str, Any]] = []
+    if gates["closed_loop_driving_validation"]:
+        solved.append(
+            {
+                "gate": "closed_loop_driving_validation",
+                "evidence_path": closed_loop["path"],
+                "evidence_profile": closed_loop["evidence_profile"],
+                "evidence_status": closed_loop["evidence_status"],
+                "total_missing_ranked_runs": closed_loop["total_missing_ranked_runs"],
+            }
+        )
+    if gates["generalization_beyond_local_frame_cache"]:
+        solved.append(
+            {
+                "gate": "generalization_beyond_local_frame_cache",
+                "evidence_path": leaderboard["path"],
+                "confirmed_hidden_test_count": leaderboard["confirmed_hidden_test_count"],
+            }
+        )
+    if gates["score_near_oracle"]:
+        solved.append(
+            {
+                "gate": "score_near_oracle",
+                "current": trajectory["oracle_capture_ratio"],
+                "rfs_gap_to_oracle": trajectory["rfs_gap_to_oracle"],
+            }
+        )
+    if gates["score_near_normalized_ceiling"]:
+        solved.append(
+            {
+                "gate": "score_near_normalized_ceiling",
+                "current": trajectory["combined_ranker_mean_normalized_rfs"],
+                "normalized_ceiling_gap": trajectory["normalized_ceiling_gap"],
+            }
+        )
+    if gates["safety_case"]:
+        solved.append(
+            {
+                "gate": "safety_case",
+                "evidence_path": safety["path"],
+                "present_sections": safety["present_sections"],
+            }
+        )
+    if gates["robust_perception_planning_control_integration"]:
+        solved.append(
+            {
+                "gate": "robust_perception_planning_control_integration",
+                "evidence_path": integration["path"],
+                "component_status": integration["component_status"],
+            }
+        )
+    if gates["production_av_stack"]:
+        solved.append(
+            {
+                "gate": "production_av_stack",
+                "evidence_path": integration["path"],
+                "production_stack_claim_valid": integration["production_stack_claim_valid"],
+            }
+        )
+    return solved
 
 
 def _trajectory_metrics(path: Path) -> dict[str, Any]:

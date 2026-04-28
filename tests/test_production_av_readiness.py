@@ -64,6 +64,7 @@ class ProductionAvReadinessTests(unittest.TestCase):
             places=5,
         )
         self.assertTrue(report["trajectory_metrics"]["label_metric_profile"]["local_cv_only"])
+        self.assertEqual([], report["solved_gates"])
         self.assertTrue(
             any(
                 "hidden-test labels" in caution
@@ -134,6 +135,61 @@ class ProductionAvReadinessTests(unittest.TestCase):
         self.assertEqual(377, closed_loop_evidence["official_level_evidence"][0]["missing_ranked_runs"])
         action = next(action for action in report["next_actions"] if action["gate"] == "closed_loop_driving_validation")
         self.assertEqual(377, action["total_missing_ranked_runs"])
+
+    def test_readiness_audit_reports_solved_closed_loop_gate_without_authorizing_deployment(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            trajectory = root / "trajectory.json"
+            trajectory.write_text(
+                json.dumps(
+                    {
+                        "combined_ranker_mean_rfs": 8.0,
+                        "combined_oracle_mean_rfs": 10.0,
+                        "combined_ranker_mean_normalized_rfs": 8.4,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            closed_loop = root / "closed_loop.json"
+            closed_loop.write_text(
+                json.dumps(
+                    {
+                        "schema": "compass_sotif_evidence_package_v0",
+                        "evidence_profile": "sotif-v0",
+                        "evidence_status": "compass_evidence_threshold_met",
+                        "claim_type": "simulation_evidence_package_not_legal_certification",
+                        "statistical_evidence": {
+                            "official_level_evidence": [
+                                {
+                                    "level": 1,
+                                    "name": "wod_aligned",
+                                    "ranked_runs": 381,
+                                    "minimum_ranked_runs": 381,
+                                    "sample_size_valid": True,
+                                    "quality_thresholds_met": True,
+                                }
+                            ]
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            report = module.production_readiness_report(
+                trajectory_report=trajectory,
+                leaderboard_results=root / "missing_leaderboard.json",
+                closed_loop_evidence=closed_loop,
+                safety_case=root / "missing_safety.json",
+                integration_manifest=root / "missing_integration.json",
+            )
+
+        solved = {gate["gate"]: gate for gate in report["solved_gates"]}
+        self.assertIn("closed_loop_driving_validation", solved)
+        self.assertEqual("sotif-v0", solved["closed_loop_driving_validation"]["evidence_profile"])
+        self.assertEqual(0, solved["closed_loop_driving_validation"]["total_missing_ranked_runs"])
+        self.assertEqual("no_go", report["deployment_authorization"]["decision"])
+        self.assertFalse(report["deployment_authorization"]["real_vehicle_control_authorized"])
 
     def test_readiness_audit_next_actions_follow_configured_thresholds(self) -> None:
         module = _load_module()
@@ -268,6 +324,7 @@ class ProductionAvReadinessTests(unittest.TestCase):
         self.assertTrue(report["production_ready"])
         self.assertEqual("production_claim_evidence_complete", report["disposition"])
         self.assertTrue(all(report["gates"].values()))
+        self.assertEqual(set(report["gates"]), {gate["gate"] for gate in report["solved_gates"]})
         self.assertEqual([], report["blockers"])
         self.assertEqual("go", report["deployment_authorization"]["decision"])
         self.assertTrue(report["deployment_authorization"]["real_vehicle_control_authorized"])
