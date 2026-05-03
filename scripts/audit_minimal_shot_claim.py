@@ -37,6 +37,12 @@ EPISODE_DEPENDENCY_PATTERNS = (
     r"\btrain_margin\b",
 )
 
+PRIVILEGED_RUNTIME_PATTERNS = (
+    r"\bscenario\.tags\b",
+    r"\bscenario\.cluster\b",
+    r"\btags\.get\b",
+)
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Audit whether the Grand claim is substantively minimal-shot.")
@@ -81,6 +87,7 @@ def build_report(
 
     checks = {
         "active_policy_has_no_episode_lookup": not policy_scan["matches"],
+        "active_policy_has_no_scenario_manifest_lookup": not policy_scan["privileged_runtime_matches"],
         "default_policy_disables_privileged_actor_forecast": (
             default_runtime["privileged_actor_forecast_default"] is False
         ),
@@ -120,6 +127,7 @@ def build_report(
 
 def _scan_policy_sources(paths: tuple[Path, ...]) -> dict[str, Any]:
     matches: list[dict[str, Any]] = []
+    privileged_runtime_matches: list[dict[str, Any]] = []
     missing: list[str] = []
     for path in paths:
         if not path.is_file():
@@ -130,11 +138,17 @@ def _scan_policy_sources(paths: tuple[Path, ...]) -> dict[str, Any]:
             for match in re.finditer(pattern, text, flags=re.IGNORECASE):
                 line = text.count("\n", 0, match.start()) + 1
                 matches.append({"path": str(path), "line": line, "pattern": pattern})
+        for pattern in PRIVILEGED_RUNTIME_PATTERNS:
+            for match in re.finditer(pattern, text, flags=re.IGNORECASE):
+                line = text.count("\n", 0, match.start()) + 1
+                privileged_runtime_matches.append({"path": str(path), "line": line, "pattern": pattern})
     return {
         "source_count": len(paths),
         "missing": missing,
         "matches": matches,
+        "privileged_runtime_matches": privileged_runtime_matches,
         "forbidden_patterns": list(EPISODE_DEPENDENCY_PATTERNS),
+        "forbidden_runtime_patterns": list(PRIVILEGED_RUNTIME_PATTERNS),
     }
 
 

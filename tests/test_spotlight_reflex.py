@@ -18,6 +18,7 @@ from minimal_shot_av.simulator.environment import Actor, Obstacle, Scenario, gen
 from minimal_shot_av.simulator.perception import ScenePerception, perceive_scene
 from minimal_shot_av.simulator.planner import PlannedAction
 from minimal_shot_av.simulator.policy import run_policy, run_spotlight_reflex_policy
+from minimal_shot_av.simulator.policy import _blocking_obstacle_row
 from minimal_shot_av.simulator.trajectory_selector import (
     TrajectoryCandidate,
     TrajectoryReference,
@@ -292,6 +293,30 @@ class ManeuverLibraryTests(unittest.TestCase):
         self.assertEqual(safe_action.mode, "lane_recovery")
         self.assertAlmostEqual(safe_action.direction[0], 0.6)
         self.assertAlmostEqual(safe_action.direction[1], 0.8)
+
+    def test_blocking_obstacle_row_is_label_free(self) -> None:
+        scenario = Scenario(
+            width=40.0,
+            height=30.0,
+            lane_center=[(0.0, 0.0), (20.0, 0.0), (40.0, 0.0)],
+            lane_half_width=6.0,
+            obstacles=[
+                Obstacle(x=20.0, y=-4.0, radius=0.9, kind="unknown", label="alpha"),
+                Obstacle(x=20.3, y=0.0, radius=0.9, kind="unseen", label="beta"),
+                Obstacle(x=19.8, y=4.0, radius=0.9, kind="novel", label="gamma"),
+            ],
+            start=(0.0, 0.0),
+            goal=(40.0, 0.0),
+            seed=14,
+            cluster="not_intersection",
+            tags={"generator": "not_wod"},
+        )
+
+        row = _blocking_obstacle_row(scenario)
+
+        self.assertIsNotNone(row)
+        assert row is not None
+        self.assertAlmostEqual(row[0], 20.03333333333333)
 
 
 class DemoIntegrationTests(unittest.TestCase):

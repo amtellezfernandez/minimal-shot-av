@@ -80,6 +80,32 @@ class MinimalShotClaimAuditTest(unittest.TestCase):
         self.assertFalse(report["valid"])
         self.assertIn("default_policy_disables_privileged_actor_forecast", report["failures"])
 
+    def test_fails_when_active_policy_reads_scenario_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sim = _write_sim(root / "sim.json")
+            policy = root / "policy.py"
+            policy.write_text(
+                "use_privileged_actor_forecast: bool = False\n"
+                "def act(scenario):\n"
+                "    return scenario.tags.get('primary_hazard_type') or scenario.cluster\n",
+                encoding="utf-8",
+            )
+            model = _write_text(root / "model.md", "validation preference labels; not strict zero-shot")
+            grand = _write_text(root / "grand.md", "not the centerpiece of the minimal-shot claim")
+            form = _write_text(root / "form.md", "strict zero-shot WOD-E2E should not be described")
+
+            report = build_report(
+                sim_eval=sim,
+                model_declaration=model,
+                grand_submission=grand,
+                submission_form=form,
+                policy_sources=(policy,),
+            )
+
+        self.assertFalse(report["valid"])
+        self.assertIn("active_policy_has_no_scenario_manifest_lookup", report["failures"])
+
 
 def _write_sim(path: Path) -> Path:
     path.write_text(

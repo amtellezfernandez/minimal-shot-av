@@ -45,8 +45,9 @@ Evidence to mention:
 - Novel-object stress audit: 81 abstract compositional unknown-object cases,
   100% goal completion, 0 collisions, 0 near misses, and all five synthetic
   labels covered. The default policy disables hidden simulator actor-behavior
-  forecasting, so this is current-geometry simulator evidence rather than
-  camera recognition or privileged simulator-oracle control.
+  forecasting and the minimal-shot audit rejects scenario manifest or
+  cluster-name lookup, so this is current-geometry simulator evidence rather
+  than camera recognition or privileged simulator-oracle control.
 - Judging criteria audit passes for technical excellence, novelty, feasibility,
   and adherence to the brief under the declared submission-candidate boundary.
 - Final readiness audit verifies archive hashes, bundled evidence, minimal-shot

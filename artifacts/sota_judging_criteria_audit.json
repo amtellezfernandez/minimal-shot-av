@@ -29,8 +29,8 @@
       },
       "evidence": [
         "Closed-loop benchmark sweep reports max collision rate 0.000.",
-        "Mean minimum clearance is 2.80 m.",
-        "Mean intervention rate is 0.094.",
+        "Mean minimum clearance is 2.76 m.",
+        "Mean intervention rate is 0.117.",
         "WOD leaderboard and production claims remain explicitly gated."
       ],
       "failed_checks": [],
@@ -39,6 +39,7 @@
     "minimal_shot_integrity": {
       "checks": {
         "active_policy_has_no_episode_lookup": true,
+        "active_policy_has_no_scenario_manifest_lookup": true,
         "closed_loop_no_near_miss": true,
         "closed_loop_zero_collision": true,
         "default_policy_disables_privileged_actor_forecast": true,
@@ -99,6 +100,7 @@
     "minimal_shot": {
       "checks": {
         "active_policy_has_no_episode_lookup": true,
+        "active_policy_has_no_scenario_manifest_lookup": true,
         "closed_loop_no_near_miss": true,
         "closed_loop_zero_collision": true,
         "default_policy_disables_privileged_actor_forecast": true,
@@ -143,8 +145,14 @@
             "\\bfit_[a-z0-9_]*selector\\b",
             "\\btrain_margin\\b"
           ],
+          "forbidden_runtime_patterns": [
+            "\\bscenario\\.tags\\b",
+            "\\bscenario\\.cluster\\b",
+            "\\btags\\.get\\b"
+          ],
           "matches": [],
           "missing": [],
+          "privileged_runtime_matches": [],
           "source_count": 7
         },
         "runtime_defaults": {
@@ -173,8 +181,8 @@
       "cluster_count": 11,
       "max_collision_rate": 0.0,
       "max_near_miss_rate": 0.0,
-      "mean_intervention_rate": 0.09441818181818182,
-      "mean_min_clearance_m": 2.799272727272727,
+      "mean_intervention_rate": 0.11696363636363637,
+      "mean_min_clearance_m": 2.7645454545454546,
       "min_benchmark_pass_rate": 1.0,
       "min_success_rate": 1.0,
       "run_count": 550

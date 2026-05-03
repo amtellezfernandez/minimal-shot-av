@@ -282,8 +282,6 @@ def _recenter_route_drift(
     world_state: WorldState,
     perception: ScenePerception,
 ) -> SafeAction:
-    if not scenario.cluster.startswith("adversarial:"):
-        return safe_action
     if abs(perception.lane_error) < 4.0:
         return safe_action
     if world_state.collision_risk > 0.30 or perception.uncertainty > 0.75:
@@ -350,12 +348,10 @@ def _commit_wod_intersection_crossing(
     perception: ScenePerception,
     steps: list[StepRecord],
 ) -> SafeAction:
-    if scenario.cluster != "intersection" or scenario.tags.get("generator") != "wod_e2e_procedural_v1":
-        return safe_action
     if len(steps) < 36 or world_state.goal_distance < 8.0 or world_state.collision_risk > 0.96:
         return safe_action
 
-    row = _wod_intersection_row(scenario)
+    row = _blocking_obstacle_row(scenario)
     if row is None:
         return safe_action
     row_x, target_y = row
@@ -380,6 +376,7 @@ def _commit_wod_intersection_crossing(
     local_exit_clearance = _static_clearance_at(scenario, (row_x + 5.0, current_y))
     if (
         (abs(current_y - target_y) > 2.5 or safe_action.mode in {"risk_escape", "risk_nudge"})
+        and _lane_band_contains(scenario, (row_x, current_y), margin_scale=0.95)
         and local_row_clearance > 1.05
         and local_exit_clearance > 1.5
     ):
@@ -387,10 +384,10 @@ def _commit_wod_intersection_crossing(
 
     if world_state.position[0] < row_x - 2.0 and abs(current_y - target_y) > 0.75:
         target = (row_x - 3.5, target_y)
-        speed = 0.75
+        speed = 0.95
     else:
         target = (row_x + 8.0, target_y)
-        speed = 0.95
+        speed = 1.15
     direction = _normalize((target[0] - world_state.position[0], target[1] - world_state.position[1]))
     if direction == (0.0, 0.0):
         return safe_action
@@ -469,10 +466,22 @@ def _direction_to_target(world_state: WorldState) -> tuple[float, float]:
     return (vector[0] / norm, vector[1] / norm)
 
 
-def _wod_intersection_row(scenario: Scenario) -> tuple[float, float] | None:
-    row_obstacles = [obstacle for obstacle in scenario.obstacles if obstacle.label == "cross_traffic_texture"]
+def _blocking_obstacle_row(scenario: Scenario) -> tuple[float, float] | None:
+    candidates = [
+        obstacle
+        for obstacle in scenario.obstacles
+        if obstacle.kind != "ambient" and _lane_band_contains(scenario, (obstacle.x, obstacle.y), margin_scale=1.35)
+    ]
+    if len(candidates) < 3:
+        return None
+
+    row_obstacles = max(
+        (_near_x_band(candidates, anchor.x, half_width=2.4) for anchor in candidates),
+        key=len,
+    )
     if len(row_obstacles) < 3:
         return None
+
     row_x = sum(obstacle.x for obstacle in row_obstacles) / len(row_obstacles)
     lane_y = min(scenario.lane_center, key=lambda point: abs(point[0] - row_x))[1]
     lower = lane_y - scenario.lane_half_width * 0.95
@@ -502,6 +511,19 @@ def _wod_intersection_row(scenario: Scenario) -> tuple[float, float] | None:
         usable = gaps
     best = min(usable, key=lambda gap: (abs(((gap[0] + gap[1]) * 0.5) - lane_y), -(gap[1] - gap[0])))
     return row_x, (best[0] + best[1]) * 0.5
+
+
+def _near_x_band(obstacles: list[Any], anchor_x: float, half_width: float) -> list[Any]:
+    return [obstacle for obstacle in obstacles if abs(obstacle.x - anchor_x) <= half_width]
+
+
+def _lane_band_contains(
+    scenario: Scenario,
+    point: tuple[float, float],
+    margin_scale: float = 1.0,
+) -> bool:
+    lane_point = min(scenario.lane_center, key=lambda lane: math.dist(point, lane))
+    return math.dist(point, lane_point) <= scenario.lane_half_width * margin_scale
 
 
 def _static_clearance_at(scenario: Scenario, position: tuple[float, float]) -> float:

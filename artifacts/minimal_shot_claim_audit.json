@@ -1,6 +1,7 @@
 {
   "checks": {
     "active_policy_has_no_episode_lookup": true,
+    "active_policy_has_no_scenario_manifest_lookup": true,
     "closed_loop_no_near_miss": true,
     "closed_loop_zero_collision": true,
     "default_policy_disables_privileged_actor_forecast": true,
@@ -45,8 +46,14 @@
         "\\bfit_[a-z0-9_]*selector\\b",
         "\\btrain_margin\\b"
       ],
+      "forbidden_runtime_patterns": [
+        "\\bscenario\\.tags\\b",
+        "\\bscenario\\.cluster\\b",
+        "\\btags\\.get\\b"
+      ],
       "matches": [],
       "missing": [],
+      "privileged_runtime_matches": [],
       "source_count": 7
     },
     "runtime_defaults": {
