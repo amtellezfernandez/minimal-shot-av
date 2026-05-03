@@ -135,9 +135,19 @@ Dataset contract:
 Metric contract:
 
 - RFS evaluated only on validation frames with valid rater labels
-- Current official-RFS benchmark report:
+- Current promoted full-validation official-RFS benchmark report:
+  `artifacts/wod_fastkin_gate_ridge175_scene020_cv_official.json`
+- Current promoted full-validation CV score: `7.65941846208851` RFS on
+  `479` preference-labeled validation frames
+- Current promoted full-validation candidate oracle:
+  `9.098014272661512` official RFS
+- Neural anchor-residual proposal ensembles are tracked as secondary WOD
+  development evidence. The best official held-out subset run reaches
+  `7.737680847131364` RFS on `159` frames with oracle `9.178972912996967`;
+  this is not a full-validation, hidden-test, or strict zero-shot result.
+- Earlier ridge-only official-RFS benchmark report:
   `benchmarks/current/wod_ridge_trajectory_cv_official.json`
-- Current internal validation CV score: `7.602814916652251` RFS
+- Earlier ridge-only validation CV score: `7.602814916652251` RFS
 - Current local-RFS candidate report:
   `benchmarks/current/wod_contextual_r175_speed_router_local_cv.json`
 - Current local-RFS candidate score: `7.695139906515457` RFS with
@@ -176,9 +186,11 @@ Metric contract:
 This system is a fast, structured, non-text WOD-E2E baseline and measurement
 harness. Its claim is not strict zero-shot autonomy and not Alpamayo-class
 learned visual reasoning. The lightweight world-model result is a small signal,
-not a solution. A meaningful solution claim requires at least a `+0.1` official
-RFS gain on the same segment-grouped validation contract plus reduced worst-slice
-regret.
+not a solution, and the neural held-out subset result is secondary evidence
+rather than the promoted WOD claim. A meaningful leaderboard solution claim
+requires hidden-test evidence, and a meaningful validation solution claim
+requires at least a `+0.1` official RFS gain on the same full 479-frame
+segment-grouped validation contract plus reduced worst-slice regret.
 
 ## Known Limitations
 

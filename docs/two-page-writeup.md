@@ -68,10 +68,12 @@ later tuning raised the promoted validation-CV score to 7.6594 without
 worsening worst-slice regret.
 
 A preference-calibrated neural heldout branch reached `7.838` local RFS on 159
-heldout validation-preference frames, and an official-scored heldout variant
-reached `7.894` normalized RFS. The full retained-validation official rerun
-scored only `7.262` mean RFS, so this is evidence of promising calibration
-headroom rather than the promoted WOD result.
+heldout validation-preference frames. The strongest official-scored neural
+heldout subset run reached `7.737680847131364` mean RFS on 159 frames, with
+oracle `9.178972912996967`. A separate normalized-RFS heldout variant reached
+`7.894` normalized RFS, but the full retained-validation official rerun scored
+only `7.262` mean RFS. These are evidence of promising calibration headroom
+rather than the promoted WOD result.
 
 The most important engineering result is separation of concerns: simulator
 metrics are not used for WOD model selection, WOD validation labels are not

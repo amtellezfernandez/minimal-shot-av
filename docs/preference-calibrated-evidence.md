@@ -19,6 +19,15 @@ There is also an official-scored heldout report with normalized RFS above `7.8`:
 - Selected official normalized RFS: `7.894`.
 - Candidate oracle official mean RFS: `9.145`.
 
+The strongest official mean-RFS neural heldout subset report is separate:
+
+- Official-RFS neural ensemble heldout report:
+  `artifacts/wod_neural_holdout/neural_ensemble3_speedfine_deny_pc2pc4pc5_official.json`
+- Split: 159 heldout validation-preference frames.
+- Selected official mean RFS: `7.737680847131364`.
+- Selected official normalized RFS: `8.009157229787094`.
+- Candidate oracle official mean RFS: `9.178972912996967`.
+
 ## Failed Promotion Check
 
 The same neural preference-calibrated family was rerun on the full retained
@@ -41,6 +50,7 @@ for the main Grand claim.
 Use this as a secondary evidence point only:
 
 - Good: "preference-calibrated heldout experiments reached `7.838` local RFS,
-  and official normalized heldout reached `7.894`, but the full official
-  validation rerun did not promote."
+  official mean heldout reached `7.7377` on 159 frames, and official normalized
+  heldout reached `7.894`, but the full official validation rerun did not
+  promote."
 - Bad: "the WOD model reached `7.8+` official mean RFS."
