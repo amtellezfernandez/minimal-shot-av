@@ -134,7 +134,15 @@ The active WOD-E2E model architecture is:
    - Includes source diagnostics so experimental proposal families cannot silently degrade the default path.
    - Scores final candidate JSONL rows with `ranker_score` before submission packaging.
 
-4. **Submission Writer**
+4. **Decision Explainability**
+   - Closed-loop Spotlight Reflex rollouts emit per-step selector references,
+     effective score terms, safety/progress penalties, and top candidate
+     summaries in `latest_rollout.json`.
+   - The AlpaSim adapter exports the same selected-maneuver rationale in
+     `reasoning_text`, so reviewers can inspect why a trajectory was chosen
+     instead of only seeing the final path.
+
+5. **Submission Writer**
    - Selects one `(20, 2)` trajectory per required frame by contextual ranker score.
    - Packages and validates `E2EDChallengeSubmission` `.tar.gz` artifacts.
 

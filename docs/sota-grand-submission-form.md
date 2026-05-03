@@ -55,6 +55,9 @@ rare hazards without AV-dataset fine-tuning.
 - Readiness audit for hidden-test leaderboard truth.
 - Novel-object stress audit: `artifacts/novel_object_stress_audit.json`.
 - Judging criteria audit: `artifacts/sota_judging_criteria_audit.json`.
+- Per-step decision traces in Spotlight Reflex rollout JSON and AlpaSim
+  `reasoning_text`: selected maneuver, matched references, trust-region
+  membership, clearance/progress terms, penalties, and top alternatives.
 - Full test suite output: `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py`.
 
 Judging criteria evidence:

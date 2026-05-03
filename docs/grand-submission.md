@@ -74,6 +74,10 @@ Each command writes:
 
 - The policy outputs 20-point, 5-second maneuver trajectories internally.
 - Candidate selection uses simulator-native trajectory selector geometry at 3s and 5s.
+- Each Spotlight Reflex rollout step now carries a decision explanation:
+  matched 3s/5s references, whether the selected trajectory stayed inside each
+  trust region, action and horizon clearance, progress/speed bonuses, penalties,
+  and the top candidate summaries.
 - The policy is deterministic and reproducible by seed.
 - The primary simulator submission uses no learned AV-specific model and no
   WOD-E2E fine-tuning.

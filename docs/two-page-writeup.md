@@ -44,6 +44,9 @@ The proposed system is **Spotlight Reflex**:
 - A source-aware numeric selector ranks candidates at 3s and 5s with the official RFS trust-region utility.
 - The simulator stack is kept separate from WOD-E2E scoring so simulator tuning cannot leak into model claims.
 - A safety projector applies kinematic smoothing, route-command checks, and invalid-trajectory rejection.
+- The closed-loop runtime emits per-step decision explanations: reference
+  matches, trust-region membership, clearance, progress/speed bonuses,
+  penalties, and top alternative candidate summaries.
 
 The key architectural bet is that minimal-shot driving should separate **candidate diversity** from **trajectory selection**. Proposal models generate plausible futures; model-side RFS scoring evaluates WOD-E2E candidates without coupling that metric to the simulator.
 

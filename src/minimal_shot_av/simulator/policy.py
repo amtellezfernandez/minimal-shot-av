@@ -30,14 +30,19 @@ class StepRecord:
     active_actor_count: int | None = None
     stall: bool | None = None
     candidate_count: int | None = None
+    reference_count: int | None = None
     selected_maneuver: str | None = None
     selector_score: float | None = None
+    selector_effective_score: float | None = None
     selector_3s_score: float | None = None
     selector_5s_score: float | None = None
     selector_3s_reference: str | None = None
     selector_5s_reference: str | None = None
     selector_3s_inside_region: bool | None = None
     selector_5s_inside_region: bool | None = None
+    decision_reason: str | None = None
+    decision_reasons: list[str] | None = None
+    top_candidate_summaries: list[dict[str, Any]] | None = None
 
 
 @dataclass
@@ -444,14 +449,19 @@ def _spotlight_step_fields(metadata: dict[str, Any]) -> dict[str, Any]:
         return {}
     return {
         "candidate_count": int(metadata["candidate_count"]),
+        "reference_count": int(metadata["reference_count"]),
         "selected_maneuver": str(metadata["selected_maneuver"]),
         "selector_score": float(metadata["selector_score"]),
+        "selector_effective_score": float(metadata["selector_effective_score"]),
         "selector_3s_score": float(metadata["selector_3s_score"]),
         "selector_5s_score": float(metadata["selector_5s_score"]),
         "selector_3s_reference": str(metadata["selector_3s_reference"]),
         "selector_5s_reference": str(metadata["selector_5s_reference"]),
         "selector_3s_inside_region": bool(metadata["selector_3s_inside_region"]),
         "selector_5s_inside_region": bool(metadata["selector_5s_inside_region"]),
+        "decision_reason": str(metadata["decision_reason"]),
+        "decision_reasons": [str(reason) for reason in metadata["decision_reasons"]],
+        "top_candidate_summaries": [dict(summary) for summary in metadata["top_candidate_summaries"]],
     }
 
 

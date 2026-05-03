@@ -102,19 +102,64 @@ class SpotlightSelection:
     score: TrajectorySelectorScore
     candidate_count: int
     reference_count: int
+    effective_score: float
+    decision_reasons: tuple[str, ...]
+    top_candidate_summaries: tuple[dict[str, object], ...]
 
-    def to_metadata(self) -> dict[str, float | int | str | bool]:
+    def to_metadata(self) -> dict[str, object]:
         return {
             "candidate_count": self.candidate_count,
             "reference_count": self.reference_count,
             "selected_maneuver": self.candidate.name,
             "selector_score": self.score.combined_score,
+            "selector_effective_score": self.effective_score,
             "selector_3s_score": self.score.score_3s,
             "selector_5s_score": self.score.score_5s,
             "selector_3s_reference": self.score.reference_3s_label,
             "selector_5s_reference": self.score.reference_5s_label,
             "selector_3s_inside_region": self.score.inside_3s_region,
             "selector_5s_inside_region": self.score.inside_5s_region,
+            "decision_reason": "; ".join(self.decision_reasons[:6]),
+            "decision_reasons": list(self.decision_reasons),
+            "top_candidate_summaries": list(self.top_candidate_summaries),
+        }
+
+
+@dataclass(frozen=True)
+class CandidateScoreExplanation:
+    candidate_name: str
+    selector_score: float
+    effective_score: float
+    action_clearance_m: float
+    horizon_clearance_m: float
+    progress_bonus: float
+    near_clearance_penalty: float
+    horizon_clearance_penalty: float
+    safety_penalty: float
+    stop_penalty: float
+    reference_3s_label: str
+    reference_5s_label: str
+    inside_3s_region: bool
+    inside_5s_region: bool
+    reasons: tuple[str, ...]
+
+    def to_summary(self) -> dict[str, object]:
+        return {
+            "candidate": self.candidate_name,
+            "selector_score": _round_float(self.selector_score),
+            "effective_score": _round_float(self.effective_score),
+            "action_clearance_m": _round_float(self.action_clearance_m),
+            "horizon_clearance_m": _round_float(self.horizon_clearance_m),
+            "progress_bonus": _round_float(self.progress_bonus),
+            "near_clearance_penalty": _round_float(self.near_clearance_penalty),
+            "horizon_clearance_penalty": _round_float(self.horizon_clearance_penalty),
+            "safety_penalty": _round_float(self.safety_penalty),
+            "stop_penalty": _round_float(self.stop_penalty),
+            "reference_3s": self.reference_3s_label,
+            "reference_5s": self.reference_5s_label,
+            "inside_3s_region": self.inside_3s_region,
+            "inside_5s_region": self.inside_5s_region,
+            "reasons": list(self.reasons[:8]),
         }
 
 
@@ -230,14 +275,14 @@ def select_maneuver(
     candidates = generate_maneuver_candidates(position, heading, speed_mps, config)
     references = generate_pseudo_references(scenario, position, world_state, perception, speed_mps, heading, config)
 
-    scored_candidates: list[tuple[float, TrajectoryCandidate, TrajectorySelectorScore]] = []
+    scored_candidates: list[tuple[float, TrajectoryCandidate, TrajectorySelectorScore, CandidateScoreExplanation]] = []
     moving_candidate_is_safe = any(
         candidate.name != "stop" and _action_clearance(candidate.trajectory, scenario, config) >= config.scoring.min_action_clearance_m
         for candidate in candidates
     )
     for candidate in candidates:
         candidate_score = score_candidate(candidate, references, speed_mps, config.selector)
-        effective_score = _simulator_backed_score(
+        explanation = _explain_simulator_backed_score(
             candidate_score,
             candidate,
             scenario,
@@ -246,16 +291,29 @@ def select_maneuver(
             moving_candidate_is_safe,
             config,
         )
-        scored_candidates.append((effective_score, candidate, candidate_score))
+        scored_candidates.append((explanation.effective_score, candidate, candidate_score, explanation))
 
-    best_effective_score, best_candidate, best_score = scored_candidates[0]
-    for effective_score, candidate, candidate_score in scored_candidates[1:]:
+    best_effective_score, best_candidate, best_score, best_explanation = scored_candidates[0]
+    for effective_score, candidate, candidate_score, explanation in scored_candidates[1:]:
         if (effective_score, candidate.confidence) > (best_effective_score, best_candidate.confidence):
             best_candidate = candidate
             best_score = candidate_score
             best_effective_score = effective_score
+            best_explanation = explanation
 
-    return SpotlightSelection(best_candidate, best_score, len(candidates), len(references))
+    top_candidate_summaries = tuple(
+        explanation.to_summary()
+        for _, _, _, explanation in sorted(scored_candidates, key=lambda item: item[0], reverse=True)[:3]
+    )
+    return SpotlightSelection(
+        best_candidate,
+        best_score,
+        len(candidates),
+        len(references),
+        best_effective_score,
+        best_explanation.reasons,
+        top_candidate_summaries,
+    )
 
 
 def plan_spotlight_reflex_action(
@@ -291,14 +349,84 @@ def _simulator_backed_score(
     moving_candidate_is_safe: bool,
     config: SpotlightReflexConfig,
 ) -> float:
+    return _explain_simulator_backed_score(
+        score,
+        candidate,
+        scenario,
+        position,
+        world_state,
+        moving_candidate_is_safe,
+        config,
+    ).effective_score
+
+
+def _explain_simulator_backed_score(
+    score: TrajectorySelectorScore,
+    candidate: TrajectoryCandidate,
+    scenario: Scenario,
+    position: tuple[float, float],
+    world_state: WorldState,
+    moving_candidate_is_safe: bool,
+    config: SpotlightReflexConfig,
+) -> CandidateScoreExplanation:
     scoring = config.scoring
     action_clearance = _action_clearance(candidate.trajectory, scenario, config)
     full_clearance = _min_obstacle_clearance_with_config(candidate.trajectory, scenario, config)
+    progress_bonus = 0.0
+    near_penalty = 0.0
+    horizon_penalty = 0.0
+    safety_penalty = 0.0
+    stop_penalty = 0.0
+    reasons = [
+        f"3s_reference={score.reference_3s_label}",
+        f"5s_reference={score.reference_5s_label}",
+        "inside_3s_region" if score.inside_3s_region else "outside_3s_region",
+        "inside_5s_region" if score.inside_5s_region else "outside_5s_region",
+        f"action_clearance={action_clearance:.2f}m",
+        f"horizon_clearance={full_clearance:.2f}m",
+    ]
+
     if action_clearance < scoring.min_action_clearance_m:
-        return score.combined_score - scoring.unsafe_action_penalty
+        safety_penalty = scoring.unsafe_action_penalty
+        reasons.append(f"unsafe_action_penalty={safety_penalty:.1f}")
+        return CandidateScoreExplanation(
+            candidate_name=candidate.name,
+            selector_score=score.combined_score,
+            effective_score=score.combined_score - safety_penalty,
+            action_clearance_m=action_clearance,
+            horizon_clearance_m=full_clearance,
+            progress_bonus=progress_bonus,
+            near_clearance_penalty=near_penalty,
+            horizon_clearance_penalty=horizon_penalty,
+            safety_penalty=safety_penalty,
+            stop_penalty=stop_penalty,
+            reference_3s_label=score.reference_3s_label,
+            reference_5s_label=score.reference_5s_label,
+            inside_3s_region=score.inside_3s_region,
+            inside_5s_region=score.inside_5s_region,
+            reasons=tuple(reasons),
+        )
 
     if candidate.name == "stop" and moving_candidate_is_safe:
-        return score.combined_score - scoring.avoid_unnecessary_stop_penalty
+        stop_penalty = scoring.avoid_unnecessary_stop_penalty
+        reasons.append(f"moving_candidate_available_stop_penalty={stop_penalty:.1f}")
+        return CandidateScoreExplanation(
+            candidate_name=candidate.name,
+            selector_score=score.combined_score,
+            effective_score=score.combined_score - stop_penalty,
+            action_clearance_m=action_clearance,
+            horizon_clearance_m=full_clearance,
+            progress_bonus=progress_bonus,
+            near_clearance_penalty=near_penalty,
+            horizon_clearance_penalty=horizon_penalty,
+            safety_penalty=safety_penalty,
+            stop_penalty=stop_penalty,
+            reference_3s_label=score.reference_3s_label,
+            reference_5s_label=score.reference_5s_label,
+            inside_3s_region=score.inside_3s_region,
+            inside_5s_region=score.inside_5s_region,
+            reasons=tuple(reasons),
+        )
 
     action_point = candidate.trajectory[min(config.trajectory.action_index, len(candidate.trajectory) - 1)]
     final_point = candidate.trajectory[-1]
@@ -312,13 +440,45 @@ def _simulator_backed_score(
         ),
     )
     if candidate.name != "stop":
-        progress_bonus += min(
+        speed_bonus = min(
             scoring.moving_speed_bonus_cap,
             float(candidate.metadata.get("speed_mps", 0.0)) * scoring.moving_speed_bonus_weight,
         )
+        progress_bonus += speed_bonus
+        reasons.append(f"moving_speed_bonus={speed_bonus:.2f}")
     near_penalty = max(0.0, scoring.near_clearance_target_m - action_clearance) * scoring.near_clearance_penalty_weight
     horizon_penalty = max(0.0, scoring.horizon_clearance_target_m - full_clearance) * scoring.horizon_clearance_penalty_weight
-    return score.combined_score + progress_bonus - near_penalty - horizon_penalty
+    reasons.append(f"progress_bonus={progress_bonus:.2f}")
+    if near_penalty > 0.0:
+        reasons.append(f"near_clearance_penalty={near_penalty:.2f}")
+    if horizon_penalty > 0.0:
+        reasons.append(f"horizon_clearance_penalty={horizon_penalty:.2f}")
+    effective_score = score.combined_score + progress_bonus - near_penalty - horizon_penalty
+    return CandidateScoreExplanation(
+        candidate_name=candidate.name,
+        selector_score=score.combined_score,
+        effective_score=effective_score,
+        action_clearance_m=action_clearance,
+        horizon_clearance_m=full_clearance,
+        progress_bonus=progress_bonus,
+        near_clearance_penalty=near_penalty,
+        horizon_clearance_penalty=horizon_penalty,
+        safety_penalty=safety_penalty,
+        stop_penalty=stop_penalty,
+        reference_3s_label=score.reference_3s_label,
+        reference_5s_label=score.reference_5s_label,
+        inside_3s_region=score.inside_3s_region,
+        inside_5s_region=score.inside_5s_region,
+        reasons=tuple(reasons),
+    )
+
+
+def _round_float(value: float) -> float | str:
+    if math.isinf(value):
+        return "inf" if value > 0.0 else "-inf"
+    if math.isnan(value):
+        return "nan"
+    return round(float(value), 3)
 
 
 def _action_clearance(trajectory: Trajectory, scenario: Scenario, config: SpotlightReflexConfig | None = None) -> float:

@@ -138,6 +138,7 @@ class SpotlightReflexAlpaSimModel(BaseTrajectoryModel):
             horizon_seconds=self._HORIZON_SECONDS,
         )
         headings = self._compute_headings_from_trajectory(trajectory_xy)
+        selection_metadata = selection.to_metadata()
         reasoning_text = json.dumps(
             {
                 "adapter": "minimal_shot_av.simulator.spotlight_reflex",
@@ -146,10 +147,14 @@ class SpotlightReflexAlpaSimModel(BaseTrajectoryModel):
                 "candidate_count": selection.candidate_count,
                 "reference_count": selection.reference_count,
                 "selector_score": selection.score.combined_score,
+                "selector_effective_score": selection_metadata["selector_effective_score"],
                 "selector_3s_score": selection.score.score_3s,
                 "selector_5s_score": selection.score.score_5s,
                 "selector_3s_reference": selection.score.reference_3s_label,
                 "selector_5s_reference": selection.score.reference_5s_label,
+                "decision_reason": selection_metadata["decision_reason"],
+                "decision_reasons": selection_metadata["decision_reasons"],
+                "top_candidate_summaries": selection_metadata["top_candidate_summaries"],
                 "alpasim_signal": alpasim_signal,
             },
             sort_keys=True,

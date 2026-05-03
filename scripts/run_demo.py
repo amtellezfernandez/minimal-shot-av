@@ -54,10 +54,14 @@ def main() -> None:
             "deterministic maneuver library with simulator-native trajectory selector reference selection"
         )
         safety_description = "selector-chosen action with existing uncertainty-aware safety filter"
+        decision_explainability = (
+            "per-step selector references, score terms, and top candidate summaries"
+        )
     else:
         rollout = run_policy(scenario)
         planner_description = "candidate trajectory search toward target waypoint"
         safety_description = "uncertainty-aware slowdown and emergency stop"
+        decision_explainability = "baseline rollout metrics only"
 
     payload = {
         "scenario": scenario_to_dict(scenario),
@@ -68,6 +72,7 @@ def main() -> None:
             "world_model": "short-horizon progress and collision-risk state",
             "planner": planner_description,
             "safety_filter": safety_description,
+            "decision_explainability": decision_explainability,
         },
         "rollout": {
             "success": rollout.success,

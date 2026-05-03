@@ -140,6 +140,36 @@ class ManeuverLibraryTests(unittest.TestCase):
         selection = select_maneuver(scenario, position, world_state, perception, 1.25)
         self.assertIn(selection.candidate.name, {"nudge_right", "evasive_right"})
 
+    def test_selector_explains_selected_maneuver_and_alternatives(self) -> None:
+        scenario = Scenario(
+            width=40.0,
+            height=20.0,
+            lane_center=[(0.0, 0.0), (30.0, 0.0)],
+            lane_half_width=5.0,
+            obstacles=[Obstacle(x=4.0, y=1.0, radius=1.0)],
+            start=(0.0, 0.0),
+            goal=(30.0, 0.0),
+            seed=124,
+        )
+        perception = perceive_scene(scenario, scenario.start)
+        world_state = update_world_state(scenario, scenario.start, perception)
+
+        selection = select_maneuver(scenario, scenario.start, world_state, perception, 1.25)
+        metadata = selection.to_metadata()
+
+        self.assertGreater(selection.effective_score, selection.score.combined_score - 1000.0)
+        self.assertGreaterEqual(len(selection.decision_reasons), 6)
+        self.assertIn("3s_reference=", selection.decision_reasons[0])
+        self.assertIn("action_clearance=", " ".join(selection.decision_reasons))
+        self.assertEqual(metadata["decision_reasons"], list(selection.decision_reasons))
+        summaries = metadata["top_candidate_summaries"]
+        self.assertIsInstance(summaries, list)
+        self.assertGreaterEqual(len(summaries), 1)
+        self.assertEqual(summaries[0]["candidate"], selection.candidate.name)
+        self.assertIn("effective_score", summaries[0])
+        self.assertIn("action_clearance_m", summaries[0])
+        self.assertIn("reasons", summaries[0])
+
     def test_forecast_clearance_keeps_static_obstacle_with_same_label_as_moving_actor(self) -> None:
         scenario = Scenario(
             width=20.0,
@@ -348,10 +378,19 @@ class DemoIntegrationTests(unittest.TestCase):
         self.assertTrue(payload["rollout"]["reached_goal"])
         first_step = payload["rollout"]["steps"][0]
         self.assertEqual(first_step["candidate_count"], 9)
+        self.assertGreaterEqual(first_step["reference_count"], 1)
         self.assertIsInstance(first_step["selected_maneuver"], str)
         self.assertIsInstance(first_step["selector_score"], float)
+        self.assertIsInstance(first_step["selector_effective_score"], float)
         self.assertIsInstance(first_step["selector_3s_reference"], str)
         self.assertIsInstance(first_step["selector_5s_reference"], str)
+        self.assertIsInstance(first_step["decision_reason"], str)
+        self.assertGreater(len(first_step["decision_reason"]), 0)
+        self.assertIsInstance(first_step["decision_reasons"], list)
+        self.assertGreaterEqual(len(first_step["decision_reasons"]), 6)
+        self.assertIsInstance(first_step["top_candidate_summaries"], list)
+        self.assertGreaterEqual(len(first_step["top_candidate_summaries"]), 1)
+        self.assertIn("effective_score", first_step["top_candidate_summaries"][0])
 
     def test_baseline_and_spotlight_demos_run_on_fixed_seed(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
