@@ -1,0 +1,62 @@
+{
+  "checks": {
+    "active_policy_has_no_episode_lookup": true,
+    "closed_loop_no_near_miss": true,
+    "closed_loop_zero_collision": true,
+    "no_strict_zero_shot_wod_claim": true,
+    "randomized_long_tail_coverage": true,
+    "validation_preferences_not_primary_claim": true,
+    "wod_evidence_declared_auxiliary": true
+  },
+  "failures": [],
+  "inputs": {
+    "grand_submission": "/home/amdev/sota/minimal-shot-av/docs/grand-submission.md",
+    "model_declaration": "/home/amdev/sota/minimal-shot-av/models/DECLARATION.md",
+    "policy_sources": [
+      "/home/amdev/sota/minimal-shot-av/src/minimal_shot_av/simulator/spotlight_reflex.py",
+      "/home/amdev/sota/minimal-shot-av/src/minimal_shot_av/simulator/policy.py",
+      "/home/amdev/sota/minimal-shot-av/src/minimal_shot_av/simulator/perception.py",
+      "/home/amdev/sota/minimal-shot-av/src/minimal_shot_av/simulator/world_model.py",
+      "/home/amdev/sota/minimal-shot-av/src/minimal_shot_av/simulator/safety.py",
+      "/home/amdev/sota/minimal-shot-av/src/minimal_shot_av/simulator/trajectory_selector.py",
+      "/home/amdev/sota/minimal-shot-av/src/minimal_shot_av/simulator/planner.py"
+    ],
+    "sim_eval": "artifacts/sota_submission_bundles/minor_eval/scenario_eval.json",
+    "submission_form": "/home/amdev/sota/minimal-shot-av/docs/sota-grand-submission-form.md"
+  },
+  "interpretation": "Pass means the primary Grand claim is supported by the closed-loop Spotlight Reflex runtime path and randomized scenario evidence, while WOD preference-calibrated results remain auxiliary benchmark analysis.",
+  "metrics": {
+    "claim_boundary": {
+      "no_strict_zero_shot_wod_claim": true,
+      "validation_preferences_not_primary": true,
+      "wod_auxiliary": true
+    },
+    "policy_static_scan": {
+      "forbidden_patterns": [
+        "\\bload_preference_frames\\b",
+        "\\bwod_preference\\b",
+        "\\bpreference_trajectories\\b",
+        "\\bframe-cache\\b",
+        "\\bnearest_train\\b",
+        "\\bnearest_preferences\\b",
+        "\\bmemory_neighbor\\b",
+        "\\branker_score\\b",
+        "\\bfit_[a-z0-9_]*selector\\b",
+        "\\btrain_margin\\b"
+      ],
+      "matches": [],
+      "missing": [],
+      "source_count": 7
+    },
+    "simulation": {
+      "cluster_count": 11,
+      "max_collision_rate": 0.0,
+      "max_near_miss_rate": 0.0,
+      "min_benchmark_pass_rate": 1.0,
+      "min_success_rate": 1.0,
+      "run_count": 550
+    }
+  },
+  "schema": "minimal_shot_claim_audit_v1",
+  "valid": true
+}

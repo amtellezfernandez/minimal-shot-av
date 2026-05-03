@@ -13,6 +13,7 @@ DEFAULT_BREAKTHROUGH_AUDIT = ROOT / "artifacts" / "wod_fastkin_gate_ridge175_sce
 DEFAULT_SIM_EVAL = ROOT / "artifacts" / "sota_submission_bundles" / "minor_eval" / "scenario_eval.json"
 DEFAULT_RUNTIME_REPORT = ROOT / "benchmarks" / "current" / "wod_online_runtime_vs_14ms_budget.json"
 DEFAULT_NOTEBOOK = ROOT / "notebooks" / "wod_e2e_analysis.ipynb"
+DEFAULT_MINIMAL_SHOT_AUDIT = ROOT / "artifacts" / "minimal_shot_claim_audit.json"
 DEFAULT_OUTPUT = ROOT / "artifacts" / "sota_judging_criteria_audit.json"
 
 
@@ -23,6 +24,7 @@ def main() -> int:
     parser.add_argument("--sim-eval", type=Path, default=DEFAULT_SIM_EVAL)
     parser.add_argument("--runtime-report", type=Path, default=DEFAULT_RUNTIME_REPORT)
     parser.add_argument("--notebook", type=Path, default=DEFAULT_NOTEBOOK)
+    parser.add_argument("--minimal-shot-audit", type=Path, default=DEFAULT_MINIMAL_SHOT_AUDIT)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     args = parser.parse_args()
 
@@ -32,6 +34,7 @@ def main() -> int:
         sim_eval=args.sim_eval,
         runtime_report=args.runtime_report,
         notebook=args.notebook,
+        minimal_shot_audit=args.minimal_shot_audit,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -46,11 +49,13 @@ def build_report(
     sim_eval: Path = DEFAULT_SIM_EVAL,
     runtime_report: Path = DEFAULT_RUNTIME_REPORT,
     notebook: Path = DEFAULT_NOTEBOOK,
+    minimal_shot_audit: Path = DEFAULT_MINIMAL_SHOT_AUDIT,
 ) -> dict[str, Any]:
     wod = _load_json(wod_report)
     breakthrough = _load_json(breakthrough_audit)
     sim = _load_json(sim_eval)
     runtime = _load_json(runtime_report)
+    minimal_shot = _load_json(minimal_shot_audit)
 
     wod_metrics = _wod_metrics(wod, breakthrough)
     sim_metrics = _sim_metrics(sim)
@@ -58,10 +63,11 @@ def build_report(
     notebook_valid = notebook.is_file() and notebook.stat().st_size > 0
 
     criteria = {
-        "technical_excellence": _technical_excellence(wod_metrics, sim_metrics, runtime_metrics),
-        "novelty": _novelty(wod_metrics),
+        "technical_excellence": _technical_excellence(wod_metrics, sim_metrics, runtime_metrics, minimal_shot),
+        "novelty": _novelty(wod_metrics, minimal_shot),
         "feasibility": _feasibility(sim_metrics, runtime_metrics),
-        "adherence_to_brief": _adherence_to_brief(wod_metrics, sim_metrics, notebook_valid),
+        "adherence_to_brief": _adherence_to_brief(wod_metrics, sim_metrics, notebook_valid, minimal_shot),
+        "minimal_shot_integrity": _minimal_shot_integrity(minimal_shot),
     }
     valid = all(item["status"] == "pass" for item in criteria.values())
     return {
@@ -74,38 +80,52 @@ def build_report(
             "sim_eval": str(sim_eval),
             "runtime_report": str(runtime_report),
             "notebook": str(notebook),
+            "minimal_shot_audit": str(minimal_shot_audit),
         },
         "metrics": {
             "wod": wod_metrics,
             "simulation": sim_metrics,
             "runtime": runtime_metrics,
             "notebook_present": notebook_valid,
+            "minimal_shot": minimal_shot,
         },
         "criteria": criteria,
     }
 
 
-def _technical_excellence(wod: dict[str, Any], sim: dict[str, Any], runtime: dict[str, Any]) -> dict[str, Any]:
+def _technical_excellence(
+    wod: dict[str, Any],
+    sim: dict[str, Any],
+    runtime: dict[str, Any],
+    minimal_shot: dict[str, Any],
+) -> dict[str, Any]:
     checks = [
-        ("wod_selected_rfs_gain_ge_0_5", wod["selected_rfs_gain_vs_constant_velocity"] >= 0.5),
-        ("wod_oracle_headroom_ge_1_0", wod["oracle_headroom"] >= 1.0),
+        ("minimal_shot_integrity_valid", bool(minimal_shot.get("valid"))),
+        (
+            "active_policy_has_no_episode_lookup",
+            bool(minimal_shot.get("checks", {}).get("active_policy_has_no_episode_lookup")),
+        ),
         ("sim_all_clusters_pass", sim["cluster_count"] >= 11 and sim["min_benchmark_pass_rate"] >= 1.0),
         ("runtime_beats_14ms_budget", runtime["beats_14ms_budget"]),
     ]
     return _criterion(
         checks,
         [
-            f"WOD official validation-CV selected RFS improves by {wod['selected_rfs_gain_vs_constant_velocity']:.3f}.",
-            f"Combined candidate oracle leaves {wod['oracle_headroom']:.3f} RFS headroom.",
+            "Primary claim is backed by the minimal-shot integrity audit, not by WOD RFS alone.",
             f"Simulation sweep covers {sim['run_count']} runs across {sim['cluster_count']} clusters.",
             f"Numeric controller p95 latency is {runtime['p95_total_latency_ms']:.3f} ms.",
+            f"WOD validation-CV remains auxiliary: selected RFS gain is {wod['selected_rfs_gain_vs_constant_velocity']:.3f}.",
         ],
     )
 
 
-def _novelty(wod: dict[str, Any]) -> dict[str, Any]:
+def _novelty(wod: dict[str, Any], minimal_shot: dict[str, Any]) -> dict[str, Any]:
     checks = [
         ("candidate_selector_separation", wod["oracle_headroom"] > 1.0),
+        (
+            "episode_free_reflex_runtime",
+            bool(minimal_shot.get("checks", {}).get("active_policy_has_no_episode_lookup")),
+        ),
         ("explicit_validation_audit", _has_explicit_validation_audit(wod)),
         ("non_text_runtime_declared", True),
     ]
@@ -113,6 +133,7 @@ def _novelty(wod: dict[str, Any]) -> dict[str, Any]:
         checks,
         [
             "The architecture separates candidate diversity from candidate selection and reports oracle regret.",
+            "The active closed-loop policy is scanned for WOD preference/cache/memory dependencies.",
             "The validation audit is included with pass/fail status and claim-boundary evidence.",
             "The active runtime path is structured/non-text and does not depend on prompt parsing.",
         ],
@@ -137,12 +158,22 @@ def _feasibility(sim: dict[str, Any], runtime: dict[str, Any]) -> dict[str, Any]
     )
 
 
-def _adherence_to_brief(wod: dict[str, Any], sim: dict[str, Any], notebook_valid: bool) -> dict[str, Any]:
+def _adherence_to_brief(
+    wod: dict[str, Any],
+    sim: dict[str, Any],
+    notebook_valid: bool,
+    minimal_shot: dict[str, Any],
+) -> dict[str, Any]:
     checks = [
         ("analysis_notebook_present", notebook_valid),
         ("randomized_scenario_generation", sim["cluster_count"] >= 11 and sim["run_count"] >= 550),
         ("wod_e2e_validation_evidence", wod["frames"] >= 479),
         ("validation_audit_declared", _has_explicit_validation_audit(wod)),
+        ("wod_evidence_declared_auxiliary", bool(minimal_shot.get("checks", {}).get("wod_evidence_declared_auxiliary"))),
+        (
+            "validation_preferences_not_primary_claim",
+            bool(minimal_shot.get("checks", {}).get("validation_preferences_not_primary_claim")),
+        ),
     ]
     return _criterion(
         checks,
@@ -151,6 +182,19 @@ def _adherence_to_brief(wod: dict[str, Any], sim: dict[str, Any], notebook_valid
             "Randomized WOD-style scenario generation covers all 11 long-tail clusters with 50 seeds each.",
             "WOD-E2E evidence is validation-CV only and labeled as such.",
             "Validation audit is explicit: the promoted report is validation-CV only and still reports oracle regret.",
+            "Minimal-shot audit verifies that WOD preference calibration is not the primary claim.",
+        ],
+    )
+
+
+def _minimal_shot_integrity(minimal_shot: dict[str, Any]) -> dict[str, Any]:
+    checks_payload = minimal_shot.get("checks", {})
+    checks = [(str(name), bool(passed)) for name, passed in checks_payload.items()]
+    return _criterion(
+        checks,
+        [
+            "Primary Grand evidence must come from the episode-free closed-loop Spotlight Reflex path.",
+            "WOD validation-preference results are allowed only as auxiliary benchmark analysis.",
         ],
     )
 

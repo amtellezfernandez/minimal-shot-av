@@ -16,6 +16,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
             breakthrough = root / "breakthrough.json"
             sim = root / "sim.json"
             runtime = root / "runtime.json"
+            minimal = root / "minimal.json"
             notebook = root / "analysis.ipynb"
 
             wod.write_text(
@@ -74,6 +75,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            minimal.write_text(json.dumps(_minimal_shot_payload()), encoding="utf-8")
             notebook.write_text("{}", encoding="utf-8")
 
             report = build_report(
@@ -82,6 +84,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
                 sim_eval=sim,
                 runtime_report=runtime,
                 notebook=notebook,
+                minimal_shot_audit=minimal,
             )
 
         self.assertTrue(report["valid"])
@@ -89,6 +92,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
         self.assertEqual("pass", report["criteria"]["novelty"]["status"])
         self.assertEqual("pass", report["criteria"]["feasibility"]["status"])
         self.assertEqual("pass", report["criteria"]["adherence_to_brief"]["status"])
+        self.assertEqual("pass", report["criteria"]["minimal_shot_integrity"]["status"])
 
     def test_missing_notebook_fails_adherence(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -97,6 +101,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
             breakthrough = root / "breakthrough.json"
             sim = root / "sim.json"
             runtime = root / "runtime.json"
+            minimal = root / "minimal.json"
             notebook = root / "missing.ipynb"
 
             wod.write_text(
@@ -141,6 +146,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            minimal.write_text(json.dumps(_minimal_shot_payload()), encoding="utf-8")
 
             report = build_report(
                 wod_report=wod,
@@ -148,6 +154,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
                 sim_eval=sim,
                 runtime_report=runtime,
                 notebook=notebook,
+                minimal_shot_audit=minimal,
             )
 
         self.assertFalse(report["valid"])
@@ -164,6 +171,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
             breakthrough = root / "breakthrough.json"
             sim = root / "sim.json"
             runtime = root / "runtime.json"
+            minimal = root / "minimal.json"
             notebook = root / "analysis.ipynb"
 
             wod.write_text(
@@ -214,6 +222,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            minimal.write_text(json.dumps(_minimal_shot_payload()), encoding="utf-8")
             notebook.write_text("{}", encoding="utf-8")
 
             report = build_report(
@@ -222,11 +231,96 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
                 sim_eval=sim,
                 runtime_report=runtime,
                 notebook=notebook,
+                minimal_shot_audit=minimal,
             )
 
         self.assertTrue(report["valid"])
         self.assertEqual("pass", report["criteria"]["novelty"]["status"])
         self.assertEqual("pass", report["criteria"]["adherence_to_brief"]["status"])
+
+    def test_episode_dependent_primary_claim_fails_minimal_shot_integrity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            wod = root / "wod.json"
+            breakthrough = root / "breakthrough.json"
+            sim = root / "sim.json"
+            runtime = root / "runtime.json"
+            minimal = root / "minimal.json"
+            notebook = root / "analysis.ipynb"
+
+            wod.write_text(
+                json.dumps(
+                    {
+                        "frames": 479,
+                        "kinematic_constant_velocity_mean_rfs": 7.0,
+                        "combined_ranker_mean_rfs": 8.0,
+                        "combined_oracle_mean_rfs": 9.2,
+                        "combined_ranker_regret_to_oracle": 1.2,
+                        "slices": {"speed:slow": {}},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            breakthrough.write_text(json.dumps({"passed": True, "failures": []}), encoding="utf-8")
+            sim.write_text(
+                json.dumps(
+                    {
+                        "summary": [
+                            {
+                                "runs": 50,
+                                "success_rate": 1.0,
+                                "benchmark_pass_rate": 1.0,
+                                "collision_rate": 0.0,
+                                "near_miss_rate": 0.0,
+                                "avg_min_clearance": 2.0,
+                                "avg_intervention_rate": 0.1,
+                            }
+                            for _ in range(11)
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            runtime.write_text(
+                json.dumps(
+                    {
+                        "beats_all_shared_metrics": True,
+                        "comparisons": [{"metric": "p95_total_latency_ms", "subject_value": 1.4}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            payload = _minimal_shot_payload()
+            payload["valid"] = False
+            payload["checks"]["active_policy_has_no_episode_lookup"] = False
+            minimal.write_text(json.dumps(payload), encoding="utf-8")
+            notebook.write_text("{}", encoding="utf-8")
+
+            report = build_report(
+                wod_report=wod,
+                breakthrough_audit=breakthrough,
+                sim_eval=sim,
+                runtime_report=runtime,
+                notebook=notebook,
+                minimal_shot_audit=minimal,
+            )
+
+        self.assertFalse(report["valid"])
+        self.assertEqual("fail", report["criteria"]["minimal_shot_integrity"]["status"])
+        self.assertEqual("fail", report["criteria"]["technical_excellence"]["status"])
+
+
+def _minimal_shot_payload() -> dict:
+    checks = {
+        "active_policy_has_no_episode_lookup": True,
+        "randomized_long_tail_coverage": True,
+        "closed_loop_zero_collision": True,
+        "closed_loop_no_near_miss": True,
+        "wod_evidence_declared_auxiliary": True,
+        "validation_preferences_not_primary_claim": True,
+        "no_strict_zero_shot_wod_claim": True,
+    }
+    return {"schema": "minimal_shot_claim_audit_v1", "valid": True, "checks": checks}
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.audit_sota_judging_criteria import build_report
+from scripts.audit_minimal_shot_claim import build_report as build_minimal_shot_report
 
 
 GRAND_RUNS = (
@@ -91,6 +92,7 @@ TRACK_EVIDENCE = {
         "artifacts/wod_preference_calibrated_ensemble3_full_official.json",
         "benchmarks/current/wod_fast_slow_runtime.json",
         "benchmarks/current/wod_monolithic_runtime_reference.json",
+        "artifacts/minimal_shot_claim_audit.json",
         "artifacts/sota_judging_criteria_audit.json",
     ],
     "minor_commission": [],
@@ -178,6 +180,11 @@ def _run_minor_evaluation(output_dir: Path) -> None:
 
 
 def _write_judging_audit(artifacts_root: Path) -> Path:
+    minimal_shot_output = ROOT / "artifacts" / "minimal_shot_claim_audit.json"
+    minimal_shot_report = build_minimal_shot_report(sim_eval=artifacts_root / "minor_eval" / "scenario_eval.json")
+    minimal_shot_output.parent.mkdir(parents=True, exist_ok=True)
+    minimal_shot_output.write_text(json.dumps(minimal_shot_report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
     output = ROOT / "artifacts" / "sota_judging_criteria_audit.json"
     report = build_report(sim_eval=artifacts_root / "minor_eval" / "scenario_eval.json")
     output.parent.mkdir(parents=True, exist_ok=True)

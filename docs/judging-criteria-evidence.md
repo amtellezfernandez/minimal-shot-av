@@ -8,9 +8,13 @@ from artifacts that are bundled with the submission and audited by
 
 - The simulator evidence contains 550 Spotlight Reflex closed-loop rollouts
   across 11 WOD-style long-tail clusters, with 50 seeds per cluster.
+- `artifacts/minimal_shot_claim_audit.json` gates the Grand claim: the active
+  Spotlight Reflex runtime path is statically scanned for WOD preference,
+  cache, nearest-neighbor memory, and validation-ranker dependencies, and the
+  audit passes with zero matches.
 - The numeric WOD controller runtime report beats the 14 ms p95 latency budget
   with `1.402` ms p95 total latency.
-- The WOD-E2E harness provides audited development evidence: official
+- The WOD-E2E harness provides audited auxiliary development evidence: official
   validation-CV selected RFS improves from `7.022` constant velocity to
   `7.6594`, and the combined candidate oracle reaches `9.098` RFS. Because the
   selector is preference-calibrated on retained validation labels, this is
@@ -24,7 +28,7 @@ from artifacts that are bundled with the submission and audited by
 - The submission includes a conservative improvement audit. A small scene-gate
   sweep improves mean RFS and normalized RFS while reducing worst-slice regret.
 - The active runtime path is structured and non-text. It does not depend on
-  prompt parsing or memorized AV demonstrations.
+  prompt parsing, WOD preference caches, or memorized AV demonstrations.
 
 ## Feasibility
 
@@ -47,3 +51,6 @@ from artifacts that are bundled with the submission and audited by
 - The submission is honest about its current boundary: validation-CV evidence is
   not presented as a hidden-test leaderboard result or as strict zero-shot
   WOD-E2E generalisation.
+- The primary minimal-shot evidence is the episode-free closed-loop Spotlight
+  Reflex policy and randomized scenario evaluation, not the preference-calibrated
+  WOD selector.
