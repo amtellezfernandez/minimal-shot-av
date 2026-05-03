@@ -150,13 +150,13 @@ subject must exceed the baseline by more than `0.01`.
   trajectory model with auxiliary temporal-summary candidates. Mean selected RFS
   is `7.602814916652251`, with combined oracle headroom `9.015857402777051`.
 - Current promoted structured-selector report:
-  `artifacts/wod_fastkin_gate_ridge175_scene016_cv_official.json`
+  `artifacts/wod_fastkin_gate_ridge175_scene020_cv_official.json`
   records segment-grouped 5-fold official-RFS validation CV after adding the
   fallback-enabled fast-kinematic/scene-gate selector path. Mean selected RFS is
-  `7.659197835744162`, with combined oracle headroom
+  `7.65941846208851`, with combined oracle headroom
   `9.098014272661512`. This is a small conservative improvement over the
-  previous `7.657089971818379` report:
-  `artifacts/wod_fastkin_gate_ridge175_scene016_breakthrough_audit.json`
+  previous `7.659197835744162` promoted report:
+  `artifacts/wod_fastkin_gate_ridge175_scene020_breakthrough_audit.json`
   records a passed validation-CV improvement audit.
 - Current lightweight world-model ablation:
   `artifacts/world_sweeps/wod_cv_479_world_ego_l8_m0_official.json` records

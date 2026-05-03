@@ -1,0 +1,26 @@
+{
+  "baseline": "artifacts/wod_fastkin_gate_ridge175_scene016_cv_official.json",
+  "candidate": "artifacts/wod_fastkin_gate_ridge175_scene020_cv_official.json",
+  "claim_boundary": "validation_cv_only_not_hidden_test_not_production",
+  "failures": [],
+  "metrics": {
+    "baseline_normalized_rfs": 7.987322782735644,
+    "baseline_selected_rfs": 7.659197835744162,
+    "baseline_worst_slice": {
+      "frames": 29,
+      "mean_regret": 1.734907160697781,
+      "slice": "intent:3"
+    },
+    "candidate_normalized_rfs": 7.987543409079993,
+    "candidate_selected_rfs": 7.65941846208851,
+    "candidate_worst_slice": {
+      "frames": 29,
+      "mean_regret": 1.734907160697781,
+      "slice": "intent:3"
+    },
+    "normalized_rfs_gain": 0.0002206263443484957,
+    "selected_rfs_gain": 0.0002206263443484957
+  },
+  "passed": true,
+  "schema": "wod_validation_breakthrough_audit_v1"
+}

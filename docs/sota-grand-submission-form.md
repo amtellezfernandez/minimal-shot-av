@@ -38,7 +38,7 @@ The policy does not claim to be a production AV stack. It is a minimal-shot arch
 
 Judging criteria evidence:
 
-- technical excellence: WOD validation-CV selected RFS improves by +0.635 over
+- technical excellence: WOD validation-CV selected RFS improves by +0.637 over
   constant velocity, the candidate oracle reaches 9.098 RFS, and numeric
   controller p95 latency is 1.402 ms against a 14 ms budget.
 - novelty: candidate generation and candidate selection are separated, and the
@@ -55,11 +55,11 @@ Current WOD-E2E validation evidence:
 
 - 479 validation frames with valid rater preference labels.
 - constant-velocity official validation-CV RFS: 7.022.
-- combined candidate ranker official validation-CV RFS: 7.659.
+- combined candidate ranker official validation-CV RFS: 7.6594.
 - gain versus constant velocity: +0.637 RFS.
 - combined candidate oracle official validation-CV RFS: 9.098.
 - selector regret to oracle: 1.439 RFS.
-- conservative improvement audit status: passed versus the previous `7.657`
+- conservative improvement audit status: passed versus the previous `7.659198`
   validation-CV report.
 - no hidden-test leaderboard score is claimed.
 
@@ -67,7 +67,7 @@ Current WOD-E2E validation evidence:
 
 The strongest result is the closed-loop architecture behavior: the policy uses scenario structure and safety selection to navigate long-tail generated cases that defeat a simpler baseline. The second strongest result is infrastructure: official WOD-E2E parsing, scoring, packaging, and leaderboard-result logging are now separated from validation-tuned claims.
 
-The validation-CV candidate stack also shows real but limited signal. The combined ranker improves over constant velocity, and the candidate oracle is substantially stronger than the selected trajectory. A conservative scene-gate sweep improved the official validation-CV report from `7.657` to `7.659` while reducing selector regret from `1.441` to `1.439`; the remaining gap points to the next technical bottleneck: candidate routing, not just generating more trajectories.
+The validation-CV candidate stack also shows real but limited signal. The combined ranker improves over constant velocity, and the candidate oracle is substantially stronger than the selected trajectory. Conservative scene-gate sweeps improved the official validation-CV report from `7.657` to `7.6594` while reducing selector regret from `1.441` to `1.4386`; the remaining gap points to the next technical bottleneck: candidate routing, not just generating more trajectories.
 
 For realtime behavior, I added a fast/slow controller proposal and benchmark.
 The fast reflex loop keeps only compact local candidates plus one cached slow
@@ -92,7 +92,7 @@ commission brief.
 
 The lightweight WOD-E2E world-model experiment is not yet a solved autonomy model. It produced only a small official validation-CV selected RFS movement and should be treated as early evidence, not a final solution. Hidden-test leaderboard results are still missing because the local workspace does not contain the WOD-E2E test split.
 
-The promoted WOD validation report is also not a clean breakthrough by the repo's own audit gate: mean RFS improves, but worst-slice regret worsens. This is why the WOD evidence should be presented as a transparent development result rather than a solved model.
+The promoted WOD validation report passes the repo's conservative improvement audit, but the margin is small and remains validation-CV only. This is why the WOD evidence should be presented as a transparent development result rather than a solved model or hidden-test leaderboard result.
 
 This should not be described as production autonomy, strict zero-shot WOD-E2E, or a completed leaderboard entry. The honest Grand claim is a runnable minimal-shot architecture prototype plus a rigorous submission harness.
 

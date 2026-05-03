@@ -81,8 +81,8 @@ TRACK_DOCS = {
 
 TRACK_EVIDENCE = {
     "grand_commission": [
-        "artifacts/wod_fastkin_gate_ridge175_scene016_cv_official.json",
-        "artifacts/wod_fastkin_gate_ridge175_scene016_breakthrough_audit.json",
+        "artifacts/wod_fastkin_gate_ridge175_scene020_cv_official.json",
+        "artifacts/wod_fastkin_gate_ridge175_scene020_breakthrough_audit.json",
         "artifacts/wod_neural_holdout/neural_ensemble3_sourcegate_speedfine_p0_local.json",
         "artifacts/wod_neural_holdout/neural_top1_pc0_familycal_l2_010_heldout_official.json",
         "artifacts/wod_preference_calibrated_ensemble3_full_official.json",

@@ -88,5 +88,5 @@ when the richer candidate refresh is late.
 - The cached slow plan still needs a stronger semantic validity check before it
   should be claimed as a deployed AV architecture.
 - The next quality experiment should combine this scheduler with the current
-  `7.659` official validation-CV WOD selector and verify that score does not
+  `7.6594` official validation-CV WOD selector and verify that score does not
   regress while control latency improves.

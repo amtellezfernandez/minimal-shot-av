@@ -7,9 +7,9 @@ from artifacts that are bundled with the submission and audited by
 ## Technical Excellence
 
 - WOD-E2E official validation-CV selected RFS improves from `7.022` constant
-  velocity to `7.659`, a `+0.637` gain on 479 preference-labeled validation
+  velocity to `7.6594`, a `+0.637` gain on 479 preference-labeled validation
   frames.
-- The combined candidate oracle reaches `9.098` RFS, leaving `1.439` RFS of
+- The combined candidate oracle reaches `9.098` RFS, leaving `1.4386` RFS of
   selector headroom. This makes the remaining bottleneck measurable rather than
   anecdotal.
 - The simulator evidence contains 550 Spotlight Reflex closed-loop rollouts

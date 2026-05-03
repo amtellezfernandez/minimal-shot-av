@@ -43,10 +43,10 @@ WOD validation numbers:
 
 - 479 validation frames with valid rater preference labels.
 - Constant velocity official validation-CV RFS: `7.022`.
-- Combined candidate ranker official validation-CV RFS: `7.659`.
+- Combined candidate ranker official validation-CV RFS: `7.6594`.
 - Gain versus constant velocity: `+0.635`.
 - Combined candidate oracle official validation-CV RFS: `9.098`.
-- Selector regret to oracle: `1.439`.
+- Selector regret to oracle: `1.4386`.
 - Breakthrough audit status: failed because worst-slice regret regressed.
 
 Required caveat:

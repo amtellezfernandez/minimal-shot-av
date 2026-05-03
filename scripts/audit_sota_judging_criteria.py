@@ -8,8 +8,8 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_WOD_REPORT = ROOT / "artifacts" / "wod_fastkin_gate_ridge175_scene016_cv_official.json"
-DEFAULT_BREAKTHROUGH_AUDIT = ROOT / "artifacts" / "wod_fastkin_gate_ridge175_scene016_breakthrough_audit.json"
+DEFAULT_WOD_REPORT = ROOT / "artifacts" / "wod_fastkin_gate_ridge175_scene020_cv_official.json"
+DEFAULT_BREAKTHROUGH_AUDIT = ROOT / "artifacts" / "wod_fastkin_gate_ridge175_scene020_breakthrough_audit.json"
 DEFAULT_SIM_EVAL = ROOT / "artifacts" / "sota_submission_bundles" / "minor_eval" / "scenario_eval.json"
 DEFAULT_RUNTIME_REPORT = ROOT / "benchmarks" / "current" / "wod_online_runtime_vs_14ms_budget.json"
 DEFAULT_NOTEBOOK = ROOT / "notebooks" / "wod_e2e_analysis.ipynb"
