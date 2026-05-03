@@ -3,17 +3,17 @@
 This repository contains two independent SoTA Commission deliverables:
 
 - `simulator`: the COMPASS/AlpaSim/Spotlight Reflex simulation and evidence stack.
-- `zero-shot model`: the WOD-E2E/RFS non-text candidate and ranker stack.
+- `model benchmark`: the WOD-E2E/RFS non-text candidate and ranker stack.
 
 They must stay agnostic to each other. Simulator work must not use model outputs,
-training labels, or WOD preference-ranker logic. Zero-shot model
+training labels, or WOD preference-ranker logic. Model benchmark
 work must not import simulator policy, planner, environment, scenario generator,
 or AlpaSim adapter logic.
 
 There is no shared model/simulator scoring layer. WOD/RFS metric code belongs to
 `minimal_shot_av.model.rfs_metric`; simulator trajectory selection belongs to
 `minimal_shot_av.simulator.trajectory_selector`. Keeping these separate prevents
-simulator work from being tuned against the zero-shot model objective.
+simulator work from being tuned against the WOD benchmark objective.
 
 Physical package ownership:
 
@@ -34,7 +34,7 @@ Module ownership:
   `spotlight_reflex`, `trajectory_selector`, `compass`, `certification`, `alpasim_spotlight`,
   `compositional_scenarios`, `wod_scenarios`, `oracle`, `safety`,
   `world_model`, and `render`.
-- Zero-shot model modules: `wod_e2e`, `wod_preference`, `wod_ranker`,
+- Model benchmark modules: `wod_e2e`, `wod_preference`, `wod_ranker`,
   `zero_shot_eval`, `rfs_metric`, `trajectory_io`, `trajectory_resampling`,
   `kinematic_candidates`, and `learned_trajectory_model`.
 - Neutral modules: `alpasim_metrics`.

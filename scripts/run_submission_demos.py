@@ -117,8 +117,9 @@ def main() -> None:
         track="grand_commission",
         title="SoTA Grand Commission Submission Bundle",
         claim=(
-            "Minimal-shot autonomy architecture prototype with WOD-E2E harness "
-            "and closed-loop Spotlight Reflex demos."
+            "Minimal-shot autonomy architecture prototype with closed-loop Spotlight Reflex demos. "
+            "WOD-E2E materials are supporting benchmark infrastructure and validation-CV analysis, "
+            "not the primary zero-shot autonomy claim."
         ),
         demo_names=[name for name, _ in GRAND_RUNS],
     )

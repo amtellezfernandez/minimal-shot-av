@@ -1,6 +1,6 @@
 # SoTA Grand Commission Submission Bundle
 
-Minimal-shot autonomy architecture prototype with WOD-E2E harness and closed-loop Spotlight Reflex demos.
+Minimal-shot autonomy architecture prototype with closed-loop Spotlight Reflex demos. WOD-E2E materials are supporting benchmark infrastructure and validation-CV analysis, not the primary zero-shot autonomy claim.
 
 ## Include In Submission
 

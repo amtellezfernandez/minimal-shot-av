@@ -1,6 +1,6 @@
 # Minimal-Shot Autonomy Architecture
 
-Closed-loop long-tail reflexes with a WOD-E2E submission harness.
+Closed-loop long-tail reflexes, with a WOD-E2E harness as supporting benchmark infrastructure.
 
 Repository: `https://github.com/amtellezfernandez/minimal-shot-av`
 
@@ -16,7 +16,7 @@ The system combines:
 
 - randomized long-tail simulation
 - closed-loop Spotlight Reflex control
-- WOD-E2E parsing, validation, and packaging
+- WOD-E2E parsing, validation, and packaging as auxiliary infrastructure
 - explicit readiness gates that prevent unconfirmed leaderboard claims
 
 ---
@@ -25,9 +25,10 @@ The system combines:
 
 Technical excellence:
 
-- WOD validation-CV selected RFS improves from `7.022` constant velocity to `7.6594`.
-- Candidate oracle reaches `9.098` RFS.
-- Numeric controller p95 runtime is `1.402 ms`.
+- Spotlight Reflex demos are closed-loop and reproducible by seed.
+- The included randomized sweep covers 550 rollouts across 11 long-tail clusters.
+- Numeric controller p95 runtime is `1.402 ms` against a 14 ms budget.
+- WOD validation-CV evidence is included as audited development analysis, not as the zero-shot claim.
 
 Novelty:
 
@@ -122,6 +123,9 @@ Current promoted validation-CV result:
 - candidate oracle: `9.098014272661512`
 - selector regret: `1.4385958105730023`
 
+This selector is preference-calibrated on retained validation labels under
+segment-grouped CV. It is development evidence, not strict zero-shot WOD-E2E.
+
 No hidden-test leaderboard score is claimed.
 
 ---
@@ -155,7 +159,7 @@ Funding would support:
 
 Submit as:
 
-Minimal-shot autonomy architecture prototype with reproducible closed-loop evidence and a rigorous WOD-E2E submission harness.
+Minimal-shot autonomy architecture prototype with reproducible closed-loop evidence and a rigorous WOD-E2E benchmark harness.
 
 Do not submit as:
 

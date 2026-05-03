@@ -6,16 +6,15 @@ from artifacts that are bundled with the submission and audited by
 
 ## Technical Excellence
 
-- WOD-E2E official validation-CV selected RFS improves from `7.022` constant
-  velocity to `7.6594`, a `+0.637` gain on 479 preference-labeled validation
-  frames.
-- The combined candidate oracle reaches `9.098` RFS, leaving `1.4386` RFS of
-  selector headroom. This makes the remaining bottleneck measurable rather than
-  anecdotal.
 - The simulator evidence contains 550 Spotlight Reflex closed-loop rollouts
   across 11 WOD-style long-tail clusters, with 50 seeds per cluster.
 - The numeric WOD controller runtime report beats the 14 ms p95 latency budget
   with `1.402` ms p95 total latency.
+- The WOD-E2E harness provides audited development evidence: official
+  validation-CV selected RFS improves from `7.022` constant velocity to
+  `7.6594`, and the combined candidate oracle reaches `9.098` RFS. Because the
+  selector is preference-calibrated on retained validation labels, this is
+  supporting benchmark analysis, not the core zero-shot autonomy claim.
 
 ## Novelty
 
@@ -46,4 +45,5 @@ from artifacts that are bundled with the submission and audited by
 - The WOD-E2E path includes parser, scorer, candidate-generation, validation-CV
   analysis, packaging, and readiness audits.
 - The submission is honest about its current boundary: validation-CV evidence is
-  not presented as a hidden-test leaderboard result.
+  not presented as a hidden-test leaderboard result or as strict zero-shot
+  WOD-E2E generalisation.

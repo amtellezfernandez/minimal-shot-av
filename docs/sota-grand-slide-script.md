@@ -4,7 +4,11 @@
 
 **Visual:** `grand_spotlight_demo/latest_rollout.svg`
 
-This project asks what a small autonomy stack can do when it is forced to reason from structure instead of memorizing an AV dataset. The prototype combines a WOD-E2E parsing and submission harness with a closed-loop Spotlight Reflex policy for rare, long-tail driving cases.
+This project asks what a small autonomy stack can do when it is forced to reason
+from structure instead of memorizing an AV dataset. The prototype centers on a
+closed-loop Spotlight Reflex policy for rare, long-tail driving cases. A WOD-E2E
+parsing and submission harness is included as benchmark infrastructure, not as
+the zero-shot autonomy claim.
 
 ## Slide 2: Judging Scorecard
 
@@ -12,9 +16,9 @@ This project asks what a small autonomy stack can do when it is forced to reason
 
 The submission now has a direct evidence map for the four judging criteria:
 
-- Technical excellence: WOD validation-CV selected RFS improves from `7.022` to
-  `7.6594`, with a `9.098` candidate oracle and a `1.402` ms p95 numeric
-  controller runtime.
+- Technical excellence: the Spotlight Reflex demos are closed-loop,
+  reproducible by seed, and backed by a 550-rollout randomized sweep; the
+  numeric controller runtime is `1.402` ms p95 against a 14 ms budget.
 - Novelty: the architecture separates candidate diversity from trajectory
   selection, and reports oracle regret rather than hiding selector failure.
 - Feasibility: the randomized simulator sweep covers 550 rollouts across 11
@@ -22,10 +26,10 @@ The submission now has a direct evidence map for the four judging criteria:
 - Adherence: the bundle includes the analysis notebook, simulation evidence,
   WOD-E2E validation-CV reports, failure audit, and readiness gates.
 
-Secondary WOD note: preference-calibrated heldout experiments reached `7.838`
-local RFS and `7.894` official normalized RFS, but the full retained-validation
-official rerun did not promote. The headline WOD claim is now the conservative
-`7.6594` official validation-CV report.
+Secondary WOD note: the benchmark harness includes a conservative `7.6594`
+official validation-CV report and a `9.098` candidate oracle. That selector is
+preference-calibrated on retained validation labels, so it is development
+analysis rather than proof of strict zero-shot WOD-E2E generalisation.
 
 Realtime note: the proposed fast/slow scheduler drops synchronous WOD runtime
 p95 from `2.124 ms` to `0.625 ms` on the same 5,000-frame synthetic runtime
@@ -78,7 +82,10 @@ The repository also includes the Waymo E2E path:
 - pre-registered blind submission matrix
 - SHA-256 leaderboard result logging
 
-The test split is not present in this workspace, so there is no hidden-test leaderboard claim yet. The code prevents unconfirmed leaderboard claims from passing the readiness audit.
+The retained-validation selector uses rater preference labels under
+segment-grouped CV, so it is not strict zero-shot. The test split is not present
+in this workspace, so there is no hidden-test leaderboard claim yet. The code
+prevents unconfirmed leaderboard claims from passing the readiness audit.
 
 ## Slide 9: What Prize Funding Enables
 
