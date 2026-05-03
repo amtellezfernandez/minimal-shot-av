@@ -1373,6 +1373,68 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
 
         self.assertEqual([kinematic], kept)
 
+    def test_affordance_geometry_filter_rejects_world_inconsistent_candidate(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        frame = sample_frame("segment-affordance-0-100", step=2.5)
+        kinematic = cv.candidate_ranker_row(
+            frame=frame,
+            trajectory=[(float(step) * 2.5, 0.0) for step in range(1, 21)],
+            candidate_name="constant_velocity",
+            candidate_index=0,
+            source="kinematic",
+        )
+        wrong_way_turn = cv.candidate_ranker_row(
+            frame=frame,
+            trajectory=[(float(step) * 0.2, float(step) * 1.2) for step in range(1, 21)],
+            candidate_name="scene_bad_affordance",
+            candidate_index=1,
+            source="scene",
+        )
+
+        kept = cv._zero_shot_geometry_filter_rows([kinematic, wrong_way_turn], mode="affordance")
+
+        self.assertEqual([kinematic], kept)
+
+    def test_affordance_geometry_filter_falls_back_if_all_candidates_rejected(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        frame = sample_frame("segment-affordance-fallback-0-100", step=2.5)
+        implausible = cv.candidate_ranker_row(
+            frame=frame,
+            trajectory=[(-float(step), float(step) * 2.0) for step in range(1, 21)],
+            candidate_name="learned_reverse_arc",
+            candidate_index=0,
+            source="learned",
+        )
+
+        kept = cv._zero_shot_geometry_filter_rows([implausible], mode="affordance")
+
+        self.assertEqual([implausible], kept)
+
+    def test_candidate_features_include_world_geometry_priors(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        frame = sample_frame("segment-world-geometry-0-100", step=1.0)
+        row = cv.candidate_ranker_row(
+            frame=frame,
+            trajectory=[(float(step), 0.0) for step in range(1, 21)],
+            candidate_name="constant_velocity",
+            candidate_index=0,
+            source="kinematic",
+        )
+        features = row["features"]
+
+        self.assertIn("expected_progress_5s", features)
+        self.assertIn("progress_ratio_5s", features)
+        self.assertIn("monotonic_forward_rate", features)
+        self.assertIn("curvature_per_meter", features)
+        self.assertAlmostEqual(float(features["monotonic_forward_rate"]), 1.0)
+        self.assertAlmostEqual(float(features["curvature_per_meter"]), 0.0)
+
     def test_family_calibration_falls_back_to_source_offset_for_sparse_bucket(self) -> None:
         if cv is None:
             self.skipTest("numpy is not installed")
@@ -1500,6 +1562,17 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         self.assertIn("source_world", features)
         self.assertIn("world_nearest_distance_log", features)
         self.assertIn("source_world_x_world_nearest_distance_log", features)
+
+    def test_selector_numeric_features_can_include_geometry_priors(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        features = cv._selector_numeric_features("geometry_contextual")
+
+        self.assertIn("expected_progress_5s", features)
+        self.assertIn("progress_ratio_5s", features)
+        self.assertIn("monotonic_forward_rate", features)
+        self.assertIn("curvature_per_meter", features)
 
 if __name__ == "__main__":
     unittest.main()

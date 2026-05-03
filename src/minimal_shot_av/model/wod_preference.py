@@ -99,6 +99,28 @@ def trajectory_features(
         *[trajectory[index][1] - trajectory[index - 1][1] for index in range(1, len(trajectory))],
     ]
     heading_changes = _heading_changes(trajectory)
+    expected_5s_progress = max(0.0, float(init_speed_mps)) * 5.0
+    forward_deltas = [
+        trajectory[0][0],
+        *[trajectory[index][0] - trajectory[index - 1][0] for index in range(1, len(trajectory))],
+    ]
+    reverse_distance = sum(max(0.0, -delta) for delta in forward_deltas)
+    monotonic_forward_rate = sum(1.0 for delta in forward_deltas if delta >= -1e-6) / len(forward_deltas)
+    signed_lateral_3s = float(point_3s[1])
+    signed_lateral_5s = float(endpoint[1])
+    lateral_to_progress_ratio = abs(signed_lateral_5s) / max(1.0, float(point_5s[0]))
+    curvature_per_meter = (
+        sum(abs(value) for value in heading_changes) / max(1.0, total_distance)
+        if heading_changes
+        else 0.0
+    )
+    final_speed_ratio = speeds[-1] / max(1.0, float(init_speed_mps))
+    progress_ratio_5s = float(point_5s[0]) / max(1.0, expected_5s_progress)
+    progress_error_5s = float(point_5s[0]) - expected_5s_progress
+    stop_distance_error = abs(float(point_5s[0])) if init_speed_mps < 1.4 else abs(progress_error_5s)
+    turn_direction = _intent_turn_bias(intent)
+    turn_lateral_alignment_3s = turn_direction * signed_lateral_3s
+    turn_lateral_alignment_5s = turn_direction * signed_lateral_5s
 
     features: dict[str, float | int | str] = {
         "candidate_name": candidate_name,
@@ -125,8 +147,21 @@ def trajectory_features(
         "max_abs_accel_mps2": float(max(abs(value) for value in accels)) if accels else 0.0,
         "mean_abs_lateral_step": float(sum(abs(value) for value in lateral_steps) / len(lateral_steps)),
         "max_abs_lateral_step": float(max(abs(value) for value in lateral_steps)),
-        "signed_lateral_5s": float(endpoint[1]),
-        "intent_turn_alignment": float(_intent_turn_bias(intent) * endpoint[1]),
+        "signed_lateral_3s": signed_lateral_3s,
+        "signed_lateral_5s": signed_lateral_5s,
+        "intent_turn_alignment": float(turn_lateral_alignment_5s),
+        "turn_lateral_alignment_3s": float(turn_lateral_alignment_3s),
+        "turn_lateral_alignment_5s": float(turn_lateral_alignment_5s),
+        "expected_progress_5s": float(expected_5s_progress),
+        "progress_ratio_5s": float(progress_ratio_5s),
+        "progress_error_5s": float(progress_error_5s),
+        "progress_error_abs_5s": float(abs(progress_error_5s)),
+        "stop_distance_error": float(stop_distance_error),
+        "reverse_distance": float(reverse_distance),
+        "monotonic_forward_rate": float(monotonic_forward_rate),
+        "lateral_to_progress_ratio": float(lateral_to_progress_ratio),
+        "curvature_per_meter": float(curvature_per_meter),
+        "final_speed_ratio": float(final_speed_ratio),
         "mean_abs_heading_change": (
             float(sum(abs(value) for value in heading_changes) / len(heading_changes))
             if heading_changes

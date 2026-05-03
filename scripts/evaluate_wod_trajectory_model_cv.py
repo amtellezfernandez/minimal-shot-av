@@ -144,6 +144,7 @@ def main() -> int:
             "contextual",
             "intent_contextual",
             "world_contextual",
+            "geometry_contextual",
             "family_reliability_contextual",
             "external_contextual",
             "camera_contextual",
@@ -216,7 +217,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--zero-shot-geometry-filter",
-        choices=("off", "conservative", "reactive"),
+        choices=("off", "conservative", "reactive", "affordance"),
         default="off",
         help=(
             "Drop non-kinematic candidates that violate fixed motion-consistency priors before selection. "
@@ -859,7 +860,7 @@ def cross_validate_trajectory_model(
         raise ValueError("--neural-residual-modes-per-anchor must be non-negative")
     if transformer_top_k < 0:
         raise ValueError("--transformer-top-k must be non-negative")
-    if zero_shot_geometry_filter not in {"off", "conservative", "reactive"}:
+    if zero_shot_geometry_filter not in {"off", "conservative", "reactive", "affordance"}:
         raise ValueError(f"unsupported zero-shot geometry filter: {zero_shot_geometry_filter}")
     neural_paths = tuple(
         dict.fromkeys(
@@ -2005,7 +2006,7 @@ def _reference_ceiling(frame: WodE2EPreferenceFrame) -> float:
 def _zero_shot_geometry_filter_rows(rows: list[dict[str, object]], *, mode: str) -> list[dict[str, object]]:
     if mode == "off":
         return rows
-    if mode not in {"conservative", "reactive"}:
+    if mode not in {"conservative", "reactive", "affordance"}:
         raise ValueError(f"unsupported zero-shot geometry filter: {mode}")
     kept = [row for row in rows if not _zero_shot_geometry_reject(row, mode=mode)]
     return kept or rows
@@ -2030,9 +2031,41 @@ def _zero_shot_geometry_reject(row: dict[str, object], *, mode: str) -> bool:
     final_lateral = float(features.get("signed_lateral_5s", 0.0))
     heading_change = max(0.0, float(features.get("max_abs_heading_change", 0.0)))
     mean_heading_change = max(0.0, float(features.get("mean_abs_heading_change", 0.0)))
+    expected_progress = max(0.0, float(features.get("expected_progress_5s", speed * 5.0)))
+    progress = float(features.get("x_5s", 0.0))
+    progress_ratio = float(features.get("progress_ratio_5s", progress / max(1.0, expected_progress)))
+    stop_distance_error = max(0.0, float(features.get("stop_distance_error", abs(progress))))
+    reverse_distance = max(0.0, float(features.get("reverse_distance", 0.0)))
+    monotonic_forward_rate = float(features.get("monotonic_forward_rate", 1.0))
+    lateral_to_progress_ratio = max(0.0, float(features.get("lateral_to_progress_ratio", 0.0)))
+    curvature_per_meter = max(0.0, float(features.get("curvature_per_meter", 0.0)))
+    turn_alignment_5s = float(features.get("turn_lateral_alignment_5s", 0.0))
     x_1s = float(features.get("x_1s", 0.0))
     x_3s = float(features.get("x_3s", 0.0))
     x_5s = float(features.get("x_5s", 0.0))
+
+    if mode == "affordance":
+        # A label-free world critic: reject only candidates whose motion is
+        # internally inconsistent with the ego speed, route intent, and a
+        # drivable forward frame. It is deliberately conservative and never
+        # removes kinematic fallbacks.
+        if reverse_distance > max(1.5, speed * 0.45):
+            return True
+        if monotonic_forward_rate < (0.82 if speed < 5.0 else 0.9):
+            return True
+        if speed < 1.4 and stop_distance_error > 9.0 and final_speed > 4.0:
+            return True
+        if speed >= 8.0 and progress_ratio < 0.12 and max_speed < speed * 0.35:
+            return True
+        if x_5s > 3.0 and lateral_to_progress_ratio > (0.95 if speed < 5.0 else 0.65):
+            return True
+        if curvature_per_meter > (0.7 if speed < 5.0 else 0.38):
+            return True
+        if intent in {2, 3} and abs(final_lateral) > 2.0 and turn_alignment_5s < -1.0:
+            return True
+        if intent == 1 and abs(final_lateral) > max(5.0, abs(x_5s) * 0.55):
+            return True
+        return False
 
     speed_headroom = 6.0 if mode == "conservative" else 4.0
     if max_speed > max(8.0, speed * 2.35 + speed_headroom):

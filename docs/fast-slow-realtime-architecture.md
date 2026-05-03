@@ -14,7 +14,8 @@ keeps better plans warm in the background.
   plan, and local safety envelope.
 - Work per tick:
   - generate compact learned/kinematic candidates,
-  - validate the cached slow plan against current kinematics,
+  - validate the cached slow plan against current kinematics and affordance
+    constraints,
   - choose between reflex candidates and the cached slow plan,
   - apply emergency escape, risk nudge, lane recovery, and stop/yield guards.
 - Failure behavior: if the slow plan is stale, unsafe, or missing, continue with
@@ -28,6 +29,8 @@ keeps better plans warm in the background.
 - Work per refresh:
   - expand residual and temporal candidates,
   - score them with the contextual ranker,
+  - reject candidates that violate label-free affordance constraints when that
+    branch is enabled,
   - publish one selected candidate as the cached slow plan.
 - Failure behavior: slow refresh may be dropped or preempted without stopping
   the fast loop.
@@ -80,13 +83,37 @@ Slow refresh is not hidden: its p95 latency is `2.132 ms` and mean latency is
 stronger for realtime deployment because the actuation loop is bounded even
 when the richer candidate refresh is late.
 
+## World-Critic Experiment
+
+The planned semantic validity check now exists as an opt-in WOD-CV branch:
+
+```bash
+uv run --no-sync python scripts/evaluate_wod_trajectory_model_cv.py \
+  --zero-shot-geometry-filter affordance \
+  --selector-features contextual \
+  ...
+```
+
+It is a label-free affordance critic, not a learned scene recognizer. It rejects
+non-kinematic candidates with internally inconsistent reverse motion, poor
+forward monotonicity, excessive curvature, lateral/progress mismatch, or
+route-intent contradiction, while preserving fallback behavior if every
+candidate would be rejected.
+
+Measured on the 479-frame official validation-CV contract, this branch reached
+`7.639936697334614` RFS. That is below the champion `7.65941846208851`, so it
+is retained as a diagnostic and safety-analysis tool rather than a promoted
+model. It did improve scene-gate precision from `0.5638897173343937` to
+`0.5802266626901282` and improved the urban slice from `8.027219411218688` to
+`8.081139911818964`, but it hurt enough other slices to lose overall.
+
 ## Current Limitations
 
 - This benchmark validates runtime architecture, not WOD-E2E score improvement.
 - It uses synthetic WOD-like frames and local numeric models, matching the
   existing runtime benchmark contract.
-- The cached slow plan still needs a stronger semantic validity check before it
-  should be claimed as a deployed AV architecture.
-- The next quality experiment should combine this scheduler with the current
-  `7.6594` official validation-CV WOD selector and verify that score does not
-  regress while control latency improves.
+- The current affordance critic is useful but too blunt for promotion; a
+  stronger semantic validity check still needs to preserve rare valid maneuvers
+  instead of only filtering implausible geometry.
+- The next quality experiment should make the slow plan publish a confidence
+  contract that separates "physically possible" from "scene appropriate."

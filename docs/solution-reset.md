@@ -24,6 +24,15 @@ AV research audience.
 - World-model oracle headroom improved from `9.015857402777051` to
   `9.046125057713054`, so there is signal, but the selector cannot reliably
   exploit it.
+- Two label-free world-geometry paths are now implemented as opt-in analysis
+  tools, but neither should be promoted as the primary selector:
+  `--selector-features geometry_contextual` reached `7.498816413053717`
+  official validation-CV RFS, and
+  `--zero-shot-geometry-filter affordance` reached `7.639936697334614`.
+  Both are below the `7.65941846208851` champion, despite the affordance critic
+  improving scene-gate precision and the urban slice. This confirms that
+  scalar geometry priors and hard plausibility filters are not sufficient world
+  understanding.
 - Scene-token mode exists as an interface, but uncached camera-token loading is
   too slow for practical sweeps and has not produced a confirmed full result.
 
@@ -59,6 +68,25 @@ A future model-side result should not be called a meaningful solution unless it:
 3. Add explicit diagnostics for world-candidate wins and failures by slice.
 4. Only after a validation-CV gain is proven, train the final model on the
    proper train split and package a test submission.
+
+## Implemented Future-Work Checks
+
+- Scene/external token caches exist for the world-model branch, including
+  external embedding attachment and validation.
+- Fast/slow runtime scheduling exists and is benchmarked separately from WOD
+  quality claims.
+- Candidate-level world geometry priors exist for diagnostics and opt-in
+  selector experiments.
+- A label-free affordance critic exists as
+  `--zero-shot-geometry-filter affordance`; it uses candidate geometry, ego
+  speed, and route intent only, and falls back to the original candidates if it
+  would reject everything.
+
+The remaining hard problem is not plumbing. It is learning or specifying a
+world critic that can preserve valid rare maneuvers while vetoing physically
+bad ones. The latest affordance run filtered `20.39%` of candidates and
+`24.28%` of non-kinematic candidates, but still lost `0.01948` RFS to the
+champion. That is useful failure evidence, not a leaderboard improvement.
 
 Until those steps succeed, the honest presentation is: transparent baseline and
 measurement harness, not a finished autonomy architecture.

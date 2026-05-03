@@ -82,6 +82,21 @@ WORLD_CANDIDATE_FEATURES = [
     "world_neighbor_count",
     "source_world_x_world_nearest_distance_log",
 ]
+GEOMETRY_PRIOR_FEATURES = [
+    "signed_lateral_3s",
+    "turn_lateral_alignment_3s",
+    "turn_lateral_alignment_5s",
+    "expected_progress_5s",
+    "progress_ratio_5s",
+    "progress_error_5s",
+    "progress_error_abs_5s",
+    "stop_distance_error",
+    "reverse_distance",
+    "monotonic_forward_rate",
+    "lateral_to_progress_ratio",
+    "curvature_per_meter",
+    "final_speed_ratio",
+]
 FAMILY_RELIABILITY_FEATURES = [
     "family_reliability_mean_rfs",
     "family_reliability_oracle_rate",
@@ -128,6 +143,7 @@ SOURCE_NUMERIC_FEATURES = [*DEFAULT_NUMERIC_FEATURES, *SOURCE_FEATURES]
 INTENT_CONTEXTUAL_NUMERIC_FEATURES = [*SOURCE_NUMERIC_FEATURES, *CONTEXT_FEATURES, *INTENT_INTERACTION_FEATURES]
 CONTEXTUAL_NUMERIC_FEATURES = [*SOURCE_NUMERIC_FEATURES, *CONTEXT_FEATURES, *CONTEXT_INTERACTION_FEATURES]
 WORLD_CONTEXTUAL_NUMERIC_FEATURES = [*CONTEXTUAL_NUMERIC_FEATURES, *WORLD_CANDIDATE_FEATURES]
+GEOMETRY_CONTEXTUAL_NUMERIC_FEATURES = [*CONTEXTUAL_NUMERIC_FEATURES, *GEOMETRY_PRIOR_FEATURES]
 FAMILY_RELIABILITY_CONTEXTUAL_NUMERIC_FEATURES = [
     *WORLD_CONTEXTUAL_NUMERIC_FEATURES,
     *FAMILY_RELIABILITY_FEATURES,
@@ -220,6 +236,8 @@ def selector_numeric_features(feature_mode: str) -> list[str]:
         return list(INTENT_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "world_contextual":
         return list(WORLD_CONTEXTUAL_NUMERIC_FEATURES)
+    if feature_mode == "geometry_contextual":
+        return list(GEOMETRY_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "family_reliability_contextual":
         return list(FAMILY_RELIABILITY_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "external_contextual":
