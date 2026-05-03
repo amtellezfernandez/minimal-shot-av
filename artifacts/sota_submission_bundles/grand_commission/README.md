@@ -24,6 +24,7 @@ Minimal-shot autonomy architecture prototype with WOD-E2E harness and closed-loo
 - `docs/submission-tracks.md`
 - `docs/grand-submission.md`
 - `docs/two-page-writeup.md`
+- `docs/final-submission-handoff.md`
 - `docs/video-outline.md`
 - `docs/solution-reset.md`
 - `docs/benchmark-comparison.md`

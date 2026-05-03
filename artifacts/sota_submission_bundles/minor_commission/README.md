@@ -25,6 +25,7 @@ Randomized WOD-E2E-style long-tail simulation environment with reproducible clos
 - `docs/minor-simulation-submission.md`
 - `docs/alpasim-integration.md`
 - `docs/compositional-ood-eval.md`
+- `docs/final-submission-handoff.md`
 - `docs/video-outline.md`
 
 ## Verification

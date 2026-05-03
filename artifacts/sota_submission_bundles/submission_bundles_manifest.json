@@ -1,6 +1,6 @@
 {
   "grand_commission": {
-    "file_count": 20,
+    "file_count": 21,
     "members": [
       "grand_commission/README.md",
       "grand_commission/repo_README.md",
@@ -10,6 +10,7 @@
       "grand_commission/docs/submission-tracks.md",
       "grand_commission/docs/grand-submission.md",
       "grand_commission/docs/two-page-writeup.md",
+      "grand_commission/docs/final-submission-handoff.md",
       "grand_commission/docs/video-outline.md",
       "grand_commission/docs/solution-reset.md",
       "grand_commission/docs/benchmark-comparison.md",
@@ -24,11 +25,11 @@
       "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.svg"
     ],
     "path": "artifacts/sota_submission_bundles/grand_commission.tar.gz",
-    "sha256": "b0390a1449ac63d87836b3a3a54f078d063df13452ff1b9e63c9cf196d846b16",
-    "size_bytes": 166612
+    "sha256": "54d18c1e8b66bfc10586b9bfcfe0dd2259f34557008fbc476d601e2bf001a787",
+    "size_bytes": 167504
   },
   "minor_commission": {
-    "file_count": 17,
+    "file_count": 18,
     "members": [
       "minor_commission/README.md",
       "minor_commission/repo_README.md",
@@ -38,6 +39,7 @@
       "minor_commission/docs/minor-simulation-submission.md",
       "minor_commission/docs/alpasim-integration.md",
       "minor_commission/docs/compositional-ood-eval.md",
+      "minor_commission/docs/final-submission-handoff.md",
       "minor_commission/docs/video-outline.md",
       "minor_commission/artifacts/minor_construction_seed1/latest_rollout.json",
       "minor_commission/artifacts/minor_construction_seed1/latest_rollout.svg",
@@ -49,7 +51,7 @@
       "minor_commission/artifacts/minor_eval/scenario_eval.json"
     ],
     "path": "artifacts/sota_submission_bundles/minor_commission.tar.gz",
-    "sha256": "013e96fca7d0cc14524218e24721d1bc8c3b3ed6bf78eb0506c66748caa78f4d",
-    "size_bytes": 91536
+    "sha256": "ec07b43dd376636ef7523fc475cf535482e840019b861efbb5697d0ff72e3fbf",
+    "size_bytes": 92712
   }
 }

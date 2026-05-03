@@ -52,6 +52,7 @@ TRACK_DOCS = {
         "docs/submission-tracks.md",
         "docs/grand-submission.md",
         "docs/two-page-writeup.md",
+        "docs/final-submission-handoff.md",
         "docs/video-outline.md",
         "docs/solution-reset.md",
         "docs/benchmark-comparison.md",
@@ -65,6 +66,7 @@ TRACK_DOCS = {
         "docs/minor-simulation-submission.md",
         "docs/alpasim-integration.md",
         "docs/compositional-ood-eval.md",
+        "docs/final-submission-handoff.md",
         "docs/video-outline.md",
     ],
 }
