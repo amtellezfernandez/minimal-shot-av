@@ -5,7 +5,9 @@ Minimal-Shot Autonomy**.
 
 This repo is intentionally split into two independent submission tracks:
 
-- **Grand Commission submission candidate:** WOD-E2E model stack, including structured candidate generation and RFS evaluation.
+- **Grand Commission submission candidate:** minimal-shot Spotlight Reflex
+  architecture, with closed-loop long-tail demos and a WOD-E2E harness as
+  auxiliary benchmark infrastructure.
 - **Minor Commission submission:** COMPASS/AlpaSim simulation stack, including Spotlight Reflex and randomized long-tail scenarios.
 
 The tracks must stay agnostic to avoid simulator/model bias. The simulator has
@@ -27,22 +29,25 @@ Commission constraints to keep visible:
 
 ## Thesis
 
-This project targets the Waymo Open Dataset for End-to-End Driving (WOD-E2E)
-with an intentionally conservative claim:
+This project includes a Waymo Open Dataset for End-to-End Driving (WOD-E2E)
+harness, but the Grand Commission claim is intentionally narrower:
 
-> build a fast, auditable WOD-E2E trajectory-prediction baseline and use it to
-> test whether experience-conditioned scene understanding improves rare-scene
-> trajectory choice.
+> build a runnable minimal-shot autonomy prototype that reasons through
+> unfamiliar long-tail scenarios with explicit world-state, maneuver generation,
+> and safety selection; use WOD-E2E as an auxiliary benchmark harness rather
+> than the proof of zero-shot autonomy.
 
 The active model path is non-text: WOD-E2E ego history and route intent feed
 structured trajectory generators, residual proposal models, a lightweight
 world-model candidate source, and an RFS-calibrated numeric selector that
 outputs 5-second ego waypoints.
 
-The goal is not to claim a production AV stack, strict zero-shot autonomy, or
-frontier-level scene reasoning. WOD-E2E is an open-loop trajectory benchmark.
-The current repo is strongest as infrastructure: parser, scorer, candidate
-evaluation, ablation harness, simulator evidence, and submission packaging.
+The goal is not to claim a production AV stack, strict zero-shot WOD-E2E, or
+frontier-level scene reasoning. WOD-E2E is an open-loop trajectory benchmark,
+and the current selector experiments use retained validation preference labels
+under segment-grouped CV. The minimal-shot evidence should be read from the
+closed-loop Spotlight Reflex architecture and randomized scenario demos; the
+WOD path is supporting infrastructure and analysis.
 See [`docs/solution-reset.md`](docs/solution-reset.md) for the current
 solution bar and why the present world-model result is not yet strong enough.
 

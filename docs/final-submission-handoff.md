@@ -15,7 +15,7 @@ Track: Grand Commission, overall best autonomy architecture.
 
 Title:
 
-Minimal-Shot Autonomy Architecture: Closed-Loop Long-Tail Reflexes with WOD-E2E Submission Harness
+Minimal-Shot Autonomy Architecture: Closed-Loop Long-Tail Reflexes
 
 Attach:
 
@@ -27,19 +27,24 @@ Attach:
 
 Short claim:
 
-This is a runnable minimal-shot autonomy architecture prototype with a WOD-E2E parsing/scoring/submission harness and closed-loop Spotlight Reflex demos on generated long-tail scenarios.
+This is a runnable minimal-shot autonomy architecture prototype centered on
+closed-loop Spotlight Reflex demos in generated long-tail scenarios. The WOD-E2E
+code is included as a parsing/scoring/submission harness and analysis record,
+not as the primary zero-shot autonomy claim.
 
 Evidence to mention:
 
 - Spotlight Reflex success demo.
 - Intersection stress demo.
 - Baseline Spotlight failure comparison.
-- WOD-E2E official-format parsing, scoring, packaging, and readiness audits.
-- Official-RFS validation-CV candidate evidence is included in the bundle.
+- WOD-E2E official-format parsing, scoring, packaging, and readiness audits,
+  clearly labelled as benchmark infrastructure.
+- Official-RFS validation-CV candidate evidence is included in the bundle as
+  development analysis, not as proof of strict zero-shot generalisation.
 - Judging criteria audit passes for technical excellence, novelty, feasibility,
   and adherence to the brief under the declared submission-candidate boundary.
 
-WOD validation numbers:
+WOD validation numbers, if mentioned:
 
 - 479 validation frames with valid rater preference labels.
 - Constant velocity official validation-CV RFS: `7.022`.
@@ -48,10 +53,17 @@ WOD validation numbers:
 - Combined candidate oracle official validation-CV RFS: `9.098`.
 - Selector regret to oracle: `1.4386`.
 - Breakthrough audit status: failed because worst-slice regret regressed.
+- Minimal-shot caveat: this selector is preference-calibrated on retained
+  validation labels under segment-grouped CV. It is not strict zero-shot
+  autonomy and should not be presented as the core SoTA claim.
 
 Required caveat:
 
-Do not claim production autonomy, strict zero-shot WOD-E2E, or a hidden-test leaderboard result. The local workspace does not contain the WOD-E2E test split or confirmed leaderboard result log.
+Do not claim production autonomy, strict zero-shot WOD-E2E, or a hidden-test
+leaderboard result. The local workspace does not contain the WOD-E2E test split
+or confirmed leaderboard result log. The Grand submission should lead with the
+minimal-shot closed-loop architecture and simulator evidence; WOD is auxiliary
+benchmark infrastructure.
 
 ## Minor Commission
 
@@ -109,7 +121,7 @@ Dear SoTA Commission team,
 
 Please find my submissions for SoTA Commission I:
 
-1. Grand Commission: Minimal-Shot Autonomy Architecture: Closed-Loop Long-Tail Reflexes with WOD-E2E Submission Harness
+1. Grand Commission: Minimal-Shot Autonomy Architecture: Closed-Loop Long-Tail Reflexes
 2. Minor Commission: Randomized Long-Tail Scenario Generator for Minimal-Shot Autonomy
 
 GitHub repository:
@@ -127,7 +139,11 @@ Attached bundles:
 - `minor_commission.tar.gz`
   SHA-256: see `artifacts/sota_submission_bundles/submission_bundles_manifest.json`
 
-The Grand submission includes a WOD-E2E harness and validation-CV evidence, but does not claim a hidden-test leaderboard result. The Minor submission includes the randomized scenario generator and 550-run closed-loop evaluation sweep.
+The Grand submission includes a WOD-E2E harness and validation-CV analysis, but
+the minimal-shot claim is the closed-loop Spotlight Reflex architecture rather
+than a validation-trained WOD selector. It does not claim a hidden-test
+leaderboard result. The Minor submission includes the randomized scenario
+generator and 550-run closed-loop evaluation sweep.
 
 Best,
 

@@ -3,18 +3,24 @@
 ## Submission Claim
 
 The current repository is not yet a completed Grand Commission solution. It is a
-submission candidate built around two honest assets:
+submission candidate built around one primary minimal-shot architecture asset
+and one auxiliary benchmark asset:
 
-- a WOD-E2E model-side benchmark and packaging harness;
 - a lightweight simulator/Spotlight Reflex prototype for reproducible long-tail
-  scenario evidence.
+  scenario evidence;
+- a WOD-E2E model-side benchmark and packaging harness for analysis,
+  submission formatting, and failure auditing.
 
-The model-side claim is currently a transparent non-text WOD-E2E baseline, not
-frontier scene understanding. The latest confirmed structured selector run
+The Grand claim should lead with the minimal-shot architecture behavior: a small
+closed-loop policy that uses scene structure, maneuver hypotheses, and safety
+selection in unfamiliar long-tail scenarios. The WOD model-side claim is a
+transparent non-text benchmark harness, not frontier scene understanding or
+strict zero-shot autonomy. The latest confirmed structured selector artifact
 improves official validation-CV selected RFS from `7.0223571581211495` constant
 velocity to `7.65941846208851`, with a combined candidate oracle at
-`9.098014272661512`. That is useful evidence for candidate diversity and
-fallback/gating, but it is not enough to call the architecture solved.
+`9.098014272661512`; because that selector is preference-calibrated on retained
+validation labels under segment-grouped CV, it is useful development analysis
+but not the centerpiece of the minimal-shot claim.
 
 This submission targets the **Grand Commission**: overall best autonomy architecture.
 
@@ -70,6 +76,8 @@ Each command writes:
 - Candidate selection uses simulator-native trajectory selector geometry at 3s and 5s.
 - The policy is deterministic and reproducible by seed.
 - The current implementation uses no learned AV-specific model and no WOD-E2E fine-tuning.
+- WOD validation-CV evidence is declared as auxiliary development analysis, not
+  proof of strict zero-shot WOD-E2E generalisation.
 - The built-in tests cover selector geometry, maneuver generation, selection behavior, CLI artifacts, and deterministic simulator seeds.
 - The judging-criteria audit maps the submission to technical excellence,
   novelty, feasibility, and adherence to the brief.
@@ -84,6 +92,9 @@ Each command writes:
   parser smoke tests, and preference-label experiments. The full train/test
   download needs to be restored before making strict train-set or hidden-test
   claims.
+- Any WOD selector trained or calibrated from retained validation preference
+  labels must be described as minimal-shot development evidence, not strict
+  zero-shot behavior.
 - The current scene critic is procedural/context-derived, not a deployed VLM
   camera stack.
 - The strongest honest claim is infrastructure plus reproducible closed-loop
