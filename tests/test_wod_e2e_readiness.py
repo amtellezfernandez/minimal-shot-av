@@ -110,7 +110,9 @@ class WodE2EReadinessTests(unittest.TestCase):
             (matrix / "manifest.json").write_text(
                 (
                     '{"pre_registered":true,'
-                    '"submissions":[{"variant":"a","submission_sha256":"abc","validation_tuned":false}]}'
+                    '"submissions":[{"variant":"a","submission_sha256":"abc",'
+                    '"branch":"strict_minimal_shot","minimal_shot_claim_allowed":true,'
+                    '"validation_tuned":false}]}'
                 ),
                 encoding="utf-8",
             )
@@ -156,6 +158,36 @@ class WodE2EReadinessTests(unittest.TestCase):
             self.assertTrue(readiness["leaderboard_truth_available"])
             self.assertTrue(readiness["all_evidence_gates_pass"])
             self.assertEqual(1, report["artifacts"]["submission_matrix"]["submission_count"])
+            self.assertEqual(1, report["artifacts"]["submission_matrix"]["strict_branch_count"])
+
+    def test_readiness_report_rejects_validation_tuned_minimal_shot_claim_row(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            matrix = root / "matrix"
+            matrix.mkdir()
+            (matrix / "manifest.json").write_text(
+                (
+                    '{"pre_registered":true,'
+                    '"submissions":[{"variant":"bad","submission_sha256":"abc",'
+                    '"branch":"preference_calibrated_leaderboard",'
+                    '"minimal_shot_claim_allowed":true,"validation_tuned":true}]}'
+                ),
+                encoding="utf-8",
+            )
+
+            report = module.readiness_report(
+                data_root=root / "waymo",
+                frame_list=root / "frames.json",
+                model=root / "model.json",
+                candidates=root / "candidates.jsonl",
+                submission=root / "submission.tar.gz",
+                submission_matrix=matrix,
+            )
+
+            matrix_report = report["artifacts"]["submission_matrix"]
+            self.assertFalse(matrix_report["valid"])
+            self.assertEqual(["bad"], matrix_report["invalid_claim_rows"])
 
     def test_readiness_report_rejects_unconfirmed_leaderboard_log(self) -> None:
         module = _load_module()

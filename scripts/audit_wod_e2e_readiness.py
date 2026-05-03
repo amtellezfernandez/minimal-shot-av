@@ -193,6 +193,11 @@ def _leaderboard_results_report(path: Path) -> dict[str, Any]:
             "valid": payload.get("schema") == "wod_e2e_leaderboard_results_v1" and bool(confirmed),
             "result_count": len(results) if isinstance(results, list) else 0,
             "confirmed_hidden_test_count": len(confirmed),
+            "best_hidden_test_rfs": max(
+                (float(item["hidden_test_rfs"]) for item in confirmed),
+                default=None,
+            ),
+            "beats_sota_snapshot": any(float(item["hidden_test_rfs"]) > 8.0461 for item in confirmed),
         }
     )
     return report
@@ -201,7 +206,18 @@ def _leaderboard_results_report(path: Path) -> dict[str, Any]:
 def _submission_matrix_report(path: Path) -> dict[str, Any]:
     manifest = path / "manifest.json" if path.is_dir() else path
     report = _file_report(manifest)
-    report.update({"valid": False, "submission_count": 0, "validation_tuned_count": 0, "missing_sha256": []})
+    report.update(
+        {
+            "valid": False,
+            "submission_count": 0,
+            "validation_tuned_count": 0,
+            "minimal_shot_claim_allowed_count": 0,
+            "strict_branch_count": 0,
+            "calibrated_branch_count": 0,
+            "missing_sha256": [],
+            "invalid_claim_rows": [],
+        }
+    )
     if not manifest.is_file():
         return report
     try:
@@ -218,13 +234,42 @@ def _submission_matrix_report(path: Path) -> dict[str, Any]:
     validation_tuned_count = sum(
         1 for item in submissions if isinstance(item, dict) and bool(item.get("validation_tuned", False))
     )
+    minimal_shot_claim_allowed_count = sum(
+        1 for item in submissions if isinstance(item, dict) and bool(item.get("minimal_shot_claim_allowed", False))
+    )
+    strict_branch_count = sum(
+        1 for item in submissions if isinstance(item, dict) and item.get("branch") == "strict_minimal_shot"
+    )
+    calibrated_branch_count = sum(
+        1
+        for item in submissions
+        if isinstance(item, dict) and item.get("branch") == "preference_calibrated_leaderboard"
+    )
+    invalid_claim_rows = [
+        str(item.get("variant", index))
+        for index, item in enumerate(submissions)
+        if isinstance(item, dict)
+        and bool(item.get("validation_tuned", False))
+        and bool(item.get("minimal_shot_claim_allowed", False))
+    ]
     report.update(
         {
             "pre_registered": bool(payload.get("pre_registered", False)),
-            "valid": bool(payload.get("pre_registered", False)) and bool(submissions) and not missing_sha256,
+            "schema": payload.get("schema"),
+            "valid": (
+                bool(payload.get("pre_registered", False))
+                and bool(submissions)
+                and not missing_sha256
+                and not invalid_claim_rows
+                and strict_branch_count > 0
+            ),
             "submission_count": len(submissions) if isinstance(submissions, list) else 0,
             "validation_tuned_count": validation_tuned_count,
+            "minimal_shot_claim_allowed_count": minimal_shot_claim_allowed_count,
+            "strict_branch_count": strict_branch_count,
+            "calibrated_branch_count": calibrated_branch_count,
             "missing_sha256": missing_sha256,
+            "invalid_claim_rows": invalid_claim_rows,
             "upload_notes": _file_report(
                 path / "UPLOAD_NOTES.md" if path.is_dir() else path.with_name("UPLOAD_NOTES.md")
             ),

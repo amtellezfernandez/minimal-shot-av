@@ -40,6 +40,8 @@ class RecordWodLeaderboardResultTests(unittest.TestCase):
             self.assertEqual("abc123", record["submission_sha256"])
             self.assertEqual(7.25, record["hidden_test_rfs"])
             self.assertFalse(record["validation_tuned"])
+            self.assertTrue(record["minimal_shot_claim_allowed"])
+            self.assertFalse(record["beats_sota_snapshot"])
 
     def test_leaderboard_record_rejects_wrong_sha(self) -> None:
         module = _load_module()
@@ -97,7 +99,9 @@ def _manifest(root: Path) -> Path:
                         "submission": "kinematic_constant_velocity.tar.gz",
                         "submission_sha256": "abc123",
                         "candidate_name": "constant_velocity",
+                        "branch": "strict_minimal_shot",
                         "validation_tuned": False,
+                        "minimal_shot_claim_allowed": True,
                     }
                 ],
             }

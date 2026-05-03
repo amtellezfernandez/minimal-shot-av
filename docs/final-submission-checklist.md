@@ -33,6 +33,9 @@ Randomized WOD-style long-tail simulation environment with 550 closed-loop rollo
 Current blockers for the separate Waymo leaderboard track:
 
 - Missing local WOD-E2E test split.
+- Missing local WOD-E2E train split for any retraining/calibrated-verifier loop.
+- Missing official test frame list.
+- Missing generated two-gate submission matrix.
 - Missing confirmed hidden-test result log.
 
 ## Final Local Verification

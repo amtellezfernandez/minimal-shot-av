@@ -114,7 +114,8 @@ def _technical_excellence(
             "Primary claim is backed by the minimal-shot integrity audit, not by WOD RFS alone.",
             f"Simulation sweep covers {sim['run_count']} runs across {sim['cluster_count']} clusters.",
             f"Numeric controller p95 latency is {runtime['p95_total_latency_ms']:.3f} ms.",
-            f"WOD validation-CV remains auxiliary: selected RFS gain is {wod['selected_rfs_gain_vs_constant_velocity']:.3f}.",
+            "WOD validation-CV remains auxiliary: "
+            f"selected RFS gain is {wod['selected_rfs_gain_vs_constant_velocity']:.3f}.",
         ],
     )
 
@@ -169,7 +170,10 @@ def _adherence_to_brief(
         ("randomized_scenario_generation", sim["cluster_count"] >= 11 and sim["run_count"] >= 550),
         ("wod_e2e_validation_evidence", wod["frames"] >= 479),
         ("validation_audit_declared", _has_explicit_validation_audit(wod)),
-        ("wod_evidence_declared_auxiliary", bool(minimal_shot.get("checks", {}).get("wod_evidence_declared_auxiliary"))),
+        (
+            "wod_evidence_declared_auxiliary",
+            bool(minimal_shot.get("checks", {}).get("wod_evidence_declared_auxiliary")),
+        ),
         (
             "validation_preferences_not_primary_claim",
             bool(minimal_shot.get("checks", {}).get("validation_preferences_not_primary_claim")),

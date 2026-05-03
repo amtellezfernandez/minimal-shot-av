@@ -58,6 +58,10 @@
   `PYTHONPATH=.wod-protos:src python3 scripts/score_wod_candidates_with_ranker.py --data-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/test --include-unlabeled --frame-list data/waymo/e2e/submission_frames/test_frames.json --candidates artifacts/wod_test_candidates.jsonl --ranker artifacts/wod_contextual_ranker.json --output artifacts/wod_test_candidates_ranked.jsonl`
 - End-to-end packaging command is available once train/test/frame-list are local:
   `PYTHONPATH=.wod-protos:src .venv-wod/bin/python scripts/prepare_wod_e2e_submission_matrix.py --test-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/test --output-dir artifacts/wod_e2e_submission_matrix --account-name <account> --authors <authors>`
+- Two-gate leaderboard attack command is available once train/test/frame-list are
+  local. It writes readiness first, then generates strict minimal-shot and
+  preference-calibrated leaderboard variants without mixing their claims:
+  `PYTHONPATH=.wod-protos:src .venv-wod/bin/python scripts/run_wod_leaderboard_attack.py --account-name <account> --authors <authors>`
 - Test submission limit is respected: 6 submissions every 30 days, excluding errored submissions.
 - RFS is computed only on frames with valid `preference_trajectories`.
 - Scenario-cluster analysis is included where labels are available.

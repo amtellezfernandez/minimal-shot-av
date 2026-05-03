@@ -1,0 +1,117 @@
+{
+  "artifacts": {
+    "candidates": {
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_submission/wod_test_candidates.jsonl",
+      "present": false,
+      "size_bytes": null
+    },
+    "closed_loop": {
+      "first_report": "/home/amdev/sota/minimal-shot-av/artifacts/agnostic_sim_eval_wod_1_10/scenario_eval.json",
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts",
+      "present": true,
+      "report_count": 16
+    },
+    "leaderboard_results": {
+      "confirmed_hidden_test_count": 0,
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_leaderboard_results.json",
+      "present": false,
+      "result_count": 0,
+      "size_bytes": null,
+      "valid": false
+    },
+    "model": {
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_submission/wod_ridge_trajectory_model.json",
+      "present": false,
+      "size_bytes": null
+    },
+    "safety_bias": {
+      "declares_not_solution": true,
+      "path": "/home/amdev/sota/minimal-shot-av/docs/solution-reset.md",
+      "present": true,
+      "size_bytes": 3055
+    },
+    "submission": {
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_submission/wod_e2e_submission.tar.gz",
+      "present": false,
+      "size_bytes": null
+    },
+    "submission_matrix": {
+      "calibrated_branch_count": 0,
+      "invalid_claim_rows": [],
+      "minimal_shot_claim_allowed_count": 0,
+      "missing_sha256": [],
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_submission_matrix",
+      "present": false,
+      "size_bytes": null,
+      "strict_branch_count": 0,
+      "submission_count": 0,
+      "valid": false,
+      "validation_tuned_count": 0
+    },
+    "world_model": {
+      "first_report": "/home/amdev/sota/minimal-shot-av/artifacts/world_sweeps/scene_tokens_479.json",
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/world_sweeps",
+      "present": true,
+      "report_count": 18
+    }
+  },
+  "blockers": [
+    "missing WOD-E2E train split at /home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/train*.tfrecord-*",
+    "missing WOD-E2E test split at /home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/test*.tfrecord-*",
+    "missing optional challenge frame-list JSON at /home/amdev/sota/minimal-shot-av/data/waymo/e2e/submission_frames/test_frames.json",
+    "missing final trajectory model at /home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_submission/wod_ridge_trajectory_model.json",
+    "missing generated test candidates at /home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_submission/wod_test_candidates.jsonl",
+    "missing packaged submission tarball at /home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_submission/wod_e2e_submission.tar.gz",
+    "missing blind submission matrix manifest under /home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_submission_matrix",
+    "missing hidden-test leaderboard result log at /home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_leaderboard_results.json"
+  ],
+  "data_root": "/home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0",
+  "frame_list": {
+    "path": "/home/amdev/sota/minimal-shot-av/data/waymo/e2e/submission_frames/test_frames.json",
+    "present": false,
+    "size_bytes": null
+  },
+  "minimal_shot_av_readiness": {
+    "all_evidence_gates_pass": false,
+    "gates": {
+      "blind_submission_protocol": false,
+      "closed_loop_evidence": true,
+      "leaderboard_truth": false,
+      "safety_bias_evidence": true,
+      "world_model_evidence": true
+    },
+    "leaderboard_truth_available": false,
+    "ready_for_blind_matrix": false,
+    "ready_for_leaderboard_upload": false
+  },
+  "ready_for_generation": false,
+  "ready_for_packaging": false,
+  "ready_for_training": false,
+  "ready_for_upload": false,
+  "splits": {
+    "test": {
+      "first_shard": null,
+      "last_shard": null,
+      "layout": null,
+      "path": "/home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/test*.tfrecord-*",
+      "present": false,
+      "shard_count": 0
+    },
+    "train": {
+      "first_shard": null,
+      "last_shard": null,
+      "layout": null,
+      "path": "/home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/train*.tfrecord-*",
+      "present": false,
+      "shard_count": 0
+    },
+    "val": {
+      "first_shard": "/home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/val/val_202504211843.tfrecord-00000-of-00093",
+      "last_shard": "/home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/val/val_202504211843.tfrecord-00092-of-00093",
+      "layout": "split_dir",
+      "path": "/home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/val",
+      "present": true,
+      "shard_count": 93
+    }
+  }
+}

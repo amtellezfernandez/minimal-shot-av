@@ -21,6 +21,10 @@ class MatrixVariant:
     name: str
     candidate_name: str
     description: str
+    branch: str = "strict_minimal_shot"
+    validation_tuned: bool = False
+    minimal_shot_claim_allowed: bool = True
+    candidates_path: Path | None = None
 
 
 KINEMATIC_VARIANTS = (
@@ -60,6 +64,16 @@ def main() -> int:
     parser.add_argument("--uses-public-model-pretraining", action="store_true")
     parser.add_argument("--public-model-names", default="")
     parser.add_argument("--num-model-parameters", default="under 1M")
+    parser.add_argument(
+        "--strict-spotlight-candidates",
+        type=Path,
+        help="Optional WOD candidate JSONL from the strict episode-free Spotlight Reflex branch.",
+    )
+    parser.add_argument(
+        "--calibrated-verifier-candidates",
+        type=Path,
+        help="Optional WOD candidate JSONL scored by the small validation-preference verifier branch.",
+    )
     args = parser.parse_args()
 
     _require_dir(args.test_dir, "WOD-E2E test split")
@@ -68,17 +82,33 @@ def main() -> int:
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     kinematic_candidates = _generate_kinematic_candidates(args)
+    variants = _matrix_variants(args, kinematic_candidates)
     submissions = [
-        _run_variant(args, variant=variant, candidates=kinematic_candidates)
-        for variant in KINEMATIC_VARIANTS
+        _run_variant(args, variant=variant)
+        for variant in variants
     ]
 
     manifest = {
+        "schema": "wod_e2e_submission_matrix_v2",
         "pre_registered": True,
         "selection_policy": (
             "Generate every configured variant before leaderboard upload; "
             "do not choose by validation after seeing results."
         ),
+        "sota_target": {
+            "source": "docs/leaderboard.md",
+            "metric": "hidden_test_rfs",
+            "threshold_rfs": 8.0461,
+            "higher_is_better": True,
+        },
+        "two_gate_policy": {
+            "strict_minimal_shot": (
+                "eligible only when validation_tuned is false and no WOD preference verifier is used"
+            ),
+            "preference_calibrated_leaderboard": (
+                "allowed to use the declared small verifier but not eligible for strict minimal-shot claims"
+            ),
+        },
         "test_dir": str(args.test_dir),
         "frame_list": str(args.frame_list) if args.frame_list else None,
         "submissions": submissions,
@@ -110,22 +140,68 @@ def _generate_kinematic_candidates(args: argparse.Namespace) -> Path:
     return candidates
 
 
+def _matrix_variants(args: argparse.Namespace, kinematic_candidates: Path) -> tuple[MatrixVariant, ...]:
+    variants = [
+        MatrixVariant(
+            name=variant.name,
+            candidate_name=variant.candidate_name,
+            description=variant.description,
+            candidates_path=kinematic_candidates,
+        )
+        for variant in KINEMATIC_VARIANTS
+    ]
+    if args.strict_spotlight_candidates is not None:
+        _require_file(args.strict_spotlight_candidates, "strict Spotlight Reflex candidate JSONL")
+        variants.append(
+            MatrixVariant(
+                name="strict_spotlight_reflex",
+                candidate_name="ranker_score",
+                description=(
+                    "Strict episode-free Spotlight Reflex branch; no WOD preference verifier, "
+                    "no nearest-neighbor episode memory."
+                ),
+                branch="strict_minimal_shot",
+                validation_tuned=False,
+                minimal_shot_claim_allowed=True,
+                candidates_path=args.strict_spotlight_candidates,
+            )
+        )
+    if args.calibrated_verifier_candidates is not None:
+        _require_file(args.calibrated_verifier_candidates, "calibrated verifier candidate JSONL")
+        variants.append(
+            MatrixVariant(
+                name="small_verifier_calibrated",
+                candidate_name="ranker_score",
+                description=(
+                    "Preference-calibrated leaderboard branch using a declared small verifier; "
+                    "not strict zero-shot or minimal-shot claim evidence."
+                ),
+                branch="preference_calibrated_leaderboard",
+                validation_tuned=True,
+                minimal_shot_claim_allowed=False,
+                candidates_path=args.calibrated_verifier_candidates,
+            )
+        )
+    return tuple(variants)
+
+
 def _run_variant(
     args: argparse.Namespace,
     *,
     variant: MatrixVariant,
-    candidates: Path,
 ) -> dict[str, object]:
+    if variant.candidates_path is None:
+        raise ValueError(f"variant {variant.name} has no candidate path")
     submission = args.output_dir / f"{variant.name}.tar.gz"
     _write_and_validate_submission(
         args,
         variant=variant,
-        candidates=candidates,
+        candidates=variant.candidates_path,
         submission=submission,
     )
     return _manifest_row(
         variant,
-        candidates,
+        variant.candidates_path,
         submission,
     )
 
@@ -188,13 +264,20 @@ def _manifest_row(
 ) -> dict[str, object]:
     return {
         "variant": variant.name,
+        "branch": variant.branch,
         "candidates": str(candidates),
         "submission": str(submission),
         "submission_size_bytes": submission.stat().st_size,
         "submission_sha256": _sha256(submission),
         "tar_members": _tar_members(submission),
-        "validation_tuned": False,
+        "validation_tuned": variant.validation_tuned,
+        "minimal_shot_claim_allowed": variant.minimal_shot_claim_allowed,
         "candidate_name": variant.candidate_name,
+        "claim_boundary": (
+            "strict_minimal_shot_evidence"
+            if variant.minimal_shot_claim_allowed
+            else "preference_calibrated_leaderboard_only"
+        ),
     }
 
 
@@ -205,13 +288,14 @@ def _upload_notes(manifest: dict[str, object]) -> str:
         "Upload every `.tar.gz` listed below before using leaderboard feedback to choose a direction.",
         "Challenge page: https://waymo.com/open/challenges/2025/e2e-driving/",
         "",
-        "| variant | validation_tuned | sha256 | path |",
-        "| --- | --- | --- | --- |",
+        "| variant | branch | minimal_shot_claim_allowed | validation_tuned | sha256 | path |",
+        "| --- | --- | --- | --- | --- | --- |",
     ]
     for row in manifest["submissions"]:
         item = dict(row)
         lines.append(
-            "| {variant} | {validation_tuned} | `{submission_sha256}` | `{submission}` |".format(**item)
+            "| {variant} | {branch} | {minimal_shot_claim_allowed} | {validation_tuned} | "
+            "`{submission_sha256}` | `{submission}` |".format(**item)
         )
     lines.extend(
         [

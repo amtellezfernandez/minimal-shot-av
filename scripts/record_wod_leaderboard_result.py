@@ -12,6 +12,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MATRIX = ROOT / "artifacts" / "wod_e2e_submission_matrix" / "manifest.json"
 DEFAULT_OUTPUT = ROOT / "artifacts" / "wod_e2e_leaderboard_results.json"
+SOTA_SNAPSHOT_RFS = 8.0461
 
 
 def main() -> int:
@@ -80,8 +81,12 @@ def leaderboard_record(
         "submission": str(matched.get("submission", "")),
         "submission_sha256": submission_sha256,
         "candidate_name": matched.get("candidate_name"),
+        "branch": matched.get("branch"),
         "validation_tuned": bool(matched.get("validation_tuned", False)),
+        "minimal_shot_claim_allowed": bool(matched.get("minimal_shot_claim_allowed", False)),
         "hidden_test_rfs": float(rfs),
+        "sota_snapshot_rfs": SOTA_SNAPSHOT_RFS,
+        "beats_sota_snapshot": float(rfs) > SOTA_SNAPSHOT_RFS,
         "confirmed_hidden_test": True,
         "rank": rank,
         "leaderboard_url": leaderboard_url,
