@@ -32,7 +32,7 @@ The same neural preference-calibrated family was rerun on the full retained
 
 This is not promoted. The selector over-trusts learned candidates on the full
 validation cache and loses to the current structured fallback report
-(`7.657` official mean RFS). The useful result is that the preference-calibrated
+(`7.659` official mean RFS). The useful result is that the preference-calibrated
 candidate family has real headroom, but the gating policy is not stable enough
 for the main Grand claim.
 

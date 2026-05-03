@@ -13,7 +13,7 @@ This project asks what a small autonomy stack can do when it is forced to reason
 The submission now has a direct evidence map for the four judging criteria:
 
 - Technical excellence: WOD validation-CV selected RFS improves from `7.022` to
-  `7.657`, with a `9.098` candidate oracle and a `1.402` ms p95 numeric
+  `7.659`, with a `9.098` candidate oracle and a `1.402` ms p95 numeric
   controller runtime.
 - Novelty: the architecture separates candidate diversity from trajectory
   selection, and reports oracle regret rather than hiding selector failure.
@@ -24,8 +24,8 @@ The submission now has a direct evidence map for the four judging criteria:
 
 Secondary WOD note: preference-calibrated heldout experiments reached `7.838`
 local RFS and `7.894` official normalized RFS, but the full retained-validation
-official rerun did not promote. The headline WOD claim remains the stable
-`7.657` official validation-CV report.
+official rerun did not promote. The headline WOD claim is now the conservative
+`7.659` official validation-CV report.
 
 Realtime note: the proposed fast/slow scheduler drops synchronous WOD runtime
 p95 from `2.124 ms` to `0.625 ms` on the same 5,000-frame synthetic runtime

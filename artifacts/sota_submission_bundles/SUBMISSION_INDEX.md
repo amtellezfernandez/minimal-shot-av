@@ -10,7 +10,7 @@ Upload / attach:
 - GitHub repository URL
 - Video or slide deck based on `docs/sota-grand-slide-script.md`
 
-SHA-256: `b44968bede87955a03862001045ef9374f057dcd8a9e5424f475900e1d6aad04`
+SHA-256: `4869cdec61f3ecb8332fd12f4f09730916cc574e3cb58b9ed0c3540416c2601d`
 
 Claim: minimal-shot autonomy architecture prototype with closed-loop demos.
 
@@ -22,7 +22,7 @@ Upload / attach:
 - GitHub repository URL
 - Video or slide deck based on `docs/sota-minor-slide-script.md`
 
-SHA-256: `5f9ec2f8a862f3d9b54705a713fef5612372dd16a41e584c0b7278fdd48cbb90`
+SHA-256: `d798978216eeddcf9ab763f3b8936f33955cc09ab1c1f6ab9999aed879a20017`
 
 Claim: randomized long-tail simulation environment with closed-loop evaluation.
 

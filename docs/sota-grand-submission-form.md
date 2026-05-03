@@ -55,18 +55,19 @@ Current WOD-E2E validation evidence:
 
 - 479 validation frames with valid rater preference labels.
 - constant-velocity official validation-CV RFS: 7.022.
-- combined candidate ranker official validation-CV RFS: 7.657.
-- gain versus constant velocity: +0.635 RFS.
+- combined candidate ranker official validation-CV RFS: 7.659.
+- gain versus constant velocity: +0.637 RFS.
 - combined candidate oracle official validation-CV RFS: 9.098.
-- selector regret to oracle: 1.441 RFS.
-- breakthrough audit status: failed because worst-slice regret regressed.
+- selector regret to oracle: 1.439 RFS.
+- conservative improvement audit status: passed versus the previous `7.657`
+  validation-CV report.
 - no hidden-test leaderboard score is claimed.
 
 ## What Worked
 
 The strongest result is the closed-loop architecture behavior: the policy uses scenario structure and safety selection to navigate long-tail generated cases that defeat a simpler baseline. The second strongest result is infrastructure: official WOD-E2E parsing, scoring, packaging, and leaderboard-result logging are now separated from validation-tuned claims.
 
-The validation-CV candidate stack also shows real but limited signal. The combined ranker improves over constant velocity, and the candidate oracle is substantially stronger than the selected trajectory. That gap is useful because it points to the next technical bottleneck: candidate routing, not just generating more trajectories.
+The validation-CV candidate stack also shows real but limited signal. The combined ranker improves over constant velocity, and the candidate oracle is substantially stronger than the selected trajectory. A conservative scene-gate sweep improved the official validation-CV report from `7.657` to `7.659` while reducing selector regret from `1.441` to `1.439`; the remaining gap points to the next technical bottleneck: candidate routing, not just generating more trajectories.
 
 For realtime behavior, I added a fast/slow controller proposal and benchmark.
 The fast reflex loop keeps only compact local candidates plus one cached slow

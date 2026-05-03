@@ -7,9 +7,9 @@ from artifacts that are bundled with the submission and audited by
 ## Technical Excellence
 
 - WOD-E2E official validation-CV selected RFS improves from `7.022` constant
-  velocity to `7.657`, a `+0.635` gain on 479 preference-labeled validation
+  velocity to `7.659`, a `+0.637` gain on 479 preference-labeled validation
   frames.
-- The combined candidate oracle reaches `9.098` RFS, leaving `1.441` RFS of
+- The combined candidate oracle reaches `9.098` RFS, leaving `1.439` RFS of
   selector headroom. This makes the remaining bottleneck measurable rather than
   anecdotal.
 - The simulator evidence contains 550 Spotlight Reflex closed-loop rollouts
@@ -22,8 +22,8 @@ from artifacts that are bundled with the submission and audited by
 - The architecture separates proposal diversity from trajectory selection:
   kinematic, learned residual, temporal, and scene candidates are evaluated
   independently from the selector.
-- The submission includes a negative breakthrough audit. Mean RFS improves, but
-  worst-slice regret regresses, so the failure is visible and actionable.
+- The submission includes a conservative improvement audit. A small scene-gate
+  sweep improves mean RFS and normalized RFS while reducing worst-slice regret.
 - The active runtime path is structured and non-text. It does not depend on
   prompt parsing or memorized AV demonstrations.
 

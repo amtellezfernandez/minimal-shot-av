@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "wod_breakthrough"
 DEFAULT_FRAME_CACHE = ROOT / "artifacts" / "wod_preference_frames_val479.json"
 DEFAULT_EXTERNAL_CACHE = ROOT / "artifacts" / "cosmos_predict25_wan21_tokenizer_val479.json"
-DEFAULT_PROMOTION_BASELINE = ROOT / "artifacts" / "wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json"
+DEFAULT_PROMOTION_BASELINE = ROOT / "artifacts" / "wod_fastkin_gate_ridge175_scene016_cv_official.json"
 
 
 def main() -> int:

@@ -19,8 +19,8 @@
       "grand_commission/docs/solution-reset.md",
       "grand_commission/docs/benchmark-comparison.md",
       "grand_commission/docs/waymo-data-access.md",
-      "grand_commission/artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json",
-      "grand_commission/artifacts/wod_fastkin_gate_ridge175_rate020_fallback_breakthrough_audit.json",
+      "grand_commission/artifacts/wod_fastkin_gate_ridge175_scene016_cv_official.json",
+      "grand_commission/artifacts/wod_fastkin_gate_ridge175_scene016_breakthrough_audit.json",
       "grand_commission/artifacts/wod_neural_holdout/neural_ensemble3_sourcegate_speedfine_p0_local.json",
       "grand_commission/artifacts/wod_neural_holdout/neural_top1_pc0_familycal_l2_010_heldout_official.json",
       "grand_commission/artifacts/wod_preference_calibrated_ensemble3_full_official.json",
@@ -35,8 +35,8 @@
       "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.svg"
     ],
     "path": "artifacts/sota_submission_bundles/grand_commission.tar.gz",
-    "sha256": "b44968bede87955a03862001045ef9374f057dcd8a9e5424f475900e1d6aad04",
-    "size_bytes": 239026
+    "sha256": "4869cdec61f3ecb8332fd12f4f09730916cc574e3cb58b9ed0c3540416c2601d",
+    "size_bytes": 238825
   },
   "minor_commission": {
     "file_count": 18,
@@ -61,7 +61,7 @@
       "minor_commission/artifacts/minor_eval/scenario_eval.json"
     ],
     "path": "artifacts/sota_submission_bundles/minor_commission.tar.gz",
-    "sha256": "5f9ec2f8a862f3d9b54705a713fef5612372dd16a41e584c0b7278fdd48cbb90",
-    "size_bytes": 92738
+    "sha256": "d798978216eeddcf9ab763f3b8936f33955cc09ab1c1f6ab9999aed879a20017",
+    "size_bytes": 92741
   }
 }

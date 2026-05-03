@@ -12,7 +12,7 @@ submission candidate built around two honest assets:
 The model-side claim is currently a transparent non-text WOD-E2E baseline, not
 frontier scene understanding. The latest confirmed structured selector run
 improves official validation-CV selected RFS from `7.0223571581211495` constant
-velocity to `7.657089971818379`, with a combined candidate oracle at
+velocity to `7.659197835744162`, with a combined candidate oracle at
 `9.098014272661512`. That is useful evidence for candidate diversity and
 fallback/gating, but it is not enough to call the architecture solved.
 

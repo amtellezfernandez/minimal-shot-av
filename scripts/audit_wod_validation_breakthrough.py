@@ -8,7 +8,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_BASELINE = ROOT / "artifacts" / "wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json"
+DEFAULT_BASELINE = ROOT / "artifacts" / "wod_fastkin_gate_ridge175_scene016_cv_official.json"
 DEFAULT_CANDIDATE = ROOT / "artifacts" / "wod_breakthrough" / "promoted_report.json"
 
 

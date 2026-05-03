@@ -60,11 +60,11 @@ is 3.28 m, and mean intervention rate is 9.44%.
 On the WOD-E2E validation side, the best confirmed official-RFS development
 report is a transparent non-text baseline rather than a solved vision policy.
 Constant velocity scores 7.022 RFS on the 479 preference-labeled validation
-frames, while the current combined candidate ranker scores 7.657 RFS under
+frames, while the current combined candidate ranker scores 7.659 RFS under
 segment-grouped cross-validation. The combined candidate oracle is much higher
 at 9.098 RFS, showing useful proposal headroom but also exposing selector
-regret. The attached breakthrough audit does not pass: the mean score improves,
-but worst-slice regret regresses.
+regret. A conservative scene-gate sweep improved the prior 7.657 report while
+also reducing worst-slice regret.
 
 A preference-calibrated neural heldout branch reached `7.838` local RFS on 159
 heldout validation-preference frames, and an official-scored heldout variant
@@ -96,7 +96,7 @@ failure analysis.
 The model-side world-model experiment did not yet produce a meaningful
 architecture win. The lightweight world-model candidate moved official
 validation-CV selected RFS only from 7.6028 to 7.6062. The stronger confirmed
-selector run reaches 7.657, but that improvement comes from structured
+selector run reaches 7.659, but that improvement comes from structured
 fallback/gating over existing candidates rather than a solved scene-understanding
 model.
 
@@ -106,8 +106,8 @@ list are missing locally. There is therefore no hidden-test score and no claim
 that this is a completed leaderboard submission.
 
 The known failure mode is candidate selection. The confirmed official report has
-a 1.441 RFS regret gap between selected candidates and the combined candidate
-oracle, and its worst-slice regret is worse than the prior clean report. Before
+a 1.439 RFS regret gap between selected candidates and the combined candidate
+oracle. Before
 this can become a stronger autonomy claim, the selector must reduce worst-slice
 regret and learn when to trust learned, temporal, memory, or world-model
 proposal families.
