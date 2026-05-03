@@ -1065,6 +1065,8 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
             ridge=0.01,
             max_rate=1.0,
             min_precision=0.0,
+            min_route_observations=0,
+            min_route_positives=0,
             source_calibration=None,
             fallback_policy=None,
             fallback_selectors=None,
@@ -1108,6 +1110,45 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
 
         self.assertIsNotNone(permissive)
         self.assertIsNone(strict)
+
+    def test_source_gate_threshold_can_require_route_support(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        observations = [
+            {"baseline_score": 5.0, "scene_score": 7.0},
+            {"baseline_score": 5.0, "scene_score": 7.0},
+        ]
+        predicted = cv.np.asarray([1.0, 1.0], dtype=cv.np.float64)
+
+        supported = cv._fit_scene_gate_threshold(
+            observations,
+            predicted,
+            margin=0.0,
+            max_rate=1.0,
+            min_observations=2,
+            min_positive_overrides=2,
+        )
+        unsupported = cv._fit_scene_gate_threshold(
+            observations,
+            predicted,
+            margin=0.0,
+            max_rate=1.0,
+            min_observations=3,
+            min_positive_overrides=2,
+        )
+        too_few_positives = cv._fit_scene_gate_threshold(
+            observations,
+            predicted,
+            margin=0.0,
+            max_rate=1.0,
+            min_observations=2,
+            min_positive_overrides=3,
+        )
+
+        self.assertIsNotNone(supported)
+        self.assertIsNone(unsupported)
+        self.assertIsNone(too_few_positives)
 
     def test_source_calibration_can_offset_overconfident_source(self) -> None:
         if cv is None:

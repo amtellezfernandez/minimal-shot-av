@@ -317,6 +317,18 @@ def main() -> int:
         help="Minimum train-fold positive-gain precision required while fitting source-gate thresholds.",
     )
     parser.add_argument(
+        "--source-gate-min-route-observations",
+        type=int,
+        default=0,
+        help="Minimum train-fold observations required before fitting a source-gate route threshold.",
+    )
+    parser.add_argument(
+        "--source-gate-min-route-positives",
+        type=int,
+        default=0,
+        help="Minimum positive train-fold overrides required before a source-gate route may activate.",
+    )
+    parser.add_argument(
         "--source-gate-local-selector",
         action="store_true",
         help="Rank each gated source with a selector trained only on that source before applying source gates.",
@@ -551,6 +563,8 @@ def main() -> int:
         source_gate_ridge=args.source_gate_ridge,
         source_gate_max_rate=args.source_gate_max_rate,
         source_gate_min_precision=args.source_gate_min_precision,
+        source_gate_min_route_observations=args.source_gate_min_route_observations,
+        source_gate_min_route_positives=args.source_gate_min_route_positives,
         source_gate_local_selector=args.source_gate_local_selector,
         kinematic_profile=args.kinematic_profile,
         blend_candidates=args.blend_candidates,
@@ -758,6 +772,8 @@ def cross_validate_trajectory_model(
     source_gate_ridge: float = 1.0,
     source_gate_max_rate: float = 0.25,
     source_gate_min_precision: float = 0.0,
+    source_gate_min_route_observations: int = 0,
+    source_gate_min_route_positives: int = 0,
     source_gate_local_selector: bool = False,
     kinematic_profile: str = "base",
     blend_candidates: str = "off",
@@ -1082,6 +1098,8 @@ def cross_validate_trajectory_model(
             ridge=source_gate_ridge,
             max_rate=source_gate_max_rate,
             min_precision=source_gate_min_precision,
+            min_route_observations=source_gate_min_route_observations,
+            min_route_positives=source_gate_min_route_positives,
             source_calibration=source_calibration,
             fallback_policy=fallback_policy,
             fallback_selectors=fallback_selectors,
@@ -1220,6 +1238,8 @@ def cross_validate_trajectory_model(
         "source_gate_ridge": float(source_gate_ridge),
         "source_gate_max_rate": float(source_gate_max_rate),
         "source_gate_min_precision": float(source_gate_min_precision),
+        "source_gate_min_route_observations": int(source_gate_min_route_observations),
+        "source_gate_min_route_positives": int(source_gate_min_route_positives),
         "source_gate_local_selector": bool(source_gate_local_selector),
         "source_gate_enabled": source_gate != "off",
         "source_gate_selected_rate": _weighted_mean(fold_reports, "source_gate_selected_rate"),
@@ -3158,6 +3178,8 @@ def _fit_source_gate_policy(
     ridge: float,
     max_rate: float,
     min_precision: float,
+    min_route_observations: int,
+    min_route_positives: int,
     source_calibration: dict[str, dict[str, float]] | None,
     fallback_policy: dict[str, object] | None,
     fallback_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None,
@@ -3175,6 +3197,10 @@ def _fit_source_gate_policy(
         raise ValueError("--source-gate-max-rate must be in (0, 1]")
     if min_precision < 0.0 or min_precision > 1.0:
         raise ValueError("--source-gate-min-precision must be in [0, 1]")
+    if min_route_observations < 0:
+        raise ValueError("--source-gate-min-route-observations must be non-negative")
+    if min_route_positives < 0:
+        raise ValueError("--source-gate-min-route-positives must be non-negative")
     source_names = tuple(dict.fromkeys(str(source) for source in sources))
     if not source_names:
         raise ValueError("at least one source-gate source is required")
@@ -3260,6 +3286,8 @@ def _fit_source_gate_policy(
             margin=margin,
             max_rate=max_rate,
             min_precision=min_precision,
+            min_route_observations=min_route_observations,
+            min_route_positives=min_route_positives,
             ridge=ridge,
         )
     mean, scale, weights, _predicted_gains = _fit_gate_linear_model(observations, ridge=ridge)
@@ -3288,6 +3316,8 @@ def _fit_source_gate_policy(
                 margin=margin,
                 max_rate=max_rate,
                 min_precision=min_precision,
+                min_observations=min_route_observations,
+                min_positive_overrides=min_route_positives,
             )
         )
     global_observations = [{**observation, "scene_score": observation["source_score"]} for observation in observations]
@@ -3297,6 +3327,8 @@ def _fit_source_gate_policy(
         margin=margin,
         max_rate=max_rate,
         min_precision=min_precision,
+        min_observations=min_route_observations,
+        min_positive_overrides=min_route_positives,
     )
     return {
         "mode": mode,
@@ -3308,6 +3340,8 @@ def _fit_source_gate_policy(
         "margin": float(margin),
         "max_rate": float(max_rate),
         "min_precision": float(min_precision),
+        "min_route_observations": int(min_route_observations),
+        "min_route_positives": int(min_route_positives),
         "feature_mean": mean.tolist(),
         "feature_scale": scale.tolist(),
         "weights": weights[1:].tolist(),
@@ -3350,6 +3384,8 @@ def _fit_independent_source_gate_policy(
     margin: float,
     max_rate: float,
     min_precision: float,
+    min_route_observations: int,
+    min_route_positives: int,
     ridge: float,
 ) -> dict[str, object]:
     source_models: dict[str, dict[str, object]] = {}
@@ -3390,6 +3426,8 @@ def _fit_independent_source_gate_policy(
             margin=margin,
             max_rate=max_rate,
             min_precision=min_precision,
+            min_observations=min_route_observations,
+            min_positive_overrides=min_route_positives,
         )
         global_decisions[source] = _scene_gate_route_payload(global_threshold)
         for group in sorted({str(observation["group"]) for observation in source_observations}):
@@ -3410,6 +3448,8 @@ def _fit_independent_source_gate_policy(
                     margin=margin,
                     max_rate=max_rate,
                     min_precision=min_precision,
+                    min_observations=min_route_observations,
+                    min_positive_overrides=min_route_positives,
                 )
             )
     return {
@@ -3422,6 +3462,8 @@ def _fit_independent_source_gate_policy(
         "margin": float(margin),
         "max_rate": float(max_rate),
         "min_precision": float(min_precision),
+        "min_route_observations": int(min_route_observations),
+        "min_route_positives": int(min_route_positives),
         "source_models": source_models,
         "source_decisions": global_decisions,
         "routes": {} if router == "off" else routes,
@@ -3492,8 +3534,12 @@ def _fit_scene_gate_threshold(
     margin: float,
     max_rate: float,
     min_precision: float = 0.0,
+    min_observations: int = 0,
+    min_positive_overrides: int = 0,
 ) -> float | None:
     if not observations:
+        return None
+    if len(observations) < int(min_observations):
         return None
     thresholds = [float("-inf"), *sorted({float(value) for value in predicted_gains}), float("inf")]
     best_threshold: float | None = None
@@ -3513,6 +3559,8 @@ def _fit_scene_gate_threshold(
         if override_count / len(observations) > float(max_rate):
             continue
         if override_count and positive_override_count / override_count < float(min_precision):
+            continue
+        if positive_override_count < int(min_positive_overrides):
             continue
         mean_score = _mean(adjusted_scores)
         if mean_score > best_mean:
