@@ -1,0 +1,67 @@
+{
+  "architecture": "fast_reflex_slow_deliberation",
+  "async_slow_refresh_ms": {
+    "max": 2.554747,
+    "mean": 1.9333656114583333,
+    "median": 1.9217085,
+    "p95": 2.1318811999999996,
+    "unit": "ms"
+  },
+  "benchmark_type": "online_wod_fast_slow_runtime",
+  "candidate_count_mean": 4,
+  "control_loop_contract": "synchronous fast loop excludes asynchronous slow refresh latency",
+  "fast_generation_ms": {
+    "max": 0.402733,
+    "mean": 0.1074360442,
+    "median": 0.105642,
+    "p95": 0.12457850000000001,
+    "unit": "ms"
+  },
+  "fast_residual_modes": 1,
+  "feature_ms": {
+    "max": 0.617277,
+    "mean": 0.3973178992,
+    "median": 0.3942045,
+    "p95": 0.44684945000000004,
+    "unit": "ms"
+  },
+  "feature_sets": {
+    "fast": "base",
+    "slow_auxiliary": "temporal_summary"
+  },
+  "frames": 5000,
+  "hardware": {
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "python": "3.12.3"
+  },
+  "meets_target": true,
+  "notes": [
+    "Fast loop measures the synchronous control path: compact candidate generation, feature extraction, and selection.",
+    "Slow refresh latency is reported separately because it can run asynchronously and be preempted.",
+    "If the slow cache is stale, the fast loop still has local learned candidates and ranker safety features.",
+    "Excludes TFRecord parsing, JPEG decode, official RFS scoring, and offline model training."
+  ],
+  "selection_ms": {
+    "max": 0.123638,
+    "mean": 0.053258491,
+    "median": 0.0524385,
+    "p95": 0.0625773,
+    "unit": "ms"
+  },
+  "selector_features": "contextual",
+  "slow_loop_contract": "refreshes richer candidate context every N frames; fast loop remains safe if stale",
+  "slow_refresh_frames": 5,
+  "slow_residual_modes": 3,
+  "stale_cache_frame_rate": 0.0,
+  "target_ms": 14.0,
+  "throughput_fps": 1046.7133032709214,
+  "total_ms": {
+    "max": 0.813593,
+    "mean": 0.5581631142,
+    "median": 0.5545055,
+    "p95": 0.6253722,
+    "unit": "ms"
+  },
+  "warmup": 200
+}

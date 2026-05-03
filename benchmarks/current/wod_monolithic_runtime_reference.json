@@ -1,0 +1,53 @@
+{
+  "benchmark_type": "online_wod_non_text_runtime",
+  "candidate_count_mean": 14,
+  "feature_ms": {
+    "max": 2.016433,
+    "mean": 1.3953783604,
+    "median": 1.384145,
+    "p95": 1.52698035,
+    "unit": "ms"
+  },
+  "feature_sets": {
+    "auxiliary": "temporal_summary",
+    "base": "base"
+  },
+  "frames": 5000,
+  "generation_ms": {
+    "max": 2.698602,
+    "mean": 0.3744159774,
+    "median": 0.370363,
+    "p95": 0.41737745000000004,
+    "unit": "ms"
+  },
+  "hardware": {
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "python": "3.12.3"
+  },
+  "meets_target": true,
+  "notes": [
+    "Measures online trajectory generation, feature extraction, and ranker selection only.",
+    "Excludes TFRecord parsing, JPEG decode, official RFS scoring, and offline model training.",
+    "Uses only local numeric trajectory models and ranker arithmetic."
+  ],
+  "residual_modes": 3,
+  "selection_ms": {
+    "max": 0.345599,
+    "mean": 0.1735471602,
+    "median": 0.170616,
+    "p95": 0.19662925,
+    "unit": "ms"
+  },
+  "selector_features": "contextual",
+  "target_ms": 14.0,
+  "throughput_fps": 494.0156190846276,
+  "total_ms": {
+    "max": 4.362898,
+    "mean": 1.9489643628,
+    "median": 1.932285,
+    "p95": 2.1236093499999997,
+    "unit": "ms"
+  },
+  "warmup": 200
+}

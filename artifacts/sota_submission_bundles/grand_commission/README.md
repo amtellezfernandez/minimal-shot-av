@@ -25,6 +25,7 @@ Minimal-shot autonomy architecture prototype with WOD-E2E harness and closed-loo
 - `docs/grand-submission.md`
 - `docs/judging-criteria-evidence.md`
 - `docs/preference-calibrated-evidence.md`
+- `docs/fast-slow-realtime-architecture.md`
 - `docs/two-page-writeup.md`
 - `docs/final-submission-handoff.md`
 - `notebooks/wod_e2e_analysis.ipynb`

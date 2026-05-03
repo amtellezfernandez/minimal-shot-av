@@ -27,6 +27,10 @@ local RFS and `7.894` official normalized RFS, but the full retained-validation
 official rerun did not promote. The headline WOD claim remains the stable
 `7.657` official validation-CV report.
 
+Realtime note: the proposed fast/slow scheduler drops synchronous WOD runtime
+p95 from `2.124 ms` to `0.625 ms` on the same 5,000-frame synthetic runtime
+benchmark by moving rich candidate refresh off the actuation path.
+
 ## Slide 3: Why The Problem Matters
 
 Most autonomy systems scale by collecting more data from places they already understand. That breaks down in rural roads, disaster zones, construction scenes, unusual agents, and rare hazards. Minimal-shot autonomy needs a world model, a candidate policy, and a safety selector that can act from sparse evidence.

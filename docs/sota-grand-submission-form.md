@@ -68,6 +68,13 @@ The strongest result is the closed-loop architecture behavior: the policy uses s
 
 The validation-CV candidate stack also shows real but limited signal. The combined ranker improves over constant velocity, and the candidate oracle is substantially stronger than the selected trajectory. That gap is useful because it points to the next technical bottleneck: candidate routing, not just generating more trajectories.
 
+For realtime behavior, I added a fast/slow controller proposal and benchmark.
+The fast reflex loop keeps only compact local candidates plus one cached slow
+plan on the synchronous path, while the slow loop refreshes richer candidates
+asynchronously. On the same 5,000-frame synthetic WOD-like runtime benchmark,
+the synchronous p95 latency drops from `2.124 ms` monolithic to `0.625 ms`
+fast/slow; slow refresh p95 is reported separately at `2.132 ms`.
+
 Preference-calibrated heldout experiments did reach the `7.8+` zone under a
 local scorer: `7.838` selected local RFS on 159 heldout validation-preference
 frames. An official-scored heldout variant reached `7.894` normalized RFS but

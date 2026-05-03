@@ -77,6 +77,12 @@ metrics are not used for WOD model selection, WOD validation labels are not
 presented as hidden-test results, and submission packaging is kept behind
 explicit readiness checks.
 
+The realtime path now has a concrete fast/slow proposal: a sub-2 ms fast reflex
+loop consumes compact local candidates and one cached slow plan, while a slower
+loop refreshes richer candidates asynchronously. On a same-settings 5,000-frame
+runtime benchmark, synchronous p95 latency improves from `2.124 ms` to
+`0.625 ms`; the slow refresh p95 is reported separately at `2.132 ms`.
+
 The direct criteria audit passes all four judging dimensions under this honest
 boundary: technical excellence from WOD validation-CV gain, oracle headroom,
 runtime margin, and closed-loop breadth; novelty from explicit
