@@ -1,11 +1,12 @@
 {
   "grand_commission": {
-    "file_count": 31,
+    "file_count": 33,
     "members": [
       "grand_commission/README.md",
       "grand_commission/repo_README.md",
       "grand_commission/models/DECLARATION.md",
       "grand_commission/docs/sota-grand-submission-form.md",
+      "grand_commission/docs/sota-grand-slide-deck.md",
       "grand_commission/docs/sota-grand-slide-script.md",
       "grand_commission/docs/submission-tracks.md",
       "grand_commission/docs/grand-submission.md",
@@ -14,6 +15,7 @@
       "grand_commission/docs/fast-slow-realtime-architecture.md",
       "grand_commission/docs/two-page-writeup.md",
       "grand_commission/docs/final-submission-handoff.md",
+      "grand_commission/docs/final-submission-checklist.md",
       "grand_commission/notebooks/wod_e2e_analysis.ipynb",
       "grand_commission/docs/video-outline.md",
       "grand_commission/docs/solution-reset.md",
@@ -35,8 +37,8 @@
       "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.svg"
     ],
     "path": "artifacts/sota_submission_bundles/grand_commission.tar.gz",
-    "sha256": "cec758e2f217757d18abf3e899fc6380d3ab8a5a3508c823650297fcfdb763d7",
-    "size_bytes": 238957
+    "sha256": "f962fd35aeaf33db14ee2ca8c4f0fde830cd9a3c4e34be04b2914a89bea253e8",
+    "size_bytes": 240694
   },
   "minor_commission": {
     "file_count": 18,
@@ -61,7 +63,7 @@
       "minor_commission/artifacts/minor_eval/scenario_eval.json"
     ],
     "path": "artifacts/sota_submission_bundles/minor_commission.tar.gz",
-    "sha256": "c7a2c1d4ed43019b18364ae4686170b896bc489b5841cb1cdbb37162cb2f2d83",
-    "size_bytes": 92740
+    "sha256": "7b3a048ca8374433451e8275e43e4b46c67620b2b1af03be929993e11ba4e248",
+    "size_bytes": 92744
   }
 }

@@ -20,6 +20,7 @@ Minimal-shot autonomy architecture prototype with WOD-E2E harness and closed-loo
 - `README.md`
 - `models/DECLARATION.md`
 - `docs/sota-grand-submission-form.md`
+- `docs/sota-grand-slide-deck.md`
 - `docs/sota-grand-slide-script.md`
 - `docs/submission-tracks.md`
 - `docs/grand-submission.md`
@@ -28,6 +29,7 @@ Minimal-shot autonomy architecture prototype with WOD-E2E harness and closed-loo
 - `docs/fast-slow-realtime-architecture.md`
 - `docs/two-page-writeup.md`
 - `docs/final-submission-handoff.md`
+- `docs/final-submission-checklist.md`
 - `notebooks/wod_e2e_analysis.ipynb`
 - `docs/video-outline.md`
 - `docs/solution-reset.md`
