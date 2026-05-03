@@ -47,6 +47,18 @@ class WodValidationBreakthroughAuditTests(unittest.TestCase):
         self.assertIn("selected_rfs_gain_too_small", failure_ids)
         self.assertIn("worst_slice_regret_worse", failure_ids)
 
+    def test_audit_rejects_equal_rfs_when_no_min_gain_is_required(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            baseline = _write_report(root / "baseline.json", rfs=7.75, normalized=8.0, regret=1.5)
+            candidate = _write_report(root / "candidate.json", rfs=7.75, normalized=8.1, regret=1.4)
+
+            report = module.audit_breakthrough(candidate, baseline, min_rfs_gain=0.0)
+
+        self.assertFalse(report["passed"])
+        self.assertIn("selected_rfs_gain_too_small", {failure["id"] for failure in report["failures"]})
+
     def test_audit_rejects_hidden_test_claim(self) -> None:
         module = _load_module()
         with TemporaryDirectory() as tmpdir:

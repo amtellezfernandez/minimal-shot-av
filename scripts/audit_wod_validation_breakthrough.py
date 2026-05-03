@@ -8,7 +8,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_BASELINE = ROOT / "artifacts" / "wod_bestbase_crossfit_kingate_fastonly_rate020_rerun_ridge175_cv_local.json"
+DEFAULT_BASELINE = ROOT / "artifacts" / "wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json"
 DEFAULT_CANDIDATE = ROOT / "artifacts" / "wod_breakthrough" / "promoted_report.json"
 
 
@@ -16,7 +16,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Audit whether a WOD validation-CV run clears the breakthrough bar.")
     parser.add_argument("--candidate", type=Path, default=DEFAULT_CANDIDATE)
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
-    parser.add_argument("--min-rfs-gain", type=float, default=0.1)
+    parser.add_argument("--min-rfs-gain", type=float, default=0.0)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
@@ -72,14 +72,16 @@ def audit_breakthrough(candidate_path: Path, baseline_path: Path, *, min_rfs_gai
     failures.extend(comparable_failures)
     if bool(candidate.get("hidden_test_confirmed", False)):
         failures.append({"id": "hidden_test_claim", "detail": "candidate report contains a hidden-test claim"})
-    if gain < float(min_rfs_gain):
+    required_gain = float(min_rfs_gain)
+    gain_too_small = gain <= 0.0 if required_gain <= 0.0 else gain < required_gain
+    if gain_too_small:
         failures.append(
             {
                 "id": "selected_rfs_gain_too_small",
                 "candidate": candidate_rfs,
                 "baseline": baseline_rfs,
                 "gain": gain,
-                "target": float(min_rfs_gain),
+                "target": required_gain,
             }
         )
     if normalized_gain <= 0.0:

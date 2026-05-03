@@ -43,6 +43,9 @@ class WodBreakthroughExperimentRunnerTests(unittest.TestCase):
         self.assertIn("blend_residual_pairs", {run["name"] for run in runs})
         self.assertIn("source_policy_speed_oracle_prior", {run["name"] for run in runs})
         self.assertIn("independent_kinematic_source_gate", {run["name"] for run in runs})
+        self.assertIn("conservative_intent_source_gate", {run["name"] for run in runs})
+        self.assertIn("conservative_intent_speed_source_gate", {run["name"] for run in runs})
+        self.assertIn("conservative_learned_cap_speed_fine", {run["name"] for run in runs})
         self.assertIn("pairwise_logistic_family_reliability_strong", {run["name"] for run in runs})
         self.assertIn("memory_pairwise_family_reliability_top5", {run["name"] for run in runs})
         self.assertIn("--rfs-backend", command)
@@ -84,6 +87,29 @@ class WodBreakthroughExperimentRunnerTests(unittest.TestCase):
         self.assertEqual("kinematic", command[command.index("--source-gate-sources") + 1])
         self.assertEqual("speed", command[command.index("--source-gate-router") + 1])
         self.assertEqual("0.55", command[command.index("--source-gate-min-precision") + 1])
+
+    def test_conservative_source_gate_runs_pass_intent_and_deny_args(self) -> None:
+        module = _load_module()
+        args = argparse.Namespace(
+            smoke=False,
+            pilot=True,
+            frame_cache=ROOT / "frames.json",
+            external_embedding_cache=ROOT / "missing_external_cache.json",
+            neural_candidate_model=None,
+        )
+        runs = module._experiment_matrix(args)
+        intent_run = next(row for row in runs if row["name"] == "conservative_intent_source_gate")
+        learned_cap_run = next(row for row in runs if row["name"] == "conservative_learned_cap_speed_fine")
+
+        intent_command = module._command_for_run(intent_run, ROOT / "intent.json", args)
+        learned_cap_command = module._command_for_run(learned_cap_run, ROOT / "learned_cap.json", args)
+
+        self.assertEqual("intent", intent_command[intent_command.index("--source-gate-router") + 1])
+        self.assertEqual("kinematic,temporal", intent_command[intent_command.index("--source-gate-sources") + 1])
+        self.assertIn("--source-gate-local-selector", intent_command)
+        deny_index = learned_cap_command.index("--source-gate-deny-prefixes") + 1
+        self.assertEqual("ridge_residual_pc2,ridge_residual_pc4,ridge_residual_pc5", learned_cap_command[deny_index])
+        self.assertEqual("speed_fine", learned_cap_command[learned_cap_command.index("--source-gate-router") + 1])
 
     def test_champion_run_passes_proven_gate_recipe(self) -> None:
         module = _load_module()
@@ -242,6 +268,42 @@ class WodBreakthroughExperimentRunnerTests(unittest.TestCase):
         module._add_baseline_comparisons(rows)
 
         self.assertIsNone(module._validation_candidate_run(rows, mode="official", min_rfs_gain=0.1))
+
+    def test_validation_candidate_requires_positive_rfs_gain_when_min_gain_is_zero(self) -> None:
+        module = _load_module()
+        rows = [
+            _manifest_row("baseline_recheck", rfs=7.0, normalized=8.0, regret=1.5),
+            _manifest_row("equal", rfs=7.0, normalized=8.1, regret=1.4),
+        ]
+        module._add_baseline_comparisons(rows)
+
+        self.assertIsNone(module._validation_candidate_run(rows, mode="official", min_rfs_gain=0.0))
+
+    def test_official_baseline_comparison_uses_fixed_promotion_report(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            baseline_path = root / "promotion_baseline.json"
+            baseline_path.write_text(
+                """{
+                  "combined_ranker_mean_rfs": 7.657,
+                  "combined_ranker_mean_normalized_rfs": 7.98,
+                  "combined_oracle_mean_rfs": 9.1,
+                  "slices": {"intent:3": {"mean_regret": 1.7}}
+                }""",
+                encoding="utf-8",
+            )
+            rows = [
+                _manifest_row("baseline_recheck", rfs=7.0, normalized=8.0, regret=1.5),
+                _manifest_row("candidate", rfs=7.7, normalized=8.02, regret=1.6),
+            ]
+
+            module._add_baseline_comparisons(rows, baseline_report=baseline_path)
+
+        self.assertAlmostEqual(0.043, rows[1]["baseline_selected_rfs_delta"])
+        self.assertAlmostEqual(0.04, rows[1]["baseline_normalized_rfs_delta"])
+        self.assertAlmostEqual(-0.1, rows[1]["baseline_worst_slice_regret_delta"])
+        self.assertTrue(rows[1]["pilot_baseline_passed"])
 
     def test_clear_derived_reports_removes_stale_promotion_artifacts(self) -> None:
         module = _load_module()

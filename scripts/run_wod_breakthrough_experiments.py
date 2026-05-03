@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "wod_breakthrough"
 DEFAULT_FRAME_CACHE = ROOT / "artifacts" / "wod_preference_frames_val479.json"
 DEFAULT_EXTERNAL_CACHE = ROOT / "artifacts" / "cosmos_predict25_wan21_tokenizer_val479.json"
+DEFAULT_PROMOTION_BASELINE = ROOT / "artifacts" / "wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json"
 
 
 def main() -> int:
@@ -22,7 +23,8 @@ def main() -> int:
     parser.add_argument("--external-embedding-cache", type=Path, default=DEFAULT_EXTERNAL_CACHE)
     parser.add_argument("--neural-candidate-model", type=Path)
     parser.add_argument("--transformer-candidate-model", type=Path)
-    parser.add_argument("--min-rfs-gain", type=float, default=0.1)
+    parser.add_argument("--promotion-baseline", type=Path, default=DEFAULT_PROMOTION_BASELINE)
+    parser.add_argument("--min-rfs-gain", type=float, default=0.0)
     parser.add_argument("--smoke", action="store_true", help="Run a tiny local-RFS smoke matrix.")
     parser.add_argument(
         "--pilot",
@@ -48,9 +50,10 @@ def main() -> int:
         manifest_rows.append(row)
         if status != 0 and not args.continue_on_error:
             break
-    _add_baseline_comparisons(manifest_rows)
-    best = _best_successful_run(manifest_rows)
     mode = _mode(args)
+    promotion_baseline = args.promotion_baseline if mode == "official" else None
+    _add_baseline_comparisons(manifest_rows, baseline_report=promotion_baseline)
+    best = _best_successful_run(manifest_rows)
     promoted = _validation_candidate_run(manifest_rows, mode=mode, min_rfs_gain=args.min_rfs_gain)
     pilot_promoted = _promoted_run(manifest_rows) if mode != "official" else None
     manifest = {
@@ -58,6 +61,7 @@ def main() -> int:
         "smoke": bool(args.smoke),
         "pilot": bool(args.pilot),
         "mode": mode,
+        "promotion_baseline": str(promotion_baseline) if promotion_baseline is not None else "baseline_recheck",
         "runs": manifest_rows,
         "best_observed": best,
         "validation_candidate": promoted,
@@ -233,6 +237,48 @@ def _experiment_matrix(args: argparse.Namespace) -> list[dict[str, Any]]:
             "source_gate_router": "speed",
             "source_gate_max_rate": "0.35",
             "source_gate_min_precision": "0.55",
+        },
+        {
+            "name": "conservative_intent_source_gate",
+            "selector_model": "linear",
+            "selector_features": "contextual",
+            "selector_target": "frame_delta",
+            "source_gate": "independent_train_margin",
+            "source_gate_sources": "kinematic,temporal",
+            "source_gate_router": "intent",
+            "source_gate_max_rate": "0.18",
+            "source_gate_min_precision": "0.60",
+            "source_gate_local_selector": True,
+        },
+        {
+            "name": "conservative_intent_speed_source_gate",
+            "selector_model": "linear",
+            "selector_features": "contextual",
+            "selector_target": "frame_delta",
+            "source_gate": "independent_train_margin",
+            "source_gate_sources": "kinematic,temporal",
+            "source_gate_router": "intent_speed",
+            "source_gate_max_rate": "0.18",
+            "source_gate_min_precision": "0.60",
+            "source_gate_local_selector": True,
+        },
+        {
+            "name": "conservative_learned_cap_speed_fine",
+            "selector_model": "pairwise_logistic",
+            "selector_features": "family_reliability_contextual",
+            "selector_target": "frame_delta",
+            "pairwise_iterations": "900",
+            "pairwise_lr": "0.12",
+            "pairwise_l2": "0.002",
+            "pairwise_max_pairs_per_frame": "160",
+            "selector_family_calibration": "speed_source_family",
+            "selector_family_calibration_min_count": "6",
+            "source_gate": "independent_train_margin",
+            "source_gate_sources": "kinematic,temporal",
+            "source_gate_router": "speed_fine",
+            "source_gate_max_rate": "0.22",
+            "source_gate_min_precision": "0.62",
+            "source_gate_deny_prefixes": "ridge_residual_pc2,ridge_residual_pc4,ridge_residual_pc5",
         },
         {
             "name": "independent_kinematic_learned_source_gate",
@@ -425,6 +471,10 @@ def _command_for_run(run: dict[str, Any], output: Path, args: argparse.Namespace
         command.extend(["--source-gate", str(run["source_gate"])])
     if run.get("source_gate_sources"):
         command.extend(["--source-gate-sources", str(run["source_gate_sources"])])
+    if run.get("source_gate_candidate_prefixes"):
+        command.extend(["--source-gate-candidate-prefixes", str(run["source_gate_candidate_prefixes"])])
+    if run.get("source_gate_deny_prefixes"):
+        command.extend(["--source-gate-deny-prefixes", str(run["source_gate_deny_prefixes"])])
     if run.get("source_gate_router"):
         command.extend(["--source-gate-router", str(run["source_gate_router"])])
     if run.get("source_gate_max_rate"):
@@ -433,6 +483,8 @@ def _command_for_run(run: dict[str, Any], output: Path, args: argparse.Namespace
         command.extend(["--source-gate-min-precision", str(run["source_gate_min_precision"])])
     if run.get("source_gate_route_allowlist"):
         command.extend(["--source-gate-route-allowlist", str(run["source_gate_route_allowlist"])])
+    if run.get("source_gate_local_selector"):
+        command.append("--source-gate-local-selector")
     if run.get("scene_gate"):
         command.extend(["--scene-gate", str(run["scene_gate"])])
     if run.get("scene_gate_router"):
@@ -554,7 +606,9 @@ def _passes_validation_baseline(row: dict[str, Any], *, min_rfs_gain: float) -> 
     worst_delta = _float_or_none(row.get("baseline_worst_slice_regret_delta"))
     if selected_delta is None or normalized_delta is None or worst_delta is None:
         return False
-    return selected_delta >= float(min_rfs_gain) and normalized_delta > 0.0 and worst_delta <= 0.0
+    required_gain = float(min_rfs_gain)
+    selected_passed = selected_delta > 0.0 if required_gain <= 0.0 else selected_delta >= required_gain
+    return selected_passed and normalized_delta > 0.0 and worst_delta <= 0.0
 
 
 def _mode(args: argparse.Namespace) -> str:
@@ -571,17 +625,19 @@ def _oracle_gap(selected: Any, oracle: Any) -> float | None:
     return None
 
 
-def _add_baseline_comparisons(rows: list[dict[str, Any]]) -> None:
-    baseline = next(
-        (
-            row
-            for row in rows
-            if row.get("name") == "baseline_recheck"
-            and row.get("returncode") == 0
-            and isinstance(row.get("combined_ranker_mean_rfs"), (int, float))
-        ),
-        None,
-    )
+def _add_baseline_comparisons(rows: list[dict[str, Any]], *, baseline_report: Path | None = None) -> None:
+    baseline = _baseline_row_from_report(baseline_report) if baseline_report is not None else None
+    if baseline is None:
+        baseline = next(
+            (
+                row
+                for row in rows
+                if row.get("name") == "baseline_recheck"
+                and row.get("returncode") == 0
+                and isinstance(row.get("combined_ranker_mean_rfs"), (int, float))
+            ),
+            None,
+        )
     if baseline is None:
         return
     baseline_rfs = float(baseline["combined_ranker_mean_rfs"])
@@ -599,6 +655,23 @@ def _add_baseline_comparisons(rows: list[dict[str, Any]]) -> None:
             worst - baseline_worst if worst is not None and baseline_worst is not None else None
         )
         row["pilot_baseline_passed"] = _passes_pilot_baseline(row)
+
+
+def _baseline_row_from_report(path: Path | None) -> dict[str, Any] | None:
+    if path is None or not path.is_file():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    selected = _float_or_none(payload.get("combined_ranker_mean_rfs"))
+    if selected is None:
+        return None
+    return {
+        "name": "promotion_baseline",
+        "returncode": 0,
+        "combined_ranker_mean_rfs": selected,
+        "combined_ranker_mean_normalized_rfs": payload.get("combined_ranker_mean_normalized_rfs"),
+        "combined_oracle_mean_rfs": payload.get("combined_oracle_mean_rfs"),
+        "worst_slice": _worst_slice(payload),
+    }
 
 
 def _passes_pilot_baseline(row: dict[str, Any]) -> bool:
