@@ -49,12 +49,18 @@ if cv is not None:
     )
 
 
-def sample_frame(frame_name: str, *, step: float, camera_payload: bytes | None = None) -> object:
+def sample_frame(
+    frame_name: str,
+    *,
+    step: float,
+    camera_payload: bytes | None = None,
+    intent: int = 1,
+) -> object:
     return cv.WodE2EPreferenceFrame(
         frame_name=frame_name,
         past_trajectory=[(-2.0 * step, 0.0), (-1.0 * step, 0.0), (0.0, 0.0)],
         future_trajectory=[(float(index) * step, 0.0) for index in range(1, 21)],
-        intent=1,
+        intent=intent,
         init_speed_mps=step * 4.0,
         references=[
             RfsReference(
@@ -1291,6 +1297,81 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         )
 
         self.assertEqual("constant_velocity", selected["candidate_name"])
+
+    def test_source_score_policy_routes_by_intent_speed_best_source_score(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        class FakeSelector:
+            def predict_row(self, row):
+                return float(row["selector_score"])
+
+        rows = []
+        specs = [
+            ("segment-slow-0-100", 1, 2.0, "kinematic", 9.0),
+            ("segment-slow-1-100", 1, 2.0, "kinematic", 8.0),
+            ("segment-fast-0-100", 1, 12.0, "temporal", 9.0),
+            ("segment-fast-1-100", 1, 12.0, "temporal", 8.0),
+        ]
+        for frame_name, intent, speed, winning_source, winning_score in specs:
+            frame = sample_frame(frame_name, step=speed / 4.0, intent=intent)
+            for index, source in enumerate(("kinematic", "temporal")):
+                name = "constant_velocity" if source == "kinematic" else "temporal_ridge_mean"
+                score = winning_score if source == winning_source else 3.0
+                row = cv.candidate_ranker_row(
+                    frame=frame,
+                    trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                    candidate_name=name,
+                    candidate_index=index,
+                    source=source,
+                )
+                row["source"] = source
+                row["selector_score"] = 10.0 if source == "temporal" else 1.0
+                row["rfs_score"] = score
+                rows.append(row)
+
+        policy = cv._fit_source_policy(rows, mode="source_score_intent_speed")
+        slow_selected = cv._select_with_policy(
+            FakeSelector(),
+            rows[:2],
+            source_guard=None,
+            fallback_policy=None,
+            source_policy=policy,
+        )
+        fast_selected = cv._select_with_policy(
+            FakeSelector(),
+            rows[4:6],
+            source_guard=None,
+            fallback_policy=None,
+            source_policy=policy,
+        )
+
+        self.assertEqual("kinematic", slow_selected["source"])
+        self.assertEqual("temporal", fast_selected["source"])
+
+    def test_zero_shot_geometry_filter_keeps_kinematic_and_drops_implausible_learned(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        frame = sample_frame("segment-geometry-0-100", step=1.0)
+        kinematic = cv.candidate_ranker_row(
+            frame=frame,
+            trajectory=[(float(step), 0.0) for step in range(1, 21)],
+            candidate_name="constant_velocity",
+            candidate_index=0,
+            source="kinematic",
+        )
+        implausible = cv.candidate_ranker_row(
+            frame=frame,
+            trajectory=[(float(step) * 2.0, float(step) * 1.5) for step in range(1, 21)],
+            candidate_name="ridge_residual_bad_geometry",
+            candidate_index=1,
+            source="learned",
+        )
+
+        kept = cv._zero_shot_geometry_filter_rows([kinematic, implausible], mode="reactive")
+
+        self.assertEqual([kinematic], kept)
 
     def test_family_calibration_falls_back_to_source_offset_for_sparse_bucket(self) -> None:
         if cv is None:

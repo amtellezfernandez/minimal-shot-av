@@ -207,9 +207,21 @@ def main() -> int:
     )
     parser.add_argument(
         "--selector-source-policy",
-        choices=("off", "oracle_source"),
+        choices=("off", "oracle_source", "source_score_speed", "source_score_intent_speed"),
         default="off",
-        help="Optionally select source first from train-fold oracle-source reliability, then rank within source.",
+        help=(
+            "Optionally select source first from train-fold source reliability, then rank within source. "
+            "source_score_* routes by mean best-candidate RFS instead of oracle win rate."
+        ),
+    )
+    parser.add_argument(
+        "--zero-shot-geometry-filter",
+        choices=("off", "conservative", "reactive"),
+        default="off",
+        help=(
+            "Drop non-kinematic candidates that violate fixed motion-consistency priors before selection. "
+            "This uses only candidate geometry, ego speed, and intent; it does not fit on frame outcomes."
+        ),
     )
     parser.add_argument(
         "--selector-family-calibration",
@@ -567,6 +579,7 @@ def main() -> int:
         selector_source_guard_margin=args.selector_source_guard_margin,
         selector_source_calibration=args.selector_source_calibration,
         selector_source_policy=args.selector_source_policy,
+        zero_shot_geometry_filter=args.zero_shot_geometry_filter,
         selector_family_calibration=args.selector_family_calibration,
         selector_family_calibration_min_count=args.selector_family_calibration_min_count,
         selector_kinematic_fallback=args.selector_kinematic_fallback,
@@ -785,6 +798,7 @@ def cross_validate_trajectory_model(
     selector_source_guard_margin: float = 0.0,
     selector_source_calibration: str = "off",
     selector_source_policy: str = "off",
+    zero_shot_geometry_filter: str = "off",
     selector_family_calibration: str = "off",
     selector_family_calibration_min_count: int = 8,
     selector_kinematic_fallback: str = "off",
@@ -845,6 +859,8 @@ def cross_validate_trajectory_model(
         raise ValueError("--neural-residual-modes-per-anchor must be non-negative")
     if transformer_top_k < 0:
         raise ValueError("--transformer-top-k must be non-negative")
+    if zero_shot_geometry_filter not in {"off", "conservative", "reactive"}:
+        raise ValueError(f"unsupported zero-shot geometry filter: {zero_shot_geometry_filter}")
     neural_paths = tuple(
         dict.fromkeys(
             [
@@ -1178,6 +1194,7 @@ def cross_validate_trajectory_model(
                 fallback_policy=fallback_policy,
                 source_calibration=source_calibration,
                 source_policy=source_policy,
+                zero_shot_geometry_filter=zero_shot_geometry_filter,
                 family_calibration=family_calibration,
                 fallback_selectors=fallback_selectors,
                 scene_gate_policy=scene_gate_policy,
@@ -1270,6 +1287,12 @@ def cross_validate_trajectory_model(
         "selector_source_guard_margin": float(selector_source_guard_margin),
         "selector_source_calibration": selector_source_calibration,
         "selector_source_policy": selector_source_policy,
+        "zero_shot_geometry_filter": zero_shot_geometry_filter,
+        "zero_shot_geometry_filtered_rate": _weighted_mean(fold_reports, "zero_shot_geometry_filtered_rate"),
+        "zero_shot_geometry_filtered_non_kinematic_rate": _weighted_mean(
+            fold_reports,
+            "zero_shot_geometry_filtered_non_kinematic_rate",
+        ),
         "selector_family_calibration": selector_family_calibration,
         "selector_family_calibration_min_count": int(selector_family_calibration_min_count),
         "selector_kinematic_fallback": selector_kinematic_fallback,
@@ -1451,6 +1474,7 @@ def _evaluate_fold(
     fallback_policy: dict[str, object] | None = None,
     source_calibration: dict[str, dict[str, float]] | None = None,
     source_policy: dict[str, object] | None = None,
+    zero_shot_geometry_filter: str = "off",
     family_calibration: dict[str, object] | None = None,
     fallback_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None = None,
     scene_gate_policy: dict[str, object] | None = None,
@@ -1507,6 +1531,10 @@ def _evaluate_fold(
     source_veto_false_positive_losses: list[float] = []
     source_veto_override_count = 0
     source_veto_true_positive_count = 0
+    zero_shot_geometry_filtered_count = 0
+    zero_shot_geometry_filtered_non_kinematic_count = 0
+    zero_shot_geometry_candidate_count = 0
+    zero_shot_geometry_non_kinematic_count = 0
     opportunity_accumulators: dict[str, dict[str, object]] = {}
     top1_matches = 0
     selected_source_counts: dict[str, int] = defaultdict(int)
@@ -1515,7 +1543,7 @@ def _evaluate_fold(
     regret_accumulators: dict[str, dict[str, object]] = {}
     frame_diagnostics: list[dict[str, object]] = []
     for frame in frames:
-        rows = _frame_candidate_rows(
+        all_rows = _frame_candidate_rows(
             frame,
             model,
             scorer,
@@ -1539,10 +1567,22 @@ def _evaluate_fold(
             transformer_top_k=transformer_top_k,
         )
         if family_reliability is not None:
-            _apply_family_reliability_features(rows, family_reliability)
-        kinematic_scores = [float(row["rfs_score"]) for row in rows if str(row["source"]) == "kinematic"]
-        learned_scores = [float(row["rfs_score"]) for row in rows if str(row["source"]) == "learned"]
-        world_scores = [float(row["rfs_score"]) for row in rows if str(row["source"]) == "world"]
+            _apply_family_reliability_features(all_rows, family_reliability)
+        rows = _zero_shot_geometry_filter_rows(all_rows, mode=zero_shot_geometry_filter)
+        zero_shot_geometry_candidate_count += len(all_rows)
+        zero_shot_geometry_filtered_count += len(all_rows) - len(rows)
+        kept_row_ids = {id(row) for row in rows}
+        zero_shot_geometry_non_kinematic_count += sum(
+            1 for row in all_rows if str(row["source"]) != "kinematic"
+        )
+        zero_shot_geometry_filtered_non_kinematic_count += sum(
+            1
+            for row in all_rows
+            if str(row["source"]) != "kinematic" and id(row) not in kept_row_ids
+        )
+        kinematic_scores = [float(row["rfs_score"]) for row in all_rows if str(row["source"]) == "kinematic"]
+        learned_scores = [float(row["rfs_score"]) for row in all_rows if str(row["source"]) == "learned"]
+        world_scores = [float(row["rfs_score"]) for row in all_rows if str(row["source"]) == "world"]
         policy_rows = [row for row in rows if str(row["source"]) != "scene"] if scene_gate_policy is not None else rows
         policy_rows = _source_gate_baseline_rows(source_gate_policy, policy_rows) or policy_rows or rows
         active_selector = _selector_for_route(selector, routed_selectors, selector_route_policy, rows[0])
@@ -1583,7 +1623,7 @@ def _evaluate_fold(
             source_calibration=source_calibration,
             fallback_selectors=fallback_selectors,
         )
-        oracle = max(rows, key=lambda row: float(row["rfs_score"]))
+        oracle = max(all_rows, key=lambda row: float(row["rfs_score"]))
         oracle_score = float(oracle["rfs_score"])
         selected_score = float(selected["rfs_score"])
         reference_ceiling = _reference_ceiling(frame)
@@ -1692,6 +1732,16 @@ def _evaluate_fold(
         "source_veto_mean_gain": _mean(source_veto_gains) if source_veto_gains else 0.0,
         "source_veto_false_positive_loss": _mean(source_veto_false_positive_losses)
         if source_veto_false_positive_losses
+        else 0.0,
+        "zero_shot_geometry_filtered_rate": float(
+            zero_shot_geometry_filtered_count / zero_shot_geometry_candidate_count
+        )
+        if zero_shot_geometry_candidate_count
+        else 0.0,
+        "zero_shot_geometry_filtered_non_kinematic_rate": float(
+            zero_shot_geometry_filtered_non_kinematic_count / zero_shot_geometry_non_kinematic_count
+        )
+        if zero_shot_geometry_non_kinematic_count
         else 0.0,
         "selected_anchor_rate": selected_source_counts["anchor"] / len(frames),
         "selected_learned_rate": selected_source_counts["learned"] / len(frames),
@@ -1950,6 +2000,82 @@ def _reference_ceiling(frame: WodE2EPreferenceFrame) -> float:
     if not frame.references:
         return 0.0
     return max(float(reference.score) for reference in frame.references)
+
+
+def _zero_shot_geometry_filter_rows(rows: list[dict[str, object]], *, mode: str) -> list[dict[str, object]]:
+    if mode == "off":
+        return rows
+    if mode not in {"conservative", "reactive"}:
+        raise ValueError(f"unsupported zero-shot geometry filter: {mode}")
+    kept = [row for row in rows if not _zero_shot_geometry_reject(row, mode=mode)]
+    return kept or rows
+
+
+def _zero_shot_geometry_reject(row: dict[str, object], *, mode: str) -> bool:
+    source = str(row["source"])
+    if source == "kinematic":
+        return False
+    features = row.get("features", {})
+    if not isinstance(features, dict):
+        return False
+    speed = max(0.0, float(features.get("init_speed_mps", 0.0)))
+    intent = int(round(float(features.get("intent", 1.0))))
+    max_speed = max(0.0, float(features.get("max_speed_mps", 0.0)))
+    mean_speed = max(0.0, float(features.get("mean_speed_mps", 0.0)))
+    final_speed = max(0.0, float(features.get("final_speed_mps", 0.0)))
+    max_accel = max(0.0, float(features.get("max_abs_accel_mps2", 0.0)))
+    mean_accel = max(0.0, float(features.get("mean_abs_accel_mps2", 0.0)))
+    lateral_abs = max(0.0, float(features.get("max_lateral_abs", 0.0)))
+    lateral_range = max(0.0, float(features.get("lateral_range", 0.0)))
+    final_lateral = float(features.get("signed_lateral_5s", 0.0))
+    heading_change = max(0.0, float(features.get("max_abs_heading_change", 0.0)))
+    mean_heading_change = max(0.0, float(features.get("mean_abs_heading_change", 0.0)))
+    x_1s = float(features.get("x_1s", 0.0))
+    x_3s = float(features.get("x_3s", 0.0))
+    x_5s = float(features.get("x_5s", 0.0))
+
+    speed_headroom = 6.0 if mode == "conservative" else 4.0
+    if max_speed > max(8.0, speed * 2.35 + speed_headroom):
+        return True
+    if mean_speed > max(6.0, speed * 1.85 + speed_headroom * 0.55):
+        return True
+    if speed < 1.4 and final_speed > (4.5 if mode == "conservative" else 3.25):
+        return True
+    if max_accel > (9.0 if mode == "conservative" else 7.0):
+        return True
+    if mean_accel > (4.5 if mode == "conservative" else 3.5):
+        return True
+    if x_1s < -0.75 or x_3s < -1.25 or x_5s < -1.75:
+        return True
+
+    if speed < 1.4:
+        lateral_limit = 4.0 if mode == "conservative" else 2.75
+    elif speed < 5.0:
+        lateral_limit = 6.5 if mode == "conservative" else 4.75
+    else:
+        lateral_limit = 10.0 if mode == "conservative" else 8.0
+    if lateral_abs > lateral_limit or lateral_range > lateral_limit * 1.35:
+        return True
+
+    heading_limit = 1.35 if mode == "conservative" else 1.05
+    if speed >= 11.0:
+        heading_limit *= 0.72
+    elif speed >= 5.0:
+        heading_limit *= 0.88
+    if heading_change > heading_limit:
+        return True
+    if mean_heading_change > heading_limit * 0.42:
+        return True
+
+    if intent == 1:
+        straight_lateral_limit = max(3.0, abs(x_5s) * (0.42 if mode == "conservative" else 0.33))
+        if speed < 5.0 and abs(final_lateral) > straight_lateral_limit:
+            return True
+    elif intent == 2 and final_lateral < (-3.0 if mode == "conservative" else -2.0):
+        return True
+    elif intent == 3 and final_lateral > (3.0 if mode == "conservative" else 2.0):
+        return True
+    return False
 
 
 def _normalized_rfs_score(score: float, reference_ceiling: float) -> float:
@@ -2867,38 +2993,52 @@ def _fit_source_calibration(
 def _fit_source_policy(rows: list[dict[str, object]], *, mode: str) -> dict[str, object] | None:
     if mode == "off":
         return None
-    if mode != "oracle_source":
+    if mode not in {"oracle_source", "source_score_speed", "source_score_intent_speed"}:
         raise ValueError(f"unsupported selector source policy: {mode}")
+    router = "intent_speed" if mode == "source_score_intent_speed" else "speed"
     rows_by_frame: dict[str, list[dict[str, object]]] = defaultdict(list)
     for row in rows:
         rows_by_frame[str(row["frame_name"])].append(row)
     source_wins_by_route: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     source_scores: dict[str, float] = defaultdict(float)
     source_counts: dict[str, int] = defaultdict(int)
+    source_scores_by_route: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    source_counts_by_route: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     for frame_rows in rows_by_frame.values():
         oracle = max(frame_rows, key=lambda row: float(row["rfs_score"]))
-        route = _source_policy_route_key(frame_rows, {"router": "speed"})
+        route = _source_policy_route_key(frame_rows, {"router": router})
         oracle_source = str(oracle["source"])
         source_wins_by_route[route][oracle_source] += 1
         for source, source_row in _best_rows_by_source(frame_rows).items():
-            source_scores[source] += float(source_row["rfs_score"])
+            score = float(source_row["rfs_score"])
+            source_scores[source] += score
             source_counts[source] += 1
+            source_scores_by_route[route][source] += score
+            source_counts_by_route[route][source] += 1
     global_source_scores = {
         source: float(source_scores[source] / source_counts[source])
         for source in source_scores
         if source_counts[source]
     }
     routes = {}
-    for route, source_counts_by_route in source_wins_by_route.items():
-        total = sum(source_counts_by_route.values())
-        routes[route] = {
-            source: float(count / total)
-            for source, count in source_counts_by_route.items()
-            if total
-        }
+    if mode == "oracle_source":
+        for route, counts_by_source in source_wins_by_route.items():
+            total = sum(counts_by_source.values())
+            routes[route] = {
+                source: float(count / total)
+                for source, count in counts_by_source.items()
+                if total
+            }
+    else:
+        for route, scores_by_source in source_scores_by_route.items():
+            routes[route] = {
+                source: float(score / source_counts_by_route[route][source])
+                for source, score in scores_by_source.items()
+                if source_counts_by_route[route][source]
+            }
     return {
         "mode": mode,
-        "router": "speed",
+        "router": router,
         "routes": routes,
         "global_source_scores": global_source_scores,
     }
@@ -4227,7 +4367,7 @@ def _select_with_source_policy(
 ) -> dict[str, object]:
     if not source_policy:
         return _select_by_calibrated_score(selector, rows, source_calibration, family_calibration)
-    if source_policy.get("mode") != "oracle_source":
+    if source_policy.get("mode") not in {"oracle_source", "source_score_speed", "source_score_intent_speed"}:
         raise ValueError(f"unsupported selector source policy: {source_policy.get('mode')}")
     route_key = _source_policy_route_key(rows, source_policy)
     route_scores = dict(dict(source_policy.get("routes", {})).get(route_key, {}))
