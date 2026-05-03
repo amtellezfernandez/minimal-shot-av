@@ -70,6 +70,50 @@ class WodE2EReadinessTests(unittest.TestCase):
             self.assertFalse(report["ready_for_upload"])
             self.assertFalse(report["minimal_shot_av_readiness"]["leaderboard_truth_available"])
 
+    def test_readiness_report_rejects_partial_shard_sets(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            train = root / "waymo" / "train"
+            train.mkdir(parents=True)
+            for index in range(2):
+                (train / f"train_000.tfrecord-{index:05d}-of-00003").write_bytes(b"")
+
+            report = module.readiness_report(
+                data_root=root / "waymo",
+                frame_list=root / "frames.json",
+                model=root / "model.json",
+                candidates=root / "candidates.jsonl",
+                submission=root / "submission.tar.gz",
+            )
+
+            self.assertFalse(report["ready_for_training"])
+            self.assertFalse(report["splits"]["train"]["complete"])
+            self.assertEqual(3, report["splits"]["train"]["expected_shard_count"])
+            self.assertEqual(1, report["splits"]["train"]["missing_shard_count"])
+            self.assertIn("incomplete WOD-E2E train split", "\n".join(report["blockers"]))
+
+    def test_readiness_report_rejects_non_contiguous_shard_sets(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            train = root / "waymo" / "train"
+            train.mkdir(parents=True)
+            for index in (0, 2):
+                (train / f"train_000.tfrecord-{index:05d}-of-00003").write_bytes(b"")
+
+            report = module.readiness_report(
+                data_root=root / "waymo",
+                frame_list=root / "frames.json",
+                model=root / "model.json",
+                candidates=root / "candidates.jsonl",
+                submission=root / "submission.tar.gz",
+            )
+
+            self.assertFalse(report["splits"]["train"]["complete"])
+            self.assertEqual(1, report["splits"]["train"]["missing_shard_count"])
+            self.assertEqual([1], report["splits"]["train"]["missing_shard_indices_sample"])
+
     def test_readiness_report_accepts_flat_root_shard_layout(self) -> None:
         module = _load_module()
         with TemporaryDirectory() as tmpdir:

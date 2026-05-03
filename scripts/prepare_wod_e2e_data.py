@@ -27,6 +27,12 @@ def main() -> int:
         type=Path,
         default=ROOT / "artifacts" / "wod_e2e_submission_matrix",
     )
+    parser.add_argument(
+        "--frame-list",
+        type=Path,
+        default=ROOT / "data" / "waymo" / "e2e" / "submission_frames" / "test_frames.json",
+    )
+    parser.add_argument("--output", type=Path, help="Optional JSON path to write the generated data-restore plan.")
     parser.add_argument("--execute", action="store_true", help="Run gsutil commands instead of only printing them.")
     args = parser.parse_args()
 
@@ -38,8 +44,13 @@ def main() -> int:
         authors=args.authors,
         method_prefix=args.method_prefix,
         matrix_output_dir=args.matrix_output_dir,
+        frame_list=args.frame_list,
     )
-    print(json.dumps(plan, indent=2, sort_keys=True))
+    text = json.dumps(plan, indent=2, sort_keys=True)
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(text + "\n", encoding="utf-8")
+    print(text)
     if not args.execute:
         return 0
     if shutil.which("gsutil") is None:
@@ -59,6 +70,7 @@ def download_plan(
     authors: str = "Alba Maria Tellez Fernandez",
     method_prefix: str = "alba_maria_tellez_fernandez_blind",
     matrix_output_dir: Path = ROOT / "artifacts" / "wod_e2e_submission_matrix",
+    frame_list: Path = ROOT / "data" / "waymo" / "e2e" / "submission_frames" / "test_frames.json",
 ) -> dict[str, Any]:
     commands: list[list[str]] = []
     split_reports: dict[str, dict[str, Any]] = {}
@@ -73,7 +85,7 @@ def download_plan(
             "source": source,
             "command": command,
         }
-        if not report["present"]:
+        if not report["complete"]:
             commands.append(command)
     matrix_command = blind_matrix_command(
         data_root=data_root,
@@ -81,14 +93,15 @@ def download_plan(
         account_name=account_name,
         authors=authors,
         method_prefix=method_prefix,
+        frame_list=frame_list,
     )
     return {
         "data_root": str(data_root),
         "bucket": bucket,
         "commands": commands,
         "splits": split_reports,
-        "ready_for_blind_matrix": split_status(data_root, "test")["present"],
-        "blind_matrix_command": matrix_command,
+        "ready_for_blind_matrix": split_status(data_root, "test")["complete"],
+        "two_gate_attack_command": matrix_command,
         "frame_list_note": (
             "Download the official challenge frame-list JSON from the Waymo E2E challenge page "
             "and place it at data/waymo/e2e/submission_frames/test_frames.json."
@@ -101,13 +114,38 @@ def split_status(data_root: Path, split: str) -> dict[str, Any]:
     target_shards = sorted(target.glob(f"{split}*.tfrecord-*"))
     root_shards = sorted(data_root.glob(f"{split}*.tfrecord-*"))
     existing_shards = target_shards or root_shards
+    expected, missing_indices = _shard_index_report(existing_shards)
+    complete = bool(existing_shards) and (expected is None or not missing_indices)
     return {
         "present": bool(existing_shards),
+        "complete": complete,
         "existing_shards": len(existing_shards),
+        "expected_shards": expected,
+        "missing_shards": len(missing_indices) if expected is not None else None,
+        "missing_shard_indices_sample": missing_indices[:20] if expected is not None else None,
         "existing_layout": "split_dir" if target_shards else "root_flat" if root_shards else None,
         "first_shard": str(existing_shards[0]) if existing_shards else None,
         "last_shard": str(existing_shards[-1]) if existing_shards else None,
     }
+
+
+def _shard_index_report(shards: list[Path]) -> tuple[int | None, list[int]]:
+    totals: set[int] = set()
+    indices: set[int] = set()
+    for shard in shards:
+        if "-of-" not in shard.name:
+            continue
+        prefix, suffix = shard.name.rsplit("-of-", maxsplit=1)
+        if suffix.isdigit():
+            totals.add(int(suffix))
+        index_text = prefix.rsplit("-", maxsplit=1)[-1]
+        if index_text.isdigit():
+            indices.add(int(index_text))
+    if not totals:
+        return None, []
+    expected = max(totals)
+    missing_indices = [index for index in range(expected) if index not in indices]
+    return expected, missing_indices
 
 
 def blind_matrix_command(
@@ -117,13 +155,16 @@ def blind_matrix_command(
     account_name: str,
     authors: str,
     method_prefix: str,
+    frame_list: Path,
 ) -> list[str]:
     return [
         "PYTHONPATH=src:.wod-protos",
         ".venv-wod/bin/python",
-        "scripts/prepare_wod_e2e_submission_matrix.py",
-        "--test-dir",
-        str(data_root / "test"),
+        "scripts/run_wod_leaderboard_attack.py",
+        "--data-root",
+        str(data_root),
+        "--frame-list",
+        str(frame_list),
         "--output-dir",
         str(output_dir),
         "--account-name",

@@ -1,0 +1,106 @@
+{
+  "bucket": "gs://waymo_open_dataset_end_to_end_camera_v_1_0_0",
+  "commands": [
+    [
+      "gsutil",
+      "-m",
+      "cp",
+      "-n",
+      "gs://waymo_open_dataset_end_to_end_camera_v_1_0_0/train*",
+      "/home/amdev/waymo/train"
+    ],
+    [
+      "gsutil",
+      "-m",
+      "cp",
+      "-n",
+      "gs://waymo_open_dataset_end_to_end_camera_v_1_0_0/test*",
+      "/home/amdev/waymo/test"
+    ]
+  ],
+  "data_root": "/home/amdev/waymo",
+  "frame_list_note": "Download the official challenge frame-list JSON from the Waymo E2E challenge page and place it at data/waymo/e2e/submission_frames/test_frames.json.",
+  "ready_for_blind_matrix": false,
+  "splits": {
+    "test": {
+      "command": [
+        "gsutil",
+        "-m",
+        "cp",
+        "-n",
+        "gs://waymo_open_dataset_end_to_end_camera_v_1_0_0/test*",
+        "/home/amdev/waymo/test"
+      ],
+      "complete": false,
+      "existing_layout": null,
+      "existing_shards": 0,
+      "expected_shards": null,
+      "first_shard": null,
+      "last_shard": null,
+      "missing_shard_indices_sample": null,
+      "missing_shards": null,
+      "present": false,
+      "source": "gs://waymo_open_dataset_end_to_end_camera_v_1_0_0/test*",
+      "target": "/home/amdev/waymo/test"
+    },
+    "train": {
+      "command": [
+        "gsutil",
+        "-m",
+        "cp",
+        "-n",
+        "gs://waymo_open_dataset_end_to_end_camera_v_1_0_0/train*",
+        "/home/amdev/waymo/train"
+      ],
+      "complete": false,
+      "existing_layout": "split_dir",
+      "existing_shards": 5,
+      "expected_shards": 263,
+      "first_shard": "/home/amdev/waymo/train/training_202504031202_202504151040.tfrecord-00000-of-00263",
+      "last_shard": "/home/amdev/waymo/train/training_202504031202_202504151040.tfrecord-00004-of-00263",
+      "missing_shard_indices_sample": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ],
+      "missing_shards": 258,
+      "present": true,
+      "source": "gs://waymo_open_dataset_end_to_end_camera_v_1_0_0/train*",
+      "target": "/home/amdev/waymo/train"
+    }
+  },
+  "two_gate_attack_command": [
+    "PYTHONPATH=src:.wod-protos",
+    ".venv-wod/bin/python",
+    "scripts/run_wod_leaderboard_attack.py",
+    "--data-root",
+    "/home/amdev/waymo",
+    "--frame-list",
+    "/home/amdev/sota/minimal-shot-av/data/waymo/e2e/submission_frames/test_frames.json",
+    "--output-dir",
+    "/home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_submission_matrix",
+    "--account-name",
+    "YOUR_WAYMO_ACCOUNT",
+    "--authors",
+    "Alba Maria Tellez Fernandez",
+    "--method-prefix",
+    "alba_maria_tellez_fernandez_blind"
+  ]
+}

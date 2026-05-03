@@ -26,6 +26,10 @@ Actual WOD-E2E TFRecords:
 - Parsed valid human-rated reference trajectories: `1437`.
 - Train split is not present in this workspace.
 - Test split is not present in this workspace.
+- Additional local scan on 2026-05-03 found a partial external train download at
+  `/home/amdev/waymo/train`: 5 shards present out of the filename-declared 263
+  train shards. This is not complete enough for training or leaderboard work.
+- No external test shards were found.
 
 Files currently present:
 
@@ -62,12 +66,24 @@ Manual steps required:
 Local command helper:
 
 ```bash
-python3 scripts/prepare_wod_e2e_data.py
+python3 scripts/prepare_wod_e2e_data.py --data-root /home/amdev/waymo \
+  --output artifacts/wod_e2e_data_restore_plan.json
 ```
 
 This prints the exact `gsutil -m cp -n` commands for missing WOD-E2E splits.
 Use `--execute` only on a machine with `gsutil` installed and authenticated to
 the Google account that accepted the Waymo Open Dataset terms.
+
+After train/test shards and the official frame list are restored, run the
+two-gate leaderboard attack wrapper:
+
+```bash
+PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/run_wod_leaderboard_attack.py \
+  --data-root /home/amdev/waymo \
+  --frame-list data/waymo/e2e/submission_frames/test_frames.json \
+  --account-name <account> \
+  --authors <authors>
+```
 
 If the official challenge frame-list JSON is not available locally, generate a
 local all-frame list from downloaded test TFRecords for coverage checks:
@@ -132,12 +148,12 @@ Current known values:
 
 ```text
 WOD_E2E_ROOT=waymo_open_dataset_end_to_end_camera_v_1_0_0
-TRAIN_GLOB=
+TRAIN_GLOB=/home/amdev/waymo/train/training_*.tfrecord-*
 VALIDATION_GLOB=waymo_open_dataset_end_to_end_camera_v_1_0_0/val/val_*.tfrecord-*
 TEST_GLOB=
 SUBMISSION_FRAME_JSON=
 
-train_tfrecord_count=
+train_tfrecord_count=5_of_263_partial
 validation_tfrecord_count=93
 test_tfrecord_count=
 
@@ -148,5 +164,5 @@ sample_test_frame_name=
 validation_frames_with_rater_labels=479
 validation_valid_reference_trajectories=1437
 test_required_frame_count=
-notes=validation split present locally; train/test missing as of 2026-04-25
+notes=validation split present locally; external train partial at /home/amdev/waymo; test missing
 ```

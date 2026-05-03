@@ -60,6 +60,50 @@ class PrepareWodE2EDataTests(unittest.TestCase):
             self.assertTrue(plan["ready_for_blind_matrix"])
             self.assertEqual([], plan["commands"])
 
+    def test_download_plan_does_not_skip_partial_split(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmpdir:
+            data_root = Path(tmpdir) / "wod"
+            (data_root / "train").mkdir(parents=True)
+            (data_root / "train" / "train_000.tfrecord-00000-of-00003").write_bytes(b"")
+
+            plan = module.download_plan(
+                data_root=data_root,
+                bucket="gs://bucket",
+                splits=["train"],
+            )
+
+            self.assertTrue(plan["splits"]["train"]["present"])
+            self.assertFalse(plan["splits"]["train"]["complete"])
+            self.assertEqual(3, plan["splits"]["train"]["expected_shards"])
+            self.assertEqual(2, plan["splits"]["train"]["missing_shards"])
+            self.assertEqual(
+                [["gsutil", "-m", "cp", "-n", "gs://bucket/train*", str(data_root / "train")]],
+                plan["commands"],
+            )
+
+    def test_download_plan_does_not_skip_non_contiguous_split(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmpdir:
+            data_root = Path(tmpdir) / "wod"
+            (data_root / "train").mkdir(parents=True)
+            for index in (0, 2):
+                (data_root / "train" / f"train_000.tfrecord-{index:05d}-of-00003").write_bytes(b"")
+
+            plan = module.download_plan(
+                data_root=data_root,
+                bucket="gs://bucket",
+                splits=["train"],
+            )
+
+            self.assertFalse(plan["splits"]["train"]["complete"])
+            self.assertEqual(1, plan["splits"]["train"]["missing_shards"])
+            self.assertEqual([1], plan["splits"]["train"]["missing_shard_indices_sample"])
+            self.assertEqual(
+                [["gsutil", "-m", "cp", "-n", "gs://bucket/train*", str(data_root / "train")]],
+                plan["commands"],
+            )
+
     def test_download_plan_includes_blind_matrix_command_with_author_metadata(self) -> None:
         module = _load_module()
         with TemporaryDirectory() as tmpdir:
@@ -77,7 +121,8 @@ class PrepareWodE2EDataTests(unittest.TestCase):
                 matrix_output_dir=Path("artifacts/matrix"),
             )
 
-            command = plan["blind_matrix_command"]
+            command = plan["two_gate_attack_command"]
+            self.assertIn("scripts/run_wod_leaderboard_attack.py", command)
             self.assertIn("--account-name", command)
             self.assertIn("alba@example.com", command)
             self.assertIn("--authors", command)

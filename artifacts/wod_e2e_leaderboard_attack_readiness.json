@@ -56,8 +56,8 @@
     }
   },
   "blockers": [
-    "missing WOD-E2E train split at /home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/train*.tfrecord-*",
-    "missing WOD-E2E test split at /home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/test*.tfrecord-*",
+    "incomplete WOD-E2E train split: 5 of 263 shards",
+    "missing WOD-E2E test split at /home/amdev/waymo/test*.tfrecord-*",
     "missing optional challenge frame-list JSON at /home/amdev/sota/minimal-shot-av/data/waymo/e2e/submission_frames/test_frames.json",
     "missing final trajectory model at /home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_submission/wod_ridge_trajectory_model.json",
     "missing generated test candidates at /home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_submission/wod_test_candidates.jsonl",
@@ -65,7 +65,7 @@
     "missing blind submission matrix manifest under /home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_submission_matrix",
     "missing hidden-test leaderboard result log at /home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_leaderboard_results.json"
   ],
-  "data_root": "/home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0",
+  "data_root": "/home/amdev/waymo",
   "frame_list": {
     "path": "/home/amdev/sota/minimal-shot-av/data/waymo/e2e/submission_frames/test_frames.json",
     "present": false,
@@ -90,28 +90,61 @@
   "ready_for_upload": false,
   "splits": {
     "test": {
+      "complete": false,
+      "expected_shard_count": null,
       "first_shard": null,
       "last_shard": null,
       "layout": null,
-      "path": "/home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/test*.tfrecord-*",
+      "missing_shard_count": null,
+      "missing_shard_indices_sample": null,
+      "path": "/home/amdev/waymo/test*.tfrecord-*",
       "present": false,
       "shard_count": 0
     },
     "train": {
+      "complete": false,
+      "expected_shard_count": 263,
+      "first_shard": "/home/amdev/waymo/train/training_202504031202_202504151040.tfrecord-00000-of-00263",
+      "last_shard": "/home/amdev/waymo/train/training_202504031202_202504151040.tfrecord-00004-of-00263",
+      "layout": "split_dir",
+      "missing_shard_count": 258,
+      "missing_shard_indices_sample": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ],
+      "path": "/home/amdev/waymo/train",
+      "present": true,
+      "shard_count": 5
+    },
+    "val": {
+      "complete": false,
+      "expected_shard_count": null,
       "first_shard": null,
       "last_shard": null,
       "layout": null,
-      "path": "/home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/train*.tfrecord-*",
+      "missing_shard_count": null,
+      "missing_shard_indices_sample": null,
+      "path": "/home/amdev/waymo/val*.tfrecord-*",
       "present": false,
       "shard_count": 0
-    },
-    "val": {
-      "first_shard": "/home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/val/val_202504211843.tfrecord-00000-of-00093",
-      "last_shard": "/home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/val/val_202504211843.tfrecord-00092-of-00093",
-      "layout": "split_dir",
-      "path": "/home/amdev/sota/minimal-shot-av/waymo_open_dataset_end_to_end_camera_v_1_0_0/val",
-      "present": true,
-      "shard_count": 93
     }
   }
 }

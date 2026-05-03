@@ -78,8 +78,18 @@ def readiness_report(
     blockers: list[str] = []
     if not splits["train"]["present"]:
         blockers.append(f"missing WOD-E2E train split at {splits['train']['path']}")
+    elif not splits["train"]["complete"]:
+        blockers.append(
+            "incomplete WOD-E2E train split: "
+            f"{splits['train']['shard_count']} of {splits['train']['expected_shard_count']} shards"
+        )
     if not splits["test"]["present"]:
         blockers.append(f"missing WOD-E2E test split at {splits['test']['path']}")
+    elif not splits["test"]["complete"]:
+        blockers.append(
+            "incomplete WOD-E2E test split: "
+            f"{splits['test']['shard_count']} of {splits['test']['expected_shard_count']} shards"
+        )
     if not frame_list_report["present"]:
         blockers.append(f"missing optional challenge frame-list JSON at {frame_list}")
     if not model_report["present"]:
@@ -100,13 +110,13 @@ def readiness_report(
         blockers.append(f"missing solution-reset/safety honesty note at {solution_reset}")
 
     ready_for_generation = (
-        splits["test"]["present"]
+        splits["test"]["complete"]
         and model_report["present"]
     )
     ready_for_packaging = ready_for_generation and candidates_report["present"]
     ready_for_upload = ready_for_packaging and submission_report["present"]
-    ready_for_blind_matrix = splits["test"]["present"] and matrix_report["valid"]
-    ready_for_leaderboard_upload = splits["test"]["present"] and matrix_report["valid"]
+    ready_for_blind_matrix = splits["test"]["complete"] and matrix_report["valid"]
+    ready_for_leaderboard_upload = splits["test"]["complete"] and matrix_report["valid"]
     leaderboard_truth_available = leaderboard_report["valid"]
     minimal_shot_av_gates = {
         "leaderboard_truth": leaderboard_truth_available,
@@ -129,7 +139,7 @@ def readiness_report(
             "world_model": world_report,
             "safety_bias": safety_report,
         },
-        "ready_for_training": splits["train"]["present"],
+        "ready_for_training": splits["train"]["complete"],
         "ready_for_generation": ready_for_generation,
         "ready_for_packaging": ready_for_packaging,
         "ready_for_upload": ready_for_upload,
@@ -150,14 +160,40 @@ def _split_report(data_root: Path, *, split: str) -> dict[str, Any]:
     root_shards = sorted(data_root.glob(f"{split}*.tfrecord-*")) if data_root.is_dir() else []
     shards = split_dir_shards or root_shards
     layout = "split_dir" if split_dir_shards else "root_flat" if root_shards else None
+    expected, missing_indices = _shard_index_report(shards)
+    complete = bool(shards) and (expected is None or not missing_indices)
     return {
         "path": str(split_dir if layout == "split_dir" else data_root / f"{split}*.tfrecord-*"),
         "layout": layout,
         "present": bool(shards),
+        "complete": complete,
         "shard_count": len(shards),
+        "expected_shard_count": expected,
+        "missing_shard_count": len(missing_indices) if expected is not None else None,
+        "missing_shard_indices_sample": missing_indices[:20] if expected is not None else None,
         "first_shard": str(shards[0]) if shards else None,
         "last_shard": str(shards[-1]) if shards else None,
     }
+
+
+def _shard_index_report(shards: list[Path]) -> tuple[int | None, list[int]]:
+    totals: set[int] = set()
+    indices: set[int] = set()
+    for shard in shards:
+        name = shard.name
+        if "-of-" not in name:
+            continue
+        prefix, suffix = name.rsplit("-of-", maxsplit=1)
+        if suffix.isdigit():
+            totals.add(int(suffix))
+        index_text = prefix.rsplit("-", maxsplit=1)[-1]
+        if index_text.isdigit():
+            indices.add(int(index_text))
+    if not totals:
+        return None, []
+    expected = max(totals)
+    missing_indices = [index for index in range(expected) if index not in indices]
+    return expected, missing_indices
 
 
 def _file_report(path: Path) -> dict[str, Any]:
