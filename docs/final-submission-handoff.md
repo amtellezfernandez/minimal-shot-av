@@ -5,7 +5,8 @@ Use this as the source of truth when completing the SoTA Commission form.
 ## Repository
 
 - GitHub URL: `https://github.com/amtellezfernandez/minimal-shot-av`
-- Submitted commit: `e56dc3b623ecea7f138cbdb032de6be862e7914a`
+- Submitted revision: the commit pointed to by tag
+  `sota-commission-2026-submission`
 - Branch: `main`
 
 ## Grand Commission
@@ -63,7 +64,7 @@ Randomized Long-Tail Scenario Generator for Minimal-Shot Autonomy
 Attach:
 
 - `artifacts/sota_submission_bundles/minor_commission.tar.gz`
-- SHA-256: `013e96fca7d0cc14524218e24721d1bc8c3b3ed6bf78eb0506c66748caa78f4d`
+- SHA-256: see `artifacts/sota_submission_bundles/submission_bundles_manifest.json`
 - Video or slide deck based on `docs/sota-minor-slide-script.md`
 
 Short claim:
@@ -117,14 +118,14 @@ GitHub repository:
 
 Submitted commit:
 
-`e56dc3b623ecea7f138cbdb032de6be862e7914a`
+Use the commit pointed to by tag `sota-commission-2026-submission`.
 
 Attached bundles:
 
 - `grand_commission.tar.gz`
-  SHA-256: `b0390a1449ac63d87836b3a3a54f078d063df13452ff1b9e63c9cf196d846b16`
+  SHA-256: see `artifacts/sota_submission_bundles/submission_bundles_manifest.json`
 - `minor_commission.tar.gz`
-  SHA-256: `013e96fca7d0cc14524218e24721d1bc8c3b3ed6bf78eb0506c66748caa78f4d`
+  SHA-256: see `artifacts/sota_submission_bundles/submission_bundles_manifest.json`
 
 The Grand submission includes a WOD-E2E harness and validation-CV evidence, but does not claim a hidden-test leaderboard result. The Minor submission includes the randomized scenario generator and 550-run closed-loop evaluation sweep.
 
