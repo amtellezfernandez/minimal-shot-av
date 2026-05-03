@@ -116,12 +116,14 @@ The active WOD-E2E model architecture is:
    - Ridge residual candidates provide the current best learned non-text proposal set.
    - Anchor-residual candidates are experimental and disabled by default until selected RFS improves, not only oracle RFS.
    - Neural anchor-residual proposal ensembles are available as a measured
-     model-side contender. The current best official validation-CV run is
-     `7.737680847131364` RFS with oracle `9.178972912996967`, using the
-     three-model ensemble in `artifacts/wod_neural_holdout/`; this is stronger
-     than the non-neural `7.65941846208851` champion, but still below the
-     `8.0461` leaderboard snapshot target and must be described as minimal-shot
-     WOD development evidence, not strict zero-shot deployment.
+     model-side contender. The current best official held-out subset run is
+     `7.737680847131364` RFS on `159` frames with oracle `9.178972912996967`,
+     using the three-model ensemble in `artifacts/wod_neural_holdout/`; this is
+     stronger than the full-479-frame non-neural `7.65941846208851` champion on
+     its own subset, but it is not yet a full-validation or leaderboard result.
+     It remains below the `8.0461` leaderboard snapshot target and must be
+     described as minimal-shot WOD development evidence, not strict zero-shot
+     deployment.
    - Lightweight world-model candidates are experimental. Current official
      validation-CV evidence shows only a tiny selected-RFS gain, so they are not
      yet the central solution.
