@@ -44,6 +44,7 @@ class ReferenceRuleConfig:
 
 @dataclass(frozen=True)
 class SimulatorBackedScoreConfig:
+    use_privileged_actor_forecast: bool = False
     min_action_clearance_m: float = 0.55
     unsafe_action_penalty: float = 1_000.0
     avoid_unnecessary_stop_penalty: float = 250.0
@@ -292,7 +293,7 @@ def _simulator_backed_score(
 ) -> float:
     scoring = config.scoring
     action_clearance = _action_clearance(candidate.trajectory, scenario, config)
-    full_clearance = _min_obstacle_clearance(candidate.trajectory, scenario)
+    full_clearance = _min_obstacle_clearance_with_config(candidate.trajectory, scenario, config)
     if action_clearance < scoring.min_action_clearance_m:
         return score.combined_score - scoring.unsafe_action_penalty
 
@@ -322,22 +323,34 @@ def _simulator_backed_score(
 
 def _action_clearance(trajectory: Trajectory, scenario: Scenario, config: SpotlightReflexConfig | None = None) -> float:
     config = config or DEFAULT_SPOTLIGHT_CONFIG
-    return _min_obstacle_clearance(trajectory[: config.trajectory.action_index + 1], scenario)
+    return _min_obstacle_clearance_with_config(trajectory[: config.trajectory.action_index + 1], scenario, config)
 
 
 def _min_obstacle_clearance(trajectory: Trajectory, scenario: Scenario) -> float:
+    return _min_obstacle_clearance_with_config(trajectory, scenario, DEFAULT_SPOTLIGHT_CONFIG)
+
+
+def _min_obstacle_clearance_with_config(
+    trajectory: Trajectory,
+    scenario: Scenario,
+    config: SpotlightReflexConfig,
+) -> float:
     min_clearance = math.inf
     for point_index, point in enumerate(trajectory):
         point_x, point_y = point
-        for obstacle in _trajectory_step_obstacles(scenario, point_index):
+        for obstacle in _trajectory_step_obstacles(scenario, point_index, config):
             clearance = math.hypot(point_x - obstacle.x, point_y - obstacle.y) - obstacle.radius
             if clearance < min_clearance:
                 min_clearance = clearance
     return min_clearance
 
 
-def _trajectory_step_obstacles(scenario: Scenario, point_index: int) -> list[Obstacle]:
-    if not scenario.actors:
+def _trajectory_step_obstacles(
+    scenario: Scenario,
+    point_index: int,
+    config: SpotlightReflexConfig,
+) -> list[Obstacle]:
+    if not config.scoring.use_privileged_actor_forecast or not scenario.actors:
         return scenario.obstacles
 
     cache = scenario.environment.setdefault("_forecast_obstacles_by_point_index", {})
@@ -556,12 +569,12 @@ def _avoidance_side(
     config = config or DEFAULT_SPOTLIGHT_CONFIG
     scoring = config.scoring
     left_clearance = max(
-        _min_obstacle_clearance(candidates["nudge_left"].trajectory, scenario),
-        _min_obstacle_clearance(candidates["evasive_left"].trajectory, scenario),
+        _min_obstacle_clearance_with_config(candidates["nudge_left"].trajectory, scenario, config),
+        _min_obstacle_clearance_with_config(candidates["evasive_left"].trajectory, scenario, config),
     )
     right_clearance = max(
-        _min_obstacle_clearance(candidates["nudge_right"].trajectory, scenario),
-        _min_obstacle_clearance(candidates["evasive_right"].trajectory, scenario),
+        _min_obstacle_clearance_with_config(candidates["nudge_right"].trajectory, scenario, config),
+        _min_obstacle_clearance_with_config(candidates["evasive_right"].trajectory, scenario, config),
     )
     if abs(left_clearance - right_clearance) > scoring.avoidance_side_clearance_delta_m:
         return "left" if left_clearance > right_clearance else "right"

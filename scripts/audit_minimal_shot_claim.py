@@ -75,11 +75,15 @@ def build_report(
     form_text = _read_text(submission_form)
 
     policy_scan = _scan_policy_sources(policy_sources)
+    default_runtime = _runtime_defaults(policy_sources)
     sim_metrics = _sim_metrics(sim)
     boundary = _claim_boundary(model_text=model_text, grand_text=grand_text, form_text=form_text)
 
     checks = {
         "active_policy_has_no_episode_lookup": not policy_scan["matches"],
+        "default_policy_disables_privileged_actor_forecast": (
+            default_runtime["privileged_actor_forecast_default"] is False
+        ),
         "randomized_long_tail_coverage": sim_metrics["cluster_count"] >= 11 and sim_metrics["run_count"] >= 550,
         "closed_loop_zero_collision": sim_metrics["max_collision_rate"] == 0.0,
         "closed_loop_no_near_miss": sim_metrics["max_near_miss_rate"] == 0.0,
@@ -103,6 +107,7 @@ def build_report(
         "metrics": {
             "simulation": sim_metrics,
             "policy_static_scan": policy_scan,
+            "runtime_defaults": default_runtime,
             "claim_boundary": boundary,
         },
         "interpretation": (
@@ -130,6 +135,22 @@ def _scan_policy_sources(paths: tuple[Path, ...]) -> dict[str, Any]:
         "missing": missing,
         "matches": matches,
         "forbidden_patterns": list(EPISODE_DEPENDENCY_PATTERNS),
+    }
+
+
+def _runtime_defaults(paths: tuple[Path, ...]) -> dict[str, Any]:
+    source_text = "\n".join(_read_text(path) for path in paths)
+    privileged_actor_forecast_default = None
+    if "use_privileged_actor_forecast: bool = False" in source_text:
+        privileged_actor_forecast_default = False
+    elif "use_privileged_actor_forecast: bool = True" in source_text:
+        privileged_actor_forecast_default = True
+    return {
+        "privileged_actor_forecast_default": privileged_actor_forecast_default,
+        "interpretation": (
+            "False means the primary runtime scores trajectories against current perceived obstacles "
+            "instead of hidden simulator actor behavior forecasts."
+        ),
     }
 
 

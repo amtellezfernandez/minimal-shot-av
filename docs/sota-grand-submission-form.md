@@ -71,8 +71,10 @@ Judging criteria evidence:
 - unknown-object evidence: an abstract novel-object stress audit covers 81
   compositional cases across `fallen_sign`, `horse_trailer`, `parade_float`,
   `piano`, and `portable_toilet` labels with 0 collisions, 0 near misses, and
-  100% goal completion. This is geometry-level obstacle handling in the 2D
-  simulator, not camera-based recognition of physical unknown objects.
+  100% goal completion. The default policy scores against current obstacle
+  geometry and disables hidden simulator actor-behavior forecasting. This is
+  geometry-level obstacle handling in the 2D simulator, not camera-based
+  recognition of physical unknown objects.
 - adherence to the brief: the bundle includes the analysis notebook, randomized
   scenario generation, WOD-E2E validation-CV evidence, and a documented failure
   case.

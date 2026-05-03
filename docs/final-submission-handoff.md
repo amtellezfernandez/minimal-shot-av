@@ -44,7 +44,9 @@ Evidence to mention:
   development analysis, not as proof of strict zero-shot generalisation.
 - Novel-object stress audit: 81 abstract compositional unknown-object cases,
   100% goal completion, 0 collisions, 0 near misses, and all five synthetic
-  labels covered. This is simulator geometry evidence, not camera recognition.
+  labels covered. The default policy disables hidden simulator actor-behavior
+  forecasting, so this is current-geometry simulator evidence rather than
+  camera recognition or privileged simulator-oracle control.
 - Judging criteria audit passes for technical excellence, novelty, feasibility,
   and adherence to the brief under the declared submission-candidate boundary.
 - Final readiness audit verifies archive hashes, bundled evidence, minimal-shot

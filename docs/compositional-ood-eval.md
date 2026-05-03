@@ -92,6 +92,7 @@ the current failure boundary; gauntlet is the deliberately hostile benchmark.
 The novel-object audit isolates cases containing abstract unknown obstacle
 labels such as `piano`, `parade_float`, and `portable_toilet`. Passing this
 audit means the closed-loop policy handles unseen object categories through
-geometry and safety margins in the simulator. It does not establish
-camera-based recognition or semantic understanding of real physical unknown
-objects.
+current obstacle geometry and safety margins in the simulator. The primary
+runtime disables hidden actor-behavior forecasts, so this audit is less
+privileged than a simulator-oracle rollout. It does not establish camera-based
+recognition or semantic understanding of real physical unknown objects.

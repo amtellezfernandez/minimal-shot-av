@@ -41,6 +41,7 @@
         "active_policy_has_no_episode_lookup": true,
         "closed_loop_no_near_miss": true,
         "closed_loop_zero_collision": true,
+        "default_policy_disables_privileged_actor_forecast": true,
         "no_strict_zero_shot_wod_claim": true,
         "randomized_long_tail_coverage": true,
         "validation_preferences_not_primary_claim": true,
@@ -100,6 +101,7 @@
         "active_policy_has_no_episode_lookup": true,
         "closed_loop_no_near_miss": true,
         "closed_loop_zero_collision": true,
+        "default_policy_disables_privileged_actor_forecast": true,
         "no_strict_zero_shot_wod_claim": true,
         "randomized_long_tail_coverage": true,
         "validation_preferences_not_primary_claim": true,
@@ -144,6 +146,10 @@
           "matches": [],
           "missing": [],
           "source_count": 7
+        },
+        "runtime_defaults": {
+          "interpretation": "False means the primary runtime scores trajectories against current perceived obstacles instead of hidden simulator actor behavior forecasts.",
+          "privileged_actor_forecast_default": false
         },
         "simulation": {
           "cluster_count": 11,

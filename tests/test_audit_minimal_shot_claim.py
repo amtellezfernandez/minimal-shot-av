@@ -14,7 +14,10 @@ class MinimalShotClaimAuditTest(unittest.TestCase):
             root = Path(tmp)
             sim = _write_sim(root / "sim.json")
             policy = root / "policy.py"
-            policy.write_text("def act(scene):\n    return scene.goal\n", encoding="utf-8")
+            policy.write_text(
+                "use_privileged_actor_forecast: bool = False\n\ndef act(scene):\n    return scene.goal\n",
+                encoding="utf-8",
+            )
             model = _write_text(root / "model.md", "validation preference labels; not strict zero-shot")
             grand = _write_text(root / "grand.md", "WOD validation-CV evidence is declared as auxiliary")
             form = _write_text(root / "form.md", "strict zero-shot WOD-E2E should not be described")
@@ -35,7 +38,11 @@ class MinimalShotClaimAuditTest(unittest.TestCase):
             root = Path(tmp)
             sim = _write_sim(root / "sim.json")
             policy = root / "policy.py"
-            policy.write_text("from x import load_preference_frames\nmode = 'nearest_train'\n", encoding="utf-8")
+            policy.write_text(
+                "use_privileged_actor_forecast: bool = False\n"
+                "from x import load_preference_frames\nmode = 'nearest_train'\n",
+                encoding="utf-8",
+            )
             model = _write_text(root / "model.md", "validation preference labels; not strict zero-shot")
             grand = _write_text(root / "grand.md", "not the centerpiece of the minimal-shot claim")
             form = _write_text(root / "form.md", "strict zero-shot WOD-E2E should not be described")
@@ -51,6 +58,27 @@ class MinimalShotClaimAuditTest(unittest.TestCase):
         self.assertFalse(report["valid"])
         self.assertIn("active_policy_has_no_episode_lookup", report["failures"])
         self.assertGreaterEqual(len(report["metrics"]["policy_static_scan"]["matches"]), 2)
+
+    def test_fails_when_privileged_actor_forecast_is_default(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sim = _write_sim(root / "sim.json")
+            policy = root / "policy.py"
+            policy.write_text("use_privileged_actor_forecast: bool = True\n", encoding="utf-8")
+            model = _write_text(root / "model.md", "validation preference labels; not strict zero-shot")
+            grand = _write_text(root / "grand.md", "not the centerpiece of the minimal-shot claim")
+            form = _write_text(root / "form.md", "strict zero-shot WOD-E2E should not be described")
+
+            report = build_report(
+                sim_eval=sim,
+                model_declaration=model,
+                grand_submission=grand,
+                submission_form=form,
+                policy_sources=(policy,),
+            )
+
+        self.assertFalse(report["valid"])
+        self.assertIn("default_policy_disables_privileged_actor_forecast", report["failures"])
 
 
 def _write_sim(path: Path) -> Path:

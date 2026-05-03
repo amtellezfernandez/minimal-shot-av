@@ -28,7 +28,10 @@ from minimal_shot_av.simulator.trajectory_selector import (
 from minimal_shot_av.simulator.safety import apply_safety_filter
 from minimal_shot_av.simulator.spotlight_reflex import (
     DEFAULT_SPOTLIGHT_CONFIG,
+    SimulatorBackedScoreConfig,
+    SpotlightReflexConfig,
     _min_obstacle_clearance,
+    _min_obstacle_clearance_with_config,
     generate_maneuver_candidates,
     select_maneuver,
 )
@@ -167,7 +170,7 @@ class ManeuverLibraryTests(unittest.TestCase):
 
         self.assertLess(_min_obstacle_clearance([(1.0, 0.0)], active), 0.0)
 
-    def test_forecast_clearance_uses_future_position_for_moving_actor(self) -> None:
+    def test_default_clearance_does_not_use_privileged_actor_forecast(self) -> None:
         scenario = Scenario(
             width=20.0,
             height=20.0,
@@ -196,7 +199,41 @@ class ManeuverLibraryTests(unittest.TestCase):
         )
         active = scenario_at_tick(scenario, 0)
 
-        self.assertLess(_min_obstacle_clearance([(0.0, 0.0)], active), 0.0)
+        self.assertGreater(_min_obstacle_clearance([(0.0, 0.0)], active), 0.0)
+
+    def test_privileged_forecast_clearance_uses_future_position_for_moving_actor(self) -> None:
+        scenario = Scenario(
+            width=20.0,
+            height=20.0,
+            lane_center=[(0.0, 0.0), (10.0, 0.0)],
+            lane_half_width=4.0,
+            obstacles=[],
+            start=(0.0, 0.0),
+            goal=(10.0, 0.0),
+            seed=8,
+            actors=[
+                Actor(
+                    actor_id="crossing_0",
+                    kind="vehicle",
+                    x=0.0,
+                    y=1.0,
+                    width=1.0,
+                    length=1.0,
+                    heading=-math.pi / 2.0,
+                    speed=4.0,
+                    vx=0.0,
+                    vy=-4.0,
+                    behavior="linear",
+                    role="crossing_actor",
+                )
+            ],
+        )
+        active = scenario_at_tick(scenario, 0)
+        config = SpotlightReflexConfig(
+            scoring=SimulatorBackedScoreConfig(use_privileged_actor_forecast=True)
+        )
+
+        self.assertLess(_min_obstacle_clearance_with_config([(0.0, 0.0)], active, config), 0.0)
 
     def test_forecast_clearance_replaces_current_moving_actor_obstacle(self) -> None:
         scenario = Scenario(
@@ -227,7 +264,7 @@ class ManeuverLibraryTests(unittest.TestCase):
         )
         active = scenario_at_tick(scenario, 0)
 
-        self.assertGreater(_min_obstacle_clearance([(0.0, 0.0)], active), 5.0)
+        self.assertLess(_min_obstacle_clearance([(0.0, 0.0)], active), 0.0)
 
     def test_lane_recovery_steers_toward_world_model_target(self) -> None:
         action = PlannedAction(direction=(1.0, 0.0), speed=1.0, mode="planned", score=0.0)

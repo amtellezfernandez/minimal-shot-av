@@ -25,7 +25,7 @@ from scripts.evaluate_scenarios import summarize_rollout  # noqa: E402
 
 
 DEFAULT_OUTPUT = ROOT / "artifacts" / "novel_object_stress_audit.json"
-GEOMETRY_ONLY_POLICY = "geometry_only_obstacle_kind_ignored_by_perception"
+GEOMETRY_ONLY_POLICY = "geometry_only_current_obstacles_no_labels_no_privileged_actor_forecast"
 
 
 def main() -> int:
@@ -106,8 +106,9 @@ def build_report(
         "runs": runs,
         "claim_boundary": (
             "This audit covers closed-loop avoidance of abstract unseen object categories in the "
-            "2D simulator. It does not prove camera-based recognition or semantic understanding "
-            "of physical unknown objects."
+            "2D simulator using current obstacle geometry rather than object labels or hidden "
+            "simulator actor forecasts. It does not prove camera-based recognition or semantic "
+            "understanding of physical unknown objects."
         ),
     }
 
