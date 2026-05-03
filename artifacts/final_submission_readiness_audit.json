@@ -1,0 +1,61 @@
+{
+  "archives": {
+    "grand_commission": {
+      "manifest_sha256": "a5bf204d121c56233b83d1e1b5774c062f6207b2a47e7ed55167e1bdcdf8999a",
+      "manifest_sha_matches": true,
+      "missing_required": [],
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/sota_submission_bundles/grand_commission.tar.gz",
+      "present": true,
+      "required_count": 6,
+      "sha256": "a5bf204d121c56233b83d1e1b5774c062f6207b2a47e7ed55167e1bdcdf8999a",
+      "valid": true
+    },
+    "minor_commission": {
+      "manifest_sha256": "37812b7d5a0d804d9cf3578f705ea601ac23775dc1b60016373b99091575cd25",
+      "manifest_sha_matches": true,
+      "missing_required": [],
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/sota_submission_bundles/minor_commission.tar.gz",
+      "present": true,
+      "required_count": 2,
+      "sha256": "37812b7d5a0d804d9cf3578f705ea601ac23775dc1b60016373b99091575cd25",
+      "valid": true
+    }
+  },
+  "blockers": [],
+  "bundle_root": "/home/amdev/sota/minimal-shot-av/artifacts/sota_submission_bundles",
+  "evidence": {
+    "judging": {
+      "failed_criteria": [],
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/sota_judging_criteria_audit.json",
+      "present": true,
+      "schema": "sota_judging_criteria_audit_v1",
+      "valid": true
+    },
+    "minimal_shot": {
+      "missing_or_false": [],
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/minimal_shot_claim_audit.json",
+      "present": true,
+      "schema": "minimal_shot_claim_audit_v1",
+      "valid": true
+    },
+    "production_boundary": {
+      "decision": "no_go",
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/production_av_readiness_audit.json",
+      "present": true,
+      "public_road_deployment_authorized": false,
+      "real_vehicle_control_authorized": false,
+      "schema": "production_av_readiness_audit_v1",
+      "valid": true
+    }
+  },
+  "gates": {
+    "grand_archive_ready": true,
+    "judging_criteria_evidence": true,
+    "manifest_present": true,
+    "minimal_shot_integrity": true,
+    "minor_archive_ready": true,
+    "production_no_go_boundary": true
+  },
+  "schema": "final_submission_readiness_audit_v1",
+  "valid": true
+}

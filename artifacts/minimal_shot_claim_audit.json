@@ -21,7 +21,7 @@
       "/home/amdev/sota/minimal-shot-av/src/minimal_shot_av/simulator/trajectory_selector.py",
       "/home/amdev/sota/minimal-shot-av/src/minimal_shot_av/simulator/planner.py"
     ],
-    "sim_eval": "/home/amdev/sota/minimal-shot-av/artifacts/sota_submission_bundles/minor_eval/scenario_eval.json",
+    "sim_eval": "artifacts/sota_submission_bundles/minor_eval/scenario_eval.json",
     "submission_form": "/home/amdev/sota/minimal-shot-av/docs/sota-grand-submission-form.md"
   },
   "interpretation": "Pass means the primary Grand claim is supported by the closed-loop Spotlight Reflex runtime path and randomized scenario evidence, while WOD preference-calibrated results remain auxiliary benchmark analysis.",

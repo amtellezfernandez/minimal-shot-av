@@ -24,6 +24,7 @@ Attach:
 - Video or slide deck based on `docs/sota-grand-slide-script.md`
 - Analysis notebook: `notebooks/wod_e2e_analysis.ipynb`
 - Judging evidence audit: `artifacts/sota_judging_criteria_audit.json`
+- Final readiness audit: `artifacts/final_submission_readiness_audit.json`
 
 Short claim:
 
@@ -43,6 +44,8 @@ Evidence to mention:
   development analysis, not as proof of strict zero-shot generalisation.
 - Judging criteria audit passes for technical excellence, novelty, feasibility,
   and adherence to the brief under the declared submission-candidate boundary.
+- Final readiness audit verifies archive hashes, bundled evidence, minimal-shot
+  integrity, judging evidence, and the production no-go boundary.
 
 WOD validation numbers, if mentioned:
 

@@ -24,6 +24,7 @@ from scripts.audit_production_av_readiness import (
     DEFAULT_TRAJECTORY_REPORT,
     production_readiness_report,
 )
+from scripts.audit_final_submission_readiness import final_readiness_report
 
 
 GRAND_RUNS = (
@@ -155,6 +156,7 @@ def main() -> None:
         manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         index_path = args.artifacts_root / "SUBMISSION_INDEX.md"
         index_path.write_text(_submission_index(manifest), encoding="utf-8")
+        _write_final_readiness_audit(args.artifacts_root)
         print(f"Wrote {grand_archive}")
         print(f"Wrote {minor_archive}")
         print(f"Wrote {manifest_path}")
@@ -209,6 +211,18 @@ def _write_judging_audit(artifacts_root: Path) -> Path:
         integration_manifest=DEFAULT_INTEGRATION_MANIFEST,
     )
     production_output.write_text(json.dumps(production_report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return output
+
+
+def _write_final_readiness_audit(artifacts_root: Path) -> Path:
+    output = ROOT / "artifacts" / "final_submission_readiness_audit.json"
+    report = final_readiness_report(
+        bundle_root=artifacts_root,
+        minimal_shot_audit=ROOT / "artifacts" / "minimal_shot_claim_audit.json",
+        judging_audit=ROOT / "artifacts" / "sota_judging_criteria_audit.json",
+        production_audit=ROOT / "artifacts" / "production_av_readiness_audit.json",
+    )
+    output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return output
 
 

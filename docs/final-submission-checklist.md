@@ -44,5 +44,6 @@ These checks passed for the final submission bundle:
 
 - `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/check_code_quality.py`
 - `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/audit_sota_judging_criteria.py`
+- `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/audit_final_submission_readiness.py`
 - `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/audit_sota_submission_bundles.py --bundle-root artifacts/sota_submission_bundles`
-- `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python -m unittest tests.test_audit_wod_validation_breakthrough tests.test_run_wod_breakthrough_experiments tests.test_audit_sota_judging_criteria tests.test_run_submission_demos tests.test_audit_sota_submission_bundles tests.test_submission_claim_language`
+- `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python -m unittest tests.test_audit_wod_validation_breakthrough tests.test_run_wod_breakthrough_experiments tests.test_audit_sota_judging_criteria tests.test_run_submission_demos tests.test_audit_sota_submission_bundles tests.test_audit_final_submission_readiness tests.test_submission_claim_language tests.test_production_av_readiness`
