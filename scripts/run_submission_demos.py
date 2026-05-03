@@ -53,6 +53,7 @@ TRACK_DOCS = {
         "docs/grand-submission.md",
         "docs/two-page-writeup.md",
         "docs/final-submission-handoff.md",
+        "notebooks/wod_e2e_analysis.ipynb",
         "docs/video-outline.md",
         "docs/solution-reset.md",
         "docs/benchmark-comparison.md",

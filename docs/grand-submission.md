@@ -23,7 +23,7 @@ This submission targets the **Grand Commission**: overall best autonomy architec
 - GitHub repo: this codebase, with `README.md`, `models/DECLARATION.md`, and `docs/spotlight-reflex.md`.
 - Video or slide deck: show the Spotlight Reflex policy navigating a generated long-tail scene and explain the simulator-native selector.
 - Short write-up: use `docs/two-page-writeup.md` as the architecture draft.
-- Analysis material: use `notebooks/README.md` as the planned WOD-E2E exploration notebook outline.
+- Analysis notebook: `notebooks/wod_e2e_analysis.ipynb`.
 
 ## Demo Commands
 
@@ -76,9 +76,10 @@ Each command writes:
 ## Boundaries
 
 - This is a runnable architecture prototype, not a completed WOD-E2E leaderboard submission.
-- The WOD-E2E validation split is present locally and can be used for analysis,
-  parser smoke tests, and preference-label experiments. Train/test TFRecords
-  are not present in this workspace.
+- The WOD-E2E validation split is retained locally and can be used for analysis,
+  parser smoke tests, and preference-label experiments. The full train/test
+  download needs to be restored before making strict train-set or hidden-test
+  claims.
 - The current scene critic is procedural/context-derived, not a deployed VLM
   camera stack.
 - The strongest honest claim is infrastructure plus reproducible closed-loop

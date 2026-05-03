@@ -1,10 +1,10 @@
-# WOD-E2E Analysis Notebook Plan
+# WOD-E2E Analysis Notebook
 
-Add the WOD-E2E exploration notebook here:
+The WOD-E2E exploration notebook is:
 
 - `wod_e2e_analysis.ipynb`
 
-The notebook should show the thinking process, not just final metrics. It should be executable once WOD-E2E TFRecords are available locally or through a declared data path.
+The notebook shows the thinking process, not just final metrics. It is executable on the retained validation cache now and is structured so the same inspection pass can be rerun once the full WOD-E2E train/test shards are restored locally.
 
 ## 1. Dataset Access and Split Declaration
 

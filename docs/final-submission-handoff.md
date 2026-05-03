@@ -19,8 +19,9 @@ Minimal-Shot Autonomy Architecture: Closed-Loop Long-Tail Reflexes with WOD-E2E 
 Attach:
 
 - `artifacts/sota_submission_bundles/grand_commission.tar.gz`
-- SHA-256: `b0390a1449ac63d87836b3a3a54f078d063df13452ff1b9e63c9cf196d846b16`
+- SHA-256: see `artifacts/sota_submission_bundles/submission_bundles_manifest.json`
 - Video or slide deck based on `docs/sota-grand-slide-script.md`
+- Analysis notebook: `notebooks/wod_e2e_analysis.ipynb`
 
 Short claim:
 

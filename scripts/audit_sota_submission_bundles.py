@@ -24,6 +24,7 @@ REQUIRED_MEMBERS = {
         "grand_commission/docs/submission-tracks.md",
         "grand_commission/docs/grand-submission.md",
         "grand_commission/docs/final-submission-handoff.md",
+        "grand_commission/notebooks/wod_e2e_analysis.ipynb",
         "grand_commission/artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json",
         "grand_commission/artifacts/wod_fastkin_gate_ridge175_rate020_fallback_breakthrough_audit.json",
         "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.json",

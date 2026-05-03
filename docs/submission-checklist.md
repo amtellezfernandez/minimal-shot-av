@@ -18,7 +18,7 @@
 - `docs/wod-e2e-deliverable.md` documents the dataset contract, scenario clusters, and RFS implications.
 - `docs/wod-e2e-schema.md` documents the proto fields, submission fields, and loader/evaluator sanity checks.
 - `models/DECLARATION.md` fully lists base models, datasets, model scaffolds, and external services used.
-- `notebooks/` contains the WOD-E2E exploration and analysis notebook.
+- `notebooks/wod_e2e_analysis.ipynb` contains the WOD-E2E exploration and analysis notebook.
 - `docs/two-page-writeup.md` is condensed into the final PDF or document.
 - `docs/video-outline.md` has been turned into a 1-5 minute video or slide deck.
 - At least one failure case is documented with component-level diagnosis.
