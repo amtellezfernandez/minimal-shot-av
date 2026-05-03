@@ -49,6 +49,9 @@ WOD validation numbers, if mentioned:
 - 479 validation frames with valid rater preference labels.
 - Constant velocity official validation-CV RFS: `7.022`.
 - Combined candidate ranker official validation-CV RFS: `7.6594`.
+- Reproducibility audit: `artifacts/wod_fastkin_gate_ridge175_scene020_repro_audit.json`
+  passes against commit `a934d2740cdf831c5f7ee58f5ddae3c7de8692e8` using the
+  Cosmos external embedding cache and `scene_gate_max_rate=0.20`.
 - Gain versus constant velocity: `+0.635`.
 - Combined candidate oracle official validation-CV RFS: `9.098`.
 - Selector regret to oracle: `1.4386`.

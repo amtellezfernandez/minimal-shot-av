@@ -122,6 +122,9 @@ Current promoted validation-CV result:
 - normalized RFS: `7.987543409079993`
 - candidate oracle: `9.098014272661512`
 - selector regret: `1.4385958105730023`
+- reproducibility: exact rerun restored from commit
+  `a934d2740cdf831c5f7ee58f5ddae3c7de8692e8` with
+  `artifacts/cosmos_predict25_wan21_tokenizer_val479.json`
 
 This selector is preference-calibrated on retained validation labels under
 segment-grouped CV. It is development evidence, not strict zero-shot WOD-E2E.

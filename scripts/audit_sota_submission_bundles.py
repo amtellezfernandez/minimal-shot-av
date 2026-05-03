@@ -31,6 +31,7 @@ REQUIRED_MEMBERS = {
         "grand_commission/docs/final-submission-checklist.md",
         "grand_commission/notebooks/wod_e2e_analysis.ipynb",
         "grand_commission/artifacts/wod_fastkin_gate_ridge175_scene020_cv_official.json",
+        "grand_commission/artifacts/wod_fastkin_gate_ridge175_scene020_repro_audit.json",
         "grand_commission/artifacts/wod_fastkin_gate_ridge175_scene020_breakthrough_audit.json",
         "grand_commission/artifacts/wod_neural_holdout/neural_ensemble3_sourcegate_speedfine_p0_local.json",
         "grand_commission/artifacts/wod_neural_holdout/neural_top1_pc0_familycal_l2_010_heldout_official.json",

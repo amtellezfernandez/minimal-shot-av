@@ -157,7 +157,11 @@ subject must exceed the baseline by more than `0.01`.
   `9.098014272661512`. This is a small conservative improvement over the
   previous `7.659197835744162` promoted report:
   `artifacts/wod_fastkin_gate_ridge175_scene020_breakthrough_audit.json`
-  records a passed validation-CV improvement audit.
+  records a passed validation-CV improvement audit. Reproducibility was restored
+  by rerunning commit `a934d2740cdf831c5f7ee58f5ddae3c7de8692e8` with
+  `artifacts/cosmos_predict25_wan21_tokenizer_val479.json` and
+  `scene_gate_max_rate=0.20`; the exact-match audit is
+  `artifacts/wod_fastkin_gate_ridge175_scene020_repro_audit.json`.
 - Current lightweight world-model ablation:
   `artifacts/world_sweeps/wod_cv_479_world_ego_l8_m0_official.json` records
   segment-grouped 5-fold official-RFS validation CV after adding an ego-temporal

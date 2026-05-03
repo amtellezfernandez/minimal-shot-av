@@ -1,0 +1,281 @@
+{
+  "cache_fingerprints": [
+    {
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/cosmos_predict25_wan21_tokenizer_val479.json",
+      "present": true,
+      "sha256": "9d03bdc67c82a3cc6dc42f23197380153d8ee360d756b45c6187841302e93a96",
+      "size_bytes": 839284
+    },
+    {
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/wod_preference_frames_val479.json",
+      "present": true,
+      "sha256": "3dacf16cca9b0d3218be02e439c6afdd933510c7c30a1069b443f8d721c3a5d6",
+      "size_bytes": 4287789
+    }
+  ],
+  "failures": [],
+  "interpretation": "This audit checks the promoted WOD validation-CV report against the recovered Git history provenance path. A mismatch means the stored report should be treated as historical development evidence until the exact code, command, and input-cache path are restored.",
+  "largest_slice_selected_rfs_deltas": [
+    {
+      "delta_selected_rfs": 0.0,
+      "frames": 427,
+      "rerun_selected_rfs": 7.806147902090974,
+      "rerun_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.3231850117096019,
+        "learned": 0.0117096018735363,
+        "memory": 0.0,
+        "scene": 0.04918032786885246,
+        "temporal": 0.6159250585480094,
+        "world": 0.0
+      },
+      "slice": "intent:1",
+      "stored_selected_rfs": 7.806147902090974,
+      "stored_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.3231850117096019,
+        "learned": 0.0117096018735363,
+        "memory": 0.0,
+        "scene": 0.04918032786885246,
+        "temporal": 0.6159250585480094,
+        "world": 0.0
+      }
+    },
+    {
+      "delta_selected_rfs": 0.0,
+      "frames": 23,
+      "rerun_selected_rfs": 6.892970739668866,
+      "rerun_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.7391304347826086,
+        "learned": 0.0,
+        "memory": 0.0,
+        "scene": 0.2608695652173913,
+        "temporal": 0.0,
+        "world": 0.0
+      },
+      "slice": "intent:2",
+      "stored_selected_rfs": 6.892970739668866,
+      "stored_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.7391304347826086,
+        "learned": 0.0,
+        "memory": 0.0,
+        "scene": 0.2608695652173913,
+        "temporal": 0.0,
+        "world": 0.0
+      }
+    },
+    {
+      "delta_selected_rfs": 0.0,
+      "frames": 29,
+      "rerun_selected_rfs": 6.106826280522993,
+      "rerun_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.4827586206896552,
+        "learned": 0.1724137931034483,
+        "memory": 0.0,
+        "scene": 0.2413793103448276,
+        "temporal": 0.10344827586206896,
+        "world": 0.0
+      },
+      "slice": "intent:3",
+      "stored_selected_rfs": 6.106826280522993,
+      "stored_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.4827586206896552,
+        "learned": 0.1724137931034483,
+        "memory": 0.0,
+        "scene": 0.2413793103448276,
+        "temporal": 0.10344827586206896,
+        "world": 0.0
+      }
+    },
+    {
+      "delta_selected_rfs": 0.0,
+      "frames": 44,
+      "rerun_selected_rfs": 7.8456193093643085,
+      "rerun_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.045454545454545456,
+        "learned": 0.0,
+        "memory": 0.0,
+        "scene": 0.11363636363636363,
+        "temporal": 0.8409090909090909,
+        "world": 0.0
+      },
+      "slice": "speed:fast",
+      "stored_selected_rfs": 7.8456193093643085,
+      "stored_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.045454545454545456,
+        "learned": 0.0,
+        "memory": 0.0,
+        "scene": 0.11363636363636363,
+        "temporal": 0.8409090909090909,
+        "world": 0.0
+      }
+    },
+    {
+      "delta_selected_rfs": 0.0,
+      "frames": 133,
+      "rerun_selected_rfs": 7.231140904969775,
+      "rerun_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.022556390977443608,
+        "learned": 0.06766917293233082,
+        "memory": 0.0,
+        "scene": 0.13533834586466165,
+        "temporal": 0.7744360902255639,
+        "world": 0.0
+      },
+      "slice": "speed:slow",
+      "stored_selected_rfs": 7.231140904969775,
+      "stored_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.022556390977443608,
+        "learned": 0.06766917293233082,
+        "memory": 0.0,
+        "scene": 0.13533834586466165,
+        "temporal": 0.7744360902255639,
+        "world": 0.0
+      }
+    },
+    {
+      "delta_selected_rfs": 0.0,
+      "frames": 166,
+      "rerun_selected_rfs": 7.651871165311118,
+      "rerun_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.9879518072289156,
+        "learned": 0.0,
+        "memory": 0.0,
+        "scene": 0.012048192771084338,
+        "temporal": 0.0,
+        "world": 0.0
+      },
+      "slice": "speed:stopped_or_creep",
+      "stored_selected_rfs": 7.651871165311118,
+      "stored_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.9879518072289156,
+        "learned": 0.0,
+        "memory": 0.0,
+        "scene": 0.012048192771084338,
+        "temporal": 0.0,
+        "world": 0.0
+      }
+    },
+    {
+      "delta_selected_rfs": 0.0,
+      "frames": 136,
+      "rerun_selected_rfs": 8.027219411218688,
+      "rerun_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.0,
+        "learned": 0.007352941176470588,
+        "memory": 0.0,
+        "scene": 0.0661764705882353,
+        "temporal": 0.9264705882352942,
+        "world": 0.0
+      },
+      "slice": "speed:urban",
+      "stored_selected_rfs": 8.027219411218688,
+      "stored_source_rates": {
+        "anchor": 0.0,
+        "kinematic": 0.0,
+        "learned": 0.007352941176470588,
+        "memory": 0.0,
+        "scene": 0.0661764705882353,
+        "temporal": 0.9264705882352942,
+        "world": 0.0
+      }
+    }
+  ],
+  "metric_tolerance": 1e-09,
+  "metrics": {
+    "combined_oracle_mean_rfs": {
+      "delta": 0.0,
+      "rerun": 9.098014272661512,
+      "stored": 9.098014272661512
+    },
+    "combined_ranker_mean_normalized_rfs": {
+      "delta": 0.0,
+      "rerun": 7.987543409079993,
+      "stored": 7.987543409079993
+    },
+    "combined_ranker_mean_rfs": {
+      "delta": 0.0,
+      "rerun": 7.65941846208851,
+      "stored": 7.65941846208851
+    },
+    "combined_ranker_regret_to_oracle": {
+      "delta": 0.0,
+      "rerun": 1.4385958105730023,
+      "stored": 1.4385958105730023
+    },
+    "scene_gate_mean_gain": {
+      "delta": 0.0,
+      "rerun": 1.361557606358948,
+      "stored": 1.361557606358948
+    },
+    "scene_gate_precision": {
+      "delta": 0.0,
+      "rerun": 0.5638897173343937,
+      "stored": 0.5638897173343937
+    },
+    "scene_gate_selected_rate": {
+      "delta": 0.0,
+      "rerun": 0.0709812108559499,
+      "stored": 0.0709812108559499
+    },
+    "source_gate_mean_gain": {
+      "delta": 0.0,
+      "rerun": 0.9698838671372291,
+      "stored": 0.9698838671372291
+    },
+    "source_gate_precision": {
+      "delta": 0.0,
+      "rerun": 0.20250521920668058,
+      "stored": 0.20250521920668058
+    },
+    "source_gate_selected_rate": {
+      "delta": 0.0,
+      "rerun": 0.0041753653444676405,
+      "stored": 0.0041753653444676405
+    }
+  },
+  "passed": true,
+  "provenance_command": "evaluate_wod_trajectory_model_cv.py --rfs-backend official --selector-model linear --selector-features contextual --selector-target frame_delta --selector-ridge 175 --ridge 30 --residual-modes 3 --residual-grouping off --kinematic-profile base --selector-kinematic-fallback train_margin --selector-fallback-router speed --selector-fallback-source-options 'kinematic;kinematic,temporal' --aux-feature-set temporal_summary --source-gate train_margin --source-gate-sources kinematic --source-gate-router speed --source-gate-max-rate 0.20 --source-gate-route-allowlist speed:fast --scene-gate train_margin --scene-gate-router speed --scene-gate-max-rate 0.20 --scene-aux-feature-set external_embeddings --external-embedding-cache artifacts/cosmos_predict25_wan21_tokenizer_val479.json",
+  "provenance_commit": "a934d2740cdf831c5f7ee58f5ddae3c7de8692e8",
+  "rerun_report": "/tmp/wod_repro_a934_cosmos_scene020.json",
+  "schema": "wod_reproducibility_audit_v1",
+  "source_rate_deltas": {
+    "selected_kinematic_rate": {
+      "delta": 0.0,
+      "rerun": 0.35281837160751567,
+      "stored": 0.35281837160751567
+    },
+    "selected_learned_rate": {
+      "delta": 0.0,
+      "rerun": 0.020876826722338204,
+      "stored": 0.020876826722338204
+    },
+    "selected_memory_rate": {
+      "delta": 0.0,
+      "rerun": 0.0,
+      "stored": 0.0
+    },
+    "selected_scene_rate": {
+      "delta": 0.0,
+      "rerun": 0.0709812108559499,
+      "stored": 0.0709812108559499
+    },
+    "selected_temporal_rate": {
+      "delta": 0.0,
+      "rerun": 0.5553235908141962,
+      "stored": 0.5553235908141962
+    }
+  },
+  "stored_report": "/home/amdev/sota/minimal-shot-av/artifacts/wod_fastkin_gate_ridge175_scene020_cv_official.json"
+}
