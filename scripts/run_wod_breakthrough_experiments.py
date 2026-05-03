@@ -22,6 +22,11 @@ def main() -> int:
     parser.add_argument("--frame-cache", type=Path, default=DEFAULT_FRAME_CACHE)
     parser.add_argument("--external-embedding-cache", type=Path, default=DEFAULT_EXTERNAL_CACHE)
     parser.add_argument("--neural-candidate-model", type=Path)
+    parser.add_argument(
+        "--neural-candidate-models",
+        default="",
+        help="Optional comma-separated neural proposal model JSONs for ensemble candidate runs.",
+    )
     parser.add_argument("--transformer-candidate-model", type=Path)
     parser.add_argument("--promotion-baseline", type=Path, default=DEFAULT_PROMOTION_BASELINE)
     parser.add_argument("--min-rfs-gain", type=float, default=0.0)
@@ -414,6 +419,31 @@ def _experiment_matrix(args: argparse.Namespace) -> list[dict[str, Any]]:
                 },
             ]
         )
+    neural_ensemble_paths = _existing_paths_from_csv(args.neural_candidate_models)
+    if neural_ensemble_paths:
+        base_runs.append(
+            {
+                "name": "neural_ensemble_sourcegate_speedfine_deny_residuals",
+                "selector_model": "pairwise_logistic",
+                "selector_features": "family_reliability_contextual",
+                "selector_target": "frame_delta",
+                "pairwise_iterations": "900",
+                "pairwise_lr": "0.12",
+                "pairwise_l2": "0.002",
+                "pairwise_max_pairs_per_frame": "160",
+                "selector_family_calibration": "speed_source_family",
+                "selector_family_calibration_min_count": "4",
+                "neural_candidate_models": ",".join(str(path) for path in neural_ensemble_paths),
+                "neural_top_k": "1",
+                "neural_residual_modes_per_anchor": "0",
+                "source_gate": "independent_train_margin",
+                "source_gate_sources": "learned",
+                "source_gate_router": "speed_fine",
+                "source_gate_max_rate": "0.35",
+                "source_gate_min_precision": "0.0",
+                "source_gate_deny_prefixes": "ridge_residual_pc2,ridge_residual_pc4,ridge_residual_pc5",
+            }
+        )
     if getattr(args, "transformer_candidate_model", None) and args.transformer_candidate_model.is_file():
         base_runs.extend(
             [
@@ -494,6 +524,8 @@ def _command_for_run(run: dict[str, Any], output: Path, args: argparse.Namespace
         command.extend(["--selector-source-policy", str(run["selector_source_policy"])])
     if run.get("selector_source_calibration"):
         command.extend(["--selector-source-calibration", str(run["selector_source_calibration"])])
+    if run.get("selector_source_calibration_scale"):
+        command.extend(["--selector-source-calibration-scale", str(run["selector_source_calibration_scale"])])
     if run.get("selector_family_calibration"):
         command.extend(["--selector-family-calibration", str(run["selector_family_calibration"])])
     if run.get("selector_family_calibration_min_count"):
@@ -553,6 +585,15 @@ def _command_for_run(run: dict[str, Any], output: Path, args: argparse.Namespace
                 str(run.get("neural_residual_modes_per_anchor", "0")),
             ]
         )
+    if run.get("neural_candidate_models"):
+        command.extend(["--neural-candidate-models", str(run["neural_candidate_models"])])
+        command.extend(["--neural-top-k", str(run.get("neural_top_k", "8"))])
+        command.extend(
+            [
+                "--neural-residual-modes-per-anchor",
+                str(run.get("neural_residual_modes_per_anchor", "0")),
+            ]
+        )
     if run.get("transformer_candidate_model"):
         command.extend(["--transformer-candidate-model", str(run["transformer_candidate_model"])])
         command.extend(["--transformer-top-k", str(run.get("transformer_top_k", "12"))])
@@ -571,6 +612,20 @@ def _run_command(command: list[str], *, continue_on_error: bool) -> int:
         payload = {"phase": "run_failed", "returncode": completed.returncode, "command": command}
         print(json.dumps(payload), file=sys.stderr)
     return int(completed.returncode)
+
+
+def _existing_paths_from_csv(value: str) -> list[Path]:
+    paths = []
+    for raw in value.split(","):
+        text = raw.strip()
+        if not text:
+            continue
+        path = Path(text)
+        if not path.is_absolute():
+            path = ROOT / path
+        if path.is_file():
+            paths.append(path)
+    return paths
 
 
 def _metrics(path: Path) -> dict[str, Any]:

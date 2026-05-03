@@ -1258,6 +1258,39 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
 
         self.assertEqual("constant_velocity", selected["candidate_name"])
 
+    def test_source_calibration_scale_shrinks_offsets(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        frame = sample_frame("segment-source-scale-100", step=1.0)
+        rows = []
+        for index, (name, source, score) in enumerate(
+            [
+                ("constant_velocity", "kinematic", 9.0),
+                ("temporal_ridge_mean", "temporal", 1.0),
+            ]
+        ):
+            row = cv.candidate_ranker_row(
+                frame=frame,
+                trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                candidate_name=name,
+                candidate_index=index,
+                source=source,
+            )
+            row["source"] = source
+            row["rfs_score"] = score
+            rows.append(row)
+
+        full = cv._fit_source_calibration(rows, mode="speed")
+        shrunk = cv._fit_source_calibration(rows, mode="speed", scale=0.25)
+        route = cv._fallback_router_key(rows[0], "speed")
+
+        self.assertAlmostEqual(shrunk[route]["kinematic"], full[route]["kinematic"] * 0.25)
+        self.assertAlmostEqual(shrunk[route]["temporal"], full[route]["temporal"] * 0.25)
+
+        with self.assertRaisesRegex(ValueError, "non-negative"):
+            cv._fit_source_calibration(rows, mode="speed", scale=-0.1)
+
     def test_source_policy_selects_oracle_source_before_candidate(self) -> None:
         if cv is None:
             self.skipTest("numpy is not installed")

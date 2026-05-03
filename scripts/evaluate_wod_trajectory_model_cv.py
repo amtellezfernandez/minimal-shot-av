@@ -207,6 +207,12 @@ def main() -> int:
         help="Add train-fold source reliability offsets to selector scores by group.",
     )
     parser.add_argument(
+        "--selector-source-calibration-scale",
+        type=float,
+        default=1.0,
+        help="Multiply train-fold source calibration offsets before applying them.",
+    )
+    parser.add_argument(
         "--selector-source-policy",
         choices=("off", "oracle_source", "source_score_speed", "source_score_intent_speed"),
         default="off",
@@ -579,6 +585,7 @@ def main() -> int:
         selector_source_guard=args.selector_source_guard,
         selector_source_guard_margin=args.selector_source_guard_margin,
         selector_source_calibration=args.selector_source_calibration,
+        selector_source_calibration_scale=args.selector_source_calibration_scale,
         selector_source_policy=args.selector_source_policy,
         zero_shot_geometry_filter=args.zero_shot_geometry_filter,
         selector_family_calibration=args.selector_family_calibration,
@@ -798,6 +805,7 @@ def cross_validate_trajectory_model(
     selector_source_guard: str = "off",
     selector_source_guard_margin: float = 0.0,
     selector_source_calibration: str = "off",
+    selector_source_calibration_scale: float = 1.0,
     selector_source_policy: str = "off",
     zero_shot_geometry_filter: str = "off",
     selector_family_calibration: str = "off",
@@ -1061,6 +1069,7 @@ def cross_validate_trajectory_model(
         source_calibration = _fit_source_calibration(
             selector_train_rows,
             mode=selector_source_calibration,
+            scale=selector_source_calibration_scale,
         )
         source_policy = _fit_source_policy(selector_train_rows, mode=selector_source_policy)
         family_calibration = _fit_family_calibration(
@@ -1287,6 +1296,7 @@ def cross_validate_trajectory_model(
         "selector_source_guard": selector_source_guard,
         "selector_source_guard_margin": float(selector_source_guard_margin),
         "selector_source_calibration": selector_source_calibration,
+        "selector_source_calibration_scale": float(selector_source_calibration_scale),
         "selector_source_policy": selector_source_policy,
         "zero_shot_geometry_filter": zero_shot_geometry_filter,
         "zero_shot_geometry_filtered_rate": _weighted_mean(fold_reports, "zero_shot_geometry_filtered_rate"),
@@ -2998,11 +3008,14 @@ def _fit_source_calibration(
     rows: list[dict[str, object]],
     *,
     mode: str,
+    scale: float = 1.0,
 ) -> dict[str, dict[str, float]] | None:
     if mode == "off":
         return None
     if mode not in {"intent", "speed", "intent_speed"}:
         raise ValueError(f"unsupported selector source calibration: {mode}")
+    if scale < 0.0:
+        raise ValueError("--selector-source-calibration-scale must be non-negative")
     best_by_frame_source: dict[tuple[str, str, str], float] = {}
     for row in rows:
         key = (_fallback_router_key(row, mode), str(row["frame_name"]), str(row["source"]))
@@ -3017,7 +3030,7 @@ def _fit_source_calibration(
     for group, source_means in means_by_group.items():
         center = _mean(list(source_means.values()))
         calibration[group] = {
-            source: float(source_mean - center)
+            source: float((source_mean - center) * scale)
             for source, source_mean in source_means.items()
         }
     return calibration

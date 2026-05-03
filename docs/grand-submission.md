@@ -75,7 +75,13 @@ Each command writes:
 - The policy outputs 20-point, 5-second maneuver trajectories internally.
 - Candidate selection uses simulator-native trajectory selector geometry at 3s and 5s.
 - The policy is deterministic and reproducible by seed.
-- The current implementation uses no learned AV-specific model and no WOD-E2E fine-tuning.
+- The primary simulator submission uses no learned AV-specific model and no
+  WOD-E2E fine-tuning.
+- Optional model-side WOD analysis now includes a neural anchor-residual
+  proposal ensemble. Its strongest official validation-CV result is
+  `7.737680847131364` RFS with `9.178972912996967` oracle RFS. This improves
+  the non-neural champion, but it is not a strict zero-shot claim and it does
+  not beat the `8.0461` leaderboard snapshot target.
 - WOD validation-CV evidence is declared as auxiliary development analysis, not
   proof of strict zero-shot WOD-E2E generalisation.
 - The built-in tests cover selector geometry, maneuver generation, selection behavior, CLI artifacts, and deterministic simulator seeds.
