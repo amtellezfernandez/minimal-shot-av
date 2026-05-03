@@ -114,6 +114,7 @@ NEUTRAL_SCRIPTS = {
     "check_cuda_preflight.py",
     "check_code_quality.py",
     "audit_hardware_vehicle_validation.py",
+    "audit_sota_judging_criteria.py",
     "audit_production_av_readiness.py",
     "import_alpasim_metrics.py",
     "produce_alpasim_comparable_reports.py",

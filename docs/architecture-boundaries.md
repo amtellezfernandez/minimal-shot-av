@@ -23,6 +23,10 @@ Physical package ownership:
   ranking, resampling, and model-side evaluation code.
 - `minimal_shot_av.neutral`: evidence utilities that are allowed to be imported
   by both deliverables, but cannot import either deliverable.
+- Judging and submission audits that read both model and simulator artifacts,
+  such as `scripts/audit_sota_judging_criteria.py`, are neutral scripts. They
+  may aggregate evidence, but must not import model or simulator implementation
+  packages.
 
 Module ownership:
 

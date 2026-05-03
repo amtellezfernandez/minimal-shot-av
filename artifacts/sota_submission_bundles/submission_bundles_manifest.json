@@ -1,6 +1,6 @@
 {
   "grand_commission": {
-    "file_count": 22,
+    "file_count": 24,
     "members": [
       "grand_commission/README.md",
       "grand_commission/repo_README.md",
@@ -9,6 +9,7 @@
       "grand_commission/docs/sota-grand-slide-script.md",
       "grand_commission/docs/submission-tracks.md",
       "grand_commission/docs/grand-submission.md",
+      "grand_commission/docs/judging-criteria-evidence.md",
       "grand_commission/docs/two-page-writeup.md",
       "grand_commission/docs/final-submission-handoff.md",
       "grand_commission/notebooks/wod_e2e_analysis.ipynb",
@@ -18,6 +19,7 @@
       "grand_commission/docs/waymo-data-access.md",
       "grand_commission/artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json",
       "grand_commission/artifacts/wod_fastkin_gate_ridge175_rate020_fallback_breakthrough_audit.json",
+      "grand_commission/artifacts/sota_judging_criteria_audit.json",
       "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.json",
       "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.svg",
       "grand_commission/artifacts/grand_intersection_stress_seed3/latest_rollout.json",
@@ -26,8 +28,8 @@
       "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.svg"
     ],
     "path": "artifacts/sota_submission_bundles/grand_commission.tar.gz",
-    "sha256": "ffa97eb55d1e963d1a44b3596bb12bf4032260410b118532dc32aebfef51da58",
-    "size_bytes": 171994
+    "sha256": "70565e6e13c08777cb72ddcc03560b01d5e8a82dc9eed7ba03f364c85ace134b",
+    "size_bytes": 174432
   },
   "minor_commission": {
     "file_count": 18,
@@ -52,7 +54,7 @@
       "minor_commission/artifacts/minor_eval/scenario_eval.json"
     ],
     "path": "artifacts/sota_submission_bundles/minor_commission.tar.gz",
-    "sha256": "3373f985db9e50c2f90c378db8225a62bd0363cb3347292f0e3bfb77a6660a9c",
-    "size_bytes": 92747
+    "sha256": "41c33d7667468f4732ee626fe5f1f5fcbd0179dd94ff2aa9054dae42bd247943",
+    "size_bytes": 92818
   }
 }

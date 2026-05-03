@@ -22,6 +22,7 @@ Attach:
 - SHA-256: see `artifacts/sota_submission_bundles/submission_bundles_manifest.json`
 - Video or slide deck based on `docs/sota-grand-slide-script.md`
 - Analysis notebook: `notebooks/wod_e2e_analysis.ipynb`
+- Judging evidence audit: `artifacts/sota_judging_criteria_audit.json`
 
 Short claim:
 
@@ -34,6 +35,8 @@ Evidence to mention:
 - Baseline Spotlight failure comparison.
 - WOD-E2E official-format parsing, scoring, packaging, and readiness audits.
 - Official-RFS validation-CV candidate evidence is included in the bundle.
+- Judging criteria audit passes for technical excellence, novelty, feasibility,
+  and adherence to the brief under the declared submission-candidate boundary.
 
 WOD validation numbers:
 

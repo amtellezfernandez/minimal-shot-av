@@ -24,6 +24,8 @@ This submission targets the **Grand Commission**: overall best autonomy architec
 - Video or slide deck: show the Spotlight Reflex policy navigating a generated long-tail scene and explain the simulator-native selector.
 - Short write-up: use `docs/two-page-writeup.md` as the architecture draft.
 - Analysis notebook: `notebooks/wod_e2e_analysis.ipynb`.
+- Judging evidence map: `docs/judging-criteria-evidence.md` and
+  `artifacts/sota_judging_criteria_audit.json`.
 
 ## Demo Commands
 
@@ -69,6 +71,8 @@ Each command writes:
 - The policy is deterministic and reproducible by seed.
 - The current implementation uses no learned AV-specific model and no WOD-E2E fine-tuning.
 - The built-in tests cover selector geometry, maneuver generation, selection behavior, CLI artifacts, and deterministic simulator seeds.
+- The judging-criteria audit maps the submission to technical excellence,
+  novelty, feasibility, and adherence to the brief.
 - The current model-side world-model experiment should be presented as a
   negative/early result: it adds oracle headroom, but the selector cannot yet
   exploit it reliably.

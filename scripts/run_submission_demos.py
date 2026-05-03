@@ -11,6 +11,10 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.audit_sota_judging_criteria import build_report
 
 
 GRAND_RUNS = (
@@ -51,6 +55,7 @@ TRACK_DOCS = {
         "docs/sota-grand-slide-script.md",
         "docs/submission-tracks.md",
         "docs/grand-submission.md",
+        "docs/judging-criteria-evidence.md",
         "docs/two-page-writeup.md",
         "docs/final-submission-handoff.md",
         "notebooks/wod_e2e_analysis.ipynb",
@@ -76,6 +81,7 @@ TRACK_EVIDENCE = {
     "grand_commission": [
         "artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json",
         "artifacts/wod_fastkin_gate_ridge175_rate020_fallback_breakthrough_audit.json",
+        "artifacts/sota_judging_criteria_audit.json",
     ],
     "minor_commission": [],
 }
@@ -96,6 +102,7 @@ def main() -> None:
     if not args.skip_runs:
         _run_demos(args.artifacts_root, GRAND_RUNS + MINOR_RUNS)
         _run_minor_evaluation(args.artifacts_root / "minor_eval")
+    _write_judging_audit(args.artifacts_root)
     grand_readme = _write_track_readme(
         args.artifacts_root,
         track="grand_commission",
@@ -157,6 +164,14 @@ def _run_minor_evaluation(output_dir: Path) -> None:
         str(output_dir),
     ]
     subprocess.run(command, cwd=ROOT, check=True)
+
+
+def _write_judging_audit(artifacts_root: Path) -> Path:
+    output = ROOT / "artifacts" / "sota_judging_criteria_audit.json"
+    report = build_report(sim_eval=artifacts_root / "minor_eval" / "scenario_eval.json")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return output
 
 
 def _write_track_readme(
