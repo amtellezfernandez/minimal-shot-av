@@ -1,6 +1,6 @@
 {
   "grand_commission": {
-    "file_count": 37,
+    "file_count": 38,
     "members": [
       "grand_commission/README.md",
       "grand_commission/repo_README.md",
@@ -33,6 +33,7 @@
       "grand_commission/benchmarks/current/wod_monolithic_runtime_reference.json",
       "grand_commission/artifacts/minimal_shot_claim_audit.json",
       "grand_commission/artifacts/sota_judging_criteria_audit.json",
+      "grand_commission/artifacts/production_av_readiness_audit.json",
       "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.json",
       "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.svg",
       "grand_commission/artifacts/grand_intersection_stress_seed3/latest_rollout.json",
@@ -41,8 +42,8 @@
       "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.svg"
     ],
     "path": "artifacts/sota_submission_bundles/grand_commission.tar.gz",
-    "sha256": "4a50bbe5a96d1710afb55610af686fa539ffdd70c426ce36c1d1873450a29e51",
-    "size_bytes": 246036
+    "sha256": "a66311d7a6b9e99d6a928da9e06f96ba268414fbe4b98a4e6030351b01379b7b",
+    "size_bytes": 248175
   },
   "minor_commission": {
     "file_count": 18,
@@ -67,7 +68,7 @@
       "minor_commission/artifacts/minor_eval/scenario_eval.json"
     ],
     "path": "artifacts/sota_submission_bundles/minor_commission.tar.gz",
-    "sha256": "d7031699356a930e1350576439d31198c80f2cbabac49b2cd5339757e4afddfb",
-    "size_bytes": 93144
+    "sha256": "8a27db53abeb6d78b29618ff3ddeb4e1c4562979cbc616a182d718be41b3c9e6",
+    "size_bytes": 93143
   }
 }

@@ -42,6 +42,7 @@ REQUIRED_MEMBERS = {
         "grand_commission/benchmarks/current/wod_monolithic_runtime_reference.json",
         "grand_commission/artifacts/minimal_shot_claim_audit.json",
         "grand_commission/artifacts/sota_judging_criteria_audit.json",
+        "grand_commission/artifacts/production_av_readiness_audit.json",
         "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.json",
         "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.svg",
         "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.json",

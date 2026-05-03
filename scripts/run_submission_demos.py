@@ -16,6 +16,14 @@ if str(ROOT) not in sys.path:
 
 from scripts.audit_sota_judging_criteria import build_report
 from scripts.audit_minimal_shot_claim import build_report as build_minimal_shot_report
+from scripts.audit_production_av_readiness import (
+    DEFAULT_CLOSED_LOOP_EVIDENCE,
+    DEFAULT_INTEGRATION_MANIFEST,
+    DEFAULT_LEADERBOARD_RESULTS,
+    DEFAULT_SAFETY_CASE,
+    DEFAULT_TRAJECTORY_REPORT,
+    production_readiness_report,
+)
 
 
 GRAND_RUNS = (
@@ -96,6 +104,7 @@ TRACK_EVIDENCE = {
         "benchmarks/current/wod_monolithic_runtime_reference.json",
         "artifacts/minimal_shot_claim_audit.json",
         "artifacts/sota_judging_criteria_audit.json",
+        "artifacts/production_av_readiness_audit.json",
     ],
     "minor_commission": [],
 }
@@ -191,6 +200,15 @@ def _write_judging_audit(artifacts_root: Path) -> Path:
     report = build_report(sim_eval=artifacts_root / "minor_eval" / "scenario_eval.json")
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    production_output = ROOT / "artifacts" / "production_av_readiness_audit.json"
+    production_report = production_readiness_report(
+        trajectory_report=DEFAULT_TRAJECTORY_REPORT,
+        leaderboard_results=DEFAULT_LEADERBOARD_RESULTS,
+        closed_loop_evidence=DEFAULT_CLOSED_LOOP_EVIDENCE,
+        safety_case=DEFAULT_SAFETY_CASE,
+        integration_manifest=DEFAULT_INTEGRATION_MANIFEST,
+    )
+    production_output.write_text(json.dumps(production_report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return output
 
 

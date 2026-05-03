@@ -1,0 +1,311 @@
+{
+  "blockers": [
+    "selected normalized RFS is 8.087, below the production audit threshold",
+    "selected/oracle capture ratio is 0.848, so routing remains far from candidate oracle",
+    "missing confirmed hidden-test leaderboard evidence at /home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_leaderboard_results.json",
+    "closed-loop evidence is missing or below threshold (insufficient_evidence_level_sample_size)",
+    "safety case sections are present, but public-road approval is false",
+    "no validated production AV stack claim is present"
+  ],
+  "claim": "production_av_stack_readiness",
+  "deployment_authorization": {
+    "blocking_reasons": [
+      "selected normalized RFS is 8.087, below the production audit threshold",
+      "selected/oracle capture ratio is 0.848, so routing remains far from candidate oracle",
+      "missing confirmed hidden-test leaderboard evidence at /home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_leaderboard_results.json",
+      "closed-loop evidence is missing or below threshold (insufficient_evidence_level_sample_size)",
+      "safety case sections are present, but public-road approval is false",
+      "no validated production AV stack claim is present"
+    ],
+    "decision": "no_go",
+    "failed_gates": [
+      "closed_loop_driving_validation",
+      "generalization_beyond_local_frame_cache",
+      "production_av_stack",
+      "safety_case",
+      "score_near_normalized_ceiling",
+      "score_near_oracle"
+    ],
+    "human_subject_or_bystander_risk_authorized": false,
+    "mandatory_controls": [
+      "do_not_connect_model_output_to_steering_throttle_or_brake",
+      "simulation_and_offline_analysis_only",
+      "require_independent_safety_case_before_vehicle_tests",
+      "require_validated_perception_prediction_planning_control_manifest",
+      "require_hidden_test_or_blind_generalization_evidence"
+    ],
+    "passed_gate_count": 1,
+    "public_road_deployment_authorized": false,
+    "real_vehicle_control_authorized": false,
+    "required_gate_count": 7
+  },
+  "disposition": "research_harness_only",
+  "evidence": {
+    "closed_loop": {
+      "claim_type": "simulation_evidence_package_not_legal_certification",
+      "closed_loop_threshold_met": false,
+      "evidence_profile": "sotif-v0",
+      "evidence_status": "insufficient_evidence_level_sample_size",
+      "official_level_evidence": [
+        {
+          "collision_upper_bound": 0.071348,
+          "level": 0,
+          "minimum_ranked_runs": 381,
+          "missing_ranked_runs": 331,
+          "name": "sanity",
+          "quality_thresholds_met": true,
+          "ranked_runs": 50,
+          "safety_score": 10.0,
+          "sample_size_valid": false,
+          "success_lower_bound": 0.928652,
+          "worst_safety_score": 10.0
+        },
+        {
+          "collision_upper_bound": 0.006936,
+          "level": 1,
+          "minimum_ranked_runs": 381,
+          "missing_ranked_runs": 0,
+          "name": "wod_aligned",
+          "quality_thresholds_met": true,
+          "ranked_runs": 550,
+          "safety_score": 9.295944,
+          "sample_size_valid": true,
+          "success_lower_bound": 0.993064,
+          "worst_safety_score": 5.066
+        },
+        {
+          "collision_upper_bound": 0.071348,
+          "level": 2,
+          "minimum_ranked_runs": 381,
+          "missing_ranked_runs": 331,
+          "name": "compositional",
+          "quality_thresholds_met": true,
+          "ranked_runs": 50,
+          "safety_score": 9.46152,
+          "sample_size_valid": false,
+          "success_lower_bound": 0.928652,
+          "worst_safety_score": 5.654
+        },
+        {
+          "collision_upper_bound": 0.071348,
+          "level": 3,
+          "minimum_ranked_runs": 381,
+          "missing_ranked_runs": 331,
+          "name": "adversarial",
+          "quality_thresholds_met": true,
+          "ranked_runs": 50,
+          "safety_score": 9.03442,
+          "sample_size_valid": false,
+          "success_lower_bound": 0.928652,
+          "worst_safety_score": 5.883
+        }
+      ],
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/compass_evidence_report.json",
+      "present": true,
+      "profile_allowed_for_production_gate": true,
+      "schema": "compass_sotif_evidence_package_v0",
+      "total_missing_ranked_runs": 993
+    },
+    "integration": {
+      "closed_loop_interface": "validated",
+      "component_status": {
+        "control": true,
+        "perception": true,
+        "planning": true,
+        "prediction": true,
+        "safety_monitor": true
+      },
+      "fault_injection": "validated",
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/av_stack_integration_manifest.json",
+      "present": true,
+      "production_stack_claim_valid": false,
+      "real_time_budget": "validated",
+      "robust_integration_valid": true,
+      "schema": "av_stack_integration_manifest_v1"
+    },
+    "leaderboard": {
+      "confirmed_hidden_test_count": 0,
+      "hidden_test_confirmed": false,
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_leaderboard_results.json",
+      "present": false,
+      "schema": null
+    },
+    "safety_case": {
+      "missing_sections": [],
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/safety_case.json",
+      "present": true,
+      "present_sections": [
+        "fallback_and_minimal_risk_condition",
+        "hazard_analysis",
+        "operational_design_domain",
+        "residual_risk_acceptance",
+        "verification_validation"
+      ],
+      "required_sections": [
+        "fallback_and_minimal_risk_condition",
+        "hazard_analysis",
+        "operational_design_domain",
+        "residual_risk_acceptance",
+        "verification_validation"
+      ],
+      "safety_case_valid": false,
+      "schema": "av_safety_case_v1"
+    }
+  },
+  "gates": {
+    "closed_loop_driving_validation": false,
+    "generalization_beyond_local_frame_cache": false,
+    "production_av_stack": false,
+    "robust_perception_planning_control_integration": true,
+    "safety_case": false,
+    "score_near_normalized_ceiling": false,
+    "score_near_oracle": false
+  },
+  "next_actions": [
+    {
+      "action": "improve WOD selector/routing until normalized CV score reaches threshold",
+      "current": 8.08725083467559,
+      "gap_to_target": 0.91274916532441,
+      "gate": "score_near_normalized_ceiling",
+      "label_metric_profile": {
+        "benchmark_type": "segment_grouped_cross_validation",
+        "cautions": [
+          "segment-grouped local CV is development evidence, not hidden-test generalization",
+          "no confirmed hidden-test labels or leaderboard result are attached",
+          "candidate oracle is much stronger than selected policy, so routing labels remain weak"
+        ],
+        "frames": 479,
+        "hidden_test_confirmed": false,
+        "local_cv_only": true,
+        "oracle_normalized_gap": 1.4408532563331455
+      },
+      "target": 9.0
+    },
+    {
+      "action": "reduce candidate-selection regret and improve oracle capture",
+      "current": 0.848253960334337,
+      "gap": 0.10174603966566298,
+      "gate": "score_near_oracle",
+      "normalized_oracle_capture_ratio": 0.8487785982845405,
+      "rfs_gap_to_oracle": 1.3874136127654033,
+      "target": 0.95
+    },
+    {
+      "action": "run conservative SOTIF evidence profile with enough ranked runs and no threshold failures",
+      "evidence_profile": "sotif-v0",
+      "evidence_status": "insufficient_evidence_level_sample_size",
+      "gate": "closed_loop_driving_validation",
+      "levels": [
+        {
+          "collision_upper_bound": 0.071348,
+          "level": 0,
+          "minimum_ranked_runs": 381,
+          "missing_ranked_runs": 331,
+          "name": "sanity",
+          "quality_thresholds_met": true,
+          "ranked_runs": 50,
+          "safety_score": 10.0,
+          "sample_size_valid": false,
+          "success_lower_bound": 0.928652,
+          "worst_safety_score": 10.0
+        },
+        {
+          "collision_upper_bound": 0.006936,
+          "level": 1,
+          "minimum_ranked_runs": 381,
+          "missing_ranked_runs": 0,
+          "name": "wod_aligned",
+          "quality_thresholds_met": true,
+          "ranked_runs": 550,
+          "safety_score": 9.295944,
+          "sample_size_valid": true,
+          "success_lower_bound": 0.993064,
+          "worst_safety_score": 5.066
+        },
+        {
+          "collision_upper_bound": 0.071348,
+          "level": 2,
+          "minimum_ranked_runs": 381,
+          "missing_ranked_runs": 331,
+          "name": "compositional",
+          "quality_thresholds_met": true,
+          "ranked_runs": 50,
+          "safety_score": 9.46152,
+          "sample_size_valid": false,
+          "success_lower_bound": 0.928652,
+          "worst_safety_score": 5.654
+        },
+        {
+          "collision_upper_bound": 0.071348,
+          "level": 3,
+          "minimum_ranked_runs": 381,
+          "missing_ranked_runs": 331,
+          "name": "adversarial",
+          "quality_thresholds_met": true,
+          "ranked_runs": 50,
+          "safety_score": 9.03442,
+          "sample_size_valid": false,
+          "success_lower_bound": 0.928652,
+          "worst_safety_score": 5.883
+        }
+      ],
+      "total_missing_ranked_runs": 993
+    },
+    {
+      "action": "record confirmed hidden-test leaderboard result for a packaged blind submission",
+      "gate": "generalization_beyond_local_frame_cache",
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/wod_e2e_leaderboard_results.json"
+    },
+    {
+      "action": "complete and approve safety case only after validation evidence supports public-road deployment",
+      "gate": "safety_case",
+      "missing_sections": []
+    }
+  ],
+  "production_ready": false,
+  "schema": "production_av_readiness_audit_v1",
+  "solved_gates": [
+    {
+      "component_status": {
+        "control": true,
+        "perception": true,
+        "planning": true,
+        "prediction": true,
+        "safety_monitor": true
+      },
+      "evidence_path": "/home/amdev/sota/minimal-shot-av/artifacts/av_stack_integration_manifest.json",
+      "gate": "robust_perception_planning_control_integration"
+    }
+  ],
+  "thresholds": {
+    "min_normalized_score": 9.0,
+    "min_oracle_capture": 0.95
+  },
+  "trajectory_metrics": {
+    "combined_oracle_mean_normalized_rfs": 9.528104091008736,
+    "combined_oracle_mean_rfs": 9.142997180171855,
+    "combined_ranker_mean_normalized_rfs": 8.08725083467559,
+    "combined_ranker_mean_rfs": 7.755583567406452,
+    "future_trajectory_mean_normalized_rfs": 8.628359490296488,
+    "label_metric_profile": {
+      "benchmark_type": "segment_grouped_cross_validation",
+      "cautions": [
+        "segment-grouped local CV is development evidence, not hidden-test generalization",
+        "no confirmed hidden-test labels or leaderboard result are attached",
+        "candidate oracle is much stronger than selected policy, so routing labels remain weak"
+      ],
+      "frames": 479,
+      "hidden_test_confirmed": false,
+      "local_cv_only": true,
+      "oracle_normalized_gap": 1.4408532563331455
+    },
+    "normalized_ceiling_gap": 1.91274916532441,
+    "normalized_oracle_capture_ratio": 0.8487785982845405,
+    "oracle_capture_ratio": 0.848253960334337,
+    "path": "/home/amdev/sota/minimal-shot-av/artifacts/wod_bestbase_crossfit_kingate_fastonly_rate020_rerun_ridge175_cv_local.json",
+    "present": true,
+    "reference_ceiling_capture_ratio": 0.8077678905822332,
+    "reference_ceiling_mean_rfs": 9.60125260960334,
+    "rfs_gap_to_oracle": 1.3874136127654033
+  }
+}

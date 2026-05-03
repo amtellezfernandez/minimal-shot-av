@@ -90,7 +90,7 @@ local all-frame list from downloaded test TFRecords for coverage checks:
 
 ```bash
 PYTHONPATH=.wod-protos:src .venv-wod/bin/python scripts/build_wod_e2e_frame_list.py \
-  --data-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/test
+  --data-dir /home/amdev/waymo/test
 ```
 
 This local file is not a substitute for the official challenge-provided frame

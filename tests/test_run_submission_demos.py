@@ -114,6 +114,8 @@ class RunSubmissionDemosTests(unittest.TestCase):
         self.assertIn("SoTA Minor Commission", index)
         self.assertIn("Waymo WOD-E2E Challenge", index)
         self.assertIn("Do not merge the claims", index)
+        self.assertIn("scripts/prepare_wod_e2e_data.py --data-root /home/amdev/waymo", index)
+        self.assertIn("scripts/run_wod_leaderboard_attack.py --data-root /home/amdev/waymo", index)
         self.assertIn("Alba Maria Tellez Fernandez", index)
 
 

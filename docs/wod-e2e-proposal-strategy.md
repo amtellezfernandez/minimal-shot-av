@@ -221,11 +221,15 @@ The contextual features were promoted only after the matched `frame_delta`,
 Submission path reset:
 
 ```text
-test frames -> pre-registered blind matrix -> upload all tarballs -> record hidden-test score by SHA-256
+restore train/test shards and official frame list -> readiness audit -> pre-registered blind matrix -> upload all tarballs -> record hidden-test score by SHA-256
 ```
 
-The active packaging path is `prepare_wod_e2e_submission_matrix.py`. It emits
-fixed kinematic hypotheses without validation-ranker selection.
+The active packaging entrypoint is `run_wod_leaderboard_attack.py`, which writes
+the WOD-E2E readiness report first and then calls
+`prepare_wod_e2e_submission_matrix.py` only after the data gates pass. The
+matrix includes strict minimal-shot rows and separately marked
+preference-calibrated rows; only the strict rows are eligible for minimal-shot
+claim language.
 
 Negative selector-feature experiment:
 

@@ -36,9 +36,9 @@
 - Dataset is downloaded through <https://waymo.com/open/download/> after Google sign-in and terms acceptance.
 - Dataset split usage is declared: train, validation, test, or sample-only.
 - Data download command helper is available:
-  `python3 scripts/prepare_wod_e2e_data.py`
+  `python3 scripts/prepare_wod_e2e_data.py --data-root /home/amdev/waymo --output artifacts/wod_e2e_data_restore_plan.json`
 - Local readiness audit command is available:
-  `python3 scripts/audit_wod_e2e_readiness.py`
+  `python3 scripts/audit_wod_e2e_readiness.py --data-root /home/amdev/waymo`
 - Validation rater labels are not represented as test performance.
 - Output trajectory format is correct: 20 future points, first point at 0.25 seconds.
 - Vehicle-coordinate convention is handled consistently, including the public-page/proto origin wording mismatch.
@@ -46,22 +46,23 @@
 - `submission_type`, public model pretraining fields, model names, and parameter count are filled if a proto submission is generated.
 - Challenge-provided JSON frame list is used to select required test frames.
 - Local fallback frame-list builder is available for coverage checks only:
-  `PYTHONPATH=.wod-protos:src .venv-wod/bin/python scripts/build_wod_e2e_frame_list.py --data-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/test`
+  `PYTHONPATH=.wod-protos:src .venv-wod/bin/python scripts/build_wod_e2e_frame_list.py --data-dir /home/amdev/waymo/test`
 - Submission file is packaged as serialized `E2EDChallengeSubmission` proto file(s) in `.tar.gz`.
 - Submission packaging command supports contextual ranker selection:
   `PYTHONPATH=.wod-protos:src python3 scripts/write_wod_e2e_submission.py --candidates artifacts/wod_test_candidates_ranked.jsonl --score-field ranker_score --frame-list data/waymo/e2e/submission_frames/test_frames.json --output artifacts/wod_e2e_submission.tar.gz --account-name <account> --unique-method-name <method> --authors <authors>`
 - Submission validation command is available:
   `PYTHONPATH=.wod-protos:src python3 scripts/validate_wod_e2e_submission.py --submission artifacts/wod_e2e_submission.tar.gz --frame-list data/waymo/e2e/submission_frames/test_frames.json`
 - Test candidate generation supports unlabeled WOD-E2E records:
-  `PYTHONPATH=.wod-protos:src python3 scripts/generate_wod_learned_candidates.py --data-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/test --include-unlabeled --frame-list data/waymo/e2e/submission_frames/test_frames.json --model artifacts/wod_ridge_trajectory_model.json --output artifacts/wod_test_candidates.jsonl`
+  `PYTHONPATH=.wod-protos:src python3 scripts/generate_wod_learned_candidates.py --data-dir /home/amdev/waymo/test --include-unlabeled --frame-list data/waymo/e2e/submission_frames/test_frames.json --model artifacts/wod_ridge_trajectory_model.json --output artifacts/wod_test_candidates.jsonl`
 - Test candidate scoring supports the contextual ranker:
-  `PYTHONPATH=.wod-protos:src python3 scripts/score_wod_candidates_with_ranker.py --data-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/test --include-unlabeled --frame-list data/waymo/e2e/submission_frames/test_frames.json --candidates artifacts/wod_test_candidates.jsonl --ranker artifacts/wod_contextual_ranker.json --output artifacts/wod_test_candidates_ranked.jsonl`
-- End-to-end packaging command is available once train/test/frame-list are local:
-  `PYTHONPATH=.wod-protos:src .venv-wod/bin/python scripts/prepare_wod_e2e_submission_matrix.py --test-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/test --output-dir artifacts/wod_e2e_submission_matrix --account-name <account> --authors <authors>`
+  `PYTHONPATH=.wod-protos:src python3 scripts/score_wod_candidates_with_ranker.py --data-dir /home/amdev/waymo/test --include-unlabeled --frame-list data/waymo/e2e/submission_frames/test_frames.json --candidates artifacts/wod_test_candidates.jsonl --ranker artifacts/wod_contextual_ranker.json --output artifacts/wod_test_candidates_ranked.jsonl`
+- Direct matrix packaging remains an implementation detail; use the two-gate
+  wrapper below for any leaderboard attempt so readiness, strict minimal-shot
+  rows, and validation-calibrated rows stay separated.
 - Two-gate leaderboard attack command is available once train/test/frame-list are
   local. It writes readiness first, then generates strict minimal-shot and
   preference-calibrated leaderboard variants without mixing their claims:
-  `PYTHONPATH=.wod-protos:src .venv-wod/bin/python scripts/run_wod_leaderboard_attack.py --account-name <account> --authors <authors>`
+  `PYTHONPATH=.wod-protos:src .venv-wod/bin/python scripts/run_wod_leaderboard_attack.py --data-root /home/amdev/waymo --frame-list data/waymo/e2e/submission_frames/test_frames.json --account-name <account> --authors <authors>`
 - Test submission limit is respected: 6 submissions every 30 days, excluding errored submissions.
 - RFS is computed only on frames with valid `preference_trajectories`.
 - Scenario-cluster analysis is included where labels are available.
