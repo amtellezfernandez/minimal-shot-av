@@ -1,6 +1,8 @@
 {
   "grand_commission": {
     "file_count": 38,
+    "git_commit": "450d7ea8ed910ce95a6999c0dcf66c98d4385937",
+    "git_dirty": false,
     "members": [
       "grand_commission/README.md",
       "grand_commission/repo_README.md",
@@ -42,11 +44,13 @@
       "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.svg"
     ],
     "path": "artifacts/sota_submission_bundles/grand_commission.tar.gz",
-    "sha256": "a5bf204d121c56233b83d1e1b5774c062f6207b2a47e7ed55167e1bdcdf8999a",
-    "size_bytes": 248267
+    "sha256": "d3c483674aacd66e00fa392f538662829d00c377c89ae88803117b65c24aeeda",
+    "size_bytes": 248270
   },
   "minor_commission": {
     "file_count": 18,
+    "git_commit": "450d7ea8ed910ce95a6999c0dcf66c98d4385937",
+    "git_dirty": false,
     "members": [
       "minor_commission/README.md",
       "minor_commission/repo_README.md",
@@ -68,7 +72,7 @@
       "minor_commission/artifacts/minor_eval/scenario_eval.json"
     ],
     "path": "artifacts/sota_submission_bundles/minor_commission.tar.gz",
-    "sha256": "37812b7d5a0d804d9cf3578f705ea601ac23775dc1b60016373b99091575cd25",
-    "size_bytes": 93202
+    "sha256": "1180b455332cd1c75ee0bacb25c9e79a151a46a3309ecf4308b3541194e0f603",
+    "size_bytes": 93203
   }
 }

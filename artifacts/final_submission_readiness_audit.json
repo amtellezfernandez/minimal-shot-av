@@ -1,23 +1,23 @@
 {
   "archives": {
     "grand_commission": {
-      "manifest_sha256": "a5bf204d121c56233b83d1e1b5774c062f6207b2a47e7ed55167e1bdcdf8999a",
+      "manifest_sha256": "d3c483674aacd66e00fa392f538662829d00c377c89ae88803117b65c24aeeda",
       "manifest_sha_matches": true,
       "missing_required": [],
       "path": "/home/amdev/sota/minimal-shot-av/artifacts/sota_submission_bundles/grand_commission.tar.gz",
       "present": true,
       "required_count": 6,
-      "sha256": "a5bf204d121c56233b83d1e1b5774c062f6207b2a47e7ed55167e1bdcdf8999a",
+      "sha256": "d3c483674aacd66e00fa392f538662829d00c377c89ae88803117b65c24aeeda",
       "valid": true
     },
     "minor_commission": {
-      "manifest_sha256": "37812b7d5a0d804d9cf3578f705ea601ac23775dc1b60016373b99091575cd25",
+      "manifest_sha256": "1180b455332cd1c75ee0bacb25c9e79a151a46a3309ecf4308b3541194e0f603",
       "manifest_sha_matches": true,
       "missing_required": [],
       "path": "/home/amdev/sota/minimal-shot-av/artifacts/sota_submission_bundles/minor_commission.tar.gz",
       "present": true,
       "required_count": 2,
-      "sha256": "37812b7d5a0d804d9cf3578f705ea601ac23775dc1b60016373b99091575cd25",
+      "sha256": "1180b455332cd1c75ee0bacb25c9e79a151a46a3309ecf4308b3541194e0f603",
       "valid": true
     }
   },
