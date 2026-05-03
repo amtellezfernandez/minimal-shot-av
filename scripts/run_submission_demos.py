@@ -304,6 +304,8 @@ def _archive_report(path: Path) -> dict[str, Any]:
         "path": str(path),
         "size_bytes": path.stat().st_size,
         "sha256": _sha256(path),
+        "git_commit": _git_commit(),
+        "git_dirty": _git_dirty(),
         "file_count": len(members),
         "members": members,
     }
@@ -327,6 +329,7 @@ def _submission_index(manifest: dict[str, dict[str, Any]]) -> str:
             "- Video or slide deck based on `docs/sota-grand-slide-script.md`",
             "",
             f"SHA-256: `{grand['sha256']}`",
+            f"Git commit: `{grand.get('git_commit', 'unknown')}`",
             "",
             "Claim: minimal-shot autonomy architecture prototype with closed-loop demos.",
             "",
@@ -339,6 +342,7 @@ def _submission_index(manifest: dict[str, dict[str, Any]]) -> str:
             "- Video or slide deck based on `docs/sota-minor-slide-script.md`",
             "",
             f"SHA-256: `{minor['sha256']}`",
+            f"Git commit: `{minor.get('git_commit', 'unknown')}`",
             "",
             "Claim: randomized long-tail simulation environment with closed-loop evaluation.",
             "",
@@ -374,6 +378,42 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _git_commit() -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            cwd=ROOT,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown"
+
+
+def _git_dirty() -> bool:
+    try:
+        status = subprocess.check_output(
+            ["git", "status", "--short"],
+            cwd=ROOT,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return True
+    generated_prefixes = (
+        "artifacts/sota_submission_bundles/",
+        "artifacts/minimal_shot_claim_audit.json",
+        "artifacts/sota_judging_criteria_audit.json",
+        "artifacts/production_av_readiness_audit.json",
+        "artifacts/final_submission_readiness_audit.json",
+    )
+    for line in status.splitlines():
+        path = line[3:] if len(line) > 3 else ""
+        if path and not path.startswith(generated_prefixes):
+            return True
+    return False
 
 
 if __name__ == "__main__":
