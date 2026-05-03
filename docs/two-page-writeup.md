@@ -44,29 +44,61 @@ The key architectural bet is that minimal-shot driving should separate **candida
 
 ## What Worked
 
-To be filled after validation analysis:
+The strongest working result is the simulator and evaluation harness. The
+Minor submission bundle includes 550 closed-loop Spotlight Reflex rollouts
+across all 11 WOD-E2E-style long-tail clusters, using 50 seeds per cluster. In
+that sweep the policy records 550 / 550 benchmark passes, 550 / 550 successful
+rollouts, 0 collisions, 0 safe stalls, and 0 near misses under the benchmark
+diagnostic. The mean minimum clearance is 2.80 m, mean 5th-percentile clearance
+is 3.28 m, and mean intervention rate is 9.44%.
 
-- scenario clusters where learned residual candidates improved maneuver choice
-- cases where temporal history changed the decision compared with a single-frame policy
-- cases where maneuver candidates gave better RFS than constant-velocity or route-following baselines
+On the WOD-E2E validation side, the best confirmed official-RFS development
+report is a transparent non-text baseline rather than a solved vision policy.
+Constant velocity scores 7.022 RFS on the 479 preference-labeled validation
+frames, while the current combined candidate ranker scores 7.657 RFS under
+segment-grouped cross-validation. The combined candidate oracle is much higher
+at 9.098 RFS, showing useful proposal headroom but also exposing selector
+regret. The attached breakthrough audit does not pass: the mean score improves,
+but worst-slice regret regresses.
+
+The most important engineering result is separation of concerns: simulator
+metrics are not used for WOD model selection, WOD validation labels are not
+presented as hidden-test results, and submission packaging is kept behind
+explicit readiness checks.
 
 ## What Failed
 
-At least one concrete failure must be documented:
+The model-side world-model experiment did not yet produce a meaningful
+architecture win. The lightweight world-model candidate moved official
+validation-CV selected RFS only from 7.6028 to 7.6062. The stronger confirmed
+selector run reaches 7.657, but that improvement comes from structured
+fallback/gating over existing candidates rather than a solved scene-understanding
+model.
 
-- visual ambiguity, such as occluded pedestrian or distant debris
-- route-command conflict, such as lane geometry suggesting one action while the command suggests another
-- over-conservative fallback, such as stopping when a cautious nudge would score better
-- trajectory projection failure, such as a physically smooth but rater-poor path
+The WOD-E2E leaderboard path is also incomplete in this workspace. Validation
+TFRecords are present, but train/test TFRecords and the official required-frame
+list are missing locally. There is therefore no hidden-test score and no claim
+that this is a completed leaderboard submission.
 
-The failure diagnosis should name the component responsible: candidate generator, temporal state, source ranker, trajectory projector, or safety projector.
+The known failure mode is candidate selection. The confirmed official report has
+a 1.441 RFS regret gap between selected candidates and the combined candidate
+oracle, and its worst-slice regret is worse than the prior clean report. Before
+this can become a stronger autonomy claim, the selector must reduce worst-slice
+regret and learn when to trust learned, temporal, memory, or world-model
+proposal families.
 
 ## Next Step With Prize Money
 
-The next milestone is a WOD-E2E validation-quality prototype:
+The next milestone is to turn the prototype into a stronger minimal-shot
+evaluation loop:
 
-- submission writer and strict proto validator
-- reproducible validation notebook
-- RFS-based evaluation table by scenario cluster
-- ablation against constant-velocity, route-following, kinematic candidate, and residual-candidate baselines
-- small edge-deployable trajectory decoder connected to the source-aware selector
+- complete blind WOD-E2E data access, frame-list handling, and leaderboard
+  submission runs;
+- build a reproducible analysis notebook with camera montages, trajectory plots,
+  RFS diagnostics, and failure cases;
+- replace the current selector with a stronger rater-aware router that closes
+  the oracle gap;
+- add real camera grounding or cached scene tokens so rare visual evidence can
+  influence trajectory choice;
+- expand the simulator toward richer actor behavior, camera-like rendering, and
+  AlpaSim sensor integration.

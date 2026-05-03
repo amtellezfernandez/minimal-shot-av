@@ -32,8 +32,10 @@ from minimal_shot_av.model.learned_trajectory_model import (
     RidgeTrajectoryModel,
     fit_ridge_trajectory_model,
 )
+from minimal_shot_av.model.neural_trajectory_model import NeuralAnchorResidualTrajectoryModel
 from minimal_shot_av.model.rfs_metric import ManeuverCandidate, RfsReference, score_candidate
 from minimal_shot_av.model.rfs_metric import Trajectory
+from minimal_shot_av.model.transformer_trajectory_model import TransformerTrajectoryProposalModel
 from minimal_shot_av.model.wod_e2e import WodE2EPreferenceFrame, load_preference_frames
 from minimal_shot_av.model.wod_ranker import WodPreferenceRanker, candidate_ranker_row, raw_features
 from minimal_shot_av.model.wod_ranker import selector_numeric_features, speed_bin
@@ -88,6 +90,32 @@ def main() -> int:
         choices=(FEATURE_SET_EXTERNAL_EMBEDDINGS,),
         help="Train an external-embedding proposal model and add its frame-conditioned candidates.",
     )
+    parser.add_argument(
+        "--neural-candidate-model",
+        type=Path,
+        help="Optional trained neural anchor-residual proposal model JSON to add as learned candidates.",
+    )
+    parser.add_argument(
+        "--neural-candidate-models",
+        default="",
+        help=(
+            "Optional comma-separated trained neural anchor-residual proposal model JSONs. "
+            "These are added as an ensemble of learned candidates."
+        ),
+    )
+    parser.add_argument("--neural-top-k", type=int, default=8)
+    parser.add_argument("--neural-residual-modes-per-anchor", type=int, default=0)
+    parser.add_argument(
+        "--transformer-candidate-model",
+        type=Path,
+        help="Optional trained transformer trajectory proposal model .pt to add as learned candidates.",
+    )
+    parser.add_argument(
+        "--transformer-candidate-models",
+        default="",
+        help="Optional comma-separated trained transformer proposal model .pt files for learned candidates.",
+    )
+    parser.add_argument("--transformer-top-k", type=int, default=12)
     parser.add_argument("--selector-ridge", type=float, default=1.0)
     parser.add_argument(
         "--selector-target",
@@ -98,6 +126,8 @@ def main() -> int:
             "frame_delta_normalized",
             "frame_delta_oracle_weighted",
             "frame_delta_normalized_oracle_weighted",
+            "frame_delta_risk_weighted",
+            "frame_delta_normalized_risk_weighted",
             "frame_zscore",
             "frame_zscore_normalized",
             "frame_rank",
@@ -114,6 +144,7 @@ def main() -> int:
             "contextual",
             "intent_contextual",
             "world_contextual",
+            "family_reliability_contextual",
             "external_contextual",
             "camera_contextual",
             "image_contextual",
@@ -122,7 +153,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--selector-model",
-        choices=("linear", "random_fourier", "listwise_softmax", "boosted_stumps", "knn"),
+        choices=("linear", "random_fourier", "listwise_softmax", "pairwise_logistic", "boosted_stumps", "knn"),
         default="linear",
         help="Selector model family. random_fourier adds deterministic non-linear features before ridge fitting.",
     )
@@ -132,11 +163,30 @@ def main() -> int:
     parser.add_argument("--selector-listwise-iterations", type=int, default=600)
     parser.add_argument("--selector-listwise-lr", type=float, default=0.2)
     parser.add_argument("--selector-listwise-temperature", type=float, default=0.35)
+    parser.add_argument("--selector-pairwise-iterations", type=int, default=400)
+    parser.add_argument("--selector-pairwise-lr", type=float, default=0.15)
+    parser.add_argument("--selector-pairwise-l2", type=float, default=0.01)
+    parser.add_argument("--selector-pairwise-max-pairs-per-frame", type=int, default=96)
     parser.add_argument("--selector-stump-iterations", type=int, default=80)
     parser.add_argument("--selector-stump-lr", type=float, default=0.08)
     parser.add_argument("--selector-stump-thresholds", type=int, default=16)
     parser.add_argument("--selector-knn-k", type=int, default=16)
     parser.add_argument("--selector-knn-temperature", type=float, default=4.0)
+    parser.add_argument(
+        "--selector-route-targets",
+        default="",
+        help=(
+            "Optional comma-separated alternate selector targets. When set with "
+            "--selector-route-router, train one selector per target and choose the "
+            "best target per train-fold route."
+        ),
+    )
+    parser.add_argument(
+        "--selector-route-router",
+        choices=("off", "intent", "speed", "speed_fine", "intent_speed"),
+        default="off",
+        help="Route selector target choice by train-fold group.",
+    )
     parser.add_argument(
         "--selector-source-guard",
         choices=("off", "intent", "speed", "intent_speed"),
@@ -240,6 +290,11 @@ def main() -> int:
         help="Optional comma-separated candidate-name prefixes eligible for --source-gate train_margin.",
     )
     parser.add_argument(
+        "--source-gate-deny-prefixes",
+        default="",
+        help="Optional comma-separated candidate-name prefixes excluded from --source-gate train_margin.",
+    )
+    parser.add_argument(
         "--source-gate-route-allowlist",
         default="",
         help=(
@@ -262,6 +317,11 @@ def main() -> int:
         help="Minimum train-fold positive-gain precision required while fitting source-gate thresholds.",
     )
     parser.add_argument(
+        "--source-gate-local-selector",
+        action="store_true",
+        help="Rank each gated source with a selector trained only on that source before applying source gates.",
+    )
+    parser.add_argument(
         "--kinematic-profile",
         choices=("base", "expanded"),
         default="base",
@@ -269,9 +329,12 @@ def main() -> int:
     )
     parser.add_argument(
         "--blend-candidates",
-        choices=("off", "mean_pairs"),
+        choices=("off", "mean_pairs", "residual_pairs"),
         default="off",
-        help="Add learned-family candidates that interpolate between mean proposals from different sources.",
+        help=(
+            "Add learned-family candidates that interpolate proposals from different sources. "
+            "residual_pairs also blends learned residual modes with kinematic representatives."
+        ),
     )
     parser.add_argument("--residual-modes", type=int, default=3)
     parser.add_argument(
@@ -415,6 +478,13 @@ def main() -> int:
         feature_set=args.feature_set,
         aux_feature_set=args.aux_feature_set,
         scene_aux_feature_set=args.scene_aux_feature_set,
+        neural_candidate_model_path=args.neural_candidate_model,
+        neural_candidate_model_paths=tuple(_split_paths(args.neural_candidate_models)),
+        neural_top_k=args.neural_top_k,
+        neural_residual_modes_per_anchor=args.neural_residual_modes_per_anchor,
+        transformer_candidate_model_path=args.transformer_candidate_model,
+        transformer_candidate_model_paths=tuple(_split_paths(args.transformer_candidate_models)),
+        transformer_top_k=args.transformer_top_k,
         selector_ridge=args.selector_ridge,
         selector_target=args.selector_target,
         selector_features=args.selector_features,
@@ -425,11 +495,17 @@ def main() -> int:
         selector_listwise_iterations=args.selector_listwise_iterations,
         selector_listwise_lr=args.selector_listwise_lr,
         selector_listwise_temperature=args.selector_listwise_temperature,
+        selector_pairwise_iterations=args.selector_pairwise_iterations,
+        selector_pairwise_lr=args.selector_pairwise_lr,
+        selector_pairwise_l2=args.selector_pairwise_l2,
+        selector_pairwise_max_pairs_per_frame=args.selector_pairwise_max_pairs_per_frame,
         selector_stump_iterations=args.selector_stump_iterations,
         selector_stump_lr=args.selector_stump_lr,
         selector_stump_thresholds=args.selector_stump_thresholds,
         selector_knn_k=args.selector_knn_k,
         selector_knn_temperature=args.selector_knn_temperature,
+        selector_route_targets=tuple(_split_optional_csv(args.selector_route_targets)),
+        selector_route_router=args.selector_route_router,
         residual_modes=args.residual_modes,
         residual_grouping=args.residual_grouping,
         include_pairwise_residuals=args.pairwise_residuals,
@@ -468,12 +544,14 @@ def main() -> int:
         source_gate=args.source_gate,
         source_gate_sources=tuple(_split_sources(args.source_gate_sources)),
         source_gate_candidate_prefixes=tuple(_split_optional_csv(args.source_gate_candidate_prefixes)),
+        source_gate_deny_prefixes=tuple(_split_optional_csv(args.source_gate_deny_prefixes)),
         source_gate_route_allowlist=tuple(_split_optional_csv(args.source_gate_route_allowlist)),
         source_gate_margin=args.source_gate_margin,
         source_gate_router=args.source_gate_router,
         source_gate_ridge=args.source_gate_ridge,
         source_gate_max_rate=args.source_gate_max_rate,
         source_gate_min_precision=args.source_gate_min_precision,
+        source_gate_local_selector=args.source_gate_local_selector,
         kinematic_profile=args.kinematic_profile,
         blend_candidates=args.blend_candidates,
         progress_every_fold=args.progress_every_fold,
@@ -577,6 +655,10 @@ def _split_optional_csv(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+def _split_paths(value: str) -> list[Path]:
+    return [Path(item) for item in _split_optional_csv(value)]
+
+
 def _split_source_options(value: str) -> list[tuple[str, ...]]:
     options = [tuple(_split_sources(option)) for option in value.split(";") if option.strip()]
     if not options:
@@ -603,6 +685,13 @@ def cross_validate_trajectory_model(
     feature_set: str = FEATURE_SET_BASE,
     aux_feature_set: str | None = None,
     scene_aux_feature_set: str | None = None,
+    neural_candidate_model_path: Path | None = None,
+    neural_candidate_model_paths: tuple[Path, ...] = (),
+    neural_top_k: int = 8,
+    neural_residual_modes_per_anchor: int = 0,
+    transformer_candidate_model_path: Path | None = None,
+    transformer_candidate_model_paths: tuple[Path, ...] = (),
+    transformer_top_k: int = 12,
     selector_ridge: float = 1.0,
     selector_target: str = "absolute",
     selector_features: str = "linear",
@@ -613,11 +702,17 @@ def cross_validate_trajectory_model(
     selector_listwise_iterations: int = 600,
     selector_listwise_lr: float = 0.2,
     selector_listwise_temperature: float = 0.35,
+    selector_pairwise_iterations: int = 400,
+    selector_pairwise_lr: float = 0.15,
+    selector_pairwise_l2: float = 0.01,
+    selector_pairwise_max_pairs_per_frame: int = 96,
     selector_stump_iterations: int = 80,
     selector_stump_lr: float = 0.08,
     selector_stump_thresholds: int = 16,
     selector_knn_k: int = 16,
     selector_knn_temperature: float = 4.0,
+    selector_route_targets: tuple[str, ...] = (),
+    selector_route_router: str = "off",
     residual_modes: int,
     residual_grouping: str = RESIDUAL_GROUP_OFF,
     include_pairwise_residuals: bool = False,
@@ -656,12 +751,14 @@ def cross_validate_trajectory_model(
     source_gate: str = "off",
     source_gate_sources: tuple[str, ...] = ("kinematic", "learned", "temporal", "scene"),
     source_gate_candidate_prefixes: tuple[str, ...] = (),
+    source_gate_deny_prefixes: tuple[str, ...] = (),
     source_gate_route_allowlist: tuple[str, ...] = (),
     source_gate_margin: float = 0.0,
     source_gate_router: str = "speed",
     source_gate_ridge: float = 1.0,
     source_gate_max_rate: float = 0.25,
     source_gate_min_precision: float = 0.0,
+    source_gate_local_selector: bool = False,
     kinematic_profile: str = "base",
     blend_candidates: str = "off",
     progress_every_fold: bool = False,
@@ -682,6 +779,32 @@ def cross_validate_trajectory_model(
         raise ValueError(f"unsupported memory candidate mode: {memory_candidates}")
     if memory_top_k < 0:
         raise ValueError("--memory-top-k must be non-negative")
+    if neural_top_k < 0:
+        raise ValueError("--neural-top-k must be non-negative")
+    if neural_residual_modes_per_anchor < 0:
+        raise ValueError("--neural-residual-modes-per-anchor must be non-negative")
+    if transformer_top_k < 0:
+        raise ValueError("--transformer-top-k must be non-negative")
+    neural_paths = tuple(
+        dict.fromkeys(
+            [
+                *([] if neural_candidate_model_path is None else [neural_candidate_model_path]),
+                *neural_candidate_model_paths,
+            ]
+        )
+    )
+    neural_candidate_models = tuple(NeuralAnchorResidualTrajectoryModel.load(path) for path in neural_paths)
+    transformer_paths = tuple(
+        dict.fromkeys(
+            [
+                *([] if transformer_candidate_model_path is None else [transformer_candidate_model_path]),
+                *transformer_candidate_model_paths,
+            ]
+        )
+    )
+    transformer_candidate_models = tuple(
+        TransformerTrajectoryProposalModel.load(path) for path in transformer_paths
+    )
     fold_frame_sets = _split_frame_names_by_segment(frames, folds=folds, seed=seed)
     fold_reports: list[dict[str, object]] = []
     for fold_index, test_names in enumerate(fold_frame_sets):
@@ -784,6 +907,11 @@ def cross_validate_trajectory_model(
             world_max_neighbor_distance=world_max_neighbor_distance,
             memory_model=memory_model,
             blend_candidates=blend_candidates,
+            neural_candidate_models=neural_candidate_models,
+            neural_top_k=neural_top_k,
+            neural_residual_modes_per_anchor=neural_residual_modes_per_anchor,
+            transformer_candidate_models=transformer_candidate_models,
+            transformer_top_k=transformer_top_k,
         )
         if progress_every_fold:
             print(
@@ -797,6 +925,10 @@ def cross_validate_trajectory_model(
             source_gate=source_gate,
             source_gate_sources=source_gate_sources,
         )
+        family_reliability = _fit_family_reliability_features(selector_train_rows)
+        if selector_features == "family_reliability_contextual":
+            _apply_family_reliability_features(selector_train_rows, family_reliability)
+            _apply_family_reliability_features(train_rows, family_reliability)
         selector = _fit_selector(
             selector_train_rows,
             ridge=selector_ridge,
@@ -809,6 +941,35 @@ def cross_validate_trajectory_model(
             listwise_iterations=selector_listwise_iterations,
             listwise_lr=selector_listwise_lr,
             listwise_temperature=selector_listwise_temperature,
+            pairwise_iterations=selector_pairwise_iterations,
+            pairwise_lr=selector_pairwise_lr,
+            pairwise_l2=selector_pairwise_l2,
+            pairwise_max_pairs_per_frame=selector_pairwise_max_pairs_per_frame,
+            stump_iterations=selector_stump_iterations,
+            stump_lr=selector_stump_lr,
+            stump_thresholds=selector_stump_thresholds,
+            knn_k=selector_knn_k,
+            knn_temperature=selector_knn_temperature,
+        )
+        routed_selectors, selector_route_policy = _fit_selector_route_policy(
+            selector_train_rows,
+            primary_selector=selector,
+            primary_target=selector_target,
+            alternate_targets=selector_route_targets,
+            router=selector_route_router,
+            ridge=selector_ridge,
+            feature_mode=selector_features,
+            model_family=selector_model,
+            rff_dim=selector_rff_dim,
+            rff_scale=selector_rff_scale,
+            rff_seed=selector_rff_seed + fold_index,
+            listwise_iterations=selector_listwise_iterations,
+            listwise_lr=selector_listwise_lr,
+            listwise_temperature=selector_listwise_temperature,
+            pairwise_iterations=selector_pairwise_iterations,
+            pairwise_lr=selector_pairwise_lr,
+            pairwise_l2=selector_pairwise_l2,
+            pairwise_max_pairs_per_frame=selector_pairwise_max_pairs_per_frame,
             stump_iterations=selector_stump_iterations,
             stump_lr=selector_stump_lr,
             stump_thresholds=selector_stump_thresholds,
@@ -845,6 +1006,10 @@ def cross_validate_trajectory_model(
                 listwise_iterations=selector_listwise_iterations,
                 listwise_lr=selector_listwise_lr,
                 listwise_temperature=selector_listwise_temperature,
+                pairwise_iterations=selector_pairwise_iterations,
+                pairwise_lr=selector_pairwise_lr,
+                pairwise_l2=selector_pairwise_l2,
+                pairwise_max_pairs_per_frame=selector_pairwise_max_pairs_per_frame,
                 stump_iterations=selector_stump_iterations,
                 stump_lr=selector_stump_lr,
                 stump_thresholds=selector_stump_thresholds,
@@ -852,6 +1017,34 @@ def cross_validate_trajectory_model(
                 knn_temperature=selector_knn_temperature,
             )
             if selector_fallback_local_selector
+            else {}
+        )
+        source_gate_selectors = (
+            _fit_fallback_selectors(
+                selector_train_rows,
+                fallback_sources=source_gate_sources,
+                source_options=tuple((source,) for source in source_gate_sources),
+                ridge=selector_ridge,
+                target_mode=selector_target,
+                feature_mode=selector_features,
+                model_family=selector_model,
+                rff_dim=selector_rff_dim,
+                rff_scale=selector_rff_scale,
+                rff_seed=selector_rff_seed + fold_index,
+                listwise_iterations=selector_listwise_iterations,
+                listwise_lr=selector_listwise_lr,
+                listwise_temperature=selector_listwise_temperature,
+                pairwise_iterations=selector_pairwise_iterations,
+                pairwise_lr=selector_pairwise_lr,
+                pairwise_l2=selector_pairwise_l2,
+                pairwise_max_pairs_per_frame=selector_pairwise_max_pairs_per_frame,
+                stump_iterations=selector_stump_iterations,
+                stump_lr=selector_stump_lr,
+                stump_thresholds=selector_stump_thresholds,
+                knn_k=selector_knn_k,
+                knn_temperature=selector_knn_temperature,
+            )
+            if source_gate_local_selector and source_gate != "off"
             else {}
         )
         fallback_policy = _fit_fallback_policy(
@@ -882,6 +1075,7 @@ def cross_validate_trajectory_model(
             mode=source_gate,
             sources=source_gate_sources,
             candidate_prefixes=source_gate_candidate_prefixes,
+            deny_prefixes=source_gate_deny_prefixes,
             route_allowlist=source_gate_route_allowlist,
             margin=source_gate_margin,
             router=source_gate_router,
@@ -891,6 +1085,7 @@ def cross_validate_trajectory_model(
             source_calibration=source_calibration,
             fallback_policy=fallback_policy,
             fallback_selectors=fallback_selectors,
+            source_selectors=source_gate_selectors,
         )
         fold_reports.append(
             _evaluate_fold(
@@ -906,6 +1101,7 @@ def cross_validate_trajectory_model(
                 fallback_selectors=fallback_selectors,
                 scene_gate_policy=scene_gate_policy,
                 source_gate_policy=source_gate_policy,
+                source_gate_selectors=source_gate_selectors,
                 fold_index=fold_index,
                 residual_modes=residual_modes,
                 include_pairwise_residuals=include_pairwise_residuals,
@@ -921,6 +1117,14 @@ def cross_validate_trajectory_model(
                 world_memory_top_k=world_memory_top_k,
                 world_max_neighbor_distance=world_max_neighbor_distance,
                 memory_model=memory_model,
+                neural_candidate_models=neural_candidate_models,
+                neural_top_k=neural_top_k,
+                neural_residual_modes_per_anchor=neural_residual_modes_per_anchor,
+                transformer_candidate_models=transformer_candidate_models,
+                transformer_top_k=transformer_top_k,
+                family_reliability=family_reliability if selector_features == "family_reliability_contextual" else None,
+                routed_selectors=routed_selectors,
+                selector_route_policy=selector_route_policy,
             )
         )
     report = {
@@ -932,6 +1136,13 @@ def cross_validate_trajectory_model(
         "feature_set": feature_set,
         "aux_feature_set": aux_feature_set,
         "scene_aux_feature_set": scene_aux_feature_set,
+        "neural_candidate_model": str(neural_paths[0]) if len(neural_paths) == 1 else None,
+        "neural_candidate_models": [str(path) for path in neural_paths],
+        "neural_top_k": int(neural_top_k),
+        "neural_residual_modes_per_anchor": int(neural_residual_modes_per_anchor),
+        "transformer_candidate_model": str(transformer_paths[0]) if len(transformer_paths) == 1 else None,
+        "transformer_candidate_models": [str(path) for path in transformer_paths],
+        "transformer_top_k": int(transformer_top_k),
         "selector_ridge": float(selector_ridge),
         "selector_target": selector_target,
         "selector_features": selector_features,
@@ -942,11 +1153,18 @@ def cross_validate_trajectory_model(
         "selector_listwise_iterations": int(selector_listwise_iterations),
         "selector_listwise_lr": float(selector_listwise_lr),
         "selector_listwise_temperature": float(selector_listwise_temperature),
+        "selector_pairwise_iterations": int(selector_pairwise_iterations),
+        "selector_pairwise_lr": float(selector_pairwise_lr),
+        "selector_pairwise_l2": float(selector_pairwise_l2),
+        "selector_pairwise_max_pairs_per_frame": int(selector_pairwise_max_pairs_per_frame),
         "selector_stump_iterations": int(selector_stump_iterations),
         "selector_stump_lr": float(selector_stump_lr),
         "selector_stump_thresholds": int(selector_stump_thresholds),
         "selector_knn_k": int(selector_knn_k),
         "selector_knn_temperature": float(selector_knn_temperature),
+        "selector_route_targets": list(selector_route_targets),
+        "selector_route_router": selector_route_router,
+        "selector_route_enabled": selector_route_policy is not None if fold_reports else False,
         "residual_modes": int(residual_modes),
         "residual_grouping": residual_grouping,
         "pairwise_residuals": bool(include_pairwise_residuals),
@@ -995,12 +1213,14 @@ def cross_validate_trajectory_model(
         "source_gate": source_gate,
         "source_gate_sources": list(source_gate_sources),
         "source_gate_candidate_prefixes": list(source_gate_candidate_prefixes),
+        "source_gate_deny_prefixes": list(source_gate_deny_prefixes),
         "source_gate_route_allowlist": list(source_gate_route_allowlist),
         "source_gate_margin": float(source_gate_margin),
         "source_gate_router": source_gate_router,
         "source_gate_ridge": float(source_gate_ridge),
         "source_gate_max_rate": float(source_gate_max_rate),
         "source_gate_min_precision": float(source_gate_min_precision),
+        "source_gate_local_selector": bool(source_gate_local_selector),
         "source_gate_enabled": source_gate != "off",
         "source_gate_selected_rate": _weighted_mean(fold_reports, "source_gate_selected_rate"),
         "source_gate_precision": _weighted_mean(fold_reports, "source_gate_precision"),
@@ -1137,6 +1357,7 @@ def _evaluate_fold(
     fallback_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None = None,
     scene_gate_policy: dict[str, object] | None = None,
     source_gate_policy: dict[str, object] | None = None,
+    source_gate_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None = None,
     fold_index: int,
     residual_modes: int,
     include_pairwise_residuals: bool,
@@ -1152,6 +1373,14 @@ def _evaluate_fold(
     world_memory_top_k: int,
     world_max_neighbor_distance: float | None,
     memory_model: dict[str, object] | None,
+    neural_candidate_models: tuple[NeuralAnchorResidualTrajectoryModel, ...],
+    neural_top_k: int,
+    neural_residual_modes_per_anchor: int,
+    transformer_candidate_models: tuple[TransformerTrajectoryProposalModel, ...],
+    transformer_top_k: int,
+    family_reliability: dict[str, object] | None = None,
+    routed_selectors: dict[str, WodPreferenceRanker] | None = None,
+    selector_route_policy: dict[str, object] | None = None,
 ) -> dict[str, object]:
     kinematic_first_scores: list[float] = []
     kinematic_oracle_scores: list[float] = []
@@ -1200,14 +1429,22 @@ def _evaluate_fold(
             world_max_neighbor_distance=world_max_neighbor_distance,
             memory_model=memory_model,
             blend_candidates=blend_candidates,
+            neural_candidate_models=neural_candidate_models,
+            neural_top_k=neural_top_k,
+            neural_residual_modes_per_anchor=neural_residual_modes_per_anchor,
+            transformer_candidate_models=transformer_candidate_models,
+            transformer_top_k=transformer_top_k,
         )
+        if family_reliability is not None:
+            _apply_family_reliability_features(rows, family_reliability)
         kinematic_scores = [float(row["rfs_score"]) for row in rows if str(row["source"]) == "kinematic"]
         learned_scores = [float(row["rfs_score"]) for row in rows if str(row["source"]) == "learned"]
         world_scores = [float(row["rfs_score"]) for row in rows if str(row["source"]) == "world"]
         policy_rows = [row for row in rows if str(row["source"]) != "scene"] if scene_gate_policy is not None else rows
         policy_rows = _source_gate_baseline_rows(source_gate_policy, policy_rows) or policy_rows or rows
+        active_selector = _selector_for_route(selector, routed_selectors, selector_route_policy, rows[0])
         selected = _select_with_policy(
-            selector,
+            active_selector,
             policy_rows,
             source_guard=source_guard,
             fallback_policy=fallback_policy,
@@ -1219,7 +1456,7 @@ def _evaluate_fold(
         baseline_selected = selected
         selected = _apply_scene_gate(
             scene_gate_policy,
-            selector,
+            active_selector,
             rows,
             baseline_selected,
             source_calibration=source_calibration,
@@ -1227,10 +1464,11 @@ def _evaluate_fold(
         selected_before_source_gate = selected
         selected = _apply_source_gate(
             source_gate_policy,
-            selector,
+            active_selector,
             rows,
             selected,
             source_calibration=source_calibration,
+            source_selectors=source_gate_selectors,
         )
         oracle = max(rows, key=lambda row: float(row["rfs_score"]))
         oracle_score = float(oracle["rfs_score"])
@@ -1245,7 +1483,7 @@ def _evaluate_fold(
         )
         scene_rows = [row for row in rows if str(row["source"]) == "scene"]
         if scene_gate_policy is not None and scene_rows:
-            best_scene = _select_by_calibrated_score(selector, scene_rows, source_calibration)
+            best_scene = _select_by_calibrated_score(active_selector, scene_rows, source_calibration)
             scene_gain = float(best_scene["rfs_score"]) - float(baseline_selected["rfs_score"])
             if scene_gain > 0.0:
                 scene_gate_positive_oracle_count += 1
@@ -1288,6 +1526,7 @@ def _evaluate_fold(
     report = {
         "fold_index": fold_index,
         "frames": len(frames),
+        "selector_route_policy": selector_route_policy,
         "selector_fallback_policy": fallback_policy,
         "scene_gate_policy": scene_gate_policy,
         "kinematic_constant_velocity_mean_rfs": _mean(kinematic_first_scores),
@@ -1361,6 +1600,11 @@ def _scored_candidate_rows(
     world_max_neighbor_distance: float | None = None,
     memory_model: dict[str, object] | None = None,
     blend_candidates: str = "off",
+    neural_candidate_models: tuple[NeuralAnchorResidualTrajectoryModel, ...] = (),
+    neural_top_k: int = 8,
+    neural_residual_modes_per_anchor: int = 0,
+    transformer_candidate_models: tuple[TransformerTrajectoryProposalModel, ...] = (),
+    transformer_top_k: int = 12,
 ) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for frame in frames:
@@ -1382,6 +1626,11 @@ def _scored_candidate_rows(
                 world_max_neighbor_distance=world_max_neighbor_distance,
                 memory_model=memory_model,
                 blend_candidates=blend_candidates,
+                neural_candidate_models=neural_candidate_models,
+                neural_top_k=neural_top_k,
+                neural_residual_modes_per_anchor=neural_residual_modes_per_anchor,
+                transformer_candidate_models=transformer_candidate_models,
+                transformer_top_k=transformer_top_k,
             )
         )
     return rows
@@ -1441,8 +1690,13 @@ def _frame_candidate_rows(
     world_max_neighbor_distance: float | None = None,
     memory_model: dict[str, object] | None = None,
     blend_candidates: str = "off",
+    neural_candidate_models: tuple[NeuralAnchorResidualTrajectoryModel, ...] = (),
+    neural_top_k: int = 8,
+    neural_residual_modes_per_anchor: int = 0,
+    transformer_candidate_models: tuple[TransformerTrajectoryProposalModel, ...] = (),
+    transformer_top_k: int = 12,
 ) -> list[dict[str, object]]:
-    if blend_candidates not in {"off", "mean_pairs"}:
+    if blend_candidates not in {"off", "mean_pairs", "residual_pairs"}:
         raise ValueError(f"unsupported blend candidate mode: {blend_candidates}")
     candidates = [
         ("kinematic", name, trajectory, {})
@@ -1501,8 +1755,37 @@ def _frame_candidate_rows(
             ("memory", name, trajectory, {})
             for name, trajectory in _memory_candidate_trajectories(memory_model, frame)
         )
-    if blend_candidates == "mean_pairs":
-        candidates.extend(_blend_mean_pair_candidates(candidates))
+    if neural_candidate_models and neural_top_k > 0:
+        for model_index, neural_candidate_model in enumerate(neural_candidate_models):
+            candidates.extend(
+                ("learned", _ensemble_candidate_name(name, model_index, len(neural_candidate_models)), trajectory, {})
+                for name, trajectory, _confidence in neural_candidate_model.candidate_trajectories_for_frame(
+                    frame,
+                    top_k=neural_top_k,
+                    residual_modes_per_anchor=neural_residual_modes_per_anchor,
+                )
+            )
+    if transformer_candidate_models and transformer_top_k > 0:
+        for model_index, transformer_candidate_model in enumerate(transformer_candidate_models):
+            candidates.extend(
+                (
+                    "learned",
+                    _ensemble_candidate_name(name, model_index, len(transformer_candidate_models)),
+                    trajectory,
+                    {},
+                )
+                for name, trajectory, _confidence in transformer_candidate_model.candidate_trajectories_for_frame(
+                    frame,
+                    top_k=transformer_top_k,
+                )
+            )
+    if blend_candidates in {"mean_pairs", "residual_pairs"}:
+        candidates.extend(
+            _blend_mean_pair_candidates(
+                candidates,
+                include_learned_residuals=blend_candidates == "residual_pairs",
+            )
+        )
     rows: list[dict[str, object]] = []
     for candidate_index, (source, candidate_name, trajectory, metadata) in enumerate(candidates):
         record = _record(frame, candidate_name, candidate_index, trajectory)
@@ -1525,6 +1808,12 @@ def _frame_candidate_rows(
     return rows
 
 
+def _ensemble_candidate_name(name: str, model_index: int, model_count: int) -> str:
+    if model_count <= 1:
+        return name
+    return f"ensemble{model_index}_{name}"
+
+
 def _reference_ceiling(frame: WodE2EPreferenceFrame) -> float:
     if not frame.references:
         return 0.0
@@ -1539,11 +1828,13 @@ def _normalized_rfs_score(score: float, reference_ceiling: float) -> float:
 
 def _blend_mean_pair_candidates(
     candidates: list[tuple[str, str, Trajectory, dict[str, float]]],
+    *,
+    include_learned_residuals: bool = False,
 ) -> list[tuple[str, str, Trajectory, dict[str, float]]]:
     representatives = [
         (source, name, trajectory)
         for source, name, trajectory, _metadata in candidates
-        if _is_blend_representative(source, name)
+        if _is_blend_representative(source, name, include_learned_residuals=include_learned_residuals)
     ]
     blends: list[tuple[str, str, Trajectory, dict[str, float]]] = []
     seen_names: set[str] = set()
@@ -1655,11 +1946,18 @@ def _memory_raw_features(frame: WodE2EPreferenceFrame, feature_set: str) -> list
     )
 
 
-def _is_blend_representative(source: str, candidate_name: str) -> bool:
+def _is_blend_representative(
+    source: str,
+    candidate_name: str,
+    *,
+    include_learned_residuals: bool = False,
+) -> bool:
     if source == "kinematic":
         return candidate_name in {"constant_velocity", "constant_acceleration", "hold_position"}
     if source == "learned":
-        return candidate_name == "ridge_mean"
+        return candidate_name == "ridge_mean" or (
+            include_learned_residuals and candidate_name.startswith("ridge_residual")
+        )
     if source == "temporal":
         return candidate_name == "temporal_ridge_mean"
     if source == "scene":
@@ -1870,6 +2168,10 @@ def _fit_selector(
     listwise_iterations: int = 600,
     listwise_lr: float = 0.2,
     listwise_temperature: float = 0.35,
+    pairwise_iterations: int = 400,
+    pairwise_lr: float = 0.15,
+    pairwise_l2: float = 0.01,
+    pairwise_max_pairs_per_frame: int = 96,
     stump_iterations: int = 80,
     stump_lr: float = 0.08,
     stump_thresholds: int = 16,
@@ -1916,6 +2218,24 @@ def _fit_selector(
             feature_scale=scale.tolist(),
             weights=weights.tolist(),
             bias=float(bias),
+        )
+    if model_family == "pairwise_logistic":
+        weights = _fit_pairwise_logistic_weights(
+            rows,
+            x_norm,
+            iterations=pairwise_iterations,
+            learning_rate=pairwise_lr,
+            l2=pairwise_l2,
+            max_pairs_per_frame=pairwise_max_pairs_per_frame,
+        )
+        return WodPreferenceRanker(
+            numeric_features=numeric_features,
+            candidate_names=candidate_names,
+            candidate_families=candidate_families,
+            feature_mean=mean.tolist(),
+            feature_scale=scale.tolist(),
+            weights=weights.tolist(),
+            bias=0.0,
         )
     if model_family == "boosted_stumps":
         if target_mode == "pairwise_delta":
@@ -2090,6 +2410,183 @@ def _fit_listwise_softmax_weights(
         weights -= float(learning_rate) * grad_w
         bias -= float(learning_rate) * grad_b
     return weights, bias
+
+
+def _fit_pairwise_logistic_weights(
+    rows: list[dict[str, object]],
+    x_norm: np.ndarray,
+    *,
+    iterations: int,
+    learning_rate: float,
+    l2: float,
+    max_pairs_per_frame: int,
+) -> np.ndarray:
+    if iterations <= 0:
+        raise ValueError("--selector-pairwise-iterations must be positive")
+    if learning_rate <= 0.0:
+        raise ValueError("--selector-pairwise-lr must be positive")
+    if l2 < 0.0:
+        raise ValueError("--selector-pairwise-l2 must be non-negative")
+    if max_pairs_per_frame <= 0:
+        raise ValueError("--selector-pairwise-max-pairs-per-frame must be positive")
+    pair_diffs = _pairwise_training_diffs(rows, x_norm, max_pairs_per_frame=max_pairs_per_frame)
+    if pair_diffs.size == 0:
+        raise ValueError("pairwise logistic selector training requires at least one ordered candidate pair")
+    weights = np.zeros(x_norm.shape[1], dtype=np.float64)
+    pair_count = float(pair_diffs.shape[0])
+    for _ in range(int(iterations)):
+        margins = np.clip(pair_diffs @ weights, -60.0, 60.0)
+        # d/dw log(1 + exp(-margin)) = -diff * sigmoid(-margin)
+        loss_weights = 1.0 / (1.0 + np.exp(margins))
+        gradient = -(pair_diffs.T @ loss_weights) / pair_count
+        gradient += float(l2) * weights
+        weights -= float(learning_rate) * gradient
+    return weights
+
+
+def _pairwise_training_diffs(
+    rows: list[dict[str, object]],
+    x_norm: np.ndarray,
+    *,
+    max_pairs_per_frame: int,
+) -> np.ndarray:
+    indices_by_frame: dict[str, list[int]] = defaultdict(list)
+    for index, row in enumerate(rows):
+        indices_by_frame[str(row["frame_name"])].append(index)
+    scores = np.asarray([float(row["rfs_score"]) for row in rows], dtype=np.float64)
+    diffs: list[np.ndarray] = []
+    for indices in indices_by_frame.values():
+        ordered_pairs: list[tuple[float, int, int]] = []
+        for left_position, left_index in enumerate(indices):
+            for right_index in indices[left_position + 1 :]:
+                delta = float(scores[left_index] - scores[right_index])
+                if abs(delta) <= 1e-9:
+                    continue
+                better, worse = (left_index, right_index) if delta > 0.0 else (right_index, left_index)
+                ordered_pairs.append((abs(delta), better, worse))
+        ordered_pairs.sort(reverse=True)
+        if len(ordered_pairs) > max_pairs_per_frame:
+            if max_pairs_per_frame == 1:
+                ordered_pairs = [ordered_pairs[0]]
+            else:
+                positions = np.linspace(0, len(ordered_pairs) - 1, num=max_pairs_per_frame)
+                ordered_pairs = [ordered_pairs[int(round(position))] for position in positions]
+        diffs.extend(x_norm[better] - x_norm[worse] for _delta, better, worse in ordered_pairs)
+    return np.asarray(diffs, dtype=np.float64) if diffs else np.zeros((0, x_norm.shape[1]), dtype=np.float64)
+
+
+def _fit_selector_route_policy(
+    rows: list[dict[str, object]],
+    *,
+    primary_selector: WodPreferenceRanker,
+    primary_target: str,
+    alternate_targets: tuple[str, ...],
+    router: str,
+    ridge: float,
+    feature_mode: str,
+    model_family: str,
+    rff_dim: int,
+    rff_scale: float,
+    rff_seed: int,
+    listwise_iterations: int,
+    listwise_lr: float,
+    listwise_temperature: float,
+    pairwise_iterations: int,
+    pairwise_lr: float,
+    pairwise_l2: float,
+    pairwise_max_pairs_per_frame: int,
+    stump_iterations: int,
+    stump_lr: float,
+    stump_thresholds: int,
+    knn_k: int,
+    knn_temperature: float,
+) -> tuple[dict[str, WodPreferenceRanker] | None, dict[str, object] | None]:
+    targets = [primary_target, *[target for target in alternate_targets if target != primary_target]]
+    if router == "off" or len(targets) <= 1:
+        return None, None
+    if router not in {"intent", "speed", "speed_fine", "intent_speed"}:
+        raise ValueError(f"unsupported selector route router: {router}")
+    selectors: dict[str, WodPreferenceRanker] = {primary_target: primary_selector}
+    for target_index, target in enumerate(targets[1:], start=1):
+        selectors[target] = _fit_selector(
+            rows,
+            ridge=ridge,
+            target_mode=target,
+            feature_mode=feature_mode,
+            model_family=model_family,
+            rff_dim=rff_dim,
+            rff_scale=rff_scale,
+            rff_seed=rff_seed + 7919 * target_index,
+            listwise_iterations=listwise_iterations,
+            listwise_lr=listwise_lr,
+            listwise_temperature=listwise_temperature,
+            pairwise_iterations=pairwise_iterations,
+            pairwise_lr=pairwise_lr,
+            pairwise_l2=pairwise_l2,
+            pairwise_max_pairs_per_frame=pairwise_max_pairs_per_frame,
+            stump_iterations=stump_iterations,
+            stump_lr=stump_lr,
+            stump_thresholds=stump_thresholds,
+            knn_k=knn_k,
+            knn_temperature=knn_temperature,
+        )
+    groups: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        groups[_fallback_router_key(row, router)].append(row)
+    routes: dict[str, str] = {}
+    route_scores: dict[str, dict[str, float]] = {}
+    global_scores = {
+        target: _selector_route_train_mean(rows, selector)
+        for target, selector in selectors.items()
+    }
+    global_target = max(global_scores, key=lambda target: (global_scores[target], -targets.index(target)))
+    for key, group_rows in groups.items():
+        scores = {
+            target: _selector_route_train_mean(group_rows, selector)
+            for target, selector in selectors.items()
+        }
+        routes[key] = max(scores, key=lambda target: (scores[target], -targets.index(target)))
+        route_scores[key] = {target: float(score) for target, score in scores.items()}
+    policy = {
+        "router": router,
+        "primary_target": primary_target,
+        "targets": targets,
+        "global_target": global_target,
+        "global_scores": {target: float(score) for target, score in global_scores.items()},
+        "routes": routes,
+        "route_scores": route_scores,
+    }
+    return selectors, policy
+
+
+def _selector_route_train_mean(rows: list[dict[str, object]], selector: WodPreferenceRanker) -> float:
+    rows_by_frame: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        rows_by_frame[str(row["frame_name"])].append(row)
+    scores = [
+        float(selector.select_row(frame_rows)["rfs_score"])
+        for frame_rows in rows_by_frame.values()
+        if frame_rows
+    ]
+    return _mean(scores) if scores else float("-inf")
+
+
+def _selector_for_route(
+    primary_selector: WodPreferenceRanker,
+    selectors: dict[str, WodPreferenceRanker] | None,
+    policy: dict[str, object] | None,
+    row: dict[str, object],
+) -> WodPreferenceRanker:
+    if not selectors or not policy:
+        return primary_selector
+    router = str(policy.get("router", "off"))
+    if router == "off":
+        return primary_selector
+    route_key = _fallback_router_key(row, router)
+    target = dict(policy.get("routes", {})).get(route_key, policy.get("global_target"))
+    if target is None:
+        return primary_selector
+    return selectors.get(str(target), primary_selector)
 
 
 def _fit_boosted_stumps(
@@ -2378,6 +2875,10 @@ def _fit_fallback_selectors(
     listwise_iterations: int,
     listwise_lr: float,
     listwise_temperature: float,
+    pairwise_iterations: int,
+    pairwise_lr: float,
+    pairwise_l2: float,
+    pairwise_max_pairs_per_frame: int,
     stump_iterations: int = 80,
     stump_lr: float = 0.08,
     stump_thresholds: int = 16,
@@ -2401,6 +2902,10 @@ def _fit_fallback_selectors(
                 listwise_iterations=listwise_iterations,
                 listwise_lr=listwise_lr,
                 listwise_temperature=listwise_temperature,
+                pairwise_iterations=pairwise_iterations,
+                pairwise_lr=pairwise_lr,
+                pairwise_l2=pairwise_l2,
+                pairwise_max_pairs_per_frame=pairwise_max_pairs_per_frame,
                 stump_iterations=stump_iterations,
                 stump_lr=stump_lr,
                 stump_thresholds=stump_thresholds,
@@ -2646,6 +3151,7 @@ def _fit_source_gate_policy(
     mode: str,
     sources: tuple[str, ...],
     candidate_prefixes: tuple[str, ...],
+    deny_prefixes: tuple[str, ...] = (),
     route_allowlist: tuple[str, ...],
     margin: float,
     router: str,
@@ -2655,6 +3161,7 @@ def _fit_source_gate_policy(
     source_calibration: dict[str, dict[str, float]] | None,
     fallback_policy: dict[str, object] | None,
     fallback_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None,
+    source_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None = None,
 ) -> dict[str, object] | None:
     if mode == "off":
         return None
@@ -2672,6 +3179,7 @@ def _fit_source_gate_policy(
     if not source_names:
         raise ValueError("at least one source-gate source is required")
     prefixes = tuple(str(prefix) for prefix in candidate_prefixes)
+    denied_prefixes = tuple(str(prefix) for prefix in deny_prefixes)
     allowed_routes = frozenset(str(route) for route in route_allowlist)
 
     observations: list[dict[str, object]] = []
@@ -2703,11 +3211,14 @@ def _fit_source_gate_policy(
             source_rows = [
                 row
                 for row in frame_rows
-                if str(row["source"]) == source and _candidate_prefix_allowed(row, prefixes)
+                if str(row["source"]) == source
+                and _candidate_prefix_allowed(row, prefixes)
+                and _candidate_prefix_allowed(row, denied_prefixes, invert=True)
             ]
             if not source_rows:
                 continue
-            candidate = _select_by_calibrated_score(selector, source_rows, source_calibration)
+            source_selector = _fallback_selector_for_sources(source_selectors, (source,)) or selector
+            candidate = _select_by_calibrated_score(source_selector, source_rows, source_calibration)
             if candidate is baseline:
                 continue
             gain = float(candidate["rfs_score"]) - float(baseline["rfs_score"])
@@ -2731,6 +3242,7 @@ def _fit_source_gate_policy(
             "router": router,
             "sources": list(source_names),
             "candidate_prefixes": list(prefixes),
+            "deny_prefixes": list(denied_prefixes),
             "route_allowlist": sorted(allowed_routes),
             "decision": "never",
             "threshold": None,
@@ -2743,6 +3255,7 @@ def _fit_source_gate_policy(
             router=router,
             source_names=source_names,
             prefixes=prefixes,
+            denied_prefixes=denied_prefixes,
             allowed_routes=allowed_routes,
             margin=margin,
             max_rate=max_rate,
@@ -2790,6 +3303,7 @@ def _fit_source_gate_policy(
         "router": router,
         "sources": list(source_names),
         "candidate_prefixes": list(prefixes),
+        "deny_prefixes": list(denied_prefixes),
         "route_allowlist": sorted(allowed_routes),
         "margin": float(margin),
         "max_rate": float(max_rate),
@@ -2831,6 +3345,7 @@ def _fit_independent_source_gate_policy(
     router: str,
     source_names: tuple[str, ...],
     prefixes: tuple[str, ...],
+    denied_prefixes: tuple[str, ...],
     allowed_routes: frozenset[str],
     margin: float,
     max_rate: float,
@@ -2902,6 +3417,7 @@ def _fit_independent_source_gate_policy(
         "router": router,
         "sources": list(source_names),
         "candidate_prefixes": list(prefixes),
+        "deny_prefixes": list(denied_prefixes),
         "route_allowlist": sorted(allowed_routes),
         "margin": float(margin),
         "max_rate": float(max_rate),
@@ -3047,10 +3563,12 @@ def _apply_source_gate(
     baseline: dict[str, object],
     *,
     source_calibration: dict[str, dict[str, float]] | None,
+    source_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None = None,
 ) -> dict[str, object]:
     if policy is None:
         return baseline
     prefixes = tuple(str(prefix) for prefix in policy.get("candidate_prefixes", []))
+    denied_prefixes = tuple(str(prefix) for prefix in policy.get("deny_prefixes", []))
     allowed_routes = set(str(route) for route in policy.get("route_allowlist", []))
     router = str(policy.get("router", "off"))
     route_group = _fallback_router_key(baseline, router) if router != "off" else "__all__"
@@ -3062,11 +3580,14 @@ def _apply_source_gate(
         source_rows = [
             row
             for row in rows
-            if str(row["source"]) == str(source) and _candidate_prefix_allowed(row, prefixes)
+            if str(row["source"]) == str(source)
+            and _candidate_prefix_allowed(row, prefixes)
+            and _candidate_prefix_allowed(row, denied_prefixes, invert=True)
         ]
         if not source_rows:
             continue
-        candidate = _select_by_calibrated_score(selector, source_rows, source_calibration)
+        source_selector = _fallback_selector_for_sources(source_selectors, (str(source),)) or selector
+        candidate = _select_by_calibrated_score(source_selector, source_rows, source_calibration)
         if candidate is baseline:
             continue
         route = _source_gate_route_for_candidate(policy, baseline, str(source))
@@ -3101,11 +3622,12 @@ def _source_gate_baseline_rows(
     return baseline_rows or rows
 
 
-def _candidate_prefix_allowed(row: dict[str, object], prefixes: tuple[str, ...]) -> bool:
+def _candidate_prefix_allowed(row: dict[str, object], prefixes: tuple[str, ...], *, invert: bool = False) -> bool:
     if not prefixes:
         return True
     candidate_name = str(row["candidate_name"])
-    return any(candidate_name.startswith(prefix) for prefix in prefixes)
+    matched = any(candidate_name.startswith(prefix) for prefix in prefixes)
+    return not matched if invert else matched
 
 
 def _source_gate_route_for_candidate(
@@ -3466,11 +3988,105 @@ def _add_world_candidate_features(row: dict[str, object], metadata: dict[str, fl
     )
 
 
+def _fit_family_reliability_features(rows: list[dict[str, object]]) -> dict[str, object]:
+    rows_by_frame: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        rows_by_frame[str(row["frame_name"])].append(row)
+    family_stats: dict[str, dict[str, float]] = defaultdict(_empty_reliability_stats)
+    source_stats: dict[str, dict[str, float]] = defaultdict(_empty_reliability_stats)
+    global_score = 0.0
+    global_regret = 0.0
+    global_count = 0.0
+    for frame_rows in rows_by_frame.values():
+        oracle = max(frame_rows, key=lambda row: float(row["rfs_score"]))
+        oracle_score = float(oracle["rfs_score"])
+        oracle_family_key = _family_reliability_key(oracle)
+        oracle_source = str(oracle["source"])
+        for row in frame_rows:
+            score = float(row["rfs_score"])
+            regret = max(0.0, oracle_score - score)
+            family_key = _family_reliability_key(row)
+            source = str(row["source"])
+            _update_reliability_stats(
+                family_stats[family_key],
+                score=score,
+                regret=regret,
+                oracle=float(family_key == oracle_family_key),
+            )
+            _update_reliability_stats(
+                source_stats[source],
+                score=score,
+                regret=regret,
+                oracle=float(source == oracle_source),
+            )
+            global_score += score
+            global_regret += regret
+            global_count += 1.0
+    return {
+        "family": _finalize_reliability_stats(family_stats),
+        "source": _finalize_reliability_stats(source_stats),
+        "global": {
+            "mean_rfs": global_score / global_count if global_count else 0.0,
+            "oracle_rate": 0.0,
+            "regret_mean": global_regret / global_count if global_count else 0.0,
+            "count_log": float(np.log1p(global_count)),
+        },
+    }
+
+
+def _empty_reliability_stats() -> dict[str, float]:
+    return {"score": 0.0, "oracle": 0.0, "regret": 0.0, "count": 0.0}
+
+
+def _update_reliability_stats(stats: dict[str, float], *, score: float, regret: float, oracle: float) -> None:
+    stats["score"] += float(score)
+    stats["regret"] += float(regret)
+    stats["oracle"] += float(oracle)
+    stats["count"] += 1.0
+
+
+def _finalize_reliability_stats(raw_stats: dict[str, dict[str, float]]) -> dict[str, dict[str, float]]:
+    finalized: dict[str, dict[str, float]] = {}
+    for key, stats in raw_stats.items():
+        count = max(1.0, float(stats["count"]))
+        finalized[key] = {
+            "mean_rfs": float(stats["score"] / count),
+            "oracle_rate": float(stats["oracle"] / count),
+            "regret_mean": float(stats["regret"] / count),
+            "count_log": float(np.log1p(count)),
+        }
+    return finalized
+
+
+def _apply_family_reliability_features(rows: list[dict[str, object]], profile: dict[str, object]) -> None:
+    family_stats = dict(profile.get("family", {}))
+    source_stats = dict(profile.get("source", {}))
+    global_stats = dict(profile.get("global", {}))
+    for row in rows:
+        family = dict(family_stats.get(_family_reliability_key(row), global_stats))
+        source = dict(source_stats.get(str(row["source"]), global_stats))
+        features = row["features"]
+        features["family_reliability_mean_rfs"] = float(family.get("mean_rfs", 0.0))
+        features["family_reliability_oracle_rate"] = float(family.get("oracle_rate", 0.0))
+        features["family_reliability_regret_mean"] = float(family.get("regret_mean", 0.0))
+        features["family_reliability_count_log"] = float(family.get("count_log", 0.0))
+        features["source_reliability_mean_rfs"] = float(source.get("mean_rfs", 0.0))
+        features["source_reliability_oracle_rate"] = float(source.get("oracle_rate", 0.0))
+        features["source_reliability_regret_mean"] = float(source.get("regret_mean", 0.0))
+        features["source_reliability_count_log"] = float(source.get("count_log", 0.0))
+
+
+def _family_reliability_key(row: dict[str, object]) -> str:
+    return f"{row['source']}|{_candidate_family(row)}"
+
+
 def _selector_numeric_features(feature_mode: str) -> list[str]:
     return selector_numeric_features(feature_mode)
 
 
 def _selector_targets(rows: list[dict[str, object]], target_mode: str) -> np.ndarray:
+    risk_weighted = target_mode.endswith("_risk_weighted")
+    target_mode = target_mode.removesuffix("_risk_weighted") + "_oracle_weighted" if risk_weighted else target_mode
     oracle_weighted = target_mode.endswith("_oracle_weighted")
     unweighted_target_mode = target_mode.removesuffix("_oracle_weighted") if oracle_weighted else target_mode
     score_key = "rfs_score_normalized" if unweighted_target_mode.endswith("_normalized") else "rfs_score"
@@ -3517,6 +4133,8 @@ def _selector_targets(rows: list[dict[str, object]], target_mode: str) -> np.nda
         if base_target_mode != "frame_delta":
             raise ValueError(f"oracle-weighted selector target requires frame_delta mode: {target_mode}")
         targets_array = targets_array * _selector_oracle_gap_weights(rows, scores)
+    if risk_weighted:
+        targets_array = targets_array * _selector_slice_risk_weights(rows)
     return targets_array
 
 
@@ -3539,6 +4157,23 @@ def _selector_oracle_gap_weights(rows: list[dict[str, object]], scores: np.ndarr
         [min(3.0, max(1.0, gap_by_frame[str(row["frame_name"])] / median_gap)) for row in rows],
         dtype=np.float64,
     )
+
+
+def _selector_slice_risk_weights(rows: list[dict[str, object]]) -> np.ndarray:
+    weights: list[float] = []
+    for row in rows:
+        features = row.get("features", {})
+        intent = int(round(float(features.get("intent", 1.0)))) if isinstance(features, dict) else 1
+        init_speed = float(features.get("init_speed_mps", 0.0)) if isinstance(features, dict) else 0.0
+        weight = 1.0
+        if intent == 2:
+            weight *= 1.75
+        elif intent == 3:
+            weight *= 2.5
+        if _speed_bin(init_speed) == "fast":
+            weight *= 1.35
+        weights.append(min(4.0, weight))
+    return np.asarray(weights, dtype=np.float64)
 
 
 def _record(

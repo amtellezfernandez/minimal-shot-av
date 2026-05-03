@@ -311,6 +311,20 @@ scoring. For harder ODD portability, the same profile can override topology
 geometry, hazard geometry, visibility/latency ranges, and oracle feasibility
 parameters.
 
+Controlled hardware / vehicle validation preflight:
+
+```bash
+UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_vehicle_validation_shadow.py
+UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/audit_hardware_vehicle_validation.py --hil-check
+```
+
+This gate is narrower than production readiness. It can authorize starting
+bench HIL and supervised closed-course validation only when strict simulator
+evidence, simulator integration, safety-case sections, estop/takeover controls,
+shadow command replay, logging, rollback, speed limits, and geofencing are
+present. It still blocks public-road deployment and unsupervised vehicle
+control. See [`docs/hardware-vehicle-validation.md`](docs/hardware-vehicle-validation.md).
+
 Available procedural clusters:
 
 `construction`, `intersection`, `pedestrian`, `cyclist`, `multi-lane maneuver`, `single-lane maneuver`, `cut-in`, `foreign object debris`, `special vehicle`, `spotlight`, `others`.

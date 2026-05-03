@@ -10,7 +10,13 @@ __pycache__/
 .pytest_cache/
 dist/
 build/
-artifacts/
+artifacts/*
+!artifacts/sota_submission_bundles/
+!artifacts/sota_submission_bundles/**
+!artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json
+!artifacts/wod_fastkin_gate_ridge175_rate020_fallback_breakthrough_audit.json
+outputs/
+runs/
 waymo_open_dataset_end_to_end_camera_v_1_0_0/
 alpasim/
 waymo-open-dataset/

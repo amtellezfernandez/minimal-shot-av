@@ -31,6 +31,15 @@ except ModuleNotFoundError as exc:
     cv = None
 
 if cv is not None:
+    from minimal_shot_av.model.neural_trajectory_model import (
+        fit_neural_anchor_residual_trajectory_model,
+        load_neural_training_frame_cache,
+        save_neural_training_frame_cache,
+    )
+    from minimal_shot_av.model.transformer_trajectory_model import (
+        TransformerTrajectoryProposalModel,
+        fit_transformer_trajectory_proposal_model,
+    )
     from minimal_shot_av.model.rfs_metric import RfsReference
     from minimal_shot_av.model.wod_e2e import WodCameraImage
     from minimal_shot_av.model.world_model import (
@@ -188,6 +197,135 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         self.assertIn("world_imagined_mean_rfs", first_fold)
         first_slice = next(iter(report["slices"].values()))
         self.assertIn("world", first_slice["selected_source_rates"])
+
+    def test_cross_validation_can_add_neural_candidates(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        try:
+            import torch  # noqa: F401
+        except ModuleNotFoundError:
+            self.skipTest("torch is not installed")
+        frames = [sample_frame(f"segment-{index}-100", step=0.5 + index * 0.25) for index in range(6)]
+        model, metadata = fit_neural_anchor_residual_trajectory_model(
+            frames,
+            anchor_count=2,
+            hidden_dim=8,
+            epochs=1,
+            batch_size=3,
+            learning_rate=1e-3,
+            feature_set=cv.FEATURE_SET_BASE,
+            seed=11,
+            device="cpu",
+        )
+        self.assertEqual("cpu", metadata["device"])
+        with TemporaryDirectory() as tmpdir:
+            model_path = Path(tmpdir) / "neural.json"
+            model.save(model_path)
+            report = cv.cross_validate_trajectory_model(
+                frames,
+                folds=3,
+                seed=5,
+                ridge=1.0,
+                feature_set=cv.FEATURE_SET_TEMPORAL,
+                residual_modes=1,
+                scorer=cv._local_rfs_score,
+                neural_candidate_model_path=model_path,
+                neural_top_k=1,
+                neural_residual_modes_per_anchor=0,
+            )
+
+        self.assertEqual(str(model_path), report["neural_candidate_model"])
+        self.assertEqual(1, report["neural_top_k"])
+        self.assertGreaterEqual(report["selected_learned_rate"], 0.0)
+
+    def test_neural_training_frame_cache_round_trips_without_references(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frames = [sample_frame(f"segment-{index}-100", step=0.5 + index * 0.25) for index in range(3)]
+
+        with TemporaryDirectory() as tmpdir:
+            cache_path = Path(tmpdir) / "frames.jsonl"
+            exported_rows = save_neural_training_frame_cache(frames, cache_path)
+            loaded = load_neural_training_frame_cache(cache_path)
+
+        self.assertEqual(3, exported_rows)
+        self.assertEqual(3, len(loaded))
+        self.assertEqual(frames[0].frame_name, loaded[0].frame_name)
+        self.assertEqual(frames[0].past_trajectory, loaded[0].past_trajectory)
+        self.assertEqual(frames[0].future_trajectory, loaded[0].future_trajectory)
+        self.assertEqual([], loaded[0].references)
+
+    def test_transformer_model_round_trips_and_generates_candidates(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        try:
+            import torch  # noqa: F401
+        except ModuleNotFoundError:
+            self.skipTest("torch is not installed")
+        frames = [sample_frame(f"segment-{index}-100", step=0.5 + index * 0.25) for index in range(4)]
+        model, metadata = fit_transformer_trajectory_proposal_model(
+            frames,
+            hidden_dim=16,
+            layers=1,
+            heads=2,
+            modes=3,
+            epochs=1,
+            batch_size=2,
+            learning_rate=1e-3,
+            seed=13,
+            device="cpu",
+        )
+        self.assertEqual("cpu", metadata["device"])
+
+        with TemporaryDirectory() as tmpdir:
+            model_path = Path(tmpdir) / "transformer.pt"
+            model.save(model_path)
+            loaded = TransformerTrajectoryProposalModel.load(model_path)
+
+        candidates = loaded.candidate_trajectories_for_frame(frames[0], top_k=2)
+
+        self.assertEqual(2, len(candidates))
+        self.assertTrue(candidates[0][0].startswith("transformer_mode_"))
+        self.assertEqual(20, len(candidates[0][1]))
+
+    def test_cross_validation_can_add_transformer_candidates(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        try:
+            import torch  # noqa: F401
+        except ModuleNotFoundError:
+            self.skipTest("torch is not installed")
+        frames = [sample_frame(f"segment-{index}-100", step=0.5 + index * 0.25) for index in range(6)]
+        model, _metadata = fit_transformer_trajectory_proposal_model(
+            frames,
+            hidden_dim=16,
+            layers=1,
+            heads=2,
+            modes=3,
+            epochs=1,
+            batch_size=3,
+            learning_rate=1e-3,
+            seed=17,
+            device="cpu",
+        )
+        with TemporaryDirectory() as tmpdir:
+            model_path = Path(tmpdir) / "transformer.pt"
+            model.save(model_path)
+            report = cv.cross_validate_trajectory_model(
+                frames,
+                folds=3,
+                seed=5,
+                ridge=1.0,
+                feature_set=cv.FEATURE_SET_TEMPORAL,
+                residual_modes=1,
+                scorer=cv._local_rfs_score,
+                transformer_candidate_model_path=model_path,
+                transformer_top_k=2,
+            )
+
+        self.assertEqual(str(model_path), report["transformer_candidate_model"])
+        self.assertEqual(2, report["transformer_top_k"])
+        self.assertGreaterEqual(report["selected_learned_rate"], 0.0)
 
     def test_reference_ceiling_can_mark_target_unreachable(self) -> None:
         if cv is None:
@@ -433,6 +571,22 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
 
         self.assertEqual([-1.0, 1.0, -8.333333333333334, 8.333333333333334], targets.tolist())
 
+    def test_selector_targets_can_weight_frame_delta_by_slice_risk(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        rows = [
+            {"frame_name": "a", "rfs_score": 4.0, "features": {"intent": 1, "init_speed_mps": 3.0}},
+            {"frame_name": "a", "rfs_score": 6.0, "features": {"intent": 1, "init_speed_mps": 3.0}},
+            {"frame_name": "b", "rfs_score": 0.0, "features": {"intent": 3, "init_speed_mps": 12.0}},
+            {"frame_name": "b", "rfs_score": 10.0, "features": {"intent": 3, "init_speed_mps": 12.0}},
+        ]
+
+        targets = cv._selector_targets(rows, "frame_delta_risk_weighted")
+
+        self.assertEqual([-1.0, 1.0], targets[:2].tolist())
+        self.assertAlmostEqual(-28.125, targets[2])
+        self.assertAlmostEqual(28.125, targets[3])
+
     def test_selector_targets_can_use_frame_zscore(self) -> None:
         if cv is None:
             self.skipTest("numpy is not installed")
@@ -472,6 +626,46 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         targets = cv._selector_targets(rows, "frame_rank")
 
         self.assertEqual([0.0, 1.0, 0.5, 0.0], targets.tolist())
+
+    def test_residual_pair_blends_include_learned_residual_representatives(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        class FakeModel:
+            def candidate_trajectories_for_frame(
+                self,
+                frame,
+                *,
+                max_residual_modes,
+                include_pairwise_residuals,
+            ):
+                del frame, max_residual_modes, include_pairwise_residuals
+                return [
+                    ("ridge_mean", [(float(step), 0.0) for step in range(1, 21)]),
+                    ("ridge_residual_0", [(float(step), 1.0) for step in range(1, 21)]),
+                ]
+
+        frame = sample_frame("segment-a-100", step=1.0)
+
+        mean_rows = cv._frame_candidate_rows(
+            frame,
+            FakeModel(),
+            cv._local_rfs_score,
+            residual_modes=1,
+            blend_candidates="mean_pairs",
+        )
+        residual_rows = cv._frame_candidate_rows(
+            frame,
+            FakeModel(),
+            cv._local_rfs_score,
+            residual_modes=1,
+            blend_candidates="residual_pairs",
+        )
+
+        mean_names = {str(row["candidate_name"]) for row in mean_rows}
+        residual_names = {str(row["candidate_name"]) for row in residual_rows}
+        self.assertFalse(any("residual" in name and name.startswith("blend_") for name in mean_names))
+        self.assertTrue(any("residual" in name and name.startswith("blend_") for name in residual_names))
 
     def test_pairwise_selector_prefers_better_same_frame_candidate(self) -> None:
         if cv is None:
@@ -540,6 +734,108 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         )
 
         self.assertEqual("ridge_mean", selector.select_row(rows)["candidate_name"])
+
+    def test_pairwise_logistic_selector_prefers_better_same_frame_candidate(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frame = sample_frame("segment-a-100", step=1.0)
+        rows = []
+        for index, (name, source, score) in enumerate(
+            [
+                ("constant_velocity", "kinematic", 4.0),
+                ("ridge_mean", "learned", 8.0),
+                ("temporal_ridge_mean", "temporal", 6.0),
+            ]
+        ):
+            row = cv.candidate_ranker_row(
+                frame=frame,
+                trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                candidate_name=name,
+                candidate_index=index,
+                source=source,
+            )
+            row["source"] = source
+            row["rfs_score"] = score
+            rows.append(row)
+
+        selector = cv._fit_selector(
+            rows,
+            ridge=0.01,
+            target_mode="frame_delta",
+            feature_mode="contextual",
+            model_family="pairwise_logistic",
+            pairwise_iterations=80,
+            pairwise_lr=0.3,
+            pairwise_l2=0.001,
+            pairwise_max_pairs_per_frame=8,
+        )
+
+        self.assertEqual("ridge_mean", selector.select_row(rows)["candidate_name"])
+
+    def test_family_reliability_features_use_train_fold_statistics(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frame = sample_frame("segment-a-100", step=1.0)
+        rows = []
+        for index, (name, source, score) in enumerate(
+            [
+                ("constant_velocity", "kinematic", 4.0),
+                ("ridge_mean", "learned", 8.0),
+                ("temporal_ridge_mean", "temporal", 6.0),
+            ]
+        ):
+            row = cv.candidate_ranker_row(
+                frame=frame,
+                trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                candidate_name=name,
+                candidate_index=index,
+                source=source,
+            )
+            row["source"] = source
+            row["rfs_score"] = score
+            rows.append(row)
+
+        profile = cv._fit_family_reliability_features(rows)
+        cv._apply_family_reliability_features(rows, profile)
+
+        learned = next(row for row in rows if row["source"] == "learned")
+        self.assertAlmostEqual(8.0, learned["features"]["family_reliability_mean_rfs"])
+        self.assertAlmostEqual(1.0, learned["features"]["family_reliability_oracle_rate"])
+        self.assertAlmostEqual(0.0, learned["features"]["family_reliability_regret_mean"])
+
+    def test_selector_route_uses_route_specific_target(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        primary = object()
+        alternate = object()
+        frame = cv.WodE2EPreferenceFrame(
+            frame_name="segment-a-100",
+            past_trajectory=[(-2.0, 0.0), (-1.0, 0.0), (0.0, 0.0)],
+            future_trajectory=[(float(step), 0.0) for step in range(1, 21)],
+            intent=2,
+            init_speed_mps=4.0,
+            references=[RfsReference("human", [(float(step), 0.0) for step in range(1, 21)], 9.0)],
+        )
+        row = cv.candidate_ranker_row(
+            frame=frame,
+            trajectory=[(float(step), 0.0) for step in range(1, 21)],
+            candidate_name="ridge_mean",
+            candidate_index=0,
+            source="learned",
+        )
+        selected = cv._selector_for_route(
+            primary,  # type: ignore[arg-type]
+            {"frame_rank": alternate},  # type: ignore[dict-item]
+            {
+                "router": "intent",
+                "global_target": "frame_delta",
+                "routes": {"intent:2": "frame_rank"},
+            },
+            row,
+        )
+
+        self.assertIs(alternate, selected)
 
     def test_kinematic_fallback_threshold_uses_train_margin(self) -> None:
         if cv is None:

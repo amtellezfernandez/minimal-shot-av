@@ -1,0 +1,45 @@
+{
+  "schema": "hardware_vehicle_validation_plan_v1",
+  "approval_status": "approved_for_controlled_validation_start",
+  "validation_scope": "bench_hil_and_closed_course_supervised_only",
+  "allowed_modes": [
+    "hardware_in_the_loop",
+    "closed_course_supervised"
+  ],
+  "public_road_allowed": false,
+  "unsupervised_control_allowed": false,
+  "max_speed_mps": 2.0,
+  "mandatory_controls": [
+    "physical_estop",
+    "remote_estop",
+    "safety_driver",
+    "speed_limit_enforced",
+    "geofenced_closed_course",
+    "manual_takeover_tested",
+    "shadow_mode_before_actuation",
+    "command_logging_enabled",
+    "rollback_plan_present"
+  ],
+  "phase_order": [
+    {
+      "phase": "bench_hil",
+      "entry_condition": "controllers receive commands through the real interface with wheels off ground or dyno-equivalent load",
+      "exit_condition": "estop, manual takeover, command logging, timing, and rollback checks pass"
+    },
+    {
+      "phase": "closed_course_shadow",
+      "entry_condition": "bench_hil exit condition is met and vehicle remains manually driven",
+      "exit_condition": "shadow commands remain within speed, steering, braking, and geofence limits"
+    },
+    {
+      "phase": "closed_course_low_speed_actuation",
+      "entry_condition": "shadow phase is reviewed and a safety driver is present with physical and remote estop",
+      "exit_condition": "limited-speed maneuvers complete without geofence, takeover, timing, or monitor violations"
+    }
+  ],
+  "notes": [
+    "This plan starts hardware and closed-course validation only; it does not authorize public-road testing.",
+    "The AV stack remains a research prototype until independent safety approval, HIL/VIL evidence, and deployment controls are complete.",
+    "Model outputs must first run in shadow mode before any steering, throttle, or brake actuation."
+  ]
+}

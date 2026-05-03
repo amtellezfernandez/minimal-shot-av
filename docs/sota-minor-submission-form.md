@@ -31,9 +31,25 @@ The environment is intentionally lightweight and deterministic. It is not photor
 - SVG and JSON artifacts for visual inspection and reproducibility.
 - Full test suite output: `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py`.
 
+Current bundled sweep:
+
+- 550 closed-loop rollouts.
+- 11 WOD-E2E-style scenario clusters.
+- 50 seeds per cluster.
+- 550 / 550 successful rollouts.
+- 550 / 550 benchmark passes.
+- 0 collisions.
+- 0 safe stalls.
+- 0 near misses under the benchmark diagnostic.
+- mean minimum clearance: 2.80 m.
+- mean 5th-percentile clearance: 3.28 m.
+- mean intervention rate: 9.44%.
+
 ## What Worked
 
 The generator creates repeatable but varied long-tail scenarios, and the evaluation sweep produces concrete closed-loop metrics across clusters and seeds. This directly addresses the commission's request for randomized scenario generation under realistic evaluation constraints.
+
+The strongest evidence is not a single cherry-picked scene. It is the same generator and policy interface running construction, intersections, pedestrian conflicts, cyclist cases, cut-ins, debris, special vehicles, spotlight hazards, and unusual maneuvers with deterministic seeds and inspectable artifacts.
 
 ## What Did Not Work Yet
 

@@ -82,6 +82,16 @@ WORLD_CANDIDATE_FEATURES = [
     "world_neighbor_count",
     "source_world_x_world_nearest_distance_log",
 ]
+FAMILY_RELIABILITY_FEATURES = [
+    "family_reliability_mean_rfs",
+    "family_reliability_oracle_rate",
+    "family_reliability_regret_mean",
+    "family_reliability_count_log",
+    "source_reliability_mean_rfs",
+    "source_reliability_oracle_rate",
+    "source_reliability_regret_mean",
+    "source_reliability_count_log",
+]
 EXTERNAL_EMBEDDING_FEATURES = [f"external_embedding_{index:02d}" for index in range(64)]
 EXTERNAL_EMBEDDING_SOURCE_INTERACTION_FEATURES = [
     f"{source}_x_{feature}"
@@ -118,8 +128,12 @@ SOURCE_NUMERIC_FEATURES = [*DEFAULT_NUMERIC_FEATURES, *SOURCE_FEATURES]
 INTENT_CONTEXTUAL_NUMERIC_FEATURES = [*SOURCE_NUMERIC_FEATURES, *CONTEXT_FEATURES, *INTENT_INTERACTION_FEATURES]
 CONTEXTUAL_NUMERIC_FEATURES = [*SOURCE_NUMERIC_FEATURES, *CONTEXT_FEATURES, *CONTEXT_INTERACTION_FEATURES]
 WORLD_CONTEXTUAL_NUMERIC_FEATURES = [*CONTEXTUAL_NUMERIC_FEATURES, *WORLD_CANDIDATE_FEATURES]
-EXTERNAL_CONTEXTUAL_NUMERIC_FEATURES = [
+FAMILY_RELIABILITY_CONTEXTUAL_NUMERIC_FEATURES = [
     *WORLD_CONTEXTUAL_NUMERIC_FEATURES,
+    *FAMILY_RELIABILITY_FEATURES,
+]
+EXTERNAL_CONTEXTUAL_NUMERIC_FEATURES = [
+    *FAMILY_RELIABILITY_CONTEXTUAL_NUMERIC_FEATURES,
     *EXTERNAL_EMBEDDING_FEATURES,
     *EXTERNAL_EMBEDDING_SOURCE_INTERACTION_FEATURES,
 ]
@@ -206,6 +220,8 @@ def selector_numeric_features(feature_mode: str) -> list[str]:
         return list(INTENT_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "world_contextual":
         return list(WORLD_CONTEXTUAL_NUMERIC_FEATURES)
+    if feature_mode == "family_reliability_contextual":
+        return list(FAMILY_RELIABILITY_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "external_contextual":
         return list(EXTERNAL_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "camera_contextual":
@@ -256,6 +272,7 @@ def add_selector_context_features(
     _add_source_features(features, source_family)
     _add_context_features(features, frame)
     _add_world_candidate_defaults(features)
+    _add_family_reliability_defaults(features)
     _add_external_embedding_features(features, frame)
     _add_context_interactions(features)
     _add_external_embedding_source_interactions(features)
@@ -313,6 +330,11 @@ def _add_world_candidate_defaults(features: dict[str, object]) -> None:
     features["world_nearest_distance_log"] = 0.0
     features["world_neighbor_count"] = 0.0
     features["source_world_x_world_nearest_distance_log"] = 0.0
+
+
+def _add_family_reliability_defaults(features: dict[str, object]) -> None:
+    for name in FAMILY_RELIABILITY_FEATURES:
+        features[name] = 0.0
 
 
 def _add_external_embedding_features(features: dict[str, object], frame: WodE2EPreferenceFrame) -> None:

@@ -144,11 +144,19 @@ subject must exceed the baseline by more than `0.01`.
   baseline `7.02235769749286` to `7.096202559469913`, with oracle headroom
   `7.852351864082588`. This is validation selector evidence, not a
   leaderboard-test result.
-- Current WOD trajectory model:
+- Previous WOD trajectory baseline:
   `benchmarks/current/wod_ridge_trajectory_cv_official.json` records
   segment-grouped 5-fold official-RFS validation CV for the non-text ridge
   trajectory model with auxiliary temporal-summary candidates. Mean selected RFS
   is `7.602814916652251`, with combined oracle headroom `9.015857402777051`.
+- Current promoted structured-selector report:
+  `artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json`
+  records segment-grouped 5-fold official-RFS validation CV after adding the
+  fallback-enabled fast-kinematic/scene-gate selector path. Mean selected RFS is
+  `7.657089971818379`, with combined oracle headroom
+  `9.098014272661512`. This improves mean selected RFS but is not a clean
+  breakthrough: `artifacts/wod_fastkin_gate_ridge175_rate020_fallback_breakthrough_audit.json`
+  records a failed breakthrough audit because worst-slice regret regressed.
 - Current lightweight world-model ablation:
   `artifacts/world_sweeps/wod_cv_479_world_ego_l8_m0_official.json` records
   segment-grouped 5-fold official-RFS validation CV after adding an ego-temporal

@@ -20,9 +20,11 @@ MODEL_MODULES = {
     "anchor_trajectory_model",
     "kinematic_candidates",
     "learned_trajectory_model",
+    "neural_trajectory_model",
     "rfs_metric",
     "trajectory_io",
     "trajectory_resampling",
+    "transformer_trajectory_model",
     "wod_e2e",
     "wod_preference",
     "wod_ranker",
@@ -46,6 +48,7 @@ SIMULATOR_MODULES = {
     "safety",
     "spotlight_reflex",
     "trajectory_selector",
+    "vehicle_command",
     "wod_scenarios",
     "world_model",
 }
@@ -61,6 +64,7 @@ ROOT_FORBIDDEN_MODULES = MODEL_MODULES | SIMULATOR_MODULES | (NEUTRAL_MODULES - 
 
 MODEL_SCRIPTS = {
     "audit_external_embedding_result.py",
+    "audit_wod_validation_breakthrough.py",
     "audit_wod_improvement_target.py",
     "audit_wod_e2e_readiness.py",
     "audit_wod_model_bias.py",
@@ -81,10 +85,14 @@ MODEL_SCRIPTS = {
     "generate_wod_anchor_candidates.py",
     "generate_wod_kinematic_candidates.py",
     "generate_wod_learned_candidates.py",
+    "export_wod_neural_training_frames.py",
     "train_wod_anchor_trajectory_model.py",
+    "train_wod_neural_trajectory_model.py",
+    "train_wod_transformer_trajectory_model.py",
     "prepare_wod_e2e_data.py",
     "prepare_wod_e2e_submission_matrix.py",
     "record_wod_leaderboard_result.py",
+    "run_wod_breakthrough_experiments.py",
     "score_wod_candidates_with_ranker.py",
     "train_wod_contextual_ranker.py",
     "train_wod_trajectory_model.py",
@@ -98,11 +106,14 @@ SIMULATOR_SCRIPTS = {
     "evaluate_scenarios.py",
     "run_demo.py",
     "run_submission_demos.py",
+    "run_vehicle_validation_shadow.py",
 }
 
 NEUTRAL_SCRIPTS = {
     "check_gpu_acceleration.py",
+    "check_cuda_preflight.py",
     "check_code_quality.py",
+    "audit_hardware_vehicle_validation.py",
     "audit_production_av_readiness.py",
     "import_alpasim_metrics.py",
     "produce_alpasim_comparable_reports.py",

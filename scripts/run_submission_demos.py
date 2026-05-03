@@ -69,6 +69,14 @@ TRACK_DOCS = {
     ],
 }
 
+TRACK_EVIDENCE = {
+    "grand_commission": [
+        "artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json",
+        "artifacts/wod_fastkin_gate_ridge175_rate020_fallback_breakthrough_audit.json",
+    ],
+    "minor_commission": [],
+}
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate separate Grand and Minor Commission demo artifacts.")
@@ -141,7 +149,7 @@ def _run_minor_evaluation(output_dir: Path) -> None:
         "--seed-start",
         "1",
         "--seed-end",
-        "5",
+        "50",
         "--output-dir",
         str(output_dir),
     ]
@@ -201,6 +209,10 @@ def _write_archive(artifacts_root: Path, track: str, readme: Path) -> Path:
             if path.exists():
                 archive_name = "repo_README.md" if source == "README.md" else source
                 archive.add(path, arcname=f"{track}/{archive_name}")
+        for source in TRACK_EVIDENCE[track]:
+            path = ROOT / source
+            if path.exists():
+                archive.add(path, arcname=f"{track}/{source}")
         for artifact_dir in _track_artifact_dirs(artifacts_root, track):
             if artifact_dir.exists():
                 archive.add(artifact_dir, arcname=f"{track}/artifacts/{artifact_dir.name}")

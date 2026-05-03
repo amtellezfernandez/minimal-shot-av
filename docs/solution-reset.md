@@ -14,6 +14,10 @@ AV research audience.
   driven.
 - Structured candidates, residual ridge models, and a linear/ridge selector are
   doing most of the work.
+- The strongest confirmed structured-selector run reaches
+  `7.657089971818379` official validation-CV RFS on the 479-frame validation
+  preference contract, versus `7.0223571581211495` for constant velocity and a
+  `9.098014272661512` combined candidate oracle.
 - The lightweight world-model candidate path produced only a tiny confirmed
   official-RFS gain: selected RFS moved from `7.602814916652251` to
   `7.606198495114426` on the 479-frame validation preference CV contract.

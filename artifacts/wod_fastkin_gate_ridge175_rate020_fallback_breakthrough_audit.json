@@ -1,0 +1,40 @@
+{
+  "baseline": "artifacts/wod_fastkin_gate_ridge175_rate020_cv_official.json",
+  "candidate": "artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json",
+  "claim_boundary": "validation_cv_only_not_hidden_test_not_production",
+  "failures": [
+    {
+      "baseline": {
+        "frames": 29,
+        "mean_regret": 1.7342629959354645,
+        "slice": "intent:3"
+      },
+      "candidate": {
+        "frames": 23,
+        "mean_regret": 1.9411112355438014,
+        "slice": "intent:2"
+      },
+      "id": "worst_slice_regret_worse"
+    }
+  ],
+  "metrics": {
+    "baseline_normalized_rfs": 7.965394093943886,
+    "baseline_selected_rfs": 7.636720446741819,
+    "baseline_worst_slice": {
+      "frames": 29,
+      "mean_regret": 1.7342629959354645,
+      "slice": "intent:3"
+    },
+    "candidate_normalized_rfs": 7.984563765965975,
+    "candidate_selected_rfs": 7.657089971818379,
+    "candidate_worst_slice": {
+      "frames": 23,
+      "mean_regret": 1.9411112355438014,
+      "slice": "intent:2"
+    },
+    "normalized_rfs_gain": 0.019169672022088413,
+    "selected_rfs_gain": 0.020369525076559647
+  },
+  "passed": false,
+  "schema": "wod_validation_breakthrough_audit_v1"
+}

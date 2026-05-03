@@ -23,6 +23,8 @@ REQUIRED_MEMBERS = {
         "grand_commission/docs/sota-grand-slide-script.md",
         "grand_commission/docs/submission-tracks.md",
         "grand_commission/docs/grand-submission.md",
+        "grand_commission/artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json",
+        "grand_commission/artifacts/wod_fastkin_gate_ridge175_rate020_fallback_breakthrough_audit.json",
         "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.json",
         "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.svg",
         "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.json",

@@ -10,9 +10,11 @@ submission candidate built around two honest assets:
   scenario evidence.
 
 The model-side claim is currently a transparent non-text WOD-E2E baseline, not
-frontier scene understanding. The latest lightweight world-model candidate
-improves official validation-CV selected RFS only from `7.602814916652251` to
-`7.606198495114426`, which is not enough to call the architecture solved.
+frontier scene understanding. The latest confirmed structured selector run
+improves official validation-CV selected RFS from `7.0223571581211495` constant
+velocity to `7.657089971818379`, with a combined candidate oracle at
+`9.098014272661512`. That is useful evidence for candidate diversity and
+fallback/gating, but it is not enough to call the architecture solved.
 
 This submission targets the **Grand Commission**: overall best autonomy architecture.
 
