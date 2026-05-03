@@ -53,6 +53,7 @@ rare hazards without AV-dataset fine-tuning.
 - Baseline Spotlight failure comparison.
 - WOD-E2E official-format submission machinery, presented as infrastructure.
 - Readiness audit for hidden-test leaderboard truth.
+- Novel-object stress audit: `artifacts/novel_object_stress_audit.json`.
 - Judging criteria audit: `artifacts/sota_judging_criteria_audit.json`.
 - Full test suite output: `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py`.
 
@@ -67,6 +68,11 @@ Judging criteria evidence:
 - feasibility: randomized closed-loop simulation covers 550 rollouts across 11
   WOD-style long-tail clusters with 0 collisions and 0 near misses under the
   benchmark diagnostic.
+- unknown-object evidence: an abstract novel-object stress audit covers 81
+  compositional cases across `fallen_sign`, `horse_trailer`, `parade_float`,
+  `piano`, and `portable_toilet` labels with 0 collisions, 0 near misses, and
+  100% goal completion. This is geometry-level obstacle handling in the 2D
+  simulator, not camera-based recognition of physical unknown objects.
 - adherence to the brief: the bundle includes the analysis notebook, randomized
   scenario generation, WOD-E2E validation-CV evidence, and a documented failure
   case.

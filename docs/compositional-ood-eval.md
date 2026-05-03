@@ -67,6 +67,12 @@ Gauntlet benchmark sweep:
 uv run --no-sync python scripts/evaluate_scenarios.py --policy both --suite gauntlet --seed-start 1 --seed-end 20 --output-dir artifacts/eval_gauntlet
 ```
 
+Novel-object stress audit:
+
+```bash
+uv run --no-sync python scripts/audit_novel_object_stress.py --seed-start 1 --seed-end 80 --min-runs 24 --output artifacts/novel_object_stress_audit.json
+```
+
 ## Metrics
 
 The evaluator reports success, collision, reached-goal, safe-stall, final goal
@@ -82,3 +88,10 @@ rate low, and maintain progress. This produces `benchmark_pass`, aggregated as
 The intended story is not a polished perfect score. WOD demonstrates baseline
 competence; compositional OOD demonstrates generalisation; adversarial exposes
 the current failure boundary; gauntlet is the deliberately hostile benchmark.
+
+The novel-object audit isolates cases containing abstract unknown obstacle
+labels such as `piano`, `parade_float`, and `portable_toilet`. Passing this
+audit means the closed-loop policy handles unseen object categories through
+geometry and safety margins in the simulator. It does not establish
+camera-based recognition or semantic understanding of real physical unknown
+objects.

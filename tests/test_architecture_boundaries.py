@@ -104,6 +104,7 @@ MODEL_SCRIPTS = {
 }
 
 SIMULATOR_SCRIPTS = {
+    "audit_novel_object_stress.py",
     "audit_sota_submission_bundles.py",
     "evaluate_scenarios.py",
     "run_demo.py",

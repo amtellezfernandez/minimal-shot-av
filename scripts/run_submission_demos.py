@@ -104,6 +104,7 @@ TRACK_EVIDENCE = {
         "benchmarks/current/wod_fast_slow_runtime.json",
         "benchmarks/current/wod_monolithic_runtime_reference.json",
         "artifacts/minimal_shot_claim_audit.json",
+        "artifacts/novel_object_stress_audit.json",
         "artifacts/sota_judging_criteria_audit.json",
         "artifacts/production_av_readiness_audit.json",
     ],
@@ -405,6 +406,7 @@ def _git_dirty() -> bool:
     generated_prefixes = (
         "artifacts/sota_submission_bundles/",
         "artifacts/minimal_shot_claim_audit.json",
+        "artifacts/novel_object_stress_audit.json",
         "artifacts/sota_judging_criteria_audit.json",
         "artifacts/production_av_readiness_audit.json",
         "artifacts/final_submission_readiness_audit.json",
