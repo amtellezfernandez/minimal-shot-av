@@ -21,6 +21,8 @@
 - `notebooks/wod_e2e_analysis.ipynb` contains the WOD-E2E exploration and analysis notebook.
 - `docs/judging-criteria-evidence.md` and `artifacts/sota_judging_criteria_audit.json`
   map the submission evidence to the SoTA judging criteria.
+- `tests/test_submission_claim_language.py` keeps risky leaderboard,
+  production-autonomy, and strict-zero-shot phrases caveated.
 - `docs/two-page-writeup.md` is condensed into the final PDF or document.
 - `docs/video-outline.md` has been turned into a 1-5 minute video or slide deck.
 - At least one failure case is documented with component-level diagnosis.

@@ -252,7 +252,8 @@ Primary analysis:
 
 Decision criteria:
 
-- If strict zero-shot reaches `7.4+`, the architecture is worth presenting as a generalization result.
+- If a validation-only strict zero-shot ablation reaches `7.4+`, it is not a
+  hidden-test claim, but it is worth presenting as a generalization result.
 - If preference-calibrated reaches `7.8+`, it is a serious leaderboard-contending result.
 - If Spotlight improves materially while Construction/Single-lane lag, the story is still strong: the method attacks the unsolved semantic cluster.
 

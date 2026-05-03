@@ -20,7 +20,7 @@ Closed-loop minimal-shot autonomy architecture prototype with WOD-E2E harness as
 Do not claim:
 
 - WOD-E2E hidden-test leaderboard performance
-- production AV readiness
+- no production AV readiness claim
 - solved world-model autonomy
 
 ## 2. SoTA Minor Commission
