@@ -334,6 +334,32 @@ def main() -> int:
         help="Rank each gated source with a selector trained only on that source before applying source gates.",
     )
     parser.add_argument(
+        "--source-veto-gate",
+        choices=("off", "train_margin"),
+        default="off",
+        help="Learn a train-fold gate that can veto selected sources back to a fallback source pool.",
+    )
+    parser.add_argument(
+        "--source-veto-sources",
+        default="temporal",
+        help="Comma-separated selected sources eligible for veto.",
+    )
+    parser.add_argument(
+        "--source-veto-fallback-sources",
+        default="kinematic",
+        help="Comma-separated fallback sources used when a selected source is vetoed.",
+    )
+    parser.add_argument(
+        "--source-veto-router",
+        choices=("off", "intent", "speed", "speed_fine", "intent_speed"),
+        default="speed",
+    )
+    parser.add_argument("--source-veto-ridge", type=float, default=1.0)
+    parser.add_argument("--source-veto-max-rate", type=float, default=0.20)
+    parser.add_argument("--source-veto-min-precision", type=float, default=0.0)
+    parser.add_argument("--source-veto-min-route-observations", type=int, default=0)
+    parser.add_argument("--source-veto-min-route-positives", type=int, default=0)
+    parser.add_argument(
         "--kinematic-profile",
         choices=("base", "expanded"),
         default="base",
@@ -566,6 +592,15 @@ def main() -> int:
         source_gate_min_route_observations=args.source_gate_min_route_observations,
         source_gate_min_route_positives=args.source_gate_min_route_positives,
         source_gate_local_selector=args.source_gate_local_selector,
+        source_veto_gate=args.source_veto_gate,
+        source_veto_sources=tuple(_split_sources(args.source_veto_sources)),
+        source_veto_fallback_sources=tuple(_split_sources(args.source_veto_fallback_sources)),
+        source_veto_router=args.source_veto_router,
+        source_veto_ridge=args.source_veto_ridge,
+        source_veto_max_rate=args.source_veto_max_rate,
+        source_veto_min_precision=args.source_veto_min_precision,
+        source_veto_min_route_observations=args.source_veto_min_route_observations,
+        source_veto_min_route_positives=args.source_veto_min_route_positives,
         kinematic_profile=args.kinematic_profile,
         blend_candidates=args.blend_candidates,
         progress_every_fold=args.progress_every_fold,
@@ -775,6 +810,15 @@ def cross_validate_trajectory_model(
     source_gate_min_route_observations: int = 0,
     source_gate_min_route_positives: int = 0,
     source_gate_local_selector: bool = False,
+    source_veto_gate: str = "off",
+    source_veto_sources: tuple[str, ...] = ("temporal",),
+    source_veto_fallback_sources: tuple[str, ...] = ("kinematic",),
+    source_veto_router: str = "speed",
+    source_veto_ridge: float = 1.0,
+    source_veto_max_rate: float = 0.20,
+    source_veto_min_precision: float = 0.0,
+    source_veto_min_route_observations: int = 0,
+    source_veto_min_route_positives: int = 0,
     kinematic_profile: str = "base",
     blend_candidates: str = "off",
     progress_every_fold: bool = False,
@@ -1105,6 +1149,25 @@ def cross_validate_trajectory_model(
             fallback_selectors=fallback_selectors,
             source_selectors=source_gate_selectors,
         )
+        source_veto_policy = _fit_source_veto_policy(
+            train_rows,
+            selector,
+            mode=source_veto_gate,
+            sources=source_veto_sources,
+            fallback_sources=source_veto_fallback_sources,
+            router=source_veto_router,
+            ridge=source_veto_ridge,
+            max_rate=source_veto_max_rate,
+            min_precision=source_veto_min_precision,
+            min_route_observations=source_veto_min_route_observations,
+            min_route_positives=source_veto_min_route_positives,
+            source_calibration=source_calibration,
+            fallback_policy=fallback_policy,
+            fallback_selectors=fallback_selectors,
+            scene_gate_policy=scene_gate_policy,
+            source_gate_policy=source_gate_policy,
+            source_gate_selectors=source_gate_selectors,
+        )
         fold_reports.append(
             _evaluate_fold(
                 test_frames,
@@ -1120,6 +1183,7 @@ def cross_validate_trajectory_model(
                 scene_gate_policy=scene_gate_policy,
                 source_gate_policy=source_gate_policy,
                 source_gate_selectors=source_gate_selectors,
+                source_veto_policy=source_veto_policy,
                 fold_index=fold_index,
                 residual_modes=residual_modes,
                 include_pairwise_residuals=include_pairwise_residuals,
@@ -1246,6 +1310,20 @@ def cross_validate_trajectory_model(
         "source_gate_precision": _weighted_mean(fold_reports, "source_gate_precision"),
         "source_gate_mean_gain": _weighted_mean(fold_reports, "source_gate_mean_gain"),
         "source_gate_false_positive_loss": _weighted_mean(fold_reports, "source_gate_false_positive_loss"),
+        "source_veto_gate": source_veto_gate,
+        "source_veto_sources": list(source_veto_sources),
+        "source_veto_fallback_sources": list(source_veto_fallback_sources),
+        "source_veto_router": source_veto_router,
+        "source_veto_ridge": float(source_veto_ridge),
+        "source_veto_max_rate": float(source_veto_max_rate),
+        "source_veto_min_precision": float(source_veto_min_precision),
+        "source_veto_min_route_observations": int(source_veto_min_route_observations),
+        "source_veto_min_route_positives": int(source_veto_min_route_positives),
+        "source_veto_enabled": source_veto_gate != "off",
+        "source_veto_selected_rate": _weighted_mean(fold_reports, "source_veto_selected_rate"),
+        "source_veto_precision": _weighted_mean(fold_reports, "source_veto_precision"),
+        "source_veto_mean_gain": _weighted_mean(fold_reports, "source_veto_mean_gain"),
+        "source_veto_false_positive_loss": _weighted_mean(fold_reports, "source_veto_false_positive_loss"),
         "selector_kinematic_fallback_threshold_mean": _finite_mean_or_none(
             [
                 value
@@ -1378,6 +1456,7 @@ def _evaluate_fold(
     scene_gate_policy: dict[str, object] | None = None,
     source_gate_policy: dict[str, object] | None = None,
     source_gate_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None = None,
+    source_veto_policy: dict[str, object] | None = None,
     fold_index: int,
     residual_modes: int,
     include_pairwise_residuals: bool,
@@ -1424,6 +1503,10 @@ def _evaluate_fold(
     source_gate_false_positive_losses: list[float] = []
     source_gate_override_count = 0
     source_gate_true_positive_count = 0
+    source_veto_gains: list[float] = []
+    source_veto_false_positive_losses: list[float] = []
+    source_veto_override_count = 0
+    source_veto_true_positive_count = 0
     opportunity_accumulators: dict[str, dict[str, object]] = {}
     top1_matches = 0
     selected_source_counts: dict[str, int] = defaultdict(int)
@@ -1490,6 +1573,16 @@ def _evaluate_fold(
             source_calibration=source_calibration,
             source_selectors=source_gate_selectors,
         )
+        selected_after_source_gate = selected
+        selected_before_veto = selected
+        selected = _apply_source_veto(
+            source_veto_policy,
+            active_selector,
+            rows,
+            selected,
+            source_calibration=source_calibration,
+            fallback_selectors=fallback_selectors,
+        )
         oracle = max(rows, key=lambda row: float(row["rfs_score"]))
         oracle_score = float(oracle["rfs_score"])
         selected_score = float(selected["rfs_score"])
@@ -1514,14 +1607,24 @@ def _evaluate_fold(
                     scene_gate_true_positive_count += 1
                 else:
                     scene_gate_false_positive_losses.append(-scene_gain)
-        if selected is not selected_before_source_gate:
+        if selected_after_source_gate is not selected_before_source_gate:
             source_gate_override_count += 1
-            source_gain = float(selected["rfs_score"]) - float(selected_before_source_gate["rfs_score"])
+            source_gain = float(selected_after_source_gate["rfs_score"]) - float(
+                selected_before_source_gate["rfs_score"]
+            )
             source_gate_gains.append(source_gain)
             if source_gain > 0.0:
                 source_gate_true_positive_count += 1
             else:
                 source_gate_false_positive_losses.append(-source_gain)
+        if selected is not selected_before_veto:
+            source_veto_override_count += 1
+            veto_gain = float(selected["rfs_score"]) - float(selected_before_veto["rfs_score"])
+            source_veto_gains.append(veto_gain)
+            if veto_gain > 0.0:
+                source_veto_true_positive_count += 1
+            else:
+                source_veto_false_positive_losses.append(-veto_gain)
         kinematic_first_scores.append(kinematic_scores[0])
         kinematic_oracle_scores.append(max(kinematic_scores))
         learned_mean_scores.append(learned_scores[0])
@@ -1580,6 +1683,15 @@ def _evaluate_fold(
         "source_gate_mean_gain": _mean(source_gate_gains) if source_gate_gains else 0.0,
         "source_gate_false_positive_loss": _mean(source_gate_false_positive_losses)
         if source_gate_false_positive_losses
+        else 0.0,
+        "source_veto_policy": source_veto_policy,
+        "source_veto_selected_rate": float(source_veto_override_count / len(frames)),
+        "source_veto_precision": float(source_veto_true_positive_count / source_veto_override_count)
+        if source_veto_override_count
+        else 0.0,
+        "source_veto_mean_gain": _mean(source_veto_gains) if source_veto_gains else 0.0,
+        "source_veto_false_positive_loss": _mean(source_veto_false_positive_losses)
+        if source_veto_false_positive_losses
         else 0.0,
         "selected_anchor_rate": selected_source_counts["anchor"] / len(frames),
         "selected_learned_rate": selected_source_counts["learned"] / len(frames),
@@ -3355,6 +3467,180 @@ def _fit_source_gate_policy(
     }
 
 
+def _fit_source_veto_policy(
+    rows: list[dict[str, object]],
+    selector: WodPreferenceRanker,
+    *,
+    mode: str,
+    sources: tuple[str, ...],
+    fallback_sources: tuple[str, ...],
+    router: str,
+    ridge: float,
+    max_rate: float,
+    min_precision: float,
+    min_route_observations: int,
+    min_route_positives: int,
+    source_calibration: dict[str, dict[str, float]] | None,
+    fallback_policy: dict[str, object] | None,
+    fallback_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None,
+    scene_gate_policy: dict[str, object] | None,
+    source_gate_policy: dict[str, object] | None,
+    source_gate_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None,
+) -> dict[str, object] | None:
+    if mode == "off":
+        return None
+    if mode != "train_margin":
+        raise ValueError(f"unsupported source veto gate: {mode}")
+    if router not in {"off", "intent", "speed", "speed_fine", "intent_speed"}:
+        raise ValueError(f"unsupported source veto router: {router}")
+    if ridge <= 0.0:
+        raise ValueError("--source-veto-ridge must be positive")
+    if max_rate <= 0.0 or max_rate > 1.0:
+        raise ValueError("--source-veto-max-rate must be in (0, 1]")
+    if min_precision < 0.0 or min_precision > 1.0:
+        raise ValueError("--source-veto-min-precision must be in [0, 1]")
+    if min_route_observations < 0:
+        raise ValueError("--source-veto-min-route-observations must be non-negative")
+    if min_route_positives < 0:
+        raise ValueError("--source-veto-min-route-positives must be non-negative")
+    veto_sources = tuple(dict.fromkeys(str(source) for source in sources))
+    fallback_source_names = tuple(dict.fromkeys(str(source) for source in fallback_sources))
+    if not veto_sources:
+        raise ValueError("at least one source-veto source is required")
+    if not fallback_source_names:
+        raise ValueError("at least one source-veto fallback source is required")
+
+    observations: list[dict[str, object]] = []
+    rows_by_frame: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        rows_by_frame[str(row["frame_name"])].append(row)
+    for frame_rows in rows_by_frame.values():
+        selected = _select_final_for_gate_training(
+            selector,
+            frame_rows,
+            source_calibration=source_calibration,
+            fallback_policy=fallback_policy,
+            fallback_selectors=fallback_selectors,
+            scene_gate_policy=scene_gate_policy,
+            source_gate_policy=source_gate_policy,
+            source_gate_selectors=source_gate_selectors,
+        )
+        if str(selected["source"]) not in veto_sources:
+            continue
+        fallback_rows = [row for row in frame_rows if str(row["source"]) in fallback_source_names]
+        if not fallback_rows:
+            continue
+        fallback_selector = _fallback_selector_for_sources(fallback_selectors, fallback_source_names) or selector
+        fallback = _select_by_calibrated_score(fallback_selector, fallback_rows, source_calibration)
+        if fallback is selected:
+            continue
+        observations.append(
+            {
+                "features": _source_gate_features(selector, selected, fallback, source_calibration),
+                "gain": float(fallback["rfs_score"]) - float(selected["rfs_score"]),
+                "baseline_score": float(selected["rfs_score"]),
+                "scene_score": float(fallback["rfs_score"]),
+                "frame_name": str(selected["frame_name"]),
+                "source": str(selected["source"]),
+                "group": "__all__" if router == "off" else _fallback_router_key(selected, router),
+            }
+        )
+    if not observations:
+        return {
+            "mode": mode,
+            "router": router,
+            "sources": list(veto_sources),
+            "fallback_sources": list(fallback_source_names),
+            "decision": "never",
+            "threshold": None,
+            "routes": {},
+            "train_observations": 0,
+        }
+    mean, scale, weights, _predicted_gains = _fit_gate_linear_model(observations, ridge=ridge)
+    threshold_gains = _crossfit_gate_predictions(observations, ridge=ridge)
+    routes: dict[str, dict[str, object]] = {}
+    route_keys = sorted({f"{observation['source']}|{observation['group']}" for observation in observations})
+    for route_key in route_keys:
+        source, group = route_key.split("|", 1)
+        indices = [
+            index
+            for index, observation in enumerate(observations)
+            if str(observation["source"]) == source and str(observation["group"]) == group
+        ]
+        routes[route_key] = _scene_gate_route_payload(
+            _fit_scene_gate_threshold(
+                [observations[index] for index in indices],
+                threshold_gains[indices],
+                margin=0.0,
+                max_rate=max_rate,
+                min_precision=min_precision,
+                min_observations=min_route_observations,
+                min_positive_overrides=min_route_positives,
+            )
+        )
+    global_threshold = _fit_scene_gate_threshold(
+        observations,
+        threshold_gains,
+        margin=0.0,
+        max_rate=max_rate,
+        min_precision=min_precision,
+        min_observations=min_route_observations,
+        min_positive_overrides=min_route_positives,
+    )
+    return {
+        "mode": mode,
+        "router": router,
+        "sources": list(veto_sources),
+        "fallback_sources": list(fallback_source_names),
+        "max_rate": float(max_rate),
+        "min_precision": float(min_precision),
+        "min_route_observations": int(min_route_observations),
+        "min_route_positives": int(min_route_positives),
+        "feature_mean": mean.tolist(),
+        "feature_scale": scale.tolist(),
+        "weights": weights[1:].tolist(),
+        "bias": float(weights[0]),
+        "threshold": None if global_threshold is None else float(global_threshold),
+        "decision": _scene_gate_route_payload(global_threshold)["decision"],
+        "routes": {} if router == "off" else routes,
+        "train_observations": len(observations),
+        "train_positive_rate": float(np.mean([float(observation["gain"]) > 0.0 for observation in observations])),
+        "threshold_fit": "segment_crossfit_source_veto",
+    }
+
+
+def _select_final_for_gate_training(
+    selector: WodPreferenceRanker,
+    rows: list[dict[str, object]],
+    *,
+    source_calibration: dict[str, dict[str, float]] | None,
+    fallback_policy: dict[str, object] | None,
+    fallback_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None,
+    scene_gate_policy: dict[str, object] | None,
+    source_gate_policy: dict[str, object] | None,
+    source_gate_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None,
+) -> dict[str, object]:
+    policy_rows = [row for row in rows if str(row["source"]) != "scene"] if scene_gate_policy is not None else rows
+    policy_rows = _source_gate_baseline_rows(source_gate_policy, policy_rows) or policy_rows or rows
+    selected = _select_with_policy(
+        selector,
+        policy_rows,
+        source_guard=None,
+        fallback_policy=fallback_policy,
+        source_calibration=source_calibration,
+        fallback_selectors=fallback_selectors,
+    )
+    selected = _apply_scene_gate(scene_gate_policy, selector, rows, selected, source_calibration=source_calibration)
+    return _apply_source_gate(
+        source_gate_policy,
+        selector,
+        rows,
+        selected,
+        source_calibration=source_calibration,
+        source_selectors=source_gate_selectors,
+    )
+
+
 def _fit_gate_linear_model(
     observations: list[dict[str, object]],
     *,
@@ -3655,6 +3941,38 @@ def _apply_source_gate(
     return best_candidate
 
 
+def _apply_source_veto(
+    policy: dict[str, object] | None,
+    selector: WodPreferenceRanker,
+    rows: list[dict[str, object]],
+    selected: dict[str, object],
+    *,
+    source_calibration: dict[str, dict[str, float]] | None,
+    fallback_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None = None,
+) -> dict[str, object]:
+    if policy is None:
+        return selected
+    if str(selected["source"]) not in {str(source) for source in policy.get("sources", [])}:
+        return selected
+    fallback_sources = tuple(str(source) for source in policy.get("fallback_sources", ("kinematic",)))
+    fallback_rows = [row for row in rows if str(row["source"]) in fallback_sources]
+    if not fallback_rows:
+        return selected
+    fallback_selector = _fallback_selector_for_sources(fallback_selectors, fallback_sources) or selector
+    fallback = _select_by_calibrated_score(fallback_selector, fallback_rows, source_calibration)
+    if fallback is selected:
+        return selected
+    route = _source_veto_route_for_row(policy, selected)
+    decision = str(route.get("decision", "never"))
+    if decision == "never":
+        return selected
+    predicted_gain = _source_veto_predict(policy, selector, selected, fallback, source_calibration)
+    if decision == "always":
+        return fallback
+    threshold = _finite_float_or_none(route.get("threshold"))
+    return fallback if threshold is not None and predicted_gain >= threshold else selected
+
+
 def _source_gate_baseline_rows(
     policy: dict[str, object] | None,
     rows: list[dict[str, object]],
@@ -3697,6 +4015,38 @@ def _source_gate_route_for_candidate(
     if source_route is not None:
         return dict(source_route)
     return {"decision": str(policy.get("decision", "never")), "threshold": policy.get("threshold")}
+
+
+def _source_veto_route_for_row(policy: dict[str, object], selected: dict[str, object]) -> dict[str, object]:
+    router = str(policy.get("router", "off"))
+    if router == "off":
+        return {"decision": str(policy.get("decision", "never")), "threshold": policy.get("threshold")}
+    route = dict(policy.get("routes", {})).get(f"{selected['source']}|{_fallback_router_key(selected, router)}")
+    if route is not None:
+        return dict(route)
+    return {"decision": str(policy.get("decision", "never")), "threshold": policy.get("threshold")}
+
+
+def _source_veto_predict(
+    policy: dict[str, object],
+    selector: WodPreferenceRanker,
+    selected: dict[str, object],
+    fallback: dict[str, object],
+    source_calibration: dict[str, dict[str, float]] | None,
+) -> float:
+    mean = np.asarray(policy.get("feature_mean", []), dtype=np.float64)
+    scale = np.asarray(policy.get("feature_scale", []), dtype=np.float64)
+    weights = np.concatenate(
+        [
+            np.asarray([float(policy.get("bias", 0.0))], dtype=np.float64),
+            np.asarray(policy.get("weights", []), dtype=np.float64),
+        ]
+    )
+    features = np.asarray(_source_gate_features(selector, selected, fallback, source_calibration), dtype=np.float64)
+    if mean.size != features.size or scale.size != features.size or weights.size != features.size + 1:
+        return float("-inf")
+    x_norm = (features - mean) / scale
+    return float(np.concatenate([np.asarray([1.0]), x_norm]) @ weights)
 
 
 def _source_gate_predict(

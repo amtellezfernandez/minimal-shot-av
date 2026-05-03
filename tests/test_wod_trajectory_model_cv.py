@@ -1150,6 +1150,67 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         self.assertIsNone(unsupported)
         self.assertIsNone(too_few_positives)
 
+    def test_source_veto_can_replace_bad_selected_source(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        class FakeSelector:
+            def select_row(self, rows):
+                return max(rows, key=self.predict_row)
+
+            def predict_row(self, row):
+                return float(row["predicted_selector_score"])
+
+        rows = []
+        frame = sample_frame("segment-a-100", step=1.0)
+        for index, (name, source, predicted, score) in enumerate(
+            [
+                ("temporal_ridge_mean", "temporal", 2.0, 3.0),
+                ("constant_velocity", "kinematic", 1.0, 9.0),
+            ]
+        ):
+            row = cv.candidate_ranker_row(
+                frame=frame,
+                trajectory=[(float(step), 0.0) for step in range(1, 21)],
+                candidate_name=name,
+                candidate_index=index,
+                source=source,
+            )
+            row["source"] = source
+            row["rfs_score"] = score
+            row["predicted_selector_score"] = predicted
+            rows.append(row)
+
+        policy = cv._fit_source_veto_policy(
+            rows,
+            FakeSelector(),
+            mode="train_margin",
+            sources=("temporal",),
+            fallback_sources=("kinematic",),
+            router="off",
+            ridge=0.01,
+            max_rate=1.0,
+            min_precision=0.0,
+            min_route_observations=0,
+            min_route_positives=0,
+            source_calibration=None,
+            fallback_policy=None,
+            fallback_selectors=None,
+            scene_gate_policy=None,
+            source_gate_policy=None,
+            source_gate_selectors=None,
+        )
+        selected = cv._apply_source_veto(
+            policy,
+            FakeSelector(),
+            rows,
+            rows[0],
+            source_calibration=None,
+        )
+
+        self.assertEqual("train_margin", policy["mode"])
+        self.assertEqual("constant_velocity", selected["candidate_name"])
+
     def test_source_calibration_can_offset_overconfident_source(self) -> None:
         if cv is None:
             self.skipTest("numpy is not installed")
