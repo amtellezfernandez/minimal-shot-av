@@ -33,7 +33,23 @@ The policy does not claim to be a production AV stack. It is a minimal-shot arch
 - Baseline Spotlight failure comparison.
 - WOD-E2E official-format submission machinery.
 - Readiness audit for hidden-test leaderboard truth.
+- Judging criteria audit: `artifacts/sota_judging_criteria_audit.json`.
 - Full test suite output: `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py`.
+
+Judging criteria evidence:
+
+- technical excellence: WOD validation-CV selected RFS improves by +0.635 over
+  constant velocity, the candidate oracle reaches 9.098 RFS, and numeric
+  controller p95 latency is 1.402 ms against a 14 ms budget.
+- novelty: candidate generation and candidate selection are separated, and the
+  repo reports selector regret explicitly instead of only reporting the best
+  oracle candidate.
+- feasibility: randomized closed-loop simulation covers 550 rollouts across 11
+  WOD-style long-tail clusters with 0 collisions and 0 near misses under the
+  benchmark diagnostic.
+- adherence to the brief: the bundle includes the analysis notebook, randomized
+  scenario generation, WOD-E2E validation-CV evidence, and a documented failure
+  case.
 
 Current WOD-E2E validation evidence:
 
@@ -51,6 +67,12 @@ Current WOD-E2E validation evidence:
 The strongest result is the closed-loop architecture behavior: the policy uses scenario structure and safety selection to navigate long-tail generated cases that defeat a simpler baseline. The second strongest result is infrastructure: official WOD-E2E parsing, scoring, packaging, and leaderboard-result logging are now separated from validation-tuned claims.
 
 The validation-CV candidate stack also shows real but limited signal. The combined ranker improves over constant velocity, and the candidate oracle is substantially stronger than the selected trajectory. That gap is useful because it points to the next technical bottleneck: candidate routing, not just generating more trajectories.
+
+The criteria audit passes all four SoTA judging dimensions under the declared
+submission-candidate boundary. That does not make the system a hidden-test
+leaderboard winner; it means the repo now has concrete evidence for why the
+architecture is technically serious, novel, feasible, and aligned with the
+commission brief.
 
 ## What Did Not Work Yet
 
