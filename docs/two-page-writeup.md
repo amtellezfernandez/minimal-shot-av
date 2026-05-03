@@ -66,6 +66,12 @@ at 9.098 RFS, showing useful proposal headroom but also exposing selector
 regret. The attached breakthrough audit does not pass: the mean score improves,
 but worst-slice regret regresses.
 
+A preference-calibrated neural heldout branch reached `7.838` local RFS on 159
+heldout validation-preference frames, and an official-scored heldout variant
+reached `7.894` normalized RFS. The full retained-validation official rerun
+scored only `7.262` mean RFS, so this is evidence of promising calibration
+headroom rather than the promoted WOD result.
+
 The most important engineering result is separation of concerns: simulator
 metrics are not used for WOD model selection, WOD validation labels are not
 presented as hidden-test results, and submission packaging is kept behind

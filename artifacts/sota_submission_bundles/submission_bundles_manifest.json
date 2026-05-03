@@ -1,6 +1,6 @@
 {
   "grand_commission": {
-    "file_count": 24,
+    "file_count": 28,
     "members": [
       "grand_commission/README.md",
       "grand_commission/repo_README.md",
@@ -10,6 +10,7 @@
       "grand_commission/docs/submission-tracks.md",
       "grand_commission/docs/grand-submission.md",
       "grand_commission/docs/judging-criteria-evidence.md",
+      "grand_commission/docs/preference-calibrated-evidence.md",
       "grand_commission/docs/two-page-writeup.md",
       "grand_commission/docs/final-submission-handoff.md",
       "grand_commission/notebooks/wod_e2e_analysis.ipynb",
@@ -19,6 +20,9 @@
       "grand_commission/docs/waymo-data-access.md",
       "grand_commission/artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json",
       "grand_commission/artifacts/wod_fastkin_gate_ridge175_rate020_fallback_breakthrough_audit.json",
+      "grand_commission/artifacts/wod_neural_holdout/neural_ensemble3_sourcegate_speedfine_p0_local.json",
+      "grand_commission/artifacts/wod_neural_holdout/neural_top1_pc0_familycal_l2_010_heldout_official.json",
+      "grand_commission/artifacts/wod_preference_calibrated_ensemble3_full_official.json",
       "grand_commission/artifacts/sota_judging_criteria_audit.json",
       "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.json",
       "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.svg",
@@ -28,8 +32,8 @@
       "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.svg"
     ],
     "path": "artifacts/sota_submission_bundles/grand_commission.tar.gz",
-    "sha256": "295c497f79f4414be39302db29220611b3ab5ddee57b6abb54dddc2cebf76a04",
-    "size_bytes": 175076
+    "sha256": "1b6a739313bd78d0c86e92cc136174d91fb76118ecba841f642fe8e69efe25fb",
+    "size_bytes": 236064
   },
   "minor_commission": {
     "file_count": 18,
@@ -54,7 +58,7 @@
       "minor_commission/artifacts/minor_eval/scenario_eval.json"
     ],
     "path": "artifacts/sota_submission_bundles/minor_commission.tar.gz",
-    "sha256": "fe546f7d6affce5a3e84ae7a0f8ea84683b02864fd223d13769b3597908de127",
-    "size_bytes": 92735
+    "sha256": "cfaa4c5954461a6fb34833ebc6a5da88afa8393d9ea7d276ecaf60bd4938a656",
+    "size_bytes": 92736
   }
 }

@@ -22,6 +22,11 @@ The submission now has a direct evidence map for the four judging criteria:
 - Adherence: the bundle includes the analysis notebook, simulation evidence,
   WOD-E2E validation-CV reports, failure audit, and readiness gates.
 
+Secondary WOD note: preference-calibrated heldout experiments reached `7.838`
+local RFS and `7.894` official normalized RFS, but the full retained-validation
+official rerun did not promote. The headline WOD claim remains the stable
+`7.657` official validation-CV report.
+
 ## Slide 3: Why The Problem Matters
 
 Most autonomy systems scale by collecting more data from places they already understand. That breaks down in rural roads, disaster zones, construction scenes, unusual agents, and rare hazards. Minimal-shot autonomy needs a world model, a candidate policy, and a safety selector that can act from sparse evidence.

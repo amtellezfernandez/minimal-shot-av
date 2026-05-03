@@ -68,6 +68,12 @@ The strongest result is the closed-loop architecture behavior: the policy uses s
 
 The validation-CV candidate stack also shows real but limited signal. The combined ranker improves over constant velocity, and the candidate oracle is substantially stronger than the selected trajectory. That gap is useful because it points to the next technical bottleneck: candidate routing, not just generating more trajectories.
 
+Preference-calibrated heldout experiments did reach the `7.8+` zone under a
+local scorer: `7.838` selected local RFS on 159 heldout validation-preference
+frames. An official-scored heldout variant reached `7.894` normalized RFS but
+only `7.628` official mean RFS. The full retained-validation official rerun
+scored `7.262`, so this is secondary evidence, not the promoted WOD claim.
+
 The criteria audit passes all four SoTA judging dimensions under the declared
 submission-candidate boundary. That does not make the system a hidden-test
 leaderboard winner; it means the repo now has concrete evidence for why the

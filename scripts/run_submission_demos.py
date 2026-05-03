@@ -56,6 +56,7 @@ TRACK_DOCS = {
         "docs/submission-tracks.md",
         "docs/grand-submission.md",
         "docs/judging-criteria-evidence.md",
+        "docs/preference-calibrated-evidence.md",
         "docs/two-page-writeup.md",
         "docs/final-submission-handoff.md",
         "notebooks/wod_e2e_analysis.ipynb",
@@ -81,6 +82,9 @@ TRACK_EVIDENCE = {
     "grand_commission": [
         "artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json",
         "artifacts/wod_fastkin_gate_ridge175_rate020_fallback_breakthrough_audit.json",
+        "artifacts/wod_neural_holdout/neural_ensemble3_sourcegate_speedfine_p0_local.json",
+        "artifacts/wod_neural_holdout/neural_top1_pc0_familycal_l2_010_heldout_official.json",
+        "artifacts/wod_preference_calibrated_ensemble3_full_official.json",
         "artifacts/sota_judging_criteria_audit.json",
     ],
     "minor_commission": [],
