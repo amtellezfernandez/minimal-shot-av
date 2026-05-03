@@ -307,7 +307,7 @@ def _experiment_matrix(args: argparse.Namespace) -> list[dict[str, Any]]:
             "source_gate": "train_margin",
             "source_gate_sources": "kinematic",
             "source_gate_router": "speed",
-            "source_gate_max_rate": "0.20",
+            "source_gate_max_rate": "0.16",
             "source_gate_candidate_prefixes": "yield_,lane_offset_,lane_change_,avoid_",
         },
         {

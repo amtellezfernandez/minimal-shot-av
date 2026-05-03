@@ -221,6 +221,7 @@ class WodBreakthroughExperimentRunnerTests(unittest.TestCase):
 
         self.assertEqual("reflex", command[command.index("--kinematic-profile") + 1])
         self.assertEqual("train_margin", command[command.index("--source-gate") + 1])
+        self.assertEqual("0.16", command[command.index("--source-gate-max-rate") + 1])
         prefix_index = command.index("--source-gate-candidate-prefixes") + 1
         self.assertEqual("yield_,lane_offset_,lane_change_,avoid_", command[prefix_index])
 
