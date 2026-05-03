@@ -91,7 +91,7 @@
     "minimal_shot_audit": "/home/amdev/sota/minimal-shot-av/artifacts/minimal_shot_claim_audit.json",
     "notebook": "/home/amdev/sota/minimal-shot-av/notebooks/wod_e2e_analysis.ipynb",
     "runtime_report": "/home/amdev/sota/minimal-shot-av/benchmarks/current/wod_online_runtime_vs_14ms_budget.json",
-    "sim_eval": "artifacts/sota_submission_bundles/minor_eval/scenario_eval.json",
+    "sim_eval": "/home/amdev/sota/minimal-shot-av/artifacts/sota_submission_bundles/minor_eval/scenario_eval.json",
     "wod_report": "/home/amdev/sota/minimal-shot-av/artifacts/wod_fastkin_gate_ridge175_scene020_cv_official.json"
   },
   "metrics": {

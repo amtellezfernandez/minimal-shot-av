@@ -1,6 +1,6 @@
 {
   "grand_commission": {
-    "file_count": 35,
+    "file_count": 37,
     "members": [
       "grand_commission/README.md",
       "grand_commission/repo_README.md",
@@ -27,6 +27,8 @@
       "grand_commission/artifacts/wod_neural_holdout/neural_ensemble3_sourcegate_speedfine_p0_local.json",
       "grand_commission/artifacts/wod_neural_holdout/neural_top1_pc0_familycal_l2_010_heldout_official.json",
       "grand_commission/artifacts/wod_preference_calibrated_ensemble3_full_official.json",
+      "grand_commission/artifacts/wod_e2e_data_restore_plan.json",
+      "grand_commission/artifacts/wod_e2e_leaderboard_attack_readiness.json",
       "grand_commission/benchmarks/current/wod_fast_slow_runtime.json",
       "grand_commission/benchmarks/current/wod_monolithic_runtime_reference.json",
       "grand_commission/artifacts/minimal_shot_claim_audit.json",
@@ -39,8 +41,8 @@
       "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.svg"
     ],
     "path": "artifacts/sota_submission_bundles/grand_commission.tar.gz",
-    "sha256": "bac1395fdb3feb309e0381596b9f376188b3320d4f8adb8822284a3aff7d9ea4",
-    "size_bytes": 244271
+    "sha256": "4a50bbe5a96d1710afb55610af686fa539ffdd70c426ce36c1d1873450a29e51",
+    "size_bytes": 246036
   },
   "minor_commission": {
     "file_count": 18,
@@ -65,7 +67,7 @@
       "minor_commission/artifacts/minor_eval/scenario_eval.json"
     ],
     "path": "artifacts/sota_submission_bundles/minor_commission.tar.gz",
-    "sha256": "d4494cf3443d03e57db78a30871e498926845e344ceebce2ba6283aa2edea582",
-    "size_bytes": 93143
+    "sha256": "d7031699356a930e1350576439d31198c80f2cbabac49b2cd5339757e4afddfb",
+    "size_bytes": 93144
   }
 }

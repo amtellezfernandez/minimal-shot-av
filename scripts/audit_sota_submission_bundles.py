@@ -36,6 +36,8 @@ REQUIRED_MEMBERS = {
         "grand_commission/artifacts/wod_neural_holdout/neural_ensemble3_sourcegate_speedfine_p0_local.json",
         "grand_commission/artifacts/wod_neural_holdout/neural_top1_pc0_familycal_l2_010_heldout_official.json",
         "grand_commission/artifacts/wod_preference_calibrated_ensemble3_full_official.json",
+        "grand_commission/artifacts/wod_e2e_data_restore_plan.json",
+        "grand_commission/artifacts/wod_e2e_leaderboard_attack_readiness.json",
         "grand_commission/benchmarks/current/wod_fast_slow_runtime.json",
         "grand_commission/benchmarks/current/wod_monolithic_runtime_reference.json",
         "grand_commission/artifacts/minimal_shot_claim_audit.json",
@@ -154,21 +156,51 @@ def _file_report(path: Path) -> dict[str, Any]:
 
 def _waymo_track_report(data_root: Path, leaderboard_results: Path) -> dict[str, Any]:
     test_shards = sorted((data_root / "test").glob("test*.tfrecord-*")) if (data_root / "test").is_dir() else []
+    expected, missing_indices = _shard_index_report(test_shards)
+    test_complete = bool(test_shards) and (expected is None or not missing_indices)
     leaderboard = _leaderboard_report(leaderboard_results)
     blockers = []
     if not test_shards:
         blockers.append(f"missing WOD-E2E test split at {data_root / 'test'}")
+    elif not test_complete:
+        blockers.append(
+            "incomplete WOD-E2E test split: "
+            f"{len(test_shards)} of {expected} shards"
+        )
     if not leaderboard["valid"]:
         blockers.append(f"missing confirmed hidden-test result log at {leaderboard_results}")
     return {
         "type": "waymo_leaderboard",
         "separate_from_sota": True,
         "test_split_present": bool(test_shards),
+        "test_split_complete": test_complete,
         "test_shard_count": len(test_shards),
+        "test_expected_shards": expected,
+        "test_missing_shards": len(missing_indices) if expected is not None else None,
+        "test_missing_shard_indices_sample": missing_indices[:20] if expected is not None else None,
         "leaderboard_results": leaderboard,
-        "ready_for_claim": bool(test_shards) and leaderboard["valid"],
+        "ready_for_claim": test_complete and leaderboard["valid"],
         "blockers": blockers,
     }
+
+
+def _shard_index_report(shards: list[Path]) -> tuple[int | None, list[int]]:
+    totals: set[int] = set()
+    indices: set[int] = set()
+    for shard in shards:
+        if "-of-" not in shard.name:
+            continue
+        prefix, suffix = shard.name.rsplit("-of-", maxsplit=1)
+        if suffix.isdigit():
+            totals.add(int(suffix))
+        index_text = prefix.rsplit("-", maxsplit=1)[-1]
+        if index_text.isdigit():
+            indices.add(int(index_text))
+    if not totals:
+        return None, []
+    expected = max(totals)
+    missing_indices = [index for index in range(expected) if index not in indices]
+    return expected, missing_indices
 
 
 def _leaderboard_report(path: Path) -> dict[str, Any]:

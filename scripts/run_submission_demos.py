@@ -90,6 +90,8 @@ TRACK_EVIDENCE = {
         "artifacts/wod_neural_holdout/neural_ensemble3_sourcegate_speedfine_p0_local.json",
         "artifacts/wod_neural_holdout/neural_top1_pc0_familycal_l2_010_heldout_official.json",
         "artifacts/wod_preference_calibrated_ensemble3_full_official.json",
+        "artifacts/wod_e2e_data_restore_plan.json",
+        "artifacts/wod_e2e_leaderboard_attack_readiness.json",
         "benchmarks/current/wod_fast_slow_runtime.json",
         "benchmarks/current/wod_monolithic_runtime_reference.json",
         "artifacts/minimal_shot_claim_audit.json",
@@ -317,10 +319,16 @@ def _submission_index(manifest: dict[str, dict[str, Any]]) -> str:
             "- WOD-E2E test split missing locally",
             "- no confirmed hidden-test leaderboard result recorded",
             "",
-            "When ready, generate official Waymo tarballs with:",
+            "First restore the missing train/test shards and official frame list:",
             "",
-            "`PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/prepare_wod_e2e_submission_matrix.py "
-            "--test-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/test "
+            "`python3 scripts/prepare_wod_e2e_data.py --data-root /home/amdev/waymo "
+            "--output artifacts/wod_e2e_data_restore_plan.json`",
+            "",
+            "When ready, generate pre-registered official Waymo tarballs through the two-gate wrapper:",
+            "",
+            "`PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/run_wod_leaderboard_attack.py "
+            "--data-root /home/amdev/waymo "
+            "--frame-list data/waymo/e2e/submission_frames/test_frames.json "
             "--output-dir artifacts/wod_e2e_submission_matrix "
             "--account-name <account> --authors 'Alba Maria Tellez Fernandez'`",
             "",

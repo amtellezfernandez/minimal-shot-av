@@ -68,8 +68,35 @@ class AuditSotaSubmissionBundlesTests(unittest.TestCase):
             self.assertTrue(report["submission_tracks"]["sota_minor"]["valid"])
             self.assertFalse(report["submission_tracks"]["waymo_wod_e2e"]["ready_for_claim"])
             self.assertTrue(report["submission_tracks"]["waymo_wod_e2e"]["separate_from_sota"])
+            self.assertFalse(report["submission_tracks"]["waymo_wod_e2e"]["test_split_complete"])
             self.assertEqual([], report["tracks"]["grand_commission"]["missing_required"])
             self.assertTrue(report["tracks"]["minor_commission"]["manifest_sha_matches"])
+
+    def test_waymo_track_rejects_partial_test_split(self) -> None:
+        audit = _load(AUDIT_SCRIPT, "audit_sota_submission_bundles")
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            test_dir = root / "waymo" / "test"
+            test_dir.mkdir(parents=True)
+            for index in (0, 2):
+                (test_dir / f"test_000.tfrecord-{index:05d}-of-00003").write_bytes(b"")
+            leaderboard = root / "leaderboard.json"
+            leaderboard.write_text(
+                (
+                    '{"schema":"wod_e2e_leaderboard_results_v1",'
+                    '"results":[{"confirmed_hidden_test":true,"submission_sha256":"abc"}]}'
+                ),
+                encoding="utf-8",
+            )
+
+            report = audit._waymo_track_report(root / "waymo", leaderboard)
+
+            self.assertFalse(report["ready_for_claim"])
+            self.assertFalse(report["test_split_complete"])
+            self.assertEqual(3, report["test_expected_shards"])
+            self.assertEqual(1, report["test_missing_shards"])
+            self.assertEqual([1], report["test_missing_shard_indices_sample"])
+            self.assertIn("incomplete WOD-E2E test split", "\n".join(report["blockers"]))
 
     def test_audit_rejects_missing_required_member(self) -> None:
         audit = _load(AUDIT_SCRIPT, "audit_sota_submission_bundles")

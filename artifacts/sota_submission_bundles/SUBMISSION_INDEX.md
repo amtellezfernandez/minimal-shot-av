@@ -10,7 +10,7 @@ Upload / attach:
 - GitHub repository URL
 - Video or slide deck based on `docs/sota-grand-slide-script.md`
 
-SHA-256: `bac1395fdb3feb309e0381596b9f376188b3320d4f8adb8822284a3aff7d9ea4`
+SHA-256: `4a50bbe5a96d1710afb55610af686fa539ffdd70c426ce36c1d1873450a29e51`
 
 Claim: minimal-shot autonomy architecture prototype with closed-loop demos.
 
@@ -22,7 +22,7 @@ Upload / attach:
 - GitHub repository URL
 - Video or slide deck based on `docs/sota-minor-slide-script.md`
 
-SHA-256: `d4494cf3443d03e57db78a30871e498926845e344ceebce2ba6283aa2edea582`
+SHA-256: `d7031699356a930e1350576439d31198c80f2cbabac49b2cd5339757e4afddfb`
 
 Claim: randomized long-tail simulation environment with closed-loop evaluation.
 
@@ -35,6 +35,10 @@ Current status:
 - WOD-E2E test split missing locally
 - no confirmed hidden-test leaderboard result recorded
 
-When ready, generate official Waymo tarballs with:
+First restore the missing train/test shards and official frame list:
 
-`PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/prepare_wod_e2e_submission_matrix.py --test-dir waymo_open_dataset_end_to_end_camera_v_1_0_0/test --output-dir artifacts/wod_e2e_submission_matrix --account-name <account> --authors 'Alba Maria Tellez Fernandez'`
+`python3 scripts/prepare_wod_e2e_data.py --data-root /home/amdev/waymo --output artifacts/wod_e2e_data_restore_plan.json`
+
+When ready, generate pre-registered official Waymo tarballs through the two-gate wrapper:
+
+`PYTHONPATH=src:.wod-protos .venv-wod/bin/python scripts/run_wod_leaderboard_attack.py --data-root /home/amdev/waymo --frame-list data/waymo/e2e/submission_frames/test_frames.json --output-dir artifacts/wod_e2e_submission_matrix --account-name <account> --authors 'Alba Maria Tellez Fernandez'`
