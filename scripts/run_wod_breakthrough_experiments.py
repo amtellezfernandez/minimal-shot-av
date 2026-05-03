@@ -419,7 +419,7 @@ def _experiment_matrix(args: argparse.Namespace) -> list[dict[str, Any]]:
                 },
             ]
         )
-    neural_ensemble_paths = _existing_paths_from_csv(args.neural_candidate_models)
+    neural_ensemble_paths = _existing_paths_from_csv(str(getattr(args, "neural_candidate_models", "")))
     if neural_ensemble_paths:
         base_runs.append(
             {

@@ -38,9 +38,10 @@ class BuildCosmosPredict25TokenizerEmbeddingCacheTests(unittest.TestCase):
     def test_image_tensor_adds_video_time_dimension(self) -> None:
         module = _load_module()
         try:
+            import torch  # noqa: F401
             from PIL import Image
         except ModuleNotFoundError:
-            self.skipTest("PIL is not installed")
+            self.skipTest("PIL or torch is not installed")
         buffer = module.BytesIO()
         Image.fromarray(np.zeros((4, 4, 3), dtype=np.uint8)).save(buffer, format="JPEG")
 
