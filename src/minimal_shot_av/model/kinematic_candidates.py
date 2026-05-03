@@ -58,7 +58,7 @@ def kinematic_trajectories(
 ) -> list[tuple[str, Trajectory]]:
     if len(past_trajectory) < 2:
         raise ValueError("at least two past trajectory points are required")
-    if profile not in {"base", "expanded"}:
+    if profile not in {"base", "expanded", "reflex"}:
         raise ValueError(f"unsupported kinematic profile: {profile!r}")
     last_step = _step(past_trajectory[-2], past_trajectory[-1])
     trajectories = [
@@ -67,7 +67,7 @@ def kinematic_trajectories(
         ("constant_heading_change", _constant_heading_change(past_trajectory, last_step)),
         ("hold_position", [(0.0, 0.0)] * WOD_FUTURE_WAYPOINTS),
     ]
-    if profile == "expanded":
+    if profile in {"expanded", "reflex"}:
         trajectories.extend(
             [
                 ("speed_25pct", _constant_velocity(_scale_step(last_step, 0.25))),
@@ -78,6 +78,8 @@ def kinematic_trajectories(
                 ("stop_by_5s", _decelerate_to_stop(last_step, stop_index=20)),
             ]
         )
+    if profile == "reflex":
+        trajectories.extend(_reflex_trajectories(last_step))
     return trajectories
 
 
@@ -100,6 +102,104 @@ def _decelerate_to_stop(step: tuple[float, float], *, stop_index: int) -> Trajec
         y += step[1] * scale
         trajectory.append((x, y))
     return trajectory
+
+
+def _reflex_trajectories(step: tuple[float, float]) -> list[tuple[str, Trajectory]]:
+    """Training-free evasive/yield hypotheses from ego motion only."""
+    return [
+        ("yield_creep", _decelerate_to_scale(step, final_scale=0.20)),
+        ("yield_then_go", _yield_then_go(step, yield_steps=8, resume_scale=0.85)),
+        ("lane_offset_left_1m", _lateral_offset(step, lateral_m=1.0)),
+        ("lane_offset_right_1m", _lateral_offset(step, lateral_m=-1.0)),
+        ("lane_change_left_3m", _lateral_offset(step, lateral_m=3.2)),
+        ("lane_change_right_3m", _lateral_offset(step, lateral_m=-3.2)),
+        ("avoid_left_return", _avoid_and_return(step, lateral_m=2.2)),
+        ("avoid_right_return", _avoid_and_return(step, lateral_m=-2.2)),
+    ]
+
+
+def _decelerate_to_scale(step: tuple[float, float], *, final_scale: float) -> Trajectory:
+    scale_end = max(0.0, float(final_scale))
+    trajectory: Trajectory = []
+    x = 0.0
+    y = 0.0
+    denominator = max(1, WOD_FUTURE_WAYPOINTS - 1)
+    for index in range(WOD_FUTURE_WAYPOINTS):
+        ratio = index / denominator
+        scale = (1.0 - ratio) + scale_end * ratio
+        x += step[0] * scale
+        y += step[1] * scale
+        trajectory.append((x, y))
+    return trajectory
+
+
+def _yield_then_go(
+    step: tuple[float, float],
+    *,
+    yield_steps: int,
+    resume_scale: float,
+) -> Trajectory:
+    slow_steps = max(1, min(WOD_FUTURE_WAYPOINTS - 1, int(yield_steps)))
+    trajectory: Trajectory = []
+    x = 0.0
+    y = 0.0
+    for index in range(WOD_FUTURE_WAYPOINTS):
+        if index < slow_steps:
+            scale = 0.15
+        else:
+            ramp = (index - slow_steps + 1) / max(1, WOD_FUTURE_WAYPOINTS - slow_steps)
+            scale = 0.15 + (float(resume_scale) - 0.15) * min(1.0, ramp)
+        x += step[0] * scale
+        y += step[1] * scale
+        trajectory.append((x, y))
+    return trajectory
+
+
+def _lateral_offset(step: tuple[float, float], *, lateral_m: float) -> Trajectory:
+    forward, lateral = _basis(step)
+    trajectory: Trajectory = []
+    for index in range(1, WOD_FUTURE_WAYPOINTS + 1):
+        progress = _smoothstep(index / WOD_FUTURE_WAYPOINTS)
+        x = forward[0] * _step_norm(step) * index + lateral[0] * lateral_m * progress
+        y = forward[1] * _step_norm(step) * index + lateral[1] * lateral_m * progress
+        trajectory.append((x, y))
+    return trajectory
+
+
+def _avoid_and_return(step: tuple[float, float], *, lateral_m: float) -> Trajectory:
+    forward, lateral = _basis(step)
+    norm = _step_norm(step)
+    trajectory: Trajectory = []
+    for index in range(1, WOD_FUTURE_WAYPOINTS + 1):
+        phase = index / WOD_FUTURE_WAYPOINTS
+        if phase <= 0.55:
+            lateral_scale = _smoothstep(phase / 0.55)
+        else:
+            lateral_scale = 1.0 - _smoothstep((phase - 0.55) / 0.45)
+        x = forward[0] * norm * index + lateral[0] * lateral_m * lateral_scale
+        y = forward[1] * norm * index + lateral[1] * lateral_m * lateral_scale
+        trajectory.append((x, y))
+    return trajectory
+
+
+def _basis(step: tuple[float, float]) -> tuple[tuple[float, float], tuple[float, float]]:
+    norm = _step_norm(step)
+    if norm <= 1e-8:
+        return (1.0, 0.0), (0.0, 1.0)
+    forward = (step[0] / norm, step[1] / norm)
+    lateral = (-forward[1], forward[0])
+    return forward, lateral
+
+
+def _step_norm(step: tuple[float, float]) -> float:
+    import math
+
+    return math.hypot(float(step[0]), float(step[1]))
+
+
+def _smoothstep(value: float) -> float:
+    ratio = min(1.0, max(0.0, float(value)))
+    return ratio * ratio * (3.0 - 2.0 * ratio)
 
 
 def _constant_acceleration(

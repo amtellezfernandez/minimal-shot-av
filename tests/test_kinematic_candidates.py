@@ -63,6 +63,18 @@ class KinematicCandidateTests(unittest.TestCase):
         self.assertGreater(len(candidates), 4)
         self.assertLess(candidates["speed_50pct"][-1][0], candidates["constant_velocity"][-1][0])
 
+    def test_reflex_profile_adds_training_free_evasive_hypotheses(self) -> None:
+        candidates = dict(kinematic_trajectories(sample_frame().past_trajectory, profile="reflex"))
+
+        self.assertIn("lane_change_left_3m", candidates)
+        self.assertIn("lane_change_right_3m", candidates)
+        self.assertIn("avoid_left_return", candidates)
+        self.assertIn("yield_then_go", candidates)
+        self.assertGreater(candidates["lane_change_left_3m"][-1][1], 2.5)
+        self.assertLess(candidates["lane_change_right_3m"][-1][1], -2.5)
+        self.assertAlmostEqual(candidates["avoid_left_return"][-1][1], 0.0, places=6)
+        self.assertLess(candidates["yield_creep"][-1][0], candidates["constant_velocity"][-1][0])
+
 
 if __name__ == "__main__":
     unittest.main()

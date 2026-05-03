@@ -4,6 +4,7 @@ import argparse
 import importlib.util
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 import unittest
 import unittest.mock
 
@@ -45,6 +46,9 @@ class WodBreakthroughExperimentRunnerTests(unittest.TestCase):
         self.assertIn("independent_kinematic_source_gate", {run["name"] for run in runs})
         self.assertIn("conservative_intent_source_gate", {run["name"] for run in runs})
         self.assertIn("conservative_intent_speed_source_gate", {run["name"] for run in runs})
+        self.assertIn("zero_shot_reflex_kinematic_linear", {run["name"] for run in runs})
+        self.assertIn("zero_shot_reflex_guarded_reactive", {run["name"] for run in runs})
+        self.assertIn("zero_shot_reflex_fast_slow_scene_gate", {run["name"] for run in runs})
         self.assertIn("conservative_learned_cap_speed_fine", {run["name"] for run in runs})
         self.assertIn("pairwise_logistic_family_reliability_strong", {run["name"] for run in runs})
         self.assertIn("memory_pairwise_family_reliability_top5", {run["name"] for run in runs})
@@ -174,6 +178,51 @@ class WodBreakthroughExperimentRunnerTests(unittest.TestCase):
         command = module._command_for_run(run, ROOT / "out.json", args)
 
         self.assertEqual("residual_pairs", command[command.index("--blend-candidates") + 1])
+
+    def test_zero_shot_reflex_runs_use_reflex_kinematic_profile(self) -> None:
+        module = _load_module()
+        args = SimpleNamespace(
+            smoke=False,
+            pilot=False,
+            frame_cache=ROOT / "frames.json",
+            output_dir=ROOT / "artifacts",
+            external_embedding_cache=ROOT / "cache.json",
+            neural_candidate_model=None,
+            transformer_candidate_model=None,
+            promotion_baseline=ROOT / "baseline.json",
+            min_rfs_gain=0.0,
+            continue_on_error=False,
+        )
+        run = next(
+            row for row in module._experiment_matrix(args) if row["name"] == "zero_shot_reflex_kinematic_linear"
+        )
+        command = module._command_for_run(run, ROOT / "out.json", args)
+
+        self.assertEqual("reflex", command[command.index("--kinematic-profile") + 1])
+
+    def test_zero_shot_reflex_guarded_run_only_gates_reflex_primitives(self) -> None:
+        module = _load_module()
+        args = SimpleNamespace(
+            smoke=False,
+            pilot=False,
+            frame_cache=ROOT / "frames.json",
+            output_dir=ROOT / "artifacts",
+            external_embedding_cache=ROOT / "cache.json",
+            neural_candidate_model=None,
+            transformer_candidate_model=None,
+            promotion_baseline=ROOT / "baseline.json",
+            min_rfs_gain=0.0,
+            continue_on_error=False,
+        )
+        run = next(
+            row for row in module._experiment_matrix(args) if row["name"] == "zero_shot_reflex_guarded_reactive"
+        )
+        command = module._command_for_run(run, ROOT / "out.json", args)
+
+        self.assertEqual("reflex", command[command.index("--kinematic-profile") + 1])
+        self.assertEqual("train_margin", command[command.index("--source-gate") + 1])
+        prefix_index = command.index("--source-gate-candidate-prefixes") + 1
+        self.assertEqual("yield_,lane_offset_,lane_change_,avoid_", command[prefix_index])
 
     def test_neural_candidate_model_adds_breakthrough_runs_and_args(self) -> None:
         module = _load_module()

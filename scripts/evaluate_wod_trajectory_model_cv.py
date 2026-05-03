@@ -361,7 +361,7 @@ def main() -> int:
     parser.add_argument("--source-veto-min-route-positives", type=int, default=0)
     parser.add_argument(
         "--kinematic-profile",
-        choices=("base", "expanded"),
+        choices=("base", "expanded", "reflex"),
         default="base",
         help="Kinematic candidate set to include in each frame.",
     )
