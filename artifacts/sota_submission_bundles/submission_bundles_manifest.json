@@ -26,8 +26,8 @@
       "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.svg"
     ],
     "path": "artifacts/sota_submission_bundles/grand_commission.tar.gz",
-    "sha256": "766b1dd529e269c63c6c6b05cb7aafdf61324fb37b55e1f5bb6e3811fc534435",
-    "size_bytes": 170972
+    "sha256": "ffa97eb55d1e963d1a44b3596bb12bf4032260410b118532dc32aebfef51da58",
+    "size_bytes": 171994
   },
   "minor_commission": {
     "file_count": 18,
@@ -52,7 +52,7 @@
       "minor_commission/artifacts/minor_eval/scenario_eval.json"
     ],
     "path": "artifacts/sota_submission_bundles/minor_commission.tar.gz",
-    "sha256": "d367d66901815813e38bc28d085e48666fedc8b7ee81f862beefae541f737770",
+    "sha256": "3373f985db9e50c2f90c378db8225a62bd0363cb3347292f0e3bfb77a6660a9c",
     "size_bytes": 92747
   }
 }
