@@ -83,6 +83,7 @@ MODEL_SCRIPTS = {
     "evaluate_wod_preference_ranker.py",
     "evaluate_wod_anchor_model_cv.py",
     "evaluate_wod_trajectory_model_cv.py",
+    "export_wod_gcs_shard_samples.py",
     "generate_wod_anchor_candidates.py",
     "generate_wod_kinematic_candidates.py",
     "generate_wod_learned_candidates.py",
@@ -107,6 +108,7 @@ MODEL_SCRIPTS = {
 SIMULATOR_SCRIPTS = {
     "audit_novel_object_stress.py",
     "audit_alpasignal_bridge.py",
+    "audit_minor_runtime_constraints.py",
     "audit_sota_submission_bundles.py",
     "evaluate_scenarios.py",
     "run_demo.py",
