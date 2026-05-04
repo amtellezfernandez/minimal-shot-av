@@ -162,11 +162,17 @@ class NeuralAnchorResidualTrajectoryModel:
         output_path.write_text(json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def save_neural_training_frame_cache(frames: Iterable[WodE2EPreferenceFrame], path: str | Path) -> int:
+def save_neural_training_frame_cache(
+    frames: Iterable[WodE2EPreferenceFrame],
+    path: str | Path,
+    *,
+    append: bool = False,
+) -> int:
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     count = 0
-    with output_path.open("w", encoding="utf-8") as output:
+    mode = "a" if append else "w"
+    with output_path.open(mode, encoding="utf-8") as output:
         for frame in frames:
             if len(frame.future_trajectory) != FUTURE_WAYPOINTS:
                 continue

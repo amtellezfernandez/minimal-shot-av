@@ -56,12 +56,18 @@ def main() -> int:
     parser.add_argument(
         "--frame-cache",
         type=Path,
-        help="JSONL cache from export_wod_neural_training_frames.py; avoids TensorFlow in the training environment.",
+        action="append",
+        help=(
+            "JSONL cache from export_wod_neural_training_frames.py; may be passed multiple times. "
+            "Avoids TensorFlow and raw TFRecords in the training environment."
+        ),
     )
     args = parser.parse_args()
 
     if args.frame_cache is not None:
-        frames = load_neural_training_frame_cache(args.frame_cache)
+        frames = []
+        for frame_cache in args.frame_cache:
+            frames.extend(load_neural_training_frame_cache(frame_cache))
     else:
         frames = load_preference_frames(
             args.train_dir,

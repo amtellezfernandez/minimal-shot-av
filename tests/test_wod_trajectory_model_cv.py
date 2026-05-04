@@ -261,6 +261,22 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         self.assertEqual(frames[0].future_trajectory, loaded[0].future_trajectory)
         self.assertEqual([], loaded[0].references)
 
+    def test_neural_training_frame_cache_can_append_shard_windows(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        first_window = [sample_frame("segment-0-100", step=0.5)]
+        second_window = [sample_frame("segment-1-100", step=0.75), sample_frame("segment-2-100", step=1.0)]
+
+        with TemporaryDirectory() as tmpdir:
+            cache_path = Path(tmpdir) / "frames.jsonl"
+            first_rows = save_neural_training_frame_cache(first_window, cache_path)
+            second_rows = save_neural_training_frame_cache(second_window, cache_path, append=True)
+            loaded = load_neural_training_frame_cache(cache_path)
+
+        self.assertEqual(1, first_rows)
+        self.assertEqual(2, second_rows)
+        self.assertEqual(["segment-0-100", "segment-1-100", "segment-2-100"], [frame.frame_name for frame in loaded])
+
     def test_transformer_model_round_trips_and_generates_candidates(self) -> None:
         if cv is None:
             self.skipTest("numpy is not installed")

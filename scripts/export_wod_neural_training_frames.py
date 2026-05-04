@@ -27,6 +27,7 @@ def main() -> int:
     parser.add_argument("--shard-start", type=int, default=0)
     parser.add_argument("--max-shards", type=int)
     parser.add_argument("--max-records", type=int)
+    parser.add_argument("--append", action="store_true", help="Append this shard window to an existing JSONL cache.")
     args = parser.parse_args()
 
     frames = load_preference_frames(
@@ -37,7 +38,7 @@ def main() -> int:
         include_camera_images=False,
         require_preferences=False,
     )
-    exported_rows = save_neural_training_frame_cache(frames, args.output)
+    exported_rows = save_neural_training_frame_cache(frames, args.output, append=args.append)
     report = {
         "schema": "wod_neural_training_frame_cache_v1",
         "output": str(args.output),
@@ -46,6 +47,7 @@ def main() -> int:
         "shard_start": args.shard_start,
         "max_shards": args.max_shards,
         "max_records": args.max_records,
+        "append": bool(args.append),
     }
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0
