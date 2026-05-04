@@ -12,6 +12,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.model.wod_e2e import (
+    _validation_shards,
     align_preference_trajectory,
     camera_images_from_frame,
     init_speed_from_states,
@@ -219,6 +220,31 @@ class WodE2ELoaderTests(unittest.TestCase):
 
         self.assertEqual([image.name for image in images], ["FRONT", "REAR"])
         self.assertEqual(images[0].jpeg, b"front")
+
+    def test_validation_shards_supports_windowed_processing(self) -> None:
+        from tempfile import TemporaryDirectory
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            for index in range(5):
+                (root / f"train_000.tfrecord-{index:05d}-of-00005").write_bytes(b"")
+
+            shards = _validation_shards(root, shard_start=2, max_shards=2)
+
+            self.assertEqual(
+                [f"train_000.tfrecord-{index:05d}-of-00005" for index in (2, 3)],
+                [shard.name for shard in shards],
+            )
+
+    def test_validation_shards_rejects_negative_start(self) -> None:
+        from tempfile import TemporaryDirectory
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "val_000.tfrecord-00000-of-00001").write_bytes(b"")
+
+            with self.assertRaises(ValueError):
+                _validation_shards(root, shard_start=-1, max_shards=None)
 
 
 if __name__ == "__main__":

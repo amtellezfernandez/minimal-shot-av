@@ -30,6 +30,7 @@ class WodE2EPreferenceFrame:
 def load_preference_frames(
     val_dir: str | Path,
     *,
+    shard_start: int = 0,
     max_shards: int | None = None,
     max_records: int | None = None,
     include_camera_images: bool = True,
@@ -38,7 +39,7 @@ def load_preference_frames(
     """Yield validation frames with valid WOD-E2E rater preference labels."""
 
     tf, wod_e2ed_pb2 = _import_official_parser()
-    shards = _validation_shards(Path(val_dir), max_shards=max_shards)
+    shards = _validation_shards(Path(val_dir), shard_start=shard_start, max_shards=max_shards)
     records_seen = 0
 
     for shard in shards:
@@ -149,10 +150,13 @@ def init_speed_from_states(states: object) -> float:
     return 0.0
 
 
-def _validation_shards(val_dir: Path, *, max_shards: int | None) -> list[Path]:
+def _validation_shards(val_dir: Path, *, shard_start: int = 0, max_shards: int | None) -> list[Path]:
+    if shard_start < 0:
+        raise ValueError("shard_start must be non-negative")
     shards = sorted(val_dir.glob("*.tfrecord-*"))
     if not shards:
         raise FileNotFoundError(f"no WOD-E2E shards found under {val_dir}")
+    shards = shards[shard_start:]
     if max_shards is not None:
         return shards[:max_shards]
     return shards
