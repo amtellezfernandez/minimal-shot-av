@@ -25,7 +25,7 @@ class PrepareWodE2EDataTests(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             data_root = Path(tmpdir) / "wod"
             (data_root / "train").mkdir(parents=True)
-            (data_root / "train" / "train_000.tfrecord-00000-of-00001").write_bytes(b"")
+            (data_root / "train" / "training_000.tfrecord-00000-of-00001").write_bytes(b"")
 
             plan = module.download_plan(
                 data_root=data_root,
@@ -39,6 +39,22 @@ class PrepareWodE2EDataTests(unittest.TestCase):
             self.assertFalse((data_root / "test").exists())
             self.assertEqual(
                 [["gsutil", "-m", "cp", "-n", "gs://bucket/test*", str(data_root / "test")]],
+                plan["commands"],
+            )
+
+    def test_download_plan_uses_real_training_object_prefix(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmpdir:
+            data_root = Path(tmpdir) / "wod"
+
+            plan = module.download_plan(
+                data_root=data_root,
+                bucket="gs://bucket",
+                splits=["train"],
+            )
+
+            self.assertEqual(
+                [["gsutil", "-m", "cp", "-n", "gs://bucket/training*", str(data_root / "train")]],
                 plan["commands"],
             )
 
@@ -65,7 +81,7 @@ class PrepareWodE2EDataTests(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             data_root = Path(tmpdir) / "wod"
             (data_root / "train").mkdir(parents=True)
-            (data_root / "train" / "train_000.tfrecord-00000-of-00003").write_bytes(b"")
+            (data_root / "train" / "training_000.tfrecord-00000-of-00003").write_bytes(b"")
 
             plan = module.download_plan(
                 data_root=data_root,
@@ -78,7 +94,7 @@ class PrepareWodE2EDataTests(unittest.TestCase):
             self.assertEqual(3, plan["splits"]["train"]["expected_shards"])
             self.assertEqual(2, plan["splits"]["train"]["missing_shards"])
             self.assertEqual(
-                [["gsutil", "-m", "cp", "-n", "gs://bucket/train*", str(data_root / "train")]],
+                [["gsutil", "-m", "cp", "-n", "gs://bucket/training*", str(data_root / "train")]],
                 plan["commands"],
             )
 
@@ -88,7 +104,7 @@ class PrepareWodE2EDataTests(unittest.TestCase):
             data_root = Path(tmpdir) / "wod"
             (data_root / "train").mkdir(parents=True)
             for index in (0, 2):
-                (data_root / "train" / f"train_000.tfrecord-{index:05d}-of-00003").write_bytes(b"")
+                (data_root / "train" / f"training_000.tfrecord-{index:05d}-of-00003").write_bytes(b"")
 
             plan = module.download_plan(
                 data_root=data_root,
@@ -100,7 +116,7 @@ class PrepareWodE2EDataTests(unittest.TestCase):
             self.assertEqual(1, plan["splits"]["train"]["missing_shards"])
             self.assertEqual([1], plan["splits"]["train"]["missing_shard_indices_sample"])
             self.assertEqual(
-                [["gsutil", "-m", "cp", "-n", "gs://bucket/train*", str(data_root / "train")]],
+                [["gsutil", "-m", "cp", "-n", "gs://bucket/training*", str(data_root / "train")]],
                 plan["commands"],
             )
 

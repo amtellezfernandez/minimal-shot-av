@@ -96,6 +96,7 @@ MODEL_SCRIPTS = {
     "run_wod_breakthrough_experiments.py",
     "run_wod_leaderboard_attack.py",
     "score_wod_candidates_with_ranker.py",
+    "stage_wod_gcs_shards.py",
     "train_wod_contextual_ranker.py",
     "train_wod_trajectory_model.py",
     "train_wod_preference_ranker.py",

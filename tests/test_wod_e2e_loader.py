@@ -12,10 +12,12 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.model.wod_e2e import (
+    _shards_from_glob,
     _validation_shards,
     align_preference_trajectory,
     camera_images_from_frame,
     init_speed_from_states,
+    load_preference_frames,
     preference_frame_from_proto,
     trajectory_from_states,
 )
@@ -245,6 +247,26 @@ class WodE2ELoaderTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 _validation_shards(root, shard_start=-1, max_shards=None)
+
+    def test_shards_from_glob_supports_gcs_style_paths(self) -> None:
+        paths = [
+            "gs://bucket/training.tfrecord-00002-of-00003",
+            "gs://bucket/training.tfrecord-00000-of-00003",
+            "gs://bucket/training.tfrecord-00001-of-00003",
+        ]
+
+        shards = _shards_from_glob(
+            "gs://bucket/training*.tfrecord-*",
+            glob_fn=lambda pattern: paths,
+            shard_start=1,
+            max_shards=1,
+        )
+
+        self.assertEqual(["gs://bucket/training.tfrecord-00001-of-00003"], shards)
+
+    def test_record_start_is_validated_before_importing_tensorflow(self) -> None:
+        with self.assertRaises(ValueError):
+            list(load_preference_frames("unused", record_start=-1))
 
 
 if __name__ == "__main__":

@@ -30,7 +30,9 @@ class WodE2EPreferenceFrame:
 def load_preference_frames(
     val_dir: str | Path,
     *,
+    shard_glob: str | None = None,
     shard_start: int = 0,
+    record_start: int = 0,
     max_shards: int | None = None,
     max_records: int | None = None,
     include_camera_images: bool = True,
@@ -38,15 +40,23 @@ def load_preference_frames(
 ) -> Iterator[WodE2EPreferenceFrame]:
     """Yield validation frames with valid WOD-E2E rater preference labels."""
 
+    if record_start < 0:
+        raise ValueError("record_start must be non-negative")
     tf, wod_e2ed_pb2 = _import_official_parser()
-    shards = _validation_shards(Path(val_dir), shard_start=shard_start, max_shards=max_shards)
+    if shard_glob is not None:
+        shards = _shards_from_glob(shard_glob, glob_fn=tf.io.gfile.glob, shard_start=shard_start, max_shards=max_shards)
+    else:
+        shards = _validation_shards(Path(val_dir), shard_start=shard_start, max_shards=max_shards)
     records_seen = 0
 
     for shard in shards:
         dataset = tf.data.TFRecordDataset([str(shard)], compression_type="")
         for record in dataset:
             records_seen += 1
-            if max_records is not None and records_seen > max_records:
+            if records_seen <= record_start:
+                continue
+            emitted_record_count = records_seen - record_start
+            if max_records is not None and emitted_record_count > max_records:
                 return
 
             frame = wod_e2ed_pb2.E2EDFrame()
@@ -156,6 +166,24 @@ def _validation_shards(val_dir: Path, *, shard_start: int = 0, max_shards: int |
     shards = sorted(val_dir.glob("*.tfrecord-*"))
     if not shards:
         raise FileNotFoundError(f"no WOD-E2E shards found under {val_dir}")
+    shards = shards[shard_start:]
+    if max_shards is not None:
+        return shards[:max_shards]
+    return shards
+
+
+def _shards_from_glob(
+    shard_glob: str,
+    *,
+    glob_fn,
+    shard_start: int = 0,
+    max_shards: int | None,
+) -> list[str]:
+    if shard_start < 0:
+        raise ValueError("shard_start must be non-negative")
+    shards = sorted(str(path) for path in glob_fn(shard_glob))
+    if not shards:
+        raise FileNotFoundError(f"no WOD-E2E shards matched {shard_glob}")
     shards = shards[shard_start:]
     if max_shards is not None:
         return shards[:max_shards]

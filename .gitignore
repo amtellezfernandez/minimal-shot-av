@@ -4,6 +4,7 @@
 .uv-cache/
 .wod-protos/
 .codex
+.gcloud/
 __pycache__/
 *.pyc
 *.egg-info/

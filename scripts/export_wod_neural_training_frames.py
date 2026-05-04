@@ -24,7 +24,15 @@ def main() -> int:
         default=ROOT / "waymo_open_dataset_end_to_end_camera_v_1_0_0" / "train",
     )
     parser.add_argument("--output", type=Path, default=ROOT / "artifacts" / "wod_neural_training_frames.jsonl")
+    parser.add_argument(
+        "--shard-glob",
+        help=(
+            "Optional local or gs:// glob for TFRecord shards, for example "
+            "gs://waymo_open_dataset_end_to_end_camera_v_1_0_0/training_*.tfrecord-*."
+        ),
+    )
     parser.add_argument("--shard-start", type=int, default=0)
+    parser.add_argument("--record-start", type=int, default=0)
     parser.add_argument("--max-shards", type=int)
     parser.add_argument("--max-records", type=int)
     parser.add_argument("--append", action="store_true", help="Append this shard window to an existing JSONL cache.")
@@ -32,7 +40,9 @@ def main() -> int:
 
     frames = load_preference_frames(
         args.train_dir,
+        shard_glob=args.shard_glob,
         shard_start=args.shard_start,
+        record_start=args.record_start,
         max_shards=args.max_shards,
         max_records=args.max_records,
         include_camera_images=False,
@@ -44,7 +54,9 @@ def main() -> int:
         "output": str(args.output),
         "exported_rows": exported_rows,
         "train_dir": str(args.train_dir),
+        "shard_glob": args.shard_glob,
         "shard_start": args.shard_start,
+        "record_start": args.record_start,
         "max_shards": args.max_shards,
         "max_records": args.max_records,
         "append": bool(args.append),

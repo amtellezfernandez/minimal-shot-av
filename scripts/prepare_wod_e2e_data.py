@@ -77,7 +77,7 @@ def download_plan(
     for split in splits:
         report = split_status(data_root, split)
         target = data_root / split
-        source = f"{bucket.rstrip('/')}/{split}*"
+        source = f"{bucket.rstrip('/')}/{_split_object_prefix(split)}*"
         command = ["gsutil", "-m", "cp", "-n", source, str(target)]
         split_reports[split] = {
             **report,
@@ -111,8 +111,9 @@ def download_plan(
 
 def split_status(data_root: Path, split: str) -> dict[str, Any]:
     target = data_root / split
-    target_shards = sorted(target.glob(f"{split}*.tfrecord-*"))
-    root_shards = sorted(data_root.glob(f"{split}*.tfrecord-*"))
+    prefix = _split_object_prefix(split)
+    target_shards = sorted(target.glob(f"{prefix}*.tfrecord-*"))
+    root_shards = sorted(data_root.glob(f"{prefix}*.tfrecord-*"))
     existing_shards = target_shards or root_shards
     expected, missing_indices = _shard_index_report(existing_shards)
     complete = bool(existing_shards) and (expected is None or not missing_indices)
@@ -146,6 +147,12 @@ def _shard_index_report(shards: list[Path]) -> tuple[int | None, list[int]]:
     expected = max(totals)
     missing_indices = [index for index in range(expected) if index not in indices]
     return expected, missing_indices
+
+
+def _split_object_prefix(split: str) -> str:
+    if split == "train":
+        return "training"
+    return split
 
 
 def blind_matrix_command(
