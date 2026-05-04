@@ -90,11 +90,24 @@ includes the signal fields used by the adapter. This keeps the submission as one
 simulation stack: scenario generation, OOD stress, and an AlpaSim-compatible
 trajectory-plugin bridge.
 
-## Slide 9: Boundaries
+## Slide 9: Runtime Constraints
+
+**Artifact:** `minor_runtime/minor_runtime_constraints.json`
+
+The bundle includes a closed-loop runtime audit. It measures the actual
+simulator control path: perception, world-state update, maneuver selection,
+safety filtering, and rollout bookkeeping.
+
+The audit reports hardware/Python context, process memory high-water mark, p95
+step latency, p95 rollout latency, and simulator-step throughput. The pass gate
+is a 50 ms p95 step budget, corresponding to a conservative 20 Hz control loop
+for the abstract simulator tier.
+
+## Slide 10: Boundaries
 
 This is a lightweight 2D simulator, not photorealistic camera simulation. AlpaSim integration exists at a trajectory/plugin level, but full sensor-realistic perception is future work. The honest claim is randomized long-tail scenario design with reproducible closed-loop evaluation.
 
-## Slide 10: What Prize Funding Enables
+## Slide 11: What Prize Funding Enables
 
 Funding would support:
 

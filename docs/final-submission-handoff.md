@@ -105,6 +105,7 @@ Evidence to mention:
 - Multi-cluster evaluation sweep with JSON and CSV reports.
 - Compositional OOD evaluation sweep with JSON and CSV reports.
 - AlpaSignal bridge audit with JSON report.
+- Closed-loop runtime constraints audit with JSON report.
 - SVG and JSON artifacts for scenario inspection.
 
 Bundled sweep:
@@ -139,6 +140,13 @@ AlpaSignal bridge audit:
 - Low-visibility and hard-braking signals create a caution zone.
 - Each case emits finite 20-point trajectories and decision reasoning with the
   signal fields used by the adapter.
+
+Runtime constraints audit:
+
+- Measures closed-loop simulator policy latency.
+- Reports p95 step latency, p95 rollout latency, simulator-step throughput,
+  platform/Python metadata, and process memory high-water mark.
+- Uses a 50 ms p95 step budget for the abstract simulator control tier.
 
 Required caveat:
 

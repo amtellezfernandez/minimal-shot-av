@@ -296,6 +296,16 @@ uv run --no-sync python scripts/audit_alpasignal_bridge.py \
   --output artifacts/minor_alpasignal_bridge/alpasignal_bridge_audit.json
 ```
 
+Minor closed-loop runtime audit:
+
+```bash
+uv run --no-sync python scripts/audit_minor_runtime_constraints.py \
+  --seed-start 1 \
+  --seed-end 3 \
+  --target-step-ms 50 \
+  --output artifacts/minor_runtime/minor_runtime_constraints.json
+```
+
 Gauntlet benchmark sweep:
 
 ```bash

@@ -26,6 +26,7 @@ from scripts.audit_production_av_readiness import (
 )
 from scripts.audit_final_submission_readiness import final_readiness_report
 from scripts.audit_alpasignal_bridge import build_report as build_alpasignal_bridge_report
+from scripts.audit_minor_runtime_constraints import build_report as build_minor_runtime_report
 
 
 GRAND_RUNS = (
@@ -130,6 +131,7 @@ def main() -> None:
         _run_minor_evaluation(args.artifacts_root / "minor_eval")
         _run_minor_ood_evaluation(args.artifacts_root / "minor_ood_eval")
         _write_minor_alpasignal_bridge_audit(args.artifacts_root / "minor_alpasignal_bridge")
+        _write_minor_runtime_audit(args.artifacts_root / "minor_runtime")
     _write_judging_audit(args.artifacts_root)
     grand_readme = _write_track_readme(
         args.artifacts_root,
@@ -150,7 +152,9 @@ def main() -> None:
             "Randomized long-tail simulation environment with WOD-style cluster coverage, "
             "compositional OOD stress cases, and reproducible closed-loop evaluation."
         ),
-        demo_names=[name for name, _ in MINOR_RUNS] + ["minor_eval", "minor_ood_eval", "minor_alpasignal_bridge"],
+        demo_names=[
+            name for name, _ in MINOR_RUNS
+        ] + ["minor_eval", "minor_ood_eval", "minor_alpasignal_bridge", "minor_runtime"],
     )
     if not args.skip_archives:
         grand_archive = _write_archive(args.artifacts_root, "grand_commission", grand_readme)
@@ -224,6 +228,16 @@ def _write_minor_alpasignal_bridge_audit(output_dir: Path) -> Path:
     output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     if not report["valid"]:
         raise RuntimeError(f"AlpaSignal bridge audit failed: {output}")
+    return output
+
+
+def _write_minor_runtime_audit(output_dir: Path) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output = output_dir / "minor_runtime_constraints.json"
+    report = build_minor_runtime_report(seed_start=1, seed_end=3, target_step_ms=50.0)
+    output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if not report["valid"]:
+        raise RuntimeError(f"Minor runtime constraints audit failed: {output}")
     return output
 
 
@@ -331,6 +345,7 @@ def _track_artifact_dirs(artifacts_root: Path, track: str) -> list[Path]:
         dirs.append(artifacts_root / "minor_eval")
         dirs.append(artifacts_root / "minor_ood_eval")
         dirs.append(artifacts_root / "minor_alpasignal_bridge")
+        dirs.append(artifacts_root / "minor_runtime")
     return dirs
 
 

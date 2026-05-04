@@ -97,6 +97,20 @@ This validates the AlpaSim/AlpaSignal adapter path with deterministic route
 commands, structured hazards, moving hazards, low-visibility camera signal, and
 ego dynamics.
 
+Run the closed-loop runtime audit:
+
+```bash
+uv run --no-sync python scripts/audit_minor_runtime_constraints.py \
+  --seed-start 1 \
+  --seed-end 3 \
+  --target-step-ms 50 \
+  --output artifacts/minor_runtime/minor_runtime_constraints.json
+```
+
+This measures the actual simulator control path over WOD-style and
+compositional scenarios: perception, world-state update, maneuver selection,
+safety filtering, and rollout bookkeeping.
+
 ## Supported Scenario Clusters
 
 - construction
@@ -164,6 +178,24 @@ procedural WOD-style generation, compositional OOD generation, and an
 AlpaSim/AlpaSignal trajectory-plugin bridge. The boundary remains explicit: it
 is not a claim of full AlpaSim sensor-realistic perception.
 
+## Compute And Latency Constraints
+
+The Minor bundle includes `minor_runtime/minor_runtime_constraints.json`, a
+closed-loop runtime audit for the simulator tier. It reports:
+
+- platform, processor, Python version, and process memory high-water mark;
+- number of closed-loop rollouts and total simulator steps;
+- mean and p95 step latency;
+- p95 rollout latency;
+- throughput in simulator steps per second;
+- pass/fail gates for success, collision freedom, finite timings, and a 50 ms
+  p95 step budget.
+
+The 50 ms budget is a conservative 20 Hz control-loop target for this abstract
+simulator tier. The audit excludes SVG rendering, JSON serialization, archive
+packaging, WOD parsing, and training, so it measures the control path rather
+than offline reporting overhead.
+
 ## Evidence To Highlight
 
 - The generator is deterministic: same cluster and seed produce the same scenario.
@@ -177,6 +209,8 @@ is not a claim of full AlpaSim sensor-realistic perception.
 - The AlpaSignal bridge audit shows how route command, camera brightness,
   dynamics, and optional structured hazards are mixed into the same Spotlight
   Reflex simulator interface.
+- The runtime audit gives explicit compute and latency constraints for the
+  closed-loop simulator policy.
 - It has an optional trajectory-level AlpaSim bridge; richer camera/perception
   integration remains future work.
 

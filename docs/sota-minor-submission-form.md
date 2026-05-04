@@ -42,6 +42,8 @@ The environment is intentionally lightweight and deterministic. It is not photor
   and `minor_ood_eval/scenario_eval.json`.
 - AlpaSignal bridge audit with
   `minor_alpasignal_bridge/alpasignal_bridge_audit.json`.
+- Closed-loop runtime constraints audit with
+  `minor_runtime/minor_runtime_constraints.json`.
 - SVG and JSON artifacts for visual inspection and reproducibility.
 - Full test suite output: `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py`.
 
@@ -80,6 +82,14 @@ AlpaSignal bridge audit:
 - Each case emits a finite 20-point trajectory and decision reasoning that
   includes the AlpaSignal fields used by the adapter.
 
+Runtime constraints audit:
+
+- Measures the actual closed-loop simulator control path.
+- Reports hardware/Python context, process memory high-water mark, p95 step
+  latency, p95 rollout latency, and simulator-step throughput.
+- Uses a 50 ms p95 step budget, corresponding to a conservative 20 Hz
+  simulator control target.
+
 ## What Worked
 
 The generator creates repeatable but varied long-tail scenarios, and the evaluation sweep produces concrete closed-loop metrics across clusters and seeds. This directly addresses the commission's request for randomized scenario generation under realistic evaluation constraints.
@@ -94,6 +104,10 @@ The AlpaSignal bridge gives the Minor submission one coherent simulation stack:
 procedural generation for abstract stress coverage, compositional OOD for
 generalization pressure, and an AlpaSim-compatible trajectory plugin that can
 consume structured simulator signals.
+
+The runtime audit makes the compute story explicit: the policy is evaluated as
+a real closed-loop controller under a stated latency budget, not just as an
+offline renderer.
 
 ## What Did Not Work Yet
 
