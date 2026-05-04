@@ -24,6 +24,13 @@ class StepRecord:
     action_mode: str
     speed: float
     intervention: bool
+    obstacle_pressure: float | None = None
+    route_blockage: float | None = None
+    corridor_blocked: bool | None = None
+    left_clearance: float | None = None
+    right_clearance: float | None = None
+    preferred_escape_side: str | None = None
+    world_model_summary: str | None = None
     goal_distance: float | None = None
     progress: float | None = None
     comfort_cost: float | None = None
@@ -432,6 +439,13 @@ def _step_record(
         min_obstacle_distance=min_obstacle_distance,
         uncertainty=world_state.uncertainty,
         collision_risk=world_state.collision_risk,
+        obstacle_pressure=world_state.obstacle_pressure,
+        route_blockage=world_state.route_blockage,
+        corridor_blocked=world_state.corridor_blocked,
+        left_clearance=world_state.left_clearance,
+        right_clearance=world_state.right_clearance,
+        preferred_escape_side=world_state.preferred_escape_side,
+        world_model_summary=_world_model_summary(world_state),
         action_mode=safe_action.mode,
         speed=safe_action.speed,
         intervention=safe_action.intervention,
@@ -463,6 +477,15 @@ def _spotlight_step_fields(metadata: dict[str, Any]) -> dict[str, Any]:
         "decision_reasons": [str(reason) for reason in metadata["decision_reasons"]],
         "top_candidate_summaries": [dict(summary) for summary in metadata["top_candidate_summaries"]],
     }
+
+
+def _world_model_summary(world_state: WorldState) -> str:
+    return (
+        f"pressure={world_state.obstacle_pressure:.2f}; "
+        f"route_blockage={world_state.route_blockage:.2f}; "
+        f"corridor_blocked={world_state.corridor_blocked}; "
+        f"escape={world_state.preferred_escape_side}"
+    )
 
 
 def _direction_to_target(world_state: WorldState) -> tuple[float, float]:

@@ -58,6 +58,10 @@ rare hazards without AV-dataset fine-tuning.
 - Per-step decision traces in Spotlight Reflex rollout JSON and AlpaSim
   `reasoning_text`: selected maneuver, matched references, trust-region
   membership, clearance/progress terms, penalties, and top alternatives.
+- Label-free world-geometry traces in each Spotlight Reflex step: obstacle
+  pressure, route blockage, corridor blockage, side clearances, and preferred
+  escape side, with a regression test that relabels object names and scenario
+  metadata without changing the geometry signal.
 - Full test suite output: `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py`.
 
 Judging criteria evidence:

@@ -47,6 +47,10 @@ The proposed system is **Spotlight Reflex**:
 - The closed-loop runtime emits per-step decision explanations: reference
   matches, trust-region membership, clearance, progress/speed bonuses,
   penalties, and top alternative candidate summaries.
+- The runtime world state exposes label-free geometry traces: obstacle pressure,
+  route blockage, corridor blockage, side clearances, and preferred escape side,
+  with tests showing that relabeling the same obstacle geometry does not change
+  these signals.
 
 The key architectural bet is that minimal-shot driving should separate **candidate diversity** from **trajectory selection**. Proposal models generate plausible futures; model-side RFS scoring evaluates WOD-E2E candidates without coupling that metric to the simulator.
 

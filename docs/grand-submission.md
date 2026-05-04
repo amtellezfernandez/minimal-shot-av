@@ -78,6 +78,10 @@ Each command writes:
   matched 3s/5s references, whether the selected trajectory stayed inside each
   trust region, action and horizon clearance, progress/speed bonuses, penalties,
   and the top candidate summaries.
+- Each step also carries label-free world geometry signals: obstacle pressure,
+  route blockage, corridor blockage, side clearances, and preferred escape side.
+  The regression tests verify these signals are unchanged when object names,
+  labels, clusters, and tags are relabeled while geometry is held fixed.
 - The policy is deterministic and reproducible by seed.
 - The primary simulator submission uses no learned AV-specific model and no
   WOD-E2E fine-tuning.

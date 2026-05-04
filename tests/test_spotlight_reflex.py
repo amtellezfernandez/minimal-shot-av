@@ -140,6 +140,45 @@ class ManeuverLibraryTests(unittest.TestCase):
         selection = select_maneuver(scenario, position, world_state, perception, 1.25)
         self.assertIn(selection.candidate.name, {"nudge_right", "evasive_right"})
 
+    def test_world_geometry_summary_is_label_free(self) -> None:
+        base = Scenario(
+            width=40.0,
+            height=20.0,
+            lane_center=[(0.0, 0.0), (20.0, 0.0)],
+            lane_half_width=4.0,
+            obstacles=[Obstacle(x=5.0, y=1.0, radius=1.0, kind="unknown", label="alpha")],
+            start=(0.0, 0.0),
+            goal=(20.0, 0.0),
+            seed=125,
+            cluster="novel_object",
+            tags={"source": "label_a"},
+        )
+        relabeled = Scenario(
+            width=base.width,
+            height=base.height,
+            lane_center=base.lane_center,
+            lane_half_width=base.lane_half_width,
+            obstacles=[Obstacle(x=5.0, y=1.0, radius=1.0, kind="construction_foam", label="beta")],
+            start=base.start,
+            goal=base.goal,
+            seed=base.seed,
+            cluster="different_cluster",
+            tags={"source": "label_b"},
+        )
+
+        base_state = update_world_state(base, base.start, perceive_scene(base, base.start))
+        relabeled_state = update_world_state(relabeled, relabeled.start, perceive_scene(relabeled, relabeled.start))
+
+        self.assertGreater(base_state.route_blockage, 0.45)
+        self.assertTrue(base_state.corridor_blocked)
+        self.assertEqual(base_state.preferred_escape_side, "right")
+        self.assertAlmostEqual(base_state.obstacle_pressure, relabeled_state.obstacle_pressure)
+        self.assertAlmostEqual(base_state.route_blockage, relabeled_state.route_blockage)
+        self.assertEqual(base_state.corridor_blocked, relabeled_state.corridor_blocked)
+        self.assertAlmostEqual(base_state.left_clearance, relabeled_state.left_clearance)
+        self.assertAlmostEqual(base_state.right_clearance, relabeled_state.right_clearance)
+        self.assertEqual(base_state.preferred_escape_side, relabeled_state.preferred_escape_side)
+
     def test_selector_explains_selected_maneuver_and_alternatives(self) -> None:
         scenario = Scenario(
             width=40.0,
@@ -391,6 +430,12 @@ class DemoIntegrationTests(unittest.TestCase):
         self.assertIsInstance(first_step["top_candidate_summaries"], list)
         self.assertGreaterEqual(len(first_step["top_candidate_summaries"]), 1)
         self.assertIn("effective_score", first_step["top_candidate_summaries"][0])
+        self.assertIsInstance(first_step["obstacle_pressure"], float)
+        self.assertIsInstance(first_step["route_blockage"], float)
+        self.assertIsInstance(first_step["corridor_blocked"], bool)
+        self.assertIsInstance(first_step["preferred_escape_side"], str)
+        self.assertIsInstance(first_step["world_model_summary"], str)
+        self.assertIn("route_blockage=", first_step["world_model_summary"])
 
     def test_baseline_and_spotlight_demos_run_on_fixed_seed(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

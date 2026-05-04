@@ -138,6 +138,10 @@ The active WOD-E2E model architecture is:
    - Closed-loop Spotlight Reflex rollouts emit per-step selector references,
      effective score terms, safety/progress penalties, and top candidate
      summaries in `latest_rollout.json`.
+   - Each step also records label-free world geometry: obstacle pressure,
+     route blockage, corridor blockage, side clearances, and the preferred
+     escape side. These fields are computed from occupancy and route geometry,
+     not object category names or scenario cluster labels.
    - The AlpaSim adapter exports the same selected-maneuver rationale in
      `reasoning_text`, so reviewers can inspect why a trajectory was chosen
      instead of only seeing the final path.
