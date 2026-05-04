@@ -64,6 +64,8 @@ REQUIRED_MEMBERS = {
         "minor_commission/artifacts/minor_spotlight_seed3/latest_rollout.svg",
         "minor_commission/artifacts/minor_eval/scenario_eval.csv",
         "minor_commission/artifacts/minor_eval/scenario_eval.json",
+        "minor_commission/artifacts/minor_ood_eval/scenario_eval.csv",
+        "minor_commission/artifacts/minor_ood_eval/scenario_eval.json",
     },
 }
 

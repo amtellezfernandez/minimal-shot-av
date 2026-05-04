@@ -260,6 +260,17 @@ uv run --no-sync python scripts/evaluate_scenarios.py \
   --output-dir artifacts/eval_compositional
 ```
 
+Minor submission OOD sweep:
+
+```bash
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy spotlight-reflex \
+  --suite all \
+  --seed-start 1 \
+  --seed-end 10 \
+  --output-dir artifacts/minor_ood_eval
+```
+
 Adversarial stress sweep:
 
 ```bash

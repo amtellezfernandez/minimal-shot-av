@@ -10,7 +10,12 @@ Minor Commission: overall best simulation environment.
 
 ## Short Description
 
-This submission is a seeded procedural simulation environment for WOD-E2E-style long-tail driving cases. It generates randomized construction zones, intersections, pedestrian conflicts, cyclist cases, cut-ins, debris, special vehicles, spotlight hazards, and unusual maneuvers. Each scenario is reproducible by cluster and seed, includes typed actors and map features, and can be evaluated in closed loop with the provided policy harness.
+This submission is a seeded procedural simulation environment for long-tail
+minimal-shot autonomy. It generates WOD-E2E-style named clusters and
+compositional OOD cases where topology, hazards, object novelty, conditions,
+surface friction, and latency budgets are sampled independently. Each scenario
+is reproducible by suite/cluster and seed, includes typed actors and map
+features, and can be evaluated in closed loop with the provided policy harness.
 
 ## Motivation
 
@@ -18,7 +23,12 @@ Minimal-shot autonomy cannot be judged only on fixed maps or memorized examples.
 
 ## Technical Approach
 
-The simulator separates visual scene texture from evaluation hazards. Ambient vehicles and background objects add context without accidentally blocking the route, while deliberate hazards are typed and placed through cluster-specific logic. The evaluation harness records success, collision, goal reach, clearance, intervention rate, progress, speed, comfort cost, and benchmark pass/fail.
+The simulator separates visual scene texture from evaluation hazards. Ambient
+vehicles and background objects add context without accidentally blocking the
+route, while deliberate hazards are typed and placed through cluster-specific
+or compositional logic. The evaluation harness records success, collision, goal
+reach, clearance, intervention rate, progress, speed, comfort cost, decision
+mode diversity, and benchmark pass/fail.
 
 The environment is intentionally lightweight and deterministic. It is not photorealistic, but it gives a compact testbed for closed-loop decision making, randomized scenario generation, and failure-case analysis.
 
@@ -28,6 +38,8 @@ The environment is intentionally lightweight and deterministic. It is not photor
 - Foreign-object-debris scenario demo.
 - Spotlight scenario demo.
 - Multi-cluster evaluation sweep with `scenario_eval.csv` and `scenario_eval.json`.
+- Compositional OOD evaluation sweep with `minor_ood_eval/scenario_eval.csv`
+  and `minor_ood_eval/scenario_eval.json`.
 - SVG and JSON artifacts for visual inspection and reproducibility.
 - Full test suite output: `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py`.
 
@@ -45,11 +57,27 @@ Current bundled sweep:
 - mean 5th-percentile clearance: 3.28 m.
 - mean intervention rate: 9.44%.
 
+Additional bundled OOD sweep:
+
+- 350 closed-loop rollouts.
+- 5 suites: WOD, compositional, adversarial, gauntlet, hidden.
+- 350 / 350 successful rollouts.
+- 326 / 350 benchmark passes.
+- 0 collisions.
+- 0 safe stalls.
+- 0 near misses under the benchmark diagnostic.
+- Gauntlet pass rate: 36 / 60 under stricter near-miss, intervention, and
+  progress gates.
+
 ## What Worked
 
 The generator creates repeatable but varied long-tail scenarios, and the evaluation sweep produces concrete closed-loop metrics across clusters and seeds. This directly addresses the commission's request for randomized scenario generation under realistic evaluation constraints.
 
-The strongest evidence is not a single cherry-picked scene. It is the same generator and policy interface running construction, intersections, pedestrian conflicts, cyclist cases, cut-ins, debris, special vehicles, spotlight hazards, and unusual maneuvers with deterministic seeds and inspectable artifacts.
+The strongest evidence is not a single cherry-picked scene. It is the same
+generator and policy interface running construction, intersections, pedestrian
+conflicts, cyclist cases, cut-ins, debris, special vehicles, spotlight hazards,
+unusual maneuvers, and compositional OOD suites with deterministic seeds and
+inspectable artifacts.
 
 ## What Did Not Work Yet
 

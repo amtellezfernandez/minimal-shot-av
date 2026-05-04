@@ -127,6 +127,7 @@ def main() -> None:
     if not args.skip_runs:
         _run_demos(args.artifacts_root, GRAND_RUNS + MINOR_RUNS)
         _run_minor_evaluation(args.artifacts_root / "minor_eval")
+        _run_minor_ood_evaluation(args.artifacts_root / "minor_ood_eval")
     _write_judging_audit(args.artifacts_root)
     grand_readme = _write_track_readme(
         args.artifacts_root,
@@ -143,8 +144,11 @@ def main() -> None:
         args.artifacts_root,
         track="minor_commission",
         title="SoTA Minor Commission Submission Bundle",
-        claim="Randomized WOD-E2E-style long-tail simulation environment with reproducible closed-loop evaluation.",
-        demo_names=[name for name, _ in MINOR_RUNS] + ["minor_eval"],
+        claim=(
+            "Randomized long-tail simulation environment with WOD-style cluster coverage, "
+            "compositional OOD stress cases, and reproducible closed-loop evaluation."
+        ),
+        demo_names=[name for name, _ in MINOR_RUNS] + ["minor_eval", "minor_ood_eval"],
     )
     if not args.skip_archives:
         grand_archive = _write_archive(args.artifacts_root, "grand_commission", grand_readme)
@@ -187,6 +191,24 @@ def _run_minor_evaluation(output_dir: Path) -> None:
         "1",
         "--seed-end",
         "50",
+        "--output-dir",
+        str(output_dir),
+    ]
+    subprocess.run(command, cwd=ROOT, check=True)
+
+
+def _run_minor_ood_evaluation(output_dir: Path) -> None:
+    command = [
+        sys.executable,
+        str(ROOT / "scripts" / "evaluate_scenarios.py"),
+        "--policy",
+        "spotlight-reflex",
+        "--suite",
+        "all",
+        "--seed-start",
+        "1",
+        "--seed-end",
+        "10",
         "--output-dir",
         str(output_dir),
     ]
@@ -295,6 +317,7 @@ def _track_artifact_dirs(artifacts_root: Path, track: str) -> list[Path]:
     dirs = [artifacts_root / name for name, _ in runs]
     if track == "minor_commission":
         dirs.append(artifacts_root / "minor_eval")
+        dirs.append(artifacts_root / "minor_ood_eval")
     return dirs
 
 

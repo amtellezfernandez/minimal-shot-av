@@ -36,7 +36,8 @@ Submit:
 
 Claim:
 
-Randomized WOD-E2E-style long-tail simulator with reproducible closed-loop evaluation.
+Randomized long-tail simulator with WOD-E2E-style cluster coverage,
+compositional OOD suites, and reproducible closed-loop evaluation.
 
 Do not claim:
 

@@ -38,7 +38,7 @@ class RunSubmissionDemosTests(unittest.TestCase):
                 track="minor_commission",
                 title="Minor",
                 claim="Simulation claim.",
-                demo_names=["minor_eval"],
+                demo_names=["minor_eval", "minor_ood_eval"],
             )
 
             self.assertIn("Architecture claim.", grand.read_text(encoding="utf-8"))
@@ -51,6 +51,7 @@ class RunSubmissionDemosTests(unittest.TestCase):
             self.assertIn("docs/submission-tracks.md", minor.read_text(encoding="utf-8"))
             self.assertIn("docs/grand-submission.md", grand.read_text(encoding="utf-8"))
             self.assertIn("docs/minor-simulation-submission.md", minor.read_text(encoding="utf-8"))
+            self.assertIn("minor_ood_eval", minor.read_text(encoding="utf-8"))
 
     def test_archive_contains_track_readme_and_docs(self) -> None:
         module = _load_module()

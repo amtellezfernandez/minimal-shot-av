@@ -93,7 +93,9 @@ Attach:
 
 Short claim:
 
-This is a seeded procedural simulation environment for WOD-E2E-style long-tail driving cases, with reproducible scenario generation and closed-loop evaluation artifacts.
+This is a seeded procedural simulation environment for WOD-E2E-style long-tail
+driving cases and compositional OOD stress cases, with reproducible scenario
+generation and closed-loop evaluation artifacts.
 
 Evidence to mention:
 
@@ -101,6 +103,7 @@ Evidence to mention:
 - Foreign-object-debris scenario demo.
 - Spotlight scenario demo.
 - Multi-cluster evaluation sweep with JSON and CSV reports.
+- Compositional OOD evaluation sweep with JSON and CSV reports.
 - SVG and JSON artifacts for scenario inspection.
 
 Bundled sweep:
@@ -116,6 +119,16 @@ Bundled sweep:
 - Mean minimum clearance: `2.80 m`.
 - Mean 5th-percentile clearance: `3.28 m`.
 - Mean intervention rate: `9.44%`.
+
+Bundled OOD sweep:
+
+- 350 additional closed-loop rollouts.
+- 5 suites: WOD, compositional, adversarial, gauntlet, hidden.
+- 350 / 350 successful rollouts.
+- 326 / 350 benchmark passes.
+- 0 collisions.
+- 0 safe stalls.
+- Gauntlet pass rate: 36 / 60 under stricter near-miss, intervention, and progress gates.
 
 Required caveat:
 

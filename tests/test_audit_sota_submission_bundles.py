@@ -71,6 +71,10 @@ class AuditSotaSubmissionBundlesTests(unittest.TestCase):
             self.assertFalse(report["submission_tracks"]["waymo_wod_e2e"]["test_split_complete"])
             self.assertEqual([], report["tracks"]["grand_commission"]["missing_required"])
             self.assertTrue(report["tracks"]["minor_commission"]["manifest_sha_matches"])
+            self.assertIn(
+                "minor_commission/artifacts/minor_ood_eval/scenario_eval.json",
+                report["tracks"]["minor_commission"]["archive"]["members"],
+            )
 
     def test_waymo_track_rejects_partial_test_split(self) -> None:
         audit = _load(AUDIT_SCRIPT, "audit_sota_submission_bundles")
@@ -145,6 +149,8 @@ def _write_required_artifacts(root: Path) -> None:
         "minor_spotlight_seed3/latest_rollout.svg",
         "minor_eval/scenario_eval.csv",
         "minor_eval/scenario_eval.json",
+        "minor_ood_eval/scenario_eval.csv",
+        "minor_ood_eval/scenario_eval.json",
     ]:
         target = root / path
         target.parent.mkdir(parents=True, exist_ok=True)

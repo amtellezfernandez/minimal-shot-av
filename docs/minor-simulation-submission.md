@@ -2,11 +2,16 @@
 
 ## Submission Claim
 
-The simulation-environment contribution is a seeded procedural generator for WOD-E2E-style long-tail driving clusters. It creates randomized, reproducible scenarios for construction, intersections, pedestrians, cyclists, cut-ins, foreign object debris, special vehicles, spotlight cases, and other rare maneuvers.
+The simulation-environment contribution is a seeded procedural generator for
+minimal-shot long-tail autonomy. It includes WOD-E2E-style named clusters and a
+second compositional OOD layer that independently samples route topology,
+hazard modules, novel object types, weather, visibility, surface friction, and
+latency budgets.
 
 The generator separates **ambient scene texture** from **blocking evaluation hazards**. Ambient vehicles, sidewalk clutter, and background objects are rendered for visual context but do not accidentally block the primary route. Each scenario family places its deliberate hard decision point through typed actors or cluster-specific hazards with a minimum corridor-clearance contract.
 
-This submission targets the **Minor Commission**: overall best simulation environment.
+This submission targets the **Minor Commission**: overall best simulation
+environment.
 
 ## What To Submit
 
@@ -67,6 +72,20 @@ The evaluation command writes:
 - `scenario_eval.json`
 - `scenario_eval.csv`
 
+Run the stronger compositional OOD sweep:
+
+```bash
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy spotlight-reflex \
+  --suite all \
+  --seed-start 1 \
+  --seed-end 10 \
+  --output-dir artifacts/minor_ood_eval
+```
+
+This adds WOD-style, compositional, adversarial, gauntlet, and hidden-suite
+rollouts to the Minor bundle.
+
 ## Supported Scenario Clusters
 
 - construction
@@ -95,12 +114,39 @@ Each generated scenario includes:
 - start and goal
 - rollout artifacts
 
+## Compositional OOD Suites
+
+The Minor bundle now includes `minor_ood_eval`, a second evaluation artifact
+that exercises:
+
+- `compositional`: independently sampled topology, hazards, conditions, and
+  object types.
+- `adversarial`: multiple hazards composed into the same route.
+- `gauntlet`: narrow, low-visibility, synchronized hazards with stricter
+  benchmark-pass gates.
+- `hidden`: holdout seed offsets for frozen-policy evaluation.
+- `wod`: the named WOD-style clusters retained for brief alignment.
+
+Bundled OOD sweep:
+
+- 350 additional closed-loop rollouts.
+- 5 suites: WOD, compositional, adversarial, gauntlet, hidden.
+- 0 collisions.
+- 350 / 350 successful rollouts.
+- 326 / 350 benchmark passes.
+- Gauntlet pass rate: 36 / 60 under the stricter near-miss, intervention, and
+  progress gates.
+
 ## Evidence To Highlight
 
 - The generator is deterministic: same cluster and seed produce the same scenario.
 - Different seeds produce different obstacle layouts and parameters.
 - The simulation is closed-loop: the policy reacts step-by-step to the generated scene.
 - It directly addresses the commission's "extra points" criterion for randomized scenario generation.
+- The compositional OOD layer makes memorization harder by sampling topology,
+  hazard type, conditions, and object novelty independently.
+- The gauntlet suite is deliberately not saturated; it exposes a measurable
+  failure boundary instead of only reporting easy perfect scores.
 - It has an optional trajectory-level AlpaSim bridge; richer camera/perception
   integration remains future work.
 
