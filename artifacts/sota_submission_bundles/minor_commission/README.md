@@ -16,6 +16,7 @@ Randomized long-tail simulation environment with WOD-style cluster coverage, com
 - `minor_spotlight_seed3/`
 - `minor_eval/`
 - `minor_ood_eval/`
+- `minor_alpasignal_bridge/`
 
 ## Source Documents
 

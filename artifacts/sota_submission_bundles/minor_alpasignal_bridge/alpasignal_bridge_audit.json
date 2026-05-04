@@ -1,0 +1,64 @@
+{
+  "adapter": "minimal_shot_av.simulator.alpasim_spotlight:SpotlightReflexAlpaSimModel",
+  "boundary": "This is a trajectory-plugin and structured-signal bridge. It is not a full photorealistic sensor/perception simulation claim.",
+  "cases": [
+    {
+      "camera_count": 1,
+      "candidate_count": 9,
+      "command": "straight",
+      "dynamics_risk": 0.0,
+      "finite_20_point_trajectory": true,
+      "name": "static_structured_hazard",
+      "pose_history_len": 1,
+      "reasoning_has_signal": true,
+      "reference_count": 2,
+      "selected_maneuver": "maintain",
+      "signal_actor_count": 0,
+      "signal_obstacle_count": 1,
+      "structured_hazard_count": 1,
+      "visibility_risk": 0.0
+    },
+    {
+      "camera_count": 1,
+      "candidate_count": 9,
+      "command": "left",
+      "dynamics_risk": 0.0,
+      "finite_20_point_trajectory": true,
+      "name": "moving_crossing_hazard",
+      "pose_history_len": 1,
+      "reasoning_has_signal": true,
+      "reference_count": 2,
+      "selected_maneuver": "maintain",
+      "signal_actor_count": 1,
+      "signal_obstacle_count": 0,
+      "structured_hazard_count": 1,
+      "visibility_risk": 0.0
+    },
+    {
+      "camera_count": 1,
+      "candidate_count": 9,
+      "command": "right",
+      "dynamics_risk": 0.866667,
+      "finite_20_point_trajectory": true,
+      "name": "low_visibility_braking",
+      "pose_history_len": 1,
+      "reasoning_has_signal": true,
+      "reference_count": 2,
+      "selected_maneuver": "maintain",
+      "signal_actor_count": 0,
+      "signal_obstacle_count": 1,
+      "structured_hazard_count": 0,
+      "visibility_risk": 0.910364
+    }
+  ],
+  "claim": "AlpaSignal/AlpaSim bridge converts route command, camera brightness, ego dynamics, and optional structured hazards into Spotlight Reflex simulator scenarios.",
+  "gates": {
+    "all_cases_emit_finite_20_point_trajectories": true,
+    "all_cases_emit_reasoning_text": true,
+    "low_visibility_adds_caution_zone": true,
+    "moving_hazard_preserved_as_actor": true,
+    "structured_hazard_consumed": true
+  },
+  "schema": "alpasignal_bridge_audit_v1",
+  "valid": true
+}
