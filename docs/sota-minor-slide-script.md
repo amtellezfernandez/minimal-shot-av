@@ -74,11 +74,27 @@ The evaluation records more than success/failure:
 
 This makes the simulator useful for comparing policies, not just rendering nice scenes.
 
-## Slide 8: Boundaries
+## Slide 8: AlpaSignal Bridge
+
+**Artifact:** `minor_alpasignal_bridge/alpasignal_bridge_audit.json`
+
+The Minor bundle also includes the AlpaSim/AlpaSignal bridge. The audit covers
+three deterministic cases:
+
+- static structured hazard -> simulator obstacle
+- moving structured hazard -> simulator actor
+- low visibility plus hard braking -> conservative caution zone
+
+Each case returns a finite 20-point trajectory and JSON decision reasoning that
+includes the signal fields used by the adapter. This keeps the submission as one
+simulation stack: scenario generation, OOD stress, and an AlpaSim-compatible
+trajectory-plugin bridge.
+
+## Slide 9: Boundaries
 
 This is a lightweight 2D simulator, not photorealistic camera simulation. AlpaSim integration exists at a trajectory/plugin level, but full sensor-realistic perception is future work. The honest claim is randomized long-tail scenario design with reproducible closed-loop evaluation.
 
-## Slide 9: What Prize Funding Enables
+## Slide 10: What Prize Funding Enables
 
 Funding would support:
 

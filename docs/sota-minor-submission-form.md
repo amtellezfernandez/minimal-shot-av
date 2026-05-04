@@ -40,6 +40,8 @@ The environment is intentionally lightweight and deterministic. It is not photor
 - Multi-cluster evaluation sweep with `scenario_eval.csv` and `scenario_eval.json`.
 - Compositional OOD evaluation sweep with `minor_ood_eval/scenario_eval.csv`
   and `minor_ood_eval/scenario_eval.json`.
+- AlpaSignal bridge audit with
+  `minor_alpasignal_bridge/alpasignal_bridge_audit.json`.
 - SVG and JSON artifacts for visual inspection and reproducibility.
 - Full test suite output: `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py`.
 
@@ -69,6 +71,15 @@ Additional bundled OOD sweep:
 - Gauntlet pass rate: 36 / 60 under stricter near-miss, intervention, and
   progress gates.
 
+AlpaSignal bridge audit:
+
+- 3 deterministic bridge cases.
+- Static structured hazards become simulator obstacles.
+- Moving structured hazards become simulator actors.
+- Low-visibility and hard-braking signals create a conservative caution zone.
+- Each case emits a finite 20-point trajectory and decision reasoning that
+  includes the AlpaSignal fields used by the adapter.
+
 ## What Worked
 
 The generator creates repeatable but varied long-tail scenarios, and the evaluation sweep produces concrete closed-loop metrics across clusters and seeds. This directly addresses the commission's request for randomized scenario generation under realistic evaluation constraints.
@@ -78,6 +89,11 @@ generator and policy interface running construction, intersections, pedestrian
 conflicts, cyclist cases, cut-ins, debris, special vehicles, spotlight hazards,
 unusual maneuvers, and compositional OOD suites with deterministic seeds and
 inspectable artifacts.
+
+The AlpaSignal bridge gives the Minor submission one coherent simulation stack:
+procedural generation for abstract stress coverage, compositional OOD for
+generalization pressure, and an AlpaSim-compatible trajectory plugin that can
+consume structured simulator signals.
 
 ## What Did Not Work Yet
 

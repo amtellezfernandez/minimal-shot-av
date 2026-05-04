@@ -86,6 +86,17 @@ uv run --no-sync python scripts/evaluate_scenarios.py \
 This adds WOD-style, compositional, adversarial, gauntlet, and hidden-suite
 rollouts to the Minor bundle.
 
+Run the AlpaSignal bridge audit:
+
+```bash
+uv run --no-sync python scripts/audit_alpasignal_bridge.py \
+  --output artifacts/minor_alpasignal_bridge/alpasignal_bridge_audit.json
+```
+
+This validates the AlpaSim/AlpaSignal adapter path with deterministic route
+commands, structured hazards, moving hazards, low-visibility camera signal, and
+ego dynamics.
+
 ## Supported Scenario Clusters
 
 - construction
@@ -137,6 +148,22 @@ Bundled OOD sweep:
 - Gauntlet pass rate: 36 / 60 under the stricter near-miss, intervention, and
   progress gates.
 
+## AlpaSignal Bridge
+
+The Minor bundle also includes `minor_alpasignal_bridge`, an audit of the
+trajectory-plugin bridge used by the AlpaSim adapter. The audit verifies that:
+
+- static structured hazards become simulator obstacles;
+- moving structured hazards become simulator actors;
+- low-visibility and hard-braking signals create a conservative caution zone;
+- the adapter emits finite 20-point trajectories and JSON decision reasoning;
+- `reasoning_text` includes the AlpaSignal fields used for the decision.
+
+This lets the Minor submission present one simulation-environment story:
+procedural WOD-style generation, compositional OOD generation, and an
+AlpaSim/AlpaSignal trajectory-plugin bridge. The boundary remains explicit: it
+is not a claim of full AlpaSim sensor-realistic perception.
+
 ## Evidence To Highlight
 
 - The generator is deterministic: same cluster and seed produce the same scenario.
@@ -147,6 +174,9 @@ Bundled OOD sweep:
   hazard type, conditions, and object novelty independently.
 - The gauntlet suite is deliberately not saturated; it exposes a measurable
   failure boundary instead of only reporting easy perfect scores.
+- The AlpaSignal bridge audit shows how route command, camera brightness,
+  dynamics, and optional structured hazards are mixed into the same Spotlight
+  Reflex simulator interface.
 - It has an optional trajectory-level AlpaSim bridge; richer camera/perception
   integration remains future work.
 

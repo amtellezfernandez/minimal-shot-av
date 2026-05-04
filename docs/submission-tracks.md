@@ -37,7 +37,8 @@ Submit:
 Claim:
 
 Randomized long-tail simulator with WOD-E2E-style cluster coverage,
-compositional OOD suites, and reproducible closed-loop evaluation.
+compositional OOD suites, AlpaSignal bridge evidence, and reproducible
+closed-loop evaluation.
 
 Do not claim:
 

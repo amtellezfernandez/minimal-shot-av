@@ -289,6 +289,13 @@ uv run alpasim-evidence alpasim_spotlight_run \
   --output artifacts/alpasim_spotlight_evidence.json
 ```
 
+AlpaSignal bridge audit:
+
+```bash
+uv run --no-sync python scripts/audit_alpasignal_bridge.py \
+  --output artifacts/minor_alpasignal_bridge/alpasignal_bridge_audit.json
+```
+
 Gauntlet benchmark sweep:
 
 ```bash

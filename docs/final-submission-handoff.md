@@ -104,6 +104,7 @@ Evidence to mention:
 - Spotlight scenario demo.
 - Multi-cluster evaluation sweep with JSON and CSV reports.
 - Compositional OOD evaluation sweep with JSON and CSV reports.
+- AlpaSignal bridge audit with JSON report.
 - SVG and JSON artifacts for scenario inspection.
 
 Bundled sweep:
@@ -129,6 +130,15 @@ Bundled OOD sweep:
 - 0 collisions.
 - 0 safe stalls.
 - Gauntlet pass rate: 36 / 60 under stricter near-miss, intervention, and progress gates.
+
+AlpaSignal bridge audit:
+
+- 3 deterministic adapter cases.
+- Static structured hazards become obstacles.
+- Moving structured hazards become actors.
+- Low-visibility and hard-braking signals create a caution zone.
+- Each case emits finite 20-point trajectories and decision reasoning with the
+  signal fields used by the adapter.
 
 Required caveat:
 
