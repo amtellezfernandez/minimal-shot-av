@@ -1,7 +1,7 @@
 {
   "grand_commission": {
     "file_count": 39,
-    "git_commit": "ac4e30eaa28ea642a00299d356f15c1ee6443ce5",
+    "git_commit": "8d3a46391f20e756084af915ab5a652c7e8458c0",
     "git_dirty": false,
     "members": [
       "grand_commission/README.md",
@@ -45,12 +45,12 @@
       "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.svg"
     ],
     "path": "artifacts/sota_submission_bundles/grand_commission.tar.gz",
-    "sha256": "b27ba5a83e1096533f6adfc6d6201d6b4e5622af9208032f365c0753bacfce38",
-    "size_bytes": 324655
+    "sha256": "9ca484525281d2c5340c4214b68fc4da6f5f10644cfc1de0bca325f0c8e40e3c",
+    "size_bytes": 324894
   },
   "minor_commission": {
-    "file_count": 18,
-    "git_commit": "ac4e30eaa28ea642a00299d356f15c1ee6443ce5",
+    "file_count": 20,
+    "git_commit": "8d3a46391f20e756084af915ab5a652c7e8458c0",
     "git_dirty": false,
     "members": [
       "minor_commission/README.md",
@@ -70,10 +70,12 @@
       "minor_commission/artifacts/minor_spotlight_seed3/latest_rollout.json",
       "minor_commission/artifacts/minor_spotlight_seed3/latest_rollout.svg",
       "minor_commission/artifacts/minor_eval/scenario_eval.csv",
-      "minor_commission/artifacts/minor_eval/scenario_eval.json"
+      "minor_commission/artifacts/minor_eval/scenario_eval.json",
+      "minor_commission/artifacts/minor_ood_eval/scenario_eval.csv",
+      "minor_commission/artifacts/minor_ood_eval/scenario_eval.json"
     ],
     "path": "artifacts/sota_submission_bundles/minor_commission.tar.gz",
-    "sha256": "10709ebfcf84f733156124ed86377787999679b361bdb4ae31c47999f9246d64",
-    "size_bytes": 150587
+    "sha256": "7a51792d320612ae49072b1f059b919b0ebc588d70483e1fbf63901ae84d94ae",
+    "size_bytes": 178857
   }
 }

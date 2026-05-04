@@ -1,6 +1,6 @@
 # SoTA Minor Commission Submission Bundle
 
-Randomized WOD-E2E-style long-tail simulation environment with reproducible closed-loop evaluation.
+Randomized long-tail simulation environment with WOD-style cluster coverage, compositional OOD stress cases, and reproducible closed-loop evaluation.
 
 ## Include In Submission
 
@@ -15,6 +15,7 @@ Randomized WOD-E2E-style long-tail simulation environment with reproducible clos
 - `minor_fod_seed2/`
 - `minor_spotlight_seed3/`
 - `minor_eval/`
+- `minor_ood_eval/`
 
 ## Source Documents
 
