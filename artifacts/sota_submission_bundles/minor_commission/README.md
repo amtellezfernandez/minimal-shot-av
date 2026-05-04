@@ -18,6 +18,7 @@ Randomized long-tail simulation environment with WOD-style cluster coverage, com
 - `minor_ood_eval/`
 - `minor_alpasignal_bridge/`
 - `minor_runtime/`
+- `minor_visual_gallery/`
 
 ## Source Documents
 

@@ -1,7 +1,7 @@
 {
   "grand_commission": {
     "file_count": 39,
-    "git_commit": "cebf44823a1dee534660871d62c4986cce657ea4",
+    "git_commit": "1276b36e8cf600655f2f9f18ab65fb8dc74cc023",
     "git_dirty": false,
     "members": [
       "grand_commission/README.md",
@@ -45,12 +45,12 @@
       "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.svg"
     ],
     "path": "artifacts/sota_submission_bundles/grand_commission.tar.gz",
-    "sha256": "9297720352369d7bb7453bbb945fc2d5e884aa8c436e9af3283d11ee545b65dc",
-    "size_bytes": 325245
+    "sha256": "abba4425ec502727a3e71dec5523655bf1bfb9795e92fe3d99563fa0566934d9",
+    "size_bytes": 325317
   },
   "minor_commission": {
-    "file_count": 22,
-    "git_commit": "cebf44823a1dee534660871d62c4986cce657ea4",
+    "file_count": 23,
+    "git_commit": "1276b36e8cf600655f2f9f18ab65fb8dc74cc023",
     "git_dirty": false,
     "members": [
       "minor_commission/README.md",
@@ -74,10 +74,11 @@
       "minor_commission/artifacts/minor_ood_eval/scenario_eval.csv",
       "minor_commission/artifacts/minor_ood_eval/scenario_eval.json",
       "minor_commission/artifacts/minor_alpasignal_bridge/alpasignal_bridge_audit.json",
-      "minor_commission/artifacts/minor_runtime/minor_runtime_constraints.json"
+      "minor_commission/artifacts/minor_runtime/minor_runtime_constraints.json",
+      "minor_commission/artifacts/minor_visual_gallery/index.html"
     ],
     "path": "artifacts/sota_submission_bundles/minor_commission.tar.gz",
-    "sha256": "ceb5bbceea96137d662c0cd5c1df564dcd0f36293fad0b712bdc1331af44571b",
-    "size_bytes": 183369
+    "sha256": "fd2502b59b6a00f314dabaaa2e8271a21a1d5c29acf209554d59893af14303da",
+    "size_bytes": 185546
   }
 }
