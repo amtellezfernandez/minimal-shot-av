@@ -68,6 +68,7 @@ REQUIRED_MEMBERS = {
         "minor_commission/artifacts/minor_ood_eval/scenario_eval.json",
         "minor_commission/artifacts/minor_alpasignal_bridge/alpasignal_bridge_audit.json",
         "minor_commission/artifacts/minor_runtime/minor_runtime_constraints.json",
+        "minor_commission/artifacts/minor_visual_gallery/index.html",
     },
 }
 

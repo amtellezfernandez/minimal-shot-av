@@ -27,6 +27,7 @@ from scripts.audit_production_av_readiness import (
 from scripts.audit_final_submission_readiness import final_readiness_report
 from scripts.audit_alpasignal_bridge import build_report as build_alpasignal_bridge_report
 from scripts.audit_minor_runtime_constraints import build_report as build_minor_runtime_report
+from scripts.build_minor_visual_gallery import build_gallery as build_minor_visual_gallery
 
 
 GRAND_RUNS = (
@@ -132,6 +133,7 @@ def main() -> None:
         _run_minor_ood_evaluation(args.artifacts_root / "minor_ood_eval")
         _write_minor_alpasignal_bridge_audit(args.artifacts_root / "minor_alpasignal_bridge")
         _write_minor_runtime_audit(args.artifacts_root / "minor_runtime")
+        build_minor_visual_gallery(args.artifacts_root, args.artifacts_root / "minor_visual_gallery")
     _write_judging_audit(args.artifacts_root)
     grand_readme = _write_track_readme(
         args.artifacts_root,
@@ -154,7 +156,7 @@ def main() -> None:
         ),
         demo_names=[
             name for name, _ in MINOR_RUNS
-        ] + ["minor_eval", "minor_ood_eval", "minor_alpasignal_bridge", "minor_runtime"],
+        ] + ["minor_eval", "minor_ood_eval", "minor_alpasignal_bridge", "minor_runtime", "minor_visual_gallery"],
     )
     if not args.skip_archives:
         grand_archive = _write_archive(args.artifacts_root, "grand_commission", grand_readme)
@@ -346,6 +348,7 @@ def _track_artifact_dirs(artifacts_root: Path, track: str) -> list[Path]:
         dirs.append(artifacts_root / "minor_ood_eval")
         dirs.append(artifacts_root / "minor_alpasignal_bridge")
         dirs.append(artifacts_root / "minor_runtime")
+        dirs.append(artifacts_root / "minor_visual_gallery")
     return dirs
 
 

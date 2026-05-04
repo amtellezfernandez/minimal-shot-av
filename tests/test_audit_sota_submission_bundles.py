@@ -83,6 +83,10 @@ class AuditSotaSubmissionBundlesTests(unittest.TestCase):
                 "minor_commission/artifacts/minor_runtime/minor_runtime_constraints.json",
                 report["tracks"]["minor_commission"]["archive"]["members"],
             )
+            self.assertIn(
+                "minor_commission/artifacts/minor_visual_gallery/index.html",
+                report["tracks"]["minor_commission"]["archive"]["members"],
+            )
 
     def test_waymo_track_rejects_partial_test_split(self) -> None:
         audit = _load(AUDIT_SCRIPT, "audit_sota_submission_bundles")
@@ -161,6 +165,7 @@ def _write_required_artifacts(root: Path) -> None:
         "minor_ood_eval/scenario_eval.json",
         "minor_alpasignal_bridge/alpasignal_bridge_audit.json",
         "minor_runtime/minor_runtime_constraints.json",
+        "minor_visual_gallery/index.html",
     ]:
         target = root / path
         target.parent.mkdir(parents=True, exist_ok=True)

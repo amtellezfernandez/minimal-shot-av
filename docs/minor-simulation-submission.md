@@ -111,6 +111,17 @@ This measures the actual simulator control path over WOD-style and
 compositional scenarios: perception, world-state update, maneuver selection,
 safety filtering, and rollout bookkeeping.
 
+Build the browser visual gallery:
+
+```bash
+uv run --no-sync python scripts/build_minor_visual_gallery.py \
+  --bundle-root artifacts/sota_submission_bundles \
+  --output-dir artifacts/sota_submission_bundles/minor_visual_gallery
+```
+
+Open `artifacts/sota_submission_bundles/minor_visual_gallery/index.html` to
+view the navigation SVGs and evidence cards in one place.
+
 ## Supported Scenario Clusters
 
 - construction
@@ -198,6 +209,9 @@ than offline reporting overhead.
 
 ## Evidence To Highlight
 
+- The visual gallery puts the three navigation demos, randomized sweep metrics,
+  OOD sweep metrics, AlpaSignal bridge audit, and runtime constraints into a
+  single browser-openable page.
 - The generator is deterministic: same cluster and seed produce the same scenario.
 - Different seeds produce different obstacle layouts and parameters.
 - The simulation is closed-loop: the policy reacts step-by-step to the generated scene.

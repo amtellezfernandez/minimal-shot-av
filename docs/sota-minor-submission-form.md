@@ -44,6 +44,7 @@ The environment is intentionally lightweight and deterministic. It is not photor
   `minor_alpasignal_bridge/alpasignal_bridge_audit.json`.
 - Closed-loop runtime constraints audit with
   `minor_runtime/minor_runtime_constraints.json`.
+- Browser visual gallery at `minor_visual_gallery/index.html`.
 - SVG and JSON artifacts for visual inspection and reproducibility.
 - Full test suite output: `UV_CACHE_DIR=/tmp/uv-cache uv run --no-sync python scripts/run_tests.py`.
 

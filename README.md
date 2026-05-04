@@ -306,6 +306,14 @@ uv run --no-sync python scripts/audit_minor_runtime_constraints.py \
   --output artifacts/minor_runtime/minor_runtime_constraints.json
 ```
 
+Minor visual gallery:
+
+```bash
+uv run --no-sync python scripts/build_minor_visual_gallery.py \
+  --bundle-root artifacts/sota_submission_bundles \
+  --output-dir artifacts/sota_submission_bundles/minor_visual_gallery
+```
+
 Gauntlet benchmark sweep:
 
 ```bash
