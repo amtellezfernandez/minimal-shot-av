@@ -43,6 +43,12 @@ placed deliberately and reported in the manifest.
 
 ## Commands
 
+RLVR curriculum manifest:
+
+```bash
+uv run --no-sync python scripts/build_rlvr_curriculum.py --seed-start 1 --seed-end 20 --output artifacts/rlvr_curriculum_v1.json
+```
+
 Brief-aligned WOD sweep:
 
 ```bash
@@ -73,17 +79,49 @@ Novel-object stress audit:
 uv run --no-sync python scripts/audit_novel_object_stress.py --seed-start 1 --seed-end 80 --min-runs 24 --output artifacts/novel_object_stress_audit.json
 ```
 
-## Metrics
+## Metrics And Evidence Discipline
+
+`artifacts/rlvr_curriculum_v1.json` makes the gym explicit:
+
+- observation modes: privileged debug geometry, noisy geometry, top-down raster
+  spec, and camera/scene embedding mode.
+- action space: bounded waypoint and velocity commands.
+- task curriculum: WOD-style, compositional, adversarial, gauntlet, and hidden
+  tasks with deterministic train/dev/blind/stress splits.
+- grader library: reach goal, no collision, trajectory safety, progress floor,
+  intervention budget, and benchmark pass.
 
 The evaluator reports success, collision, reached-goal, safe-stall, final goal
 distance, steps, min clearance, 5th-percentile clearance, average progress,
-comfort cost, intervention rate, decision mode count, suite, topology, primary
-hazard, difficulty, and OOD axes.
+maximum collision risk, maximum lane error, comfort cost, intervention rate,
+decision mode count, suite, topology, primary hazard, difficulty, and OOD axes.
+Each row is one closed-loop rollout: the policy observes the active scenario,
+chooses actions, the safety filter may intervene, actors move with time, and the
+next state is generated from the executed action.
+
+The evaluator also reports trajectory-level safety, not only final state:
+
+- `trajectory_safety_pass`: the run reached the goal without any intermediate
+  safety event.
+- `trajectory_safety_event_count`: number of intermediate safety events.
+- `trajectory_safety_events`: compact trace markers for low clearance, extreme
+  collision-risk spikes with tight executed clearance, or terminal collisions.
+  Planner context flags such as a blocked corridor are reported through normal
+  rollout fields, but they are not counted as safety violations unless they
+  produce a physical-risk event.
 
 For the `gauntlet` suite the evaluator also treats route completion as
 insufficient. A run must avoid collision, avoid near misses, keep intervention
 rate low, and maintain progress. This produces `benchmark_pass`, aggregated as
 `benchmark_pass_rate`.
+
+`scenario_eval.json` includes:
+
+- `runs`: per-rollout action-trace summaries.
+- `summary`: per-policy, per-suite, per-cluster aggregates with Wilson 95%
+  confidence intervals for success and benchmark pass rate.
+- `curriculum`: suite, cluster, topology, hazard, and difficulty coverage.
+- `statistics`: pass@1 and trajectory-safety pass rates by policy and suite.
 
 The intended story is not a polished perfect score. WOD demonstrates baseline
 competence; compositional OOD demonstrates generalisation; adversarial exposes

@@ -422,10 +422,61 @@ def _experiment_matrix(args: argparse.Namespace) -> list[dict[str, Any]]:
     neural_ensemble_paths = _existing_paths_from_csv(str(getattr(args, "neural_candidate_models", "")))
     if neural_ensemble_paths:
         ensemble_models = ",".join(str(path) for path in neural_ensemble_paths)
-        base_runs.extend(
-            [
+        neural_ensemble_runs = [
+            {
+                "name": "neural_ensemble_listwise_temp062_safety_utility_familycal_veto",
+                "selector_model": "listwise_softmax",
+                "selector_features": "contextual",
+                "selector_target": "frame_delta",
+                "selector_listwise_iterations": "900",
+                "selector_listwise_lr": "0.18",
+                "selector_listwise_temperature": "0.62",
+                "selector_ridge": "100",
+                "selector_postprocess": "safety_utility",
+                "safety_utility_ridge": "3",
+                "selector_family_calibration": "speed_source_family",
+                "selector_family_calibration_min_count": "6",
+                "neural_candidate_models": ensemble_models,
+                "neural_top_k": "2",
+                "neural_residual_modes_per_anchor": "0",
+                "source_veto_gate": "train_margin",
+                "source_veto_sources": "learned",
+                "source_veto_fallback_sources": "kinematic",
+                "source_veto_router": "speed_fine",
+                "source_veto_max_rate": "1.0",
+                "source_veto_min_precision": "0.25",
+                "kinematic_profile": "base",
+                "residual_modes": "3",
+                "residual_grouping": "off",
+                "selector_fallback_source_options": "kinematic;kinematic,temporal",
+            },
+            {
+                "name": "neural_ensemble_sourcegate_speedfine_deny_residuals",
+                "selector_model": "pairwise_logistic",
+                "selector_features": "family_reliability_contextual",
+                "selector_target": "frame_delta",
+                "pairwise_iterations": "900",
+                "pairwise_lr": "0.12",
+                "pairwise_l2": "0.002",
+                "pairwise_max_pairs_per_frame": "160",
+                "selector_family_calibration": "speed_source_family",
+                "selector_family_calibration_min_count": "4",
+                "neural_candidate_models": ensemble_models,
+                "neural_top_k": "1",
+                "neural_residual_modes_per_anchor": "0",
+                "source_gate": "independent_train_margin",
+                "source_gate_sources": "learned",
+                "source_gate_router": "speed_fine",
+                "source_gate_max_rate": "0.35",
+                "source_gate_min_precision": "0.0",
+                "source_gate_deny_prefixes": "ridge_residual_pc2,ridge_residual_pc4,ridge_residual_pc5",
+            },
+        ]
+        if len(neural_ensemble_paths) >= 3:
+            neural_ensemble_runs.insert(
+                0,
                 {
-                    "name": "neural_ensemble_listwise_temp062_safety_utility_familycal_veto",
+                    "name": "neural_ensemble_diverse_top1_temp062_safety_utility_familycal_veto",
                     "selector_model": "listwise_softmax",
                     "selector_features": "contextual",
                     "selector_target": "frame_delta",
@@ -438,7 +489,7 @@ def _experiment_matrix(args: argparse.Namespace) -> list[dict[str, Any]]:
                     "selector_family_calibration": "speed_source_family",
                     "selector_family_calibration_min_count": "6",
                     "neural_candidate_models": ensemble_models,
-                    "neural_top_k": "2",
+                    "neural_top_k": "1",
                     "neural_residual_modes_per_anchor": "0",
                     "source_veto_gate": "train_margin",
                     "source_veto_sources": "learned",
@@ -451,29 +502,8 @@ def _experiment_matrix(args: argparse.Namespace) -> list[dict[str, Any]]:
                     "residual_grouping": "off",
                     "selector_fallback_source_options": "kinematic;kinematic,temporal",
                 },
-                {
-                    "name": "neural_ensemble_sourcegate_speedfine_deny_residuals",
-                    "selector_model": "pairwise_logistic",
-                    "selector_features": "family_reliability_contextual",
-                    "selector_target": "frame_delta",
-                    "pairwise_iterations": "900",
-                    "pairwise_lr": "0.12",
-                    "pairwise_l2": "0.002",
-                    "pairwise_max_pairs_per_frame": "160",
-                    "selector_family_calibration": "speed_source_family",
-                    "selector_family_calibration_min_count": "4",
-                    "neural_candidate_models": ensemble_models,
-                    "neural_top_k": "1",
-                    "neural_residual_modes_per_anchor": "0",
-                    "source_gate": "independent_train_margin",
-                    "source_gate_sources": "learned",
-                    "source_gate_router": "speed_fine",
-                    "source_gate_max_rate": "0.35",
-                    "source_gate_min_precision": "0.0",
-                    "source_gate_deny_prefixes": "ridge_residual_pc2,ridge_residual_pc4,ridge_residual_pc5",
-                },
-            ]
-        )
+            )
+        base_runs.extend(neural_ensemble_runs)
     if getattr(args, "transformer_candidate_model", None) and args.transformer_candidate_model.is_file():
         base_runs.extend(
             [

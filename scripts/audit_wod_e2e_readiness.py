@@ -104,6 +104,8 @@ def readiness_report(
         blockers.append(f"missing hidden-test leaderboard result log at {leaderboard_results}")
     if not closed_loop_report["present"]:
         blockers.append(f"missing closed-loop scenario_eval.json evidence under {closed_loop_dir}")
+    elif not closed_loop_report["valid"]:
+        blockers.append(f"closed-loop evidence lacks trajectory-safety/statistical fields under {closed_loop_dir}")
     if not world_report["present"]:
         blockers.append(f"missing world-model sweep evidence under {world_sweep_dir}")
     if not safety_report["present"]:
@@ -121,7 +123,7 @@ def readiness_report(
     minimal_shot_av_gates = {
         "leaderboard_truth": leaderboard_truth_available,
         "blind_submission_protocol": matrix_report["valid"],
-        "closed_loop_evidence": closed_loop_report["present"],
+        "closed_loop_evidence": closed_loop_report["valid"],
         "world_model_evidence": world_report["present"],
         "safety_bias_evidence": safety_report["present"],
     }
@@ -316,12 +318,56 @@ def _submission_matrix_report(path: Path) -> dict[str, Any]:
 
 def _closed_loop_report(path: Path) -> dict[str, Any]:
     reports = sorted(path.glob("**/scenario_eval.json")) if path.is_dir() else []
+    valid_reports: list[Path] = []
+    errors: dict[str, str] = {}
+    for report in reports:
+        try:
+            payload = json.loads(report.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            errors[str(report)] = str(exc)
+            continue
+        if _has_closed_loop_trajectory_evidence(payload):
+            valid_reports.append(report)
     return {
         "path": str(path),
         "present": bool(reports),
+        "valid": bool(valid_reports),
         "report_count": len(reports),
+        "valid_report_count": len(valid_reports),
         "first_report": str(reports[0]) if reports else None,
+        "first_valid_report": str(valid_reports[0]) if valid_reports else None,
+        "errors": errors,
     }
+
+
+def _has_closed_loop_trajectory_evidence(payload: Any) -> bool:
+    if not isinstance(payload, dict):
+        return False
+    runs = payload.get("runs", [])
+    summary = payload.get("summary", [])
+    statistics = payload.get("statistics", {})
+    curriculum = payload.get("curriculum", {})
+    if not isinstance(runs, list) or not runs:
+        return False
+    if not isinstance(summary, list) or not summary:
+        return False
+    if not isinstance(statistics, dict) or statistics.get("unit") != "closed-loop rollout":
+        return False
+    if not isinstance(curriculum, dict) or curriculum.get("generator") != "closed_loop_procedural_curriculum":
+        return False
+    return all(
+        isinstance(row, dict)
+        and "trajectory_safety_pass" in row
+        and "trajectory_safety_event_count" in row
+        and "max_collision_risk" in row
+        for row in runs
+    ) and all(
+        isinstance(row, dict)
+        and "trajectory_safety_pass_rate" in row
+        and "benchmark_pass_rate_ci95_low" in row
+        and "benchmark_pass_rate_ci95_high" in row
+        for row in summary
+    )
 
 
 def _world_sweep_report(path: Path) -> dict[str, Any]:

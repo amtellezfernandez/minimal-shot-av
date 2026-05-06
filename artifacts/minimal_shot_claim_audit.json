@@ -64,7 +64,7 @@
       "cluster_count": 11,
       "max_collision_rate": 0.0,
       "max_near_miss_rate": 0.0,
-      "min_benchmark_pass_rate": 1.0,
+      "min_benchmark_pass_rate": 0.98,
       "min_success_rate": 1.0,
       "run_count": 550
     }

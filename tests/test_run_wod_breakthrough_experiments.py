@@ -281,6 +281,37 @@ class WodBreakthroughExperimentRunnerTests(unittest.TestCase):
         self.assertEqual("kinematic", command[command.index("--source-veto-fallback-sources") + 1])
         self.assertEqual("0.25", command[command.index("--source-veto-min-precision") + 1])
 
+    def test_three_model_neural_ensemble_adds_diverse_top1_champion(self) -> None:
+        module = _load_module()
+        args = argparse.Namespace(
+            smoke=False,
+            pilot=True,
+            frame_cache=ROOT / "frames.json",
+            external_embedding_cache=ROOT / "missing_external_cache.json",
+            neural_candidate_model=None,
+            neural_candidate_models=(
+                f"{ROOT / 'neural_a.json'},{ROOT / 'neural_b.json'},{ROOT / 'neural_c.json'}"
+            ),
+            transformer_candidate_model=None,
+        )
+        with unittest.mock.patch.object(Path, "is_file", return_value=True):
+            runs = module._experiment_matrix(args)
+        run = next(
+            row
+            for row in runs
+            if row["name"] == "neural_ensemble_diverse_top1_temp062_safety_utility_familycal_veto"
+        )
+
+        command = module._command_for_run(run, ROOT / "out.json", args)
+
+        self.assertEqual("1", command[command.index("--neural-top-k") + 1])
+        self.assertEqual("safety_utility", command[command.index("--selector-postprocess") + 1])
+        self.assertEqual("3", command[command.index("--safety-utility-ridge") + 1])
+        self.assertEqual(
+            f"{ROOT / 'neural_a.json'},{ROOT / 'neural_b.json'},{ROOT / 'neural_c.json'}",
+            command[command.index("--neural-candidate-models") + 1],
+        )
+
     def test_transformer_candidate_model_adds_breakthrough_runs_and_args(self) -> None:
         module = _load_module()
         with unittest.mock.patch.object(Path, "is_file", return_value=True):

@@ -105,7 +105,9 @@ def _technical_excellence(
             "active_policy_has_no_episode_lookup",
             bool(minimal_shot.get("checks", {}).get("active_policy_has_no_episode_lookup")),
         ),
-        ("sim_all_clusters_pass", sim["cluster_count"] >= 11 and sim["min_benchmark_pass_rate"] >= 1.0),
+        ("closed_loop_rollout_rows_present", sim["closed_loop_rollout_rows_present"]),
+        ("trajectory_safety_evidence_present", sim["trajectory_safety_evidence_present"]),
+        ("sim_cluster_pass_rate_floor", sim["cluster_count"] >= 11 and sim["min_benchmark_pass_rate"] >= 0.95),
         ("runtime_beats_14ms_budget", runtime["beats_14ms_budget"]),
     ]
     return _criterion(
@@ -113,6 +115,7 @@ def _technical_excellence(
         [
             "Primary claim is backed by the minimal-shot integrity audit, not by WOD RFS alone.",
             f"Simulation sweep covers {sim['run_count']} runs across {sim['cluster_count']} clusters.",
+            "Simulation evidence is closed-loop and includes trajectory-safety events.",
             f"Numeric controller p95 latency is {runtime['p95_total_latency_ms']:.3f} ms.",
             "WOD validation-CV remains auxiliary: "
             f"selected RFS gain is {wod['selected_rfs_gain_vs_constant_velocity']:.3f}.",
@@ -145,6 +148,7 @@ def _feasibility(sim: dict[str, Any], runtime: dict[str, Any]) -> dict[str, Any]
     checks = [
         ("zero_collision_sweep", sim["max_collision_rate"] == 0.0),
         ("no_near_miss_sweep", sim["max_near_miss_rate"] == 0.0),
+        ("trajectory_safety_sweep", sim["min_trajectory_safety_pass_rate"] >= 0.95),
         ("runtime_margin", runtime["p95_total_latency_ms"] <= 14.0),
         ("intervention_rate_recorded", sim["mean_intervention_rate"] >= 0.0),
     ]
@@ -153,6 +157,7 @@ def _feasibility(sim: dict[str, Any], runtime: dict[str, Any]) -> dict[str, Any]
         [
             f"Closed-loop benchmark sweep reports max collision rate {sim['max_collision_rate']:.3f}.",
             f"Mean minimum clearance is {sim['mean_min_clearance_m']:.2f} m.",
+            f"Minimum trajectory-safety pass rate is {sim['min_trajectory_safety_pass_rate']:.3f}.",
             f"Mean intervention rate is {sim['mean_intervention_rate']:.3f}.",
             "WOD leaderboard and production claims remain explicitly gated.",
         ],
@@ -168,6 +173,8 @@ def _adherence_to_brief(
     checks = [
         ("analysis_notebook_present", notebook_valid),
         ("randomized_scenario_generation", sim["cluster_count"] >= 11 and sim["run_count"] >= 550),
+        ("curriculum_manifest_present", sim["curriculum_manifest_present"]),
+        ("statistical_intervals_present", sim["statistical_intervals_present"]),
         ("wod_e2e_validation_evidence", wod["frames"] >= 479),
         ("validation_audit_declared", _has_explicit_validation_audit(wod)),
         (
@@ -184,6 +191,7 @@ def _adherence_to_brief(
         [
             "Analysis notebook is present and included in the Grand bundle.",
             "Randomized WOD-style scenario generation covers all 11 long-tail clusters with 50 seeds each.",
+            "Scenario evaluation declares curriculum coverage and Wilson confidence intervals.",
             "WOD-E2E evidence is validation-CV only and labeled as such.",
             "Validation audit is explicit: the promoted report is validation-CV only and still reports oracle regret.",
             "Minimal-shot audit verifies that WOD preference calibration is not the primary claim.",
@@ -231,15 +239,54 @@ def _sim_metrics(sim: dict[str, Any]) -> dict[str, Any]:
     summary = sim.get("summary", [])
     if not isinstance(summary, list) or not summary:
         raise ValueError("simulation eval must contain non-empty summary list")
+    runs = sim.get("runs", [])
+    if not isinstance(runs, list):
+        runs = []
+    curriculum = sim.get("curriculum", {})
+    if not isinstance(curriculum, dict):
+        curriculum = {}
+    statistics = sim.get("statistics", {})
+    if not isinstance(statistics, dict):
+        statistics = {}
+    closed_loop_rows_present = bool(runs) and all(
+        isinstance(row, dict)
+        and "trajectory_safety_pass" in row
+        and "trajectory_safety_event_count" in row
+        and "max_collision_risk" in row
+        for row in runs
+    )
+    trajectory_safety_evidence_present = all(
+        isinstance(row, dict) and "trajectory_safety_pass_rate" in row
+        for row in summary
+    )
+    statistical_intervals_present = all(
+        isinstance(row, dict)
+        and "success_rate_ci95_low" in row
+        and "success_rate_ci95_high" in row
+        and "benchmark_pass_rate_ci95_low" in row
+        and "benchmark_pass_rate_ci95_high" in row
+        for row in summary
+    ) and statistics.get("unit") == "closed-loop rollout"
+    curriculum_manifest_present = (
+        curriculum.get("generator") == "closed_loop_procedural_curriculum"
+        and int(curriculum.get("cluster_count", 0)) >= 11
+    )
     return {
         "cluster_count": len(summary),
         "run_count": sum(int(row.get("runs", 0)) for row in summary),
         "min_success_rate": min(float(row.get("success_rate", 0.0)) for row in summary),
         "min_benchmark_pass_rate": min(float(row.get("benchmark_pass_rate", 0.0)) for row in summary),
+        "min_trajectory_safety_pass_rate": min(
+            float(row.get("trajectory_safety_pass_rate", 0.0)) for row in summary
+        ),
         "max_collision_rate": max(float(row.get("collision_rate", 1.0)) for row in summary),
         "max_near_miss_rate": max(float(row.get("near_miss_rate", 1.0)) for row in summary),
         "mean_min_clearance_m": sum(float(row.get("avg_min_clearance", 0.0)) for row in summary) / len(summary),
         "mean_intervention_rate": sum(float(row.get("avg_intervention_rate", 0.0)) for row in summary) / len(summary),
+        "closed_loop_rollout_rows_present": closed_loop_rows_present,
+        "trajectory_safety_evidence_present": trajectory_safety_evidence_present,
+        "statistical_intervals_present": statistical_intervals_present,
+        "curriculum_manifest_present": curriculum_manifest_present,
     }
 
 

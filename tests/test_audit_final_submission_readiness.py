@@ -81,14 +81,87 @@ class AuditFinalSubmissionReadinessTests(unittest.TestCase):
             self.assertIn("gate failed: production_no_go_boundary", report["blockers"])
             self.assertIn("production boundary is not an explicit no-go", report["blockers"])
 
+    def test_final_readiness_rejects_stale_minor_eval_in_archive(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle_root = root / "bundles"
+            bundle_root.mkdir()
+            grand = _write_archive(bundle_root / "grand_commission.tar.gz", module.REQUIRED_GRAND_MEMBERS)
+            minor = _write_archive(
+                bundle_root / "minor_commission.tar.gz",
+                module.REQUIRED_MINOR_MEMBERS,
+                stale_minor_eval=True,
+            )
+            _write_json(
+                bundle_root / "submission_bundles_manifest.json",
+                {
+                    "grand_commission": {"sha256": module._sha256(grand)},
+                    "minor_commission": {"sha256": module._sha256(minor)},
+                },
+            )
+            minimal = _write_minimal(root / "minimal.json")
+            judging = _write_judging(root / "judging.json")
+            production = _write_production(root / "production.json", decision="no_go")
 
-def _write_archive(path: Path, members: set[str]) -> Path:
+            report = module.final_readiness_report(
+                bundle_root=bundle_root,
+                minimal_shot_audit=minimal,
+                judging_audit=judging,
+                production_audit=production,
+            )
+
+            self.assertFalse(report["valid"])
+            self.assertIn("gate failed: minor_archive_ready", report["blockers"])
+            self.assertTrue(
+                any("scenario_eval.json" in blocker for blocker in report["blockers"])
+            )
+
+
+def _write_archive(path: Path, members: set[str], *, stale_minor_eval: bool = False) -> Path:
     with tarfile.open(path, "w:gz") as stream:
         for member in members:
             source = path.parent / member.replace("/", "_")
-            source.write_text("{}", encoding="utf-8")
+            if member.endswith("scenario_eval.json"):
+                payload = _stale_scenario_eval() if stale_minor_eval else _scenario_eval()
+                source.write_text(json.dumps(payload), encoding="utf-8")
+            else:
+                source.write_text("{}", encoding="utf-8")
             stream.add(source, arcname=member)
     return path
+
+
+def _scenario_eval() -> dict:
+    return {
+        "runs": [
+            {
+                "success": True,
+                "benchmark_pass": True,
+                "trajectory_safety_pass": True,
+                "trajectory_safety_event_count": 0,
+                "max_collision_risk": 0.1,
+            }
+        ],
+        "summary": [
+            {
+                "runs": 1,
+                "success_rate": 1.0,
+                "benchmark_pass_rate": 1.0,
+                "benchmark_pass_rate_ci95_low": 0.2,
+                "benchmark_pass_rate_ci95_high": 1.0,
+                "trajectory_safety_pass_rate": 1.0,
+            }
+        ],
+        "curriculum": {"generator": "closed_loop_procedural_curriculum", "cluster_count": 1},
+        "statistics": {"unit": "closed-loop rollout"},
+    }
+
+
+def _stale_scenario_eval() -> dict:
+    return {
+        "runs": [{"success": True, "benchmark_pass": True}],
+        "summary": [{"runs": 1, "success_rate": 1.0, "benchmark_pass_rate": 1.0}],
+    }
 
 
 def _write_minimal(path: Path) -> Path:

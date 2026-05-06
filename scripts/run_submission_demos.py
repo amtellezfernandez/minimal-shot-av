@@ -109,6 +109,8 @@ TRACK_EVIDENCE = {
         "artifacts/minimal_shot_claim_audit.json",
         "artifacts/novel_object_stress_audit.json",
         "artifacts/sota_judging_criteria_audit.json",
+        "artifacts/rlvr_curriculum_v1.json",
+        "artifacts/top_lab_readiness_audit.json",
         "artifacts/production_av_readiness_audit.json",
     ],
     "minor_commission": [],
@@ -216,7 +218,7 @@ def _run_minor_ood_evaluation(output_dir: Path) -> None:
         "--seed-start",
         "1",
         "--seed-end",
-        "10",
+        "20",
         "--output-dir",
         str(output_dir),
     ]

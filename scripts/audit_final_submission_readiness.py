@@ -73,6 +73,9 @@ def final_readiness_report(
         minor_archive,
         manifest.get("minor_commission", {}),
         required_members=REQUIRED_MINOR_MEMBERS,
+        content_checks={
+            "minor_commission/artifacts/minor_eval/scenario_eval.json": _scenario_eval_contract,
+        },
     )
     minimal = _minimal_shot_gate(minimal_shot_audit)
     judging = _judging_gate(judging_audit)
@@ -103,14 +106,36 @@ def final_readiness_report(
     }
 
 
-def _archive_gate(path: Path, manifest_row: dict[str, Any], *, required_members: set[str]) -> dict[str, Any]:
+def _archive_gate(
+    path: Path,
+    manifest_row: dict[str, Any],
+    *,
+    required_members: set[str],
+    content_checks: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     present = path.is_file()
     members: set[str] = set()
     sha256 = None
+    content_errors: list[str] = []
     if present:
         sha256 = _sha256(path)
         with tarfile.open(path, "r:gz") as archive:
             members = {member.name for member in archive.getmembers() if member.isfile()}
+            for member, check in (content_checks or {}).items():
+                if member not in members:
+                    continue
+                try:
+                    extracted = archive.extractfile(member)
+                    if extracted is None:
+                        content_errors.append(f"{member}: unreadable")
+                        continue
+                    payload = json.loads(extracted.read().decode("utf-8"))
+                except (KeyError, OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+                    content_errors.append(f"{member}: {exc}")
+                    continue
+                error = check(payload)
+                if error:
+                    content_errors.append(f"{member}: {error}")
     missing = sorted(required_members - members)
     manifest_sha = str(manifest_row.get("sha256", ""))
     return {
@@ -121,8 +146,43 @@ def _archive_gate(path: Path, manifest_row: dict[str, Any], *, required_members:
         "manifest_sha_matches": bool(sha256) and sha256 == manifest_sha,
         "required_count": len(required_members),
         "missing_required": missing,
-        "valid": present and bool(sha256) and sha256 == manifest_sha and not missing,
+        "content_errors": content_errors,
+        "valid": present and bool(sha256) and sha256 == manifest_sha and not missing and not content_errors,
     }
+
+
+def _scenario_eval_contract(payload: Any) -> str | None:
+    if not isinstance(payload, dict):
+        return "expected JSON object"
+    runs = payload.get("runs", [])
+    summary = payload.get("summary", [])
+    statistics = payload.get("statistics", {})
+    curriculum = payload.get("curriculum", {})
+    if not isinstance(runs, list) or not runs:
+        return "missing non-empty runs"
+    if not isinstance(summary, list) or not summary:
+        return "missing non-empty summary"
+    if not isinstance(statistics, dict) or statistics.get("unit") != "closed-loop rollout":
+        return "missing closed-loop statistics manifest"
+    if not isinstance(curriculum, dict) or curriculum.get("generator") != "closed_loop_procedural_curriculum":
+        return "missing curriculum manifest"
+    if not all(
+        isinstance(row, dict)
+        and "trajectory_safety_pass" in row
+        and "trajectory_safety_event_count" in row
+        and "max_collision_risk" in row
+        for row in runs
+    ):
+        return "runs lack trajectory-safety fields"
+    if not all(
+        isinstance(row, dict)
+        and "trajectory_safety_pass_rate" in row
+        and "benchmark_pass_rate_ci95_low" in row
+        and "benchmark_pass_rate_ci95_high" in row
+        for row in summary
+    ):
+        return "summary lacks safety/statistical fields"
+    return None
 
 
 def _minimal_shot_gate(path: Path) -> dict[str, Any]:
@@ -203,6 +263,8 @@ def _blockers(
     for label, archive in (("grand", grand), ("minor", minor)):
         for member in archive.get("missing_required", []):
             blockers.append(f"{label} archive missing {member}")
+        for error in archive.get("content_errors", []):
+            blockers.append(f"{label} archive invalid content: {error}")
     for check in minimal.get("missing_or_false", []):
         blockers.append(f"minimal-shot check failed: {check}")
     for criterion in judging.get("failed_criteria", []):

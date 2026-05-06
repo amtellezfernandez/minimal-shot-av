@@ -26,6 +26,7 @@ from minimal_shot_av.simulator.environment import (
     scenario_to_dict,
 )
 from minimal_shot_av.simulator.wod_scenarios import WOD_E2E_CLUSTERS, generate_wod_scenario
+from minimal_shot_av.simulator.policy import StepRecord
 
 
 class WodScenarioGeneratorTests(unittest.TestCase):
@@ -127,6 +128,11 @@ class WodScenarioGeneratorTests(unittest.TestCase):
 
         self.assertEqual(len(payload["runs"]), len(WOD_E2E_CLUSTERS) * 2)
         self.assertIn("success_rate", payload["summary"][0])
+        self.assertIn("benchmark_pass_rate_ci95_low", payload["summary"][0])
+        self.assertIn("trajectory_safety_pass", payload["runs"][0])
+        self.assertIn("trajectory_safety_event_count", payload["runs"][0])
+        self.assertIn("curriculum", payload)
+        self.assertEqual("closed-loop rollout", payload["statistics"]["unit"])
         self.assertIn("suite,cluster,topology", csv_text)
 
     def test_compositional_generator_emits_manifest_not_taxonomy_only(self) -> None:
@@ -231,6 +237,116 @@ class WodScenarioGeneratorTests(unittest.TestCase):
         self.assertEqual(payload["runs"][0]["suite"], "compositional")
         self.assertIn("ood_axes", payload["runs"][0])
         self.assertIn("benchmark_pass_rate", payload["summary"][0])
+        self.assertIn("trajectory_safety_pass_rate", payload["summary"][0])
+        self.assertEqual("closed_loop_procedural_curriculum", payload["curriculum"]["generator"])
+
+    def test_blocked_corridor_without_physical_risk_is_not_safety_event(self) -> None:
+        module = _load_evaluate_scenarios_module()
+        rollout = module.Rollout(
+            success=True,
+            collision=False,
+            reached_goal=True,
+            steps=[
+                StepRecord(
+                    t=0,
+                    x=0.0,
+                    y=0.0,
+                    lane_error=0.0,
+                    min_obstacle_distance=2.0,
+                    uncertainty=0.1,
+                    collision_risk=0.2,
+                    action_mode="nominal",
+                    speed=1.0,
+                    intervention=False,
+                    corridor_blocked=True,
+                )
+            ],
+        )
+
+        self.assertEqual([], module._trajectory_safety_events("wod", rollout))
+
+    def test_low_clearance_is_trajectory_safety_event(self) -> None:
+        module = _load_evaluate_scenarios_module()
+        rollout = module.Rollout(
+            success=True,
+            collision=False,
+            reached_goal=True,
+            steps=[
+                StepRecord(
+                    t=3,
+                    x=0.0,
+                    y=0.0,
+                    lane_error=0.0,
+                    min_obstacle_distance=0.4,
+                    uncertainty=0.1,
+                    collision_risk=0.2,
+                    action_mode="nominal",
+                    speed=1.0,
+                    intervention=False,
+                )
+            ],
+        )
+
+        self.assertEqual(["t3:clearance<0.55"], module._trajectory_safety_events("wod", rollout))
+
+    def test_high_model_risk_without_tight_clearance_is_not_safety_event(self) -> None:
+        module = _load_evaluate_scenarios_module()
+        rollout = module.Rollout(
+            success=True,
+            collision=False,
+            reached_goal=True,
+            steps=[
+                StepRecord(
+                    t=7,
+                    x=0.0,
+                    y=0.0,
+                    lane_error=0.0,
+                    min_obstacle_distance=1.15,
+                    uncertainty=0.1,
+                    collision_risk=0.99,
+                    action_mode="guarded",
+                    speed=0.5,
+                    intervention=True,
+                )
+            ],
+        )
+
+        self.assertEqual([], module._trajectory_safety_events("wod", rollout))
+
+    def test_extreme_risk_with_tight_clearance_is_safety_event(self) -> None:
+        module = _load_evaluate_scenarios_module()
+        rollout = module.Rollout(
+            success=True,
+            collision=False,
+            reached_goal=True,
+            steps=[
+                StepRecord(
+                    t=9,
+                    x=0.0,
+                    y=0.0,
+                    lane_error=0.0,
+                    min_obstacle_distance=0.8,
+                    uncertainty=0.1,
+                    collision_risk=0.98,
+                    action_mode="guarded",
+                    speed=0.5,
+                    intervention=True,
+                )
+            ],
+        )
+
+        self.assertEqual(["t9:risk>=0.97"], module._trajectory_safety_events("wod", rollout))
+
+def _load_evaluate_scenarios_module():
+    import importlib.util
+
+    script = ROOT / "scripts" / "evaluate_scenarios.py"
+    spec = importlib.util.spec_from_file_location("evaluate_scenarios", script)
+    if spec is None or spec.loader is None:
+        raise ImportError(script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 if __name__ == "__main__":

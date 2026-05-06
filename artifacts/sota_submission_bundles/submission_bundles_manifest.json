@@ -1,8 +1,8 @@
 {
   "grand_commission": {
-    "file_count": 39,
-    "git_commit": "1276b36e8cf600655f2f9f18ab65fb8dc74cc023",
-    "git_dirty": false,
+    "file_count": 41,
+    "git_commit": "e5feadccbe0aa3d1576a184a5fd3a0a895ad8fd7",
+    "git_dirty": true,
     "members": [
       "grand_commission/README.md",
       "grand_commission/repo_README.md",
@@ -36,6 +36,8 @@
       "grand_commission/artifacts/minimal_shot_claim_audit.json",
       "grand_commission/artifacts/novel_object_stress_audit.json",
       "grand_commission/artifacts/sota_judging_criteria_audit.json",
+      "grand_commission/artifacts/rlvr_curriculum_v1.json",
+      "grand_commission/artifacts/top_lab_readiness_audit.json",
       "grand_commission/artifacts/production_av_readiness_audit.json",
       "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.json",
       "grand_commission/artifacts/grand_spotlight_demo/latest_rollout.svg",
@@ -45,13 +47,13 @@
       "grand_commission/artifacts/grand_baseline_spotlight_demo/latest_rollout.svg"
     ],
     "path": "artifacts/sota_submission_bundles/grand_commission.tar.gz",
-    "sha256": "abba4425ec502727a3e71dec5523655bf1bfb9795e92fe3d99563fa0566934d9",
-    "size_bytes": 325317
+    "sha256": "15d5e1f4ee903d04b1390477de646ef14325e22cc6fbcedba5208e75329d90dc",
+    "size_bytes": 378923
   },
   "minor_commission": {
     "file_count": 23,
-    "git_commit": "1276b36e8cf600655f2f9f18ab65fb8dc74cc023",
-    "git_dirty": false,
+    "git_commit": "e5feadccbe0aa3d1576a184a5fd3a0a895ad8fd7",
+    "git_dirty": true,
     "members": [
       "minor_commission/README.md",
       "minor_commission/repo_README.md",
@@ -78,7 +80,7 @@
       "minor_commission/artifacts/minor_visual_gallery/index.html"
     ],
     "path": "artifacts/sota_submission_bundles/minor_commission.tar.gz",
-    "sha256": "fd2502b59b6a00f314dabaaa2e8271a21a1d5c29acf209554d59893af14303da",
-    "size_bytes": 185546
+    "sha256": "7bacc8b666de0f4c735b1e9be871ae2bb3851401bd15c791cf66c8cdfd233a9e",
+    "size_bytes": 228851
   }
 }

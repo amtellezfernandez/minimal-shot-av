@@ -4,7 +4,9 @@
     "adherence_to_brief": {
       "checks": {
         "analysis_notebook_present": true,
+        "curriculum_manifest_present": true,
         "randomized_scenario_generation": true,
+        "statistical_intervals_present": true,
         "validation_audit_declared": true,
         "validation_preferences_not_primary_claim": true,
         "wod_e2e_validation_evidence": true,
@@ -13,6 +15,7 @@
       "evidence": [
         "Analysis notebook is present and included in the Grand bundle.",
         "Randomized WOD-style scenario generation covers all 11 long-tail clusters with 50 seeds each.",
+        "Scenario evaluation declares curriculum coverage and Wilson confidence intervals.",
         "WOD-E2E evidence is validation-CV only and labeled as such.",
         "Validation audit is explicit: the promoted report is validation-CV only and still reports oracle regret.",
         "Minimal-shot audit verifies that WOD preference calibration is not the primary claim."
@@ -25,11 +28,13 @@
         "intervention_rate_recorded": true,
         "no_near_miss_sweep": true,
         "runtime_margin": true,
+        "trajectory_safety_sweep": true,
         "zero_collision_sweep": true
       },
       "evidence": [
         "Closed-loop benchmark sweep reports max collision rate 0.000.",
         "Mean minimum clearance is 2.76 m.",
+        "Minimum trajectory-safety pass rate is 0.980.",
         "Mean intervention rate is 0.117.",
         "WOD leaderboard and production claims remain explicitly gated."
       ],
@@ -74,13 +79,16 @@
     "technical_excellence": {
       "checks": {
         "active_policy_has_no_episode_lookup": true,
+        "closed_loop_rollout_rows_present": true,
         "minimal_shot_integrity_valid": true,
         "runtime_beats_14ms_budget": true,
-        "sim_all_clusters_pass": true
+        "sim_cluster_pass_rate_floor": true,
+        "trajectory_safety_evidence_present": true
       },
       "evidence": [
         "Primary claim is backed by the minimal-shot integrity audit, not by WOD RFS alone.",
         "Simulation sweep covers 550 runs across 11 clusters.",
+        "Simulation evidence is closed-loop and includes trajectory-safety events.",
         "Numeric controller p95 latency is 1.402 ms.",
         "WOD validation-CV remains auxiliary: selected RFS gain is 0.637."
       ],
@@ -93,7 +101,7 @@
     "minimal_shot_audit": "/home/amdev/sota/minimal-shot-av/artifacts/minimal_shot_claim_audit.json",
     "notebook": "/home/amdev/sota/minimal-shot-av/notebooks/wod_e2e_analysis.ipynb",
     "runtime_report": "/home/amdev/sota/minimal-shot-av/benchmarks/current/wod_online_runtime_vs_14ms_budget.json",
-    "sim_eval": "artifacts/sota_submission_bundles/minor_eval/scenario_eval.json",
+    "sim_eval": "/home/amdev/sota/minimal-shot-av/artifacts/sota_submission_bundles/minor_eval/scenario_eval.json",
     "wod_report": "/home/amdev/sota/minimal-shot-av/artifacts/wod_fastkin_gate_ridge175_scene020_cv_official.json"
   },
   "metrics": {
@@ -163,7 +171,7 @@
           "cluster_count": 11,
           "max_collision_rate": 0.0,
           "max_near_miss_rate": 0.0,
-          "min_benchmark_pass_rate": 1.0,
+          "min_benchmark_pass_rate": 0.98,
           "min_success_rate": 1.0,
           "run_count": 550
         }
@@ -178,14 +186,19 @@
       "p95_total_latency_ms": 1.40214185
     },
     "simulation": {
+      "closed_loop_rollout_rows_present": true,
       "cluster_count": 11,
+      "curriculum_manifest_present": true,
       "max_collision_rate": 0.0,
       "max_near_miss_rate": 0.0,
       "mean_intervention_rate": 0.11696363636363637,
       "mean_min_clearance_m": 2.7645454545454546,
-      "min_benchmark_pass_rate": 1.0,
+      "min_benchmark_pass_rate": 0.98,
       "min_success_rate": 1.0,
-      "run_count": 550
+      "min_trajectory_safety_pass_rate": 0.98,
+      "run_count": 550,
+      "statistical_intervals_present": true,
+      "trajectory_safety_evidence_present": true
     },
     "wod": {
       "breakthrough_failures": [],

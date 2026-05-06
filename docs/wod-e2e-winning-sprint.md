@@ -12,12 +12,13 @@ produce a valid Waymo E2E submission that can challenge the active leaderboard.
 - The current best repo path is still mostly ego-history, route-intent, ridge
   residual candidates, and a structured selector.
 - The current best local validation-CV artifact is
-  `artifacts/cache/wod_neural_ensemble_su_r3_f70_m05_d075_no_route_familycal_m6_veto_r100_p25_temp062.json`
-  at `7.7569` selected RFS / `8.0836` normalized RFS. This uses a two-model
-  neural proposal ensemble plus a temperature-0.62 listwise softmax selector,
-  speed/source/family calibration, learned-source veto, and ridge-3 safety-utility
-  postprocessing. Route-target routing did not improve this setup in the
-  current 479-frame validation CV contract.
+  `artifacts/cache/wod_neural_ensemble_su_r3_three_models_top1_familycal_m6_veto_r100_p25_temp062.json`
+  at `7.8052` selected RFS / `8.1302` normalized RFS. This uses a diverse
+  three-model neural proposal ensemble with only the top proposal from each
+  model, plus a temperature-0.62 listwise softmax selector, speed/source/family
+  calibration, learned-source veto, and ridge-3 safety-utility postprocessing.
+  Route-target routing and larger per-model top-k did not improve this setup in
+  the current 479-frame validation CV contract.
 - This is stronger than the previous calibrated linear selector result
   (`7.7061` selected RFS), but it is still not a hidden-test leaderboard result
   and is not enough to claim leaderboard-winning scene understanding.

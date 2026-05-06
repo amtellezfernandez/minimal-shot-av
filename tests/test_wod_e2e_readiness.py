@@ -176,7 +176,10 @@ class WodE2EReadinessTests(unittest.TestCase):
             )
             closed_loop = root / "closed_loop"
             (closed_loop / "run").mkdir(parents=True)
-            (closed_loop / "run" / "scenario_eval.json").write_text("{}", encoding="utf-8")
+            (closed_loop / "run" / "scenario_eval.json").write_text(
+                _closed_loop_payload(),
+                encoding="utf-8",
+            )
             world = root / "world"
             world.mkdir()
             (world / "wod_cv_world.json").write_text("{}", encoding="utf-8")
@@ -203,6 +206,51 @@ class WodE2EReadinessTests(unittest.TestCase):
             self.assertTrue(readiness["all_evidence_gates_pass"])
             self.assertEqual(1, report["artifacts"]["submission_matrix"]["submission_count"])
             self.assertEqual(1, report["artifacts"]["submission_matrix"]["strict_branch_count"])
+            self.assertTrue(report["artifacts"]["closed_loop"]["valid"])
+
+    def test_readiness_report_rejects_stale_closed_loop_summary(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            waymo = root / "waymo"
+            for split in ("train", "test"):
+                (waymo / split).mkdir(parents=True)
+                (waymo / split / f"{split}_000.tfrecord-00000-of-00001").write_bytes(b"")
+            matrix = root / "matrix"
+            matrix.mkdir()
+            (matrix / "manifest.json").write_text(
+                (
+                    '{"pre_registered":true,'
+                    '"submissions":[{"variant":"a","submission_sha256":"abc",'
+                    '"branch":"strict_minimal_shot","minimal_shot_claim_allowed":true,'
+                    '"validation_tuned":false}]}'
+                ),
+                encoding="utf-8",
+            )
+            model = root / "model.json"
+            candidates = root / "candidates.jsonl"
+            model.write_text("{}", encoding="utf-8")
+            candidates.write_text("", encoding="utf-8")
+            closed_loop = root / "closed_loop"
+            (closed_loop / "run").mkdir(parents=True)
+            (closed_loop / "run" / "scenario_eval.json").write_text(
+                '{"summary":[{"runs":1,"benchmark_pass_rate":1.0}]}',
+                encoding="utf-8",
+            )
+
+            report = module.readiness_report(
+                data_root=waymo,
+                frame_list=root / "missing_frame_list.json",
+                model=model,
+                candidates=candidates,
+                submission=root / "submission.tar.gz",
+                submission_matrix=matrix,
+                closed_loop_dir=closed_loop,
+            )
+
+            self.assertTrue(report["artifacts"]["closed_loop"]["present"])
+            self.assertFalse(report["artifacts"]["closed_loop"]["valid"])
+            self.assertFalse(report["minimal_shot_av_readiness"]["gates"]["closed_loop_evidence"])
 
     def test_readiness_report_rejects_validation_tuned_minimal_shot_claim_row(self) -> None:
         module = _load_module()
@@ -254,6 +302,16 @@ class WodE2EReadinessTests(unittest.TestCase):
 
             self.assertFalse(report["minimal_shot_av_readiness"]["leaderboard_truth_available"])
             self.assertFalse(report["artifacts"]["leaderboard_results"]["valid"])
+
+def _closed_loop_payload() -> str:
+    return (
+        '{"runs":[{"trajectory_safety_pass":true,'
+        '"trajectory_safety_event_count":0,"max_collision_risk":0.2}],'
+        '"summary":[{"trajectory_safety_pass_rate":1.0,'
+        '"benchmark_pass_rate_ci95_low":0.8,"benchmark_pass_rate_ci95_high":1.0}],'
+        '"curriculum":{"generator":"closed_loop_procedural_curriculum"},'
+        '"statistics":{"unit":"closed-loop rollout"}}'
+    )
 
 
 if __name__ == "__main__":

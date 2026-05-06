@@ -42,22 +42,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
                 encoding="utf-8",
             )
             sim.write_text(
-                json.dumps(
-                    {
-                        "summary": [
-                            {
-                                "runs": 50,
-                                "success_rate": 1.0,
-                                "benchmark_pass_rate": 1.0,
-                                "collision_rate": 0.0,
-                                "near_miss_rate": 0.0,
-                                "avg_min_clearance": 2.0,
-                                "avg_intervention_rate": 0.1,
-                            }
-                            for _ in range(11)
-                        ]
-                    }
-                ),
+                json.dumps(_sim_payload()),
                 encoding="utf-8",
             )
             runtime.write_text(
@@ -119,22 +104,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
             )
             breakthrough.write_text(json.dumps({"passed": False, "failures": [{"id": "x"}]}), encoding="utf-8")
             sim.write_text(
-                json.dumps(
-                    {
-                        "summary": [
-                            {
-                                "runs": 50,
-                                "success_rate": 1.0,
-                                "benchmark_pass_rate": 1.0,
-                                "collision_rate": 0.0,
-                                "near_miss_rate": 0.0,
-                                "avg_min_clearance": 2.0,
-                                "avg_intervention_rate": 0.1,
-                            }
-                            for _ in range(11)
-                        ]
-                    }
-                ),
+                json.dumps(_sim_payload()),
                 encoding="utf-8",
             )
             runtime.write_text(
@@ -189,22 +159,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
             )
             breakthrough.write_text(json.dumps({"passed": True, "failures": []}), encoding="utf-8")
             sim.write_text(
-                json.dumps(
-                    {
-                        "summary": [
-                            {
-                                "runs": 50,
-                                "success_rate": 1.0,
-                                "benchmark_pass_rate": 1.0,
-                                "collision_rate": 0.0,
-                                "near_miss_rate": 0.0,
-                                "avg_min_clearance": 2.0,
-                                "avg_intervention_rate": 0.1,
-                            }
-                            for _ in range(11)
-                        ]
-                    }
-                ),
+                json.dumps(_sim_payload()),
                 encoding="utf-8",
             )
             runtime.write_text(
@@ -263,22 +218,7 @@ class SotaJudgingCriteriaAuditTest(unittest.TestCase):
             )
             breakthrough.write_text(json.dumps({"passed": True, "failures": []}), encoding="utf-8")
             sim.write_text(
-                json.dumps(
-                    {
-                        "summary": [
-                            {
-                                "runs": 50,
-                                "success_rate": 1.0,
-                                "benchmark_pass_rate": 1.0,
-                                "collision_rate": 0.0,
-                                "near_miss_rate": 0.0,
-                                "avg_min_clearance": 2.0,
-                                "avg_intervention_rate": 0.1,
-                            }
-                            for _ in range(11)
-                        ]
-                    }
-                ),
+                json.dumps(_sim_payload()),
                 encoding="utf-8",
             )
             runtime.write_text(
@@ -321,6 +261,55 @@ def _minimal_shot_payload() -> dict:
         "no_strict_zero_shot_wod_claim": True,
     }
     return {"schema": "minimal_shot_claim_audit_v1", "valid": True, "checks": checks}
+
+
+def _sim_payload() -> dict:
+    summary = [
+        {
+            "runs": 50,
+            "success_rate": 1.0,
+            "success_rate_ci95_low": 0.929,
+            "success_rate_ci95_high": 1.0,
+            "benchmark_pass_rate": 1.0,
+            "benchmark_pass_rate_ci95_low": 0.929,
+            "benchmark_pass_rate_ci95_high": 1.0,
+            "trajectory_safety_pass_rate": 1.0,
+            "collision_rate": 0.0,
+            "near_miss_rate": 0.0,
+            "avg_min_clearance": 2.0,
+            "avg_intervention_rate": 0.1,
+        }
+        for _ in range(11)
+    ]
+    runs = [
+        {
+            "suite": "wod",
+            "cluster": f"cluster_{index % 11}",
+            "policy": "spotlight-reflex",
+            "success": True,
+            "benchmark_pass": True,
+            "trajectory_safety_pass": True,
+            "trajectory_safety_event_count": 0,
+            "max_collision_risk": 0.2,
+        }
+        for index in range(550)
+    ]
+    return {
+        "runs": runs,
+        "summary": summary,
+        "curriculum": {
+            "generator": "closed_loop_procedural_curriculum",
+            "cluster_count": 11,
+            "suite_count": 1,
+            "topology_count": 3,
+            "primary_hazard_type_count": 11,
+        },
+        "statistics": {
+            "unit": "closed-loop rollout",
+            "confidence_interval": "Wilson score interval, 95%",
+            "by_policy_suite": [{"policy": "spotlight-reflex", "suite": "wod", "pass_at_1": 1.0}],
+        },
+    }
 
 
 if __name__ == "__main__":
