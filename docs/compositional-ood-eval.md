@@ -79,6 +79,12 @@ Novel-object stress audit:
 uv run --no-sync python scripts/audit_novel_object_stress.py --seed-start 1 --seed-end 80 --min-runs 24 --output artifacts/novel_object_stress_audit.json
 ```
 
+Topology susceptibility audit:
+
+```bash
+uv run --no-sync python scripts/audit_seizure_topology_susceptibility.py --seeds-per-topology 3 --suite hidden --output-dir artifacts/seizure_topology_susceptibility
+```
+
 ## Metrics And Evidence Discipline
 
 `artifacts/rlvr_curriculum_v1.json` makes the gym explicit:
@@ -136,3 +142,11 @@ rejects scenario manifest or cluster-name lookup in active policy sources, so
 this audit is less privileged than a simulator-oracle rollout. It does not
 establish camera-based recognition or semantic understanding of real physical
 unknown objects.
+
+The topology susceptibility audit asks a different question: which route
+geometries are most fragile under synchronized guard perturbations? It injects
+phase-locked phantom guard obstacles at curvature and corridor decision points,
+sweeps perturbation budget, and reports the first budget where at least half of
+clean-passing scenarios collapse. The result is a controlled seizure-like proxy
+for false transition guards, not a claim that the simulator contains real
+neurological or physical seizure dynamics.

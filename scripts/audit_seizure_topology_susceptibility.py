@@ -1,0 +1,317 @@
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import math
+from dataclasses import replace
+from pathlib import Path
+import sys
+from typing import Any
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+if str(ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(ROOT / "scripts"))
+
+from evaluate_scenarios import summarize_rollout
+from minimal_shot_av.simulator.compositional_scenarios import (  # noqa: E402
+    COMPOSITIONAL_TOPOLOGIES,
+    generate_compositional_scenario,
+)
+from minimal_shot_av.simulator.environment import Obstacle, Scenario, interpolate_lane
+from minimal_shot_av.simulator.policy import run_spotlight_reflex_policy
+
+
+DEFAULT_BUDGETS = (0.0, 0.1, 0.2, 0.35, 0.5, 0.7, 0.9, 1.15, 1.5, 2.0)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Sweep seizure-like perception perturbation budgets by route topology."
+    )
+    parser.add_argument("--seeds-per-topology", type=int, default=4)
+    parser.add_argument("--suite", choices=("compositional", "hidden", "adversarial"), default="hidden")
+    parser.add_argument("--seed-start", type=int, default=1)
+    parser.add_argument("--output-dir", type=Path, default=Path("artifacts/seizure_topology_susceptibility"))
+    parser.add_argument(
+        "--budgets",
+        type=float,
+        nargs="*",
+        default=list(DEFAULT_BUDGETS),
+        help="Perturbation budgets to sweep. Zero is the clean condition.",
+    )
+    args = parser.parse_args()
+
+    clean_rows: list[dict[str, Any]] = []
+    sweep_rows: list[dict[str, Any]] = []
+    selected = _select_scenarios(args.suite, args.seed_start, args.seeds_per_topology)
+
+    for topology, scenarios in selected.items():
+        for scenario_index, scenario in enumerate(scenarios):
+            clean_rollout = run_spotlight_reflex_policy(scenario)
+            clean_summary = summarize_rollout(
+                args.suite,
+                scenario.cluster,
+                scenario.seed,
+                "spotlight-reflex",
+                clean_rollout,
+                scenario.goal,
+                scenario.tags,
+            )
+            clean_rows.append({**clean_summary, **_topology_metrics(scenario), "scenario_index": scenario_index})
+
+            clean_progress = _total_progress(clean_rollout.steps)
+            clean_pass = bool(clean_summary["benchmark_pass"])
+            for budget in args.budgets:
+                attacked = _with_seizure_phantoms(scenario, budget)
+                rollout = run_spotlight_reflex_policy(attacked)
+                summary = summarize_rollout(
+                    args.suite,
+                    attacked.cluster,
+                    attacked.seed,
+                    "spotlight-reflex+seizure-phantoms",
+                    rollout,
+                    attacked.goal,
+                    attacked.tags,
+                )
+                progress_ratio = _total_progress(rollout.steps) / max(clean_progress, 1e-9)
+                collapse = _collapse(clean_pass, clean_summary, summary, progress_ratio)
+                sweep_rows.append(
+                    {
+                        **summary,
+                        **_topology_metrics(scenario),
+                        "scenario_index": scenario_index,
+                        "attack_budget": budget,
+                        "clean_benchmark_pass": clean_pass,
+                        "clean_progress": round(clean_progress, 4),
+                        "attacked_progress": round(_total_progress(rollout.steps), 4),
+                        "progress_ratio": round(progress_ratio, 4),
+                        "collapse": collapse,
+                        "collapse_reason": _collapse_reason(clean_pass, summary, progress_ratio),
+                        "attack_model": "phase_locked_phantom_guard_obstacles",
+                    }
+                )
+
+    topology_summary = _summarize_by_topology(sweep_rows)
+    payload = {
+        "attack_model": {
+            "name": "phase_locked_phantom_guard_obstacles",
+            "interpretation": (
+                "A bounded perception/control seizure proxy: false obstacle guards are injected at repeated "
+                "route phases. It tests which route topologies lose mission progress under small synchronized "
+                "guard perturbations; it is not a claim that the simulator contains a real neural seizure."
+            ),
+            "collapse_definition": (
+                "A clean-passing scenario collapses if the attacked rollout collides, fails the benchmark, "
+                "or keeps less than 65% of clean progress."
+            ),
+        },
+        "clean_runs": clean_rows,
+        "sweep_runs": sweep_rows,
+        "topology_summary": topology_summary,
+        "ranking": sorted(
+            topology_summary,
+            key=lambda row: (
+                float(row["critical_attack_budget"]) if row["critical_attack_budget"] is not None else math.inf,
+                -float(row["collapse_rate_at_0_35"]),
+                -float(row["mean_curvature_per_100m"]),
+            ),
+        ),
+    }
+
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    _write_csv(args.output_dir / "topology_susceptibility_sweep.csv", sweep_rows)
+    _write_csv(args.output_dir / "topology_susceptibility_summary.csv", topology_summary)
+    (args.output_dir / "topology_susceptibility.json").write_text(json.dumps(payload, indent=2))
+    print(f"Wrote topology susceptibility audit to {args.output_dir}")
+
+
+def _select_scenarios(suite: str, seed_start: int, seeds_per_topology: int) -> dict[str, list[Scenario]]:
+    selected = {topology: [] for topology in COMPOSITIONAL_TOPOLOGIES}
+    seed = seed_start
+    max_seed = seed_start + 40_000
+    while seed < max_seed and any(len(rows) < seeds_per_topology for rows in selected.values()):
+        scenario = generate_compositional_scenario(seed, suite=suite)
+        topology = str(scenario.tags.get("topology", ""))
+        if topology in selected and len(selected[topology]) < seeds_per_topology:
+            selected[topology].append(scenario)
+        seed += 1
+    missing = [topology for topology, rows in selected.items() if len(rows) < seeds_per_topology]
+    if missing:
+        raise RuntimeError(f"could not sample enough scenarios for: {', '.join(missing)}")
+    return selected
+
+
+def _with_seizure_phantoms(scenario: Scenario, budget: float) -> Scenario:
+    if budget <= 0.0:
+        return scenario
+    lane = interpolate_lane(scenario.lane_center, samples_per_segment=12)
+    count = max(1, int(round(2 + budget * 7)))
+    radius = 0.55 + budget * 2.0
+    lateral_scale = max(0.0, 0.09 - budget * 0.045)
+    phase_indices = _guard_phase_indices(lane, count)
+    phantoms: list[Obstacle] = []
+    for index, lane_index in enumerate(phase_indices):
+        x, y = lane[lane_index]
+        previous_point = lane[max(0, lane_index - 1)]
+        next_point = lane[min(len(lane) - 1, lane_index + 1)]
+        tangent = (next_point[0] - previous_point[0], next_point[1] - previous_point[1])
+        norm = math.hypot(tangent[0], tangent[1]) or 1.0
+        normal = (-tangent[1] / norm, tangent[0] / norm)
+        side = -1.0 if index % 2 else 1.0
+        offset = side * scenario.lane_half_width * lateral_scale
+        phantoms.append(
+            Obstacle(
+                x=x + normal[0] * offset,
+                y=y + normal[1] * offset,
+                radius=radius,
+                kind="seizure_phantom",
+                label=f"seizure_budget_{budget:.2f}_phase_{index}",
+            )
+        )
+    tags = {
+        **scenario.tags,
+        "seizure_attack_budget": round(budget, 4),
+        "seizure_attack_model": "phase_locked_phantom_guard_obstacles",
+    }
+    return replace(scenario, obstacles=[*scenario.obstacles, *phantoms], tags=tags)
+
+
+def _guard_phase_indices(lane: list[tuple[float, float]], count: int) -> list[int]:
+    if count <= 0:
+        return []
+    curvature_scores: list[tuple[float, int]] = []
+    for index in range(1, len(lane) - 1):
+        first, second, third = lane[index - 1], lane[index], lane[index + 1]
+        h1 = math.atan2(second[1] - first[1], second[0] - first[0])
+        h2 = math.atan2(third[1] - second[1], third[0] - second[0])
+        curvature_scores.append((abs(_angle_delta(h2, h1)), index))
+    high_curvature = [
+        index
+        for _, index in sorted(curvature_scores, reverse=True)
+        if len(lane) * 0.12 <= index <= len(lane) * 0.88
+    ][: max(1, count // 2)]
+    evenly_spaced = [
+        min(len(lane) - 1, max(0, int(((slot + 1) / (count + 1)) * (len(lane) - 1)))) for slot in range(count)
+    ]
+    selected: list[int] = []
+    for index in [*high_curvature, *evenly_spaced]:
+        if index not in selected:
+            selected.append(index)
+        if len(selected) == count:
+            break
+    return selected
+
+
+def _topology_metrics(scenario: Scenario) -> dict[str, Any]:
+    lane = scenario.lane_center
+    length = sum(math.dist(a, b) for a, b in zip(lane, lane[1:]))
+    heading_changes: list[float] = []
+    for first, second, third in zip(lane, lane[1:], lane[2:]):
+        h1 = math.atan2(second[1] - first[1], second[0] - first[0])
+        h2 = math.atan2(third[1] - second[1], third[0] - second[0])
+        heading_changes.append(abs(_angle_delta(h2, h1)))
+    curvature = sum(heading_changes) / max(length, 1e-9)
+    feature_kinds = {str(feature.get("kind", "")) for feature in scenario.map_features}
+    return {
+        "route_length_m": round(length, 3),
+        "lane_half_width_m": round(scenario.lane_half_width, 3),
+        "curvature_per_100m": round(curvature * 100.0, 4),
+        "topology_feature_count": len(feature_kinds),
+        "has_speed_limit_feature": "speed_limit" in feature_kinds,
+        "has_temporary_alignment_feature": "temporary_alignment" in feature_kinds,
+        "has_roundabout_feature": "roundabout_entry" in feature_kinds,
+        "has_pullout_feature": "single_track_pullout" in feature_kinds,
+    }
+
+
+def _angle_delta(a: float, b: float) -> float:
+    return (a - b + math.pi) % (2.0 * math.pi) - math.pi
+
+
+def _total_progress(steps: list[Any]) -> float:
+    return sum(max(0.0, float(step.progress or 0.0)) for step in steps)
+
+
+def _collapse(clean_pass: bool, clean_summary: dict[str, Any], attacked_summary: dict[str, Any], progress_ratio: float) -> bool:
+    if not clean_pass:
+        return False
+    if bool(attacked_summary["collision"]):
+        return True
+    if not bool(attacked_summary["benchmark_pass"]):
+        return True
+    return progress_ratio < 0.65 and float(clean_summary["avg_progress"]) > 0.0
+
+
+def _collapse_reason(clean_pass: bool, attacked_summary: dict[str, Any], progress_ratio: float) -> str:
+    if not clean_pass:
+        return "clean_failed"
+    if bool(attacked_summary["collision"]):
+        return "collision"
+    if not bool(attacked_summary["benchmark_pass"]):
+        return "benchmark_failure"
+    if progress_ratio < 0.65:
+        return "progress_collapse"
+    return "no_collapse"
+
+
+def _summarize_by_topology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    summary: list[dict[str, Any]] = []
+    topologies = sorted({str(row["topology"]) for row in rows})
+    for topology in topologies:
+        scoped = [row for row in rows if row["topology"] == topology]
+        budgets = sorted({float(row["attack_budget"]) for row in scoped})
+        scenario_count = len({int(row["scenario_index"]) for row in scoped})
+        clean_passes = {
+            int(row["scenario_index"])
+            for row in scoped
+            if float(row["attack_budget"]) == 0.0 and bool(row["clean_benchmark_pass"])
+        }
+        critical: float | None = None
+        for budget in budgets:
+            at_budget = [row for row in scoped if float(row["attack_budget"]) == budget and int(row["scenario_index"]) in clean_passes]
+            if at_budget and sum(1 for row in at_budget if bool(row["collapse"])) / len(at_budget) >= 0.5:
+                critical = budget
+                break
+        at_035 = [
+            row
+            for row in scoped
+            if abs(float(row["attack_budget"]) - 0.35) < 1e-9 and int(row["scenario_index"]) in clean_passes
+        ]
+        collapse_rate_035 = (sum(1 for row in at_035 if bool(row["collapse"])) / len(at_035)) if at_035 else 0.0
+        clean_rows = [row for row in scoped if float(row["attack_budget"]) == 0.0]
+        summary.append(
+            {
+                "topology": topology,
+                "scenario_count": scenario_count,
+                "clean_pass_count": len(clean_passes),
+                "critical_attack_budget": critical,
+                "collapse_rate_at_0_35": round(collapse_rate_035, 4),
+                "mean_lane_half_width_m": round(_mean(clean_rows, "lane_half_width_m"), 3),
+                "mean_curvature_per_100m": round(_mean(clean_rows, "curvature_per_100m"), 4),
+                "mean_route_length_m": round(_mean(clean_rows, "route_length_m"), 3),
+            }
+        )
+    return summary
+
+
+def _mean(rows: list[dict[str, Any]], key: str) -> float:
+    values = [float(row[key]) for row in rows]
+    return sum(values) / max(1, len(values))
+
+
+def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    if not rows:
+        raise RuntimeError(f"no rows for {path}")
+    with path.open("w", newline="") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+if __name__ == "__main__":
+    main()

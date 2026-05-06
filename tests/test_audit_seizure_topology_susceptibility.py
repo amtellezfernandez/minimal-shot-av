@@ -1,0 +1,60 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from minimal_shot_av.simulator.compositional_scenarios import COMPOSITIONAL_TOPOLOGIES
+
+
+class SeizureTopologySusceptibilityAuditTests(unittest.TestCase):
+    def test_audit_writes_topology_ranking(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "audit_seizure_topology_susceptibility.py"),
+                    "--seeds-per-topology",
+                    "1",
+                    "--seed-start",
+                    "1",
+                    "--suite",
+                    "hidden",
+                    "--budgets",
+                    "0.0",
+                    "0.35",
+                    "--output-dir",
+                    temp_dir,
+                ],
+                cwd=ROOT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            payload = json.loads((Path(temp_dir) / "topology_susceptibility.json").read_text())
+            summary_csv = (Path(temp_dir) / "topology_susceptibility_summary.csv").read_text()
+            sweep_csv = (Path(temp_dir) / "topology_susceptibility_sweep.csv").read_text()
+
+        self.assertEqual({row["topology"] for row in payload["topology_summary"]}, set(COMPOSITIONAL_TOPOLOGIES))
+        self.assertEqual(len(payload["ranking"]), len(COMPOSITIONAL_TOPOLOGIES))
+        self.assertEqual(
+            "phase_locked_phantom_guard_obstacles",
+            payload["attack_model"]["name"],
+        )
+        self.assertIn("critical_attack_budget", summary_csv)
+        self.assertIn("collapse_reason", sweep_csv)
+        self.assertIn("curvature_per_100m", sweep_csv)
+
+
+if __name__ == "__main__":
+    unittest.main()
