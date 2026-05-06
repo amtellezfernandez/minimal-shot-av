@@ -72,6 +72,43 @@ class SeizureTopologySusceptibilityAuditTests(unittest.TestCase):
         self.assertIn("sweep_family", sweep_csv)
         self.assertIn("curvature_per_100m", sweep_csv)
 
+    def test_matched_hazard_audit_selects_same_hazard_across_topologies(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "audit_seizure_topology_susceptibility.py"),
+                    "--seeds-per-topology",
+                    "1",
+                    "--seed-start",
+                    "1",
+                    "--suite",
+                    "hidden",
+                    "--match-primary-hazard",
+                    "wrong_way_vehicle",
+                    "--sweep-family",
+                    "coupled_stealth",
+                    "--budgets",
+                    "0.0",
+                    "0.7",
+                    "--output-dir",
+                    temp_dir,
+                ],
+                cwd=ROOT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            payload = json.loads((Path(temp_dir) / "topology_susceptibility.json").read_text())
+
+        self.assertTrue(payload["attack_model"]["matched_design"])
+        self.assertEqual(payload["attack_model"]["match_primary_hazard"], "wrong_way_vehicle")
+        self.assertTrue(payload["confound_audit"]["matched_primary_hazard"])
+        self.assertEqual(payload["confound_audit"]["selected_hazards"], ["wrong_way_vehicle"])
+        self.assertEqual({row["topology"] for row in payload["topology_summary"]}, set(COMPOSITIONAL_TOPOLOGIES))
+        self.assertEqual(len(payload["sweep_runs"]), len(COMPOSITIONAL_TOPOLOGIES) * 2)
+
 
 if __name__ == "__main__":
     unittest.main()

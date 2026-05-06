@@ -42,6 +42,16 @@ def main() -> None:
     parser.add_argument("--seeds-per-topology", type=int, default=4)
     parser.add_argument("--suite", choices=("compositional", "hidden", "adversarial"), default="hidden")
     parser.add_argument("--seed-start", type=int, default=1)
+    parser.add_argument(
+        "--match-primary-hazard",
+        default="",
+        help="If set, sample only scenarios with this primary hazard on every topology.",
+    )
+    parser.add_argument(
+        "--match-condition",
+        default="",
+        help="If set, sample only scenarios with this condition on every topology.",
+    )
     parser.add_argument("--output-dir", type=Path, default=Path("artifacts/seizure_topology_susceptibility"))
     parser.add_argument(
         "--budgets",
@@ -60,7 +70,15 @@ def main() -> None:
 
     clean_rows: list[dict[str, Any]] = []
     sweep_rows: list[dict[str, Any]] = []
-    selected = _select_scenarios(args.suite, args.seed_start, args.seeds_per_topology)
+    match_primary_hazard = args.match_primary_hazard.strip()
+    match_condition = args.match_condition.strip()
+    selected = _select_scenarios(
+        args.suite,
+        args.seed_start,
+        args.seeds_per_topology,
+        match_primary_hazard=match_primary_hazard,
+        match_condition=match_condition,
+    )
 
     for topology, scenarios in selected.items():
         for scenario_index, scenario in enumerate(scenarios):
@@ -134,6 +152,9 @@ def main() -> None:
                 "benchmark criterion, or keeps less than 65% of clean progress."
             ),
             "sweep_families": list(_selected_families(args.sweep_family)),
+            "matched_design": bool(match_primary_hazard or match_condition),
+            "match_primary_hazard": match_primary_hazard,
+            "match_condition": match_condition,
         },
         "clean_runs": clean_rows,
         "sweep_runs": sweep_rows,
@@ -160,20 +181,44 @@ def main() -> None:
     print(f"Wrote topology susceptibility audit to {args.output_dir}")
 
 
-def _select_scenarios(suite: str, seed_start: int, seeds_per_topology: int) -> dict[str, list[Scenario]]:
+def _select_scenarios(
+    suite: str,
+    seed_start: int,
+    seeds_per_topology: int,
+    match_primary_hazard: str = "",
+    match_condition: str = "",
+) -> dict[str, list[Scenario]]:
     selected = {topology: [] for topology in COMPOSITIONAL_TOPOLOGIES}
     seed = seed_start
-    max_seed = seed_start + 40_000
+    max_seed = seed_start + 120_000
     while seed < max_seed and any(len(rows) < seeds_per_topology for rows in selected.values()):
         scenario = generate_compositional_scenario(seed, suite=suite)
         topology = str(scenario.tags.get("topology", ""))
-        if topology in selected and len(selected[topology]) < seeds_per_topology:
+        if (
+            topology in selected
+            and len(selected[topology]) < seeds_per_topology
+            and _matches_scenario(scenario, match_primary_hazard, match_condition)
+        ):
             selected[topology].append(scenario)
         seed += 1
     missing = [topology for topology, rows in selected.items() if len(rows) < seeds_per_topology]
     if missing:
-        raise RuntimeError(f"could not sample enough scenarios for: {', '.join(missing)}")
+        filters = []
+        if match_primary_hazard:
+            filters.append(f"primary_hazard={match_primary_hazard}")
+        if match_condition:
+            filters.append(f"condition={match_condition}")
+        suffix = f" with filters {' '.join(filters)}" if filters else ""
+        raise RuntimeError(f"could not sample enough scenarios for: {', '.join(missing)}{suffix}")
     return selected
+
+
+def _matches_scenario(scenario: Scenario, match_primary_hazard: str, match_condition: str) -> bool:
+    if match_primary_hazard and str(scenario.tags.get("primary_hazard_type", "")) != match_primary_hazard:
+        return False
+    if match_condition and str(scenario.tags.get("condition", "")) != match_condition:
+        return False
+    return True
 
 
 def _selected_families(requested: str) -> tuple[str, ...]:
@@ -463,9 +508,16 @@ def _confound_audit(rows: list[dict[str, Any]]) -> dict[str, Any]:
     top_hazard_share = top_hazard_count / collapse_count if collapse_count else 0.0
     affected_topology_count = len(topologies)
     affected_hazard_count = len(hazards)
+    selected_hazards = {str(row["primary_hazard_type"]) for row in clean_rows}
+    selected_conditions = {_condition(row) for row in clean_rows}
+    matched_primary_hazard = len(selected_hazards) == 1
+    matched_condition = len(selected_conditions) == 1
     interpretation = "no_clean_passing_collapses"
     if collapse_count:
-        interpretation = "hazard_concentrated" if top_hazard_share >= 0.70 else "multi_hazard"
+        if matched_primary_hazard:
+            interpretation = "matched_hazard"
+        else:
+            interpretation = "hazard_concentrated" if top_hazard_share >= 0.70 else "multi_hazard"
         if affected_topology_count <= 2:
             interpretation += "_narrow_topology"
         else:
@@ -476,6 +528,10 @@ def _confound_audit(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "collapse_row_rate": round(collapse_count / len(clean_rows), 4) if clean_rows else 0.0,
         "affected_topology_count": affected_topology_count,
         "affected_hazard_count": affected_hazard_count,
+        "matched_primary_hazard": matched_primary_hazard,
+        "matched_condition": matched_condition,
+        "selected_hazards": sorted(selected_hazards),
+        "selected_conditions": sorted(selected_conditions),
         "top_hazard_share": round(top_hazard_share, 4),
         "hazard_counts": hazards,
         "topology_counts": topologies,

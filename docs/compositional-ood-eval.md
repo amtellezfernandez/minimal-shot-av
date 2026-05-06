@@ -91,6 +91,12 @@ Paper-grade topology susceptibility sweep:
 uv run --no-sync python scripts/audit_seizure_topology_susceptibility.py --seeds-per-topology 20 --suite hidden --sweep-family all --output-dir artifacts/seizure_topology_susceptibility_paper
 ```
 
+Matched-hazard causal topology sweep:
+
+```bash
+uv run --no-sync python scripts/audit_seizure_topology_susceptibility.py --seeds-per-topology 10 --suite hidden --match-primary-hazard wrong_way_vehicle --sweep-family all --output-dir artifacts/seizure_topology_wrong_way_matched
+```
+
 ## Metrics And Evidence Discipline
 
 `artifacts/rlvr_curriculum_v1.json` makes the gym explicit:
@@ -162,6 +168,8 @@ excessive intervention, slow crawl, goal failure, or progress collapse. The
 artifact also emits a stratified topology/hazard/condition table and a confound
 audit. If collapses concentrate in one hazard family, the result should be
 reported as topology-by-scenario-family susceptibility rather than a pure
-topology effect. The result is a controlled seizure-like proxy for false
-transition guards, not a claim that the simulator contains real neurological or
-physical seizure dynamics.
+topology effect. To test topology causality directly, run the matched-hazard
+mode, which samples the same primary hazard across every topology before the
+attack sweep. The result is a controlled seizure-like proxy for false transition
+guards, not a claim that the simulator contains real neurological or physical
+seizure dynamics.
