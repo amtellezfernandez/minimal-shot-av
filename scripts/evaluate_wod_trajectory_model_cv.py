@@ -147,6 +147,7 @@ def main() -> int:
             "geometry_contextual",
             "family_reliability_contextual",
             "external_contextual",
+            "contextual_external",
             "camera_contextual",
             "image_contextual",
         ),
@@ -237,6 +238,36 @@ def main() -> int:
         help="Apply conservative held-out reliability offsets by speed, source, and candidate family.",
     )
     parser.add_argument("--selector-family-calibration-min-count", type=int, default=8)
+    parser.add_argument(
+        "--selector-postprocess",
+        choices=("off", "safety_filter", "safety_utility"),
+        default="off",
+        help="Apply a safety postprocess after normal selection.",
+    )
+    parser.add_argument(
+        "--safety-utility-ridge",
+        type=float,
+        default=10.0,
+        help="Ridge penalty for --selector-postprocess safety_utility risk/utility models.",
+    )
+    parser.add_argument(
+        "--safety-utility-floor",
+        type=float,
+        default=7.0,
+        help="Train-fold RFS floor used to define safety risk for --selector-postprocess safety_utility.",
+    )
+    parser.add_argument(
+        "--safety-utility-min-risk-margin",
+        type=float,
+        default=0.5,
+        help="Minimum predicted risk reduction required to replace an already safe selected candidate.",
+    )
+    parser.add_argument(
+        "--safety-utility-max-utility-drop",
+        type=float,
+        default=0.75,
+        help="Maximum predicted utility loss allowed when replacing an already safe selected candidate.",
+    )
     parser.add_argument(
         "--selector-kinematic-fallback",
         choices=("off", "train_margin"),
@@ -459,6 +490,11 @@ def main() -> int:
         help="JSON cache with one fixed-length external embedding vector per WOD frame.",
     )
     parser.add_argument(
+        "--allow-missing-external-embeddings",
+        action="store_true",
+        help="Attach available external embeddings and leave missing frames as zero-filled selector context.",
+    )
+    parser.add_argument(
         "--world-max-neighbor-distance",
         type=float,
         help="Only emit world candidates when the nearest learned experience is within this latent distance.",
@@ -510,13 +546,27 @@ def main() -> int:
         print(json.dumps({"phase": "loaded_frames", "frames": len(frames)}), file=sys.stderr, flush=True)
     if args.world_model == FEATURE_MODE_EXTERNAL_EMBEDDINGS and args.external_embedding_cache is None:
         raise ValueError("--external-embedding-cache is required when --world-model external_embeddings")
+    if args.allow_missing_external_embeddings and args.world_model == FEATURE_MODE_EXTERNAL_EMBEDDINGS:
+        raise ValueError("--allow-missing-external-embeddings cannot be used with --world-model external_embeddings")
+    if args.allow_missing_external_embeddings and args.scene_aux_feature_set == FEATURE_SET_EXTERNAL_EMBEDDINGS:
+        raise ValueError(
+            "--allow-missing-external-embeddings cannot be used with --scene-aux-feature-set external_embeddings"
+        )
+    if args.allow_missing_external_embeddings and args.memory_feature_set == FEATURE_SET_EXTERNAL_EMBEDDINGS:
+        raise ValueError(
+            "--allow-missing-external-embeddings cannot be used with --memory-feature-set external_embeddings"
+        )
     if args.scene_token_cache is not None:
         frames = attach_scene_token_cache(frames, load_scene_token_cache(args.scene_token_cache))
     external_embedding_source = None
     if args.external_embedding_cache is not None:
         external_payload = json.loads(args.external_embedding_cache.read_text(encoding="utf-8"))
         external_embedding_source = str(external_payload.get("source", args.external_embedding_cache))
-        frames = attach_external_embedding_cache(frames, load_external_embedding_cache(args.external_embedding_cache))
+        frames = attach_external_embedding_cache(
+            frames,
+            load_external_embedding_cache(args.external_embedding_cache),
+            require_all=not args.allow_missing_external_embeddings,
+        )
         if args.progress_every_fold:
             print(
                 json.dumps({"phase": "attached_external_embeddings", "frames": len(frames)}),
@@ -590,6 +640,11 @@ def main() -> int:
         zero_shot_geometry_filter=args.zero_shot_geometry_filter,
         selector_family_calibration=args.selector_family_calibration,
         selector_family_calibration_min_count=args.selector_family_calibration_min_count,
+        selector_postprocess=args.selector_postprocess,
+        safety_utility_ridge=args.safety_utility_ridge,
+        safety_utility_floor=args.safety_utility_floor,
+        safety_utility_min_risk_margin=args.safety_utility_min_risk_margin,
+        safety_utility_max_utility_drop=args.safety_utility_max_utility_drop,
         selector_kinematic_fallback=args.selector_kinematic_fallback,
         selector_fallback_sources=tuple(_split_sources(args.selector_fallback_sources)),
         selector_fallback_router=args.selector_fallback_router,
@@ -810,6 +865,11 @@ def cross_validate_trajectory_model(
     zero_shot_geometry_filter: str = "off",
     selector_family_calibration: str = "off",
     selector_family_calibration_min_count: int = 8,
+    selector_postprocess: str = "off",
+    safety_utility_ridge: float = 10.0,
+    safety_utility_floor: float = 7.0,
+    safety_utility_min_risk_margin: float = 0.5,
+    safety_utility_max_utility_drop: float = 0.75,
     selector_kinematic_fallback: str = "off",
     selector_fallback_sources: tuple[str, ...] = ("kinematic",),
     selector_fallback_router: str = "off",
@@ -870,6 +930,14 @@ def cross_validate_trajectory_model(
         raise ValueError("--transformer-top-k must be non-negative")
     if zero_shot_geometry_filter not in {"off", "conservative", "reactive", "affordance"}:
         raise ValueError(f"unsupported zero-shot geometry filter: {zero_shot_geometry_filter}")
+    if selector_postprocess not in {"off", "safety_filter", "safety_utility"}:
+        raise ValueError(f"unsupported selector postprocess: {selector_postprocess}")
+    if safety_utility_ridge <= 0.0:
+        raise ValueError("--safety-utility-ridge must be positive")
+    if safety_utility_min_risk_margin < 0.0:
+        raise ValueError("--safety-utility-min-risk-margin must be non-negative")
+    if safety_utility_max_utility_drop < 0.0:
+        raise ValueError("--safety-utility-max-utility-drop must be non-negative")
     neural_paths = tuple(
         dict.fromkeys(
             [
@@ -1077,6 +1145,17 @@ def cross_validate_trajectory_model(
             mode=selector_family_calibration,
             min_count=selector_family_calibration_min_count,
         )
+        safety_utility_policy = _fit_safety_utility_policy(
+            selector_train_rows,
+            selector,
+            mode=selector_postprocess,
+            ridge=safety_utility_ridge,
+            safety_floor=safety_utility_floor,
+            min_risk_margin=safety_utility_min_risk_margin,
+            max_utility_drop=safety_utility_max_utility_drop,
+            source_calibration=source_calibration,
+            family_calibration=family_calibration,
+        )
         fallback_selectors = (
             _fit_fallback_selectors(
                 selector_train_rows,
@@ -1211,6 +1290,7 @@ def cross_validate_trajectory_model(
                 source_gate_policy=source_gate_policy,
                 source_gate_selectors=source_gate_selectors,
                 source_veto_policy=source_veto_policy,
+                safety_utility_policy=safety_utility_policy,
                 fold_index=fold_index,
                 residual_modes=residual_modes,
                 include_pairwise_residuals=include_pairwise_residuals,
@@ -1306,6 +1386,11 @@ def cross_validate_trajectory_model(
         ),
         "selector_family_calibration": selector_family_calibration,
         "selector_family_calibration_min_count": int(selector_family_calibration_min_count),
+        "selector_postprocess": selector_postprocess,
+        "safety_utility_ridge": float(safety_utility_ridge),
+        "safety_utility_floor": float(safety_utility_floor),
+        "safety_utility_min_risk_margin": float(safety_utility_min_risk_margin),
+        "safety_utility_max_utility_drop": float(safety_utility_max_utility_drop),
         "selector_kinematic_fallback": selector_kinematic_fallback,
         "selector_fallback_sources": _effective_fallback_sources(
             selector_fallback_sources,
@@ -1358,6 +1443,13 @@ def cross_validate_trajectory_model(
         "source_veto_precision": _weighted_mean(fold_reports, "source_veto_precision"),
         "source_veto_mean_gain": _weighted_mean(fold_reports, "source_veto_mean_gain"),
         "source_veto_false_positive_loss": _weighted_mean(fold_reports, "source_veto_false_positive_loss"),
+        "safety_utility_selected_rate": _weighted_mean(fold_reports, "safety_utility_selected_rate"),
+        "safety_utility_precision": _weighted_mean(fold_reports, "safety_utility_precision"),
+        "safety_utility_mean_gain": _weighted_mean(fold_reports, "safety_utility_mean_gain"),
+        "safety_utility_false_positive_loss": _weighted_mean(
+            fold_reports,
+            "safety_utility_false_positive_loss",
+        ),
         "selector_kinematic_fallback_threshold_mean": _finite_mean_or_none(
             [
                 value
@@ -1464,7 +1556,7 @@ def cross_validate_trajectory_model(
                 "oracle_world_rate": _weighted_mean(fold_reports, "oracle_world_rate"),
             }
         )
-    if world_model_mode == FEATURE_MODE_EXTERNAL_EMBEDDINGS:
+    if external_embedding_source is not None:
         report.update(
             {
                 "embedding_source": external_embedding_source or "external_embedding_cache",
@@ -1492,6 +1584,7 @@ def _evaluate_fold(
     source_gate_policy: dict[str, object] | None = None,
     source_gate_selectors: dict[tuple[str, ...], WodPreferenceRanker] | None = None,
     source_veto_policy: dict[str, object] | None = None,
+    safety_utility_policy: dict[str, object] | None = None,
     fold_index: int,
     residual_modes: int,
     include_pairwise_residuals: bool,
@@ -1542,6 +1635,10 @@ def _evaluate_fold(
     source_veto_false_positive_losses: list[float] = []
     source_veto_override_count = 0
     source_veto_true_positive_count = 0
+    safety_utility_gains: list[float] = []
+    safety_utility_false_positive_losses: list[float] = []
+    safety_utility_override_count = 0
+    safety_utility_true_positive_count = 0
     zero_shot_geometry_filtered_count = 0
     zero_shot_geometry_filtered_non_kinematic_count = 0
     zero_shot_geometry_candidate_count = 0
@@ -1634,6 +1731,16 @@ def _evaluate_fold(
             source_calibration=source_calibration,
             fallback_selectors=fallback_selectors,
         )
+        selected_after_veto = selected
+        selected_before_safety_utility = selected
+        selected = _apply_safety_utility_policy(
+            safety_utility_policy,
+            active_selector,
+            rows,
+            selected,
+            source_calibration=source_calibration,
+            family_calibration=family_calibration,
+        )
         oracle = max(all_rows, key=lambda row: float(row["rfs_score"]))
         oracle_score = float(oracle["rfs_score"])
         selected_score = float(selected["rfs_score"])
@@ -1668,14 +1775,22 @@ def _evaluate_fold(
                 source_gate_true_positive_count += 1
             else:
                 source_gate_false_positive_losses.append(-source_gain)
-        if selected is not selected_before_veto:
+        if selected_after_veto is not selected_before_veto:
             source_veto_override_count += 1
-            veto_gain = float(selected["rfs_score"]) - float(selected_before_veto["rfs_score"])
+            veto_gain = float(selected_after_veto["rfs_score"]) - float(selected_before_veto["rfs_score"])
             source_veto_gains.append(veto_gain)
             if veto_gain > 0.0:
                 source_veto_true_positive_count += 1
             else:
                 source_veto_false_positive_losses.append(-veto_gain)
+        if selected is not selected_before_safety_utility:
+            safety_utility_override_count += 1
+            safety_gain = float(selected["rfs_score"]) - float(selected_before_safety_utility["rfs_score"])
+            safety_utility_gains.append(safety_gain)
+            if safety_gain > 0.0:
+                safety_utility_true_positive_count += 1
+            else:
+                safety_utility_false_positive_losses.append(-safety_gain)
         kinematic_first_scores.append(kinematic_scores[0])
         kinematic_oracle_scores.append(max(kinematic_scores))
         learned_mean_scores.append(learned_scores[0])
@@ -1743,6 +1858,15 @@ def _evaluate_fold(
         "source_veto_mean_gain": _mean(source_veto_gains) if source_veto_gains else 0.0,
         "source_veto_false_positive_loss": _mean(source_veto_false_positive_losses)
         if source_veto_false_positive_losses
+        else 0.0,
+        "safety_utility_policy": safety_utility_policy,
+        "safety_utility_selected_rate": float(safety_utility_override_count / len(frames)),
+        "safety_utility_precision": float(safety_utility_true_positive_count / safety_utility_override_count)
+        if safety_utility_override_count
+        else 0.0,
+        "safety_utility_mean_gain": _mean(safety_utility_gains) if safety_utility_gains else 0.0,
+        "safety_utility_false_positive_loss": _mean(safety_utility_false_positive_losses)
+        if safety_utility_false_positive_losses
         else 0.0,
         "zero_shot_geometry_filtered_rate": float(
             zero_shot_geometry_filtered_count / zero_shot_geometry_candidate_count
@@ -3154,6 +3278,309 @@ def _family_calibration_offset(row: dict[str, object], family_calibration: dict[
         return float(offsets[key])
     source_offsets = dict(family_calibration.get("source_offsets", {}))
     return float(source_offsets.get(str(row["source"]), 0.0))
+
+
+SAFETY_UTILITY_FEATURES = [
+    "selector_score",
+    "selector_margin_to_best",
+    "selector_margin_to_best_kinematic",
+    "hard_geometry_reject",
+    "source_is_kinematic",
+    "source_is_learned",
+    "speed",
+    "intent",
+    "max_speed",
+    "final_speed",
+    "max_accel",
+    "progress_ratio",
+    "stop_distance_error",
+    "reverse_distance",
+    "monotonic_forward_rate",
+    "lateral_to_progress_ratio",
+    "curvature_per_meter",
+    "final_speed_ratio",
+]
+
+
+def _fit_safety_utility_policy(
+    rows: list[dict[str, object]],
+    selector: WodPreferenceRanker,
+    *,
+    mode: str,
+    ridge: float,
+    safety_floor: float,
+    min_risk_margin: float,
+    max_utility_drop: float,
+    source_calibration: dict[str, dict[str, float]] | None,
+    family_calibration: dict[str, object] | None,
+) -> dict[str, object] | None:
+    if mode == "off":
+        return None
+    if mode == "safety_filter":
+        return {"mode": "safety_filter", "hard_filter": "catastrophic_geometry"}
+    if mode != "safety_utility":
+        raise ValueError(f"unsupported selector postprocess: {mode}")
+    if ridge <= 0.0:
+        raise ValueError("--safety-utility-ridge must be positive")
+    x, risk_y, utility_y = _safety_utility_training_matrix(
+        rows,
+        selector,
+        safety_floor=float(safety_floor),
+        source_calibration=source_calibration,
+        family_calibration=family_calibration,
+    )
+    if x.size == 0:
+        return None
+    mean = x.mean(axis=0)
+    scale = x.std(axis=0)
+    scale[scale < 1e-8] = 1.0
+    x_norm = (x - mean) / scale
+    penalty = np.eye(x_norm.shape[1], dtype=np.float64) * float(ridge)
+    risk_weights = np.linalg.solve(x_norm.T @ x_norm + penalty, x_norm.T @ (risk_y - risk_y.mean()))
+    utility_weights = np.linalg.solve(
+        x_norm.T @ x_norm + penalty,
+        x_norm.T @ (utility_y - utility_y.mean()),
+    )
+    return {
+        "mode": "safety_utility",
+        "feature_names": list(SAFETY_UTILITY_FEATURES),
+        "feature_mean": mean.tolist(),
+        "feature_scale": scale.tolist(),
+        "risk_bias": float(risk_y.mean()),
+        "risk_weights": risk_weights.tolist(),
+        "utility_bias": float(utility_y.mean()),
+        "utility_weights": utility_weights.tolist(),
+        "safety_floor": float(safety_floor),
+        "min_risk_margin": float(min_risk_margin),
+        "max_utility_drop": float(max_utility_drop),
+        "hard_filter": "catastrophic_geometry",
+    }
+
+
+def _safety_utility_training_matrix(
+    rows: list[dict[str, object]],
+    selector: WodPreferenceRanker,
+    *,
+    safety_floor: float,
+    source_calibration: dict[str, dict[str, float]] | None,
+    family_calibration: dict[str, object] | None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    rows_by_frame: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        rows_by_frame[str(row["frame_name"])].append(row)
+    features: list[list[float]] = []
+    risk_targets: list[float] = []
+    utility_targets: list[float] = []
+    for frame_rows in rows_by_frame.values():
+        context = _safety_utility_context(
+            frame_rows,
+            selector,
+            source_calibration=source_calibration,
+            family_calibration=family_calibration,
+        )
+        for row in frame_rows:
+            features.append(_safety_utility_features(row, context))
+            hard_penalty = 2.0 if _safety_hard_reject(row) else 0.0
+            score = float(row["rfs_score"])
+            risk_targets.append(max(0.0, float(safety_floor) - score) + hard_penalty)
+            utility_targets.append(score)
+    return (
+        np.asarray(features, dtype=np.float64),
+        np.asarray(risk_targets, dtype=np.float64),
+        np.asarray(utility_targets, dtype=np.float64),
+    )
+
+
+def _apply_safety_utility_policy(
+    policy: dict[str, object] | None,
+    selector: WodPreferenceRanker,
+    rows: list[dict[str, object]],
+    selected: dict[str, object],
+    *,
+    source_calibration: dict[str, dict[str, float]] | None,
+    family_calibration: dict[str, object] | None,
+) -> dict[str, object]:
+    if not policy:
+        return selected
+    if policy.get("mode") == "safety_filter":
+        return _apply_safety_filter_policy(
+            selector,
+            rows,
+            selected,
+            source_calibration=source_calibration,
+            family_calibration=family_calibration,
+        )
+    if policy.get("mode") != "safety_utility":
+        raise ValueError(f"unsupported selector postprocess: {policy.get('mode')}")
+    safe_rows = [row for row in rows if not _safety_hard_reject(row)]
+    eligible_rows = safe_rows or [row for row in rows if str(row["source"]) == "kinematic"] or rows
+    context = _safety_utility_context(
+        eligible_rows,
+        selector,
+        source_calibration=source_calibration,
+        family_calibration=family_calibration,
+    )
+    candidate = min(
+        eligible_rows,
+        key=lambda row: (
+            _safety_utility_predict(policy, row, context, target="risk"),
+            -_safety_utility_predict(policy, row, context, target="utility"),
+            -_calibrated_score(selector, row, source_calibration, family_calibration),
+            int(row.get("candidate_index", 0)),
+            str(row["candidate_name"]),
+        ),
+    )
+    if _safety_hard_reject(selected):
+        return candidate
+    if selected not in eligible_rows:
+        return candidate
+    selected_risk = _safety_utility_predict(policy, selected, context, target="risk")
+    candidate_risk = _safety_utility_predict(policy, candidate, context, target="risk")
+    selected_utility = _safety_utility_predict(policy, selected, context, target="utility")
+    candidate_utility = _safety_utility_predict(policy, candidate, context, target="utility")
+    min_risk_margin = float(policy.get("min_risk_margin", 0.0))
+    max_utility_drop = float(policy.get("max_utility_drop", float("inf")))
+    if candidate_risk <= selected_risk - min_risk_margin and candidate_utility >= selected_utility - max_utility_drop:
+        return candidate
+    return selected
+
+
+def _apply_safety_filter_policy(
+    selector: WodPreferenceRanker,
+    rows: list[dict[str, object]],
+    selected: dict[str, object],
+    *,
+    source_calibration: dict[str, dict[str, float]] | None,
+    family_calibration: dict[str, object] | None,
+) -> dict[str, object]:
+    if not _safety_hard_reject(selected):
+        return selected
+    safe_rows = [row for row in rows if not _safety_hard_reject(row)]
+    eligible_rows = safe_rows or [row for row in rows if str(row["source"]) == "kinematic"] or rows
+    return _select_by_calibrated_score(
+        selector,
+        eligible_rows,
+        source_calibration,
+        family_calibration,
+    )
+
+
+def _safety_utility_context(
+    rows: list[dict[str, object]],
+    selector: WodPreferenceRanker,
+    *,
+    source_calibration: dict[str, dict[str, float]] | None,
+    family_calibration: dict[str, object] | None,
+) -> dict[str, object]:
+    scores = [
+        _calibrated_score(selector, row, source_calibration, family_calibration)
+        for row in rows
+    ]
+    best_score = max(scores) if scores else 0.0
+    kinematic_scores = [
+        score
+        for row, score in zip(rows, scores)
+        if str(row["source"]) == "kinematic"
+    ]
+    best_kinematic_score = max(kinematic_scores) if kinematic_scores else best_score
+    return {
+        "best_score": float(best_score),
+        "best_kinematic_score": float(best_kinematic_score),
+        "scores_by_row_id": {id(row): float(score) for row, score in zip(rows, scores)},
+    }
+
+
+def _safety_utility_features(row: dict[str, object], context: dict[str, object]) -> list[float]:
+    features = row.get("features", {})
+    if not isinstance(features, dict):
+        features = {}
+    scores_by_row_id = context.get("scores_by_row_id", {})
+    selector_score = float(dict(scores_by_row_id).get(id(row), context.get("best_score", 0.0)))
+    speed = max(0.0, float(features.get("init_speed_mps", 0.0)))
+    expected_progress = max(1.0, float(features.get("expected_progress_5s", speed * 5.0)))
+    progress_ratio = float(features.get("progress_ratio_5s", float(features.get("x_5s", 0.0)) / expected_progress))
+    source = str(row["source"])
+    return [
+        selector_score,
+        selector_score - float(context.get("best_score", selector_score)),
+        selector_score - float(context.get("best_kinematic_score", selector_score)),
+        1.0 if _safety_hard_reject(row) else 0.0,
+        1.0 if source == "kinematic" else 0.0,
+        1.0 if source == "learned" else 0.0,
+        speed,
+        float(features.get("intent", 1.0)),
+        max(0.0, float(features.get("max_speed_mps", 0.0))),
+        max(0.0, float(features.get("final_speed_mps", 0.0))),
+        max(0.0, float(features.get("max_abs_accel_mps2", 0.0))),
+        progress_ratio,
+        max(0.0, float(features.get("stop_distance_error", 0.0))),
+        max(0.0, float(features.get("reverse_distance", 0.0))),
+        float(features.get("monotonic_forward_rate", 1.0)),
+        max(0.0, float(features.get("lateral_to_progress_ratio", 0.0))),
+        max(0.0, float(features.get("curvature_per_meter", 0.0))),
+        max(0.0, float(features.get("final_speed_ratio", 0.0))),
+    ]
+
+
+def _safety_utility_predict(
+    policy: dict[str, object],
+    row: dict[str, object],
+    context: dict[str, object],
+    *,
+    target: str,
+) -> float:
+    values = np.asarray(_safety_utility_features(row, context), dtype=np.float64)
+    mean = np.asarray(policy["feature_mean"], dtype=np.float64)
+    scale = np.asarray(policy["feature_scale"], dtype=np.float64)
+    x_norm = (values - mean) / scale
+    if target == "risk":
+        weights = np.asarray(policy["risk_weights"], dtype=np.float64)
+        return float(policy["risk_bias"]) + float(np.dot(x_norm, weights))
+    if target == "utility":
+        weights = np.asarray(policy["utility_weights"], dtype=np.float64)
+        return float(policy["utility_bias"]) + float(np.dot(x_norm, weights))
+    raise ValueError(f"unsupported safety utility target: {target}")
+
+
+def _safety_hard_reject(row: dict[str, object]) -> bool:
+    return _catastrophic_motion_reject(row)
+
+
+def _catastrophic_motion_reject(row: dict[str, object]) -> bool:
+    source = str(row["source"])
+    if source == "kinematic":
+        return False
+    features = row.get("features", {})
+    if not isinstance(features, dict):
+        return False
+
+    speed = max(0.0, float(features.get("init_speed_mps", 0.0)))
+    max_speed = max(0.0, float(features.get("max_speed_mps", 0.0)))
+    mean_accel = max(0.0, float(features.get("mean_abs_accel_mps2", 0.0)))
+    max_accel = max(0.0, float(features.get("max_abs_accel_mps2", 0.0)))
+    progress = float(features.get("x_5s", 0.0))
+    x_1s = float(features.get("x_1s", progress))
+    x_3s = float(features.get("x_3s", progress))
+    reverse_distance = max(0.0, float(features.get("reverse_distance", 0.0)))
+    monotonic_forward_rate = float(features.get("monotonic_forward_rate", 1.0))
+    lateral_to_progress_ratio = max(0.0, float(features.get("lateral_to_progress_ratio", 0.0)))
+    curvature_per_meter = max(0.0, float(features.get("curvature_per_meter", 0.0)))
+
+    if reverse_distance > max(15.0, speed * 3.0):
+        return True
+    if min(x_1s, x_3s, progress) < -max(8.0, speed * 2.0):
+        return True
+    if monotonic_forward_rate < 0.2:
+        return True
+    if max_accel > 40.0 or mean_accel > 20.0:
+        return True
+    if max_speed > max(45.0, speed * 5.0 + 15.0):
+        return True
+    if curvature_per_meter > 6.0:
+        return True
+    if progress > 3.0 and lateral_to_progress_ratio > 8.0:
+        return True
+    return False
 
 
 def _selector_training_rows_for_gates(

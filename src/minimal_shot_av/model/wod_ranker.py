@@ -153,6 +153,11 @@ EXTERNAL_CONTEXTUAL_NUMERIC_FEATURES = [
     *EXTERNAL_EMBEDDING_FEATURES,
     *EXTERNAL_EMBEDDING_SOURCE_INTERACTION_FEATURES,
 ]
+CONTEXTUAL_EXTERNAL_NUMERIC_FEATURES = [
+    *CONTEXTUAL_NUMERIC_FEATURES,
+    *EXTERNAL_EMBEDDING_FEATURES,
+    *EXTERNAL_EMBEDDING_SOURCE_INTERACTION_FEATURES,
+]
 CAMERA_CONTEXTUAL_NUMERIC_FEATURES = [
     *CONTEXTUAL_NUMERIC_FEATURES,
     *CAMERA_PAYLOAD_FEATURES,
@@ -242,6 +247,8 @@ def selector_numeric_features(feature_mode: str) -> list[str]:
         return list(FAMILY_RELIABILITY_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "external_contextual":
         return list(EXTERNAL_CONTEXTUAL_NUMERIC_FEATURES)
+    if feature_mode == "contextual_external":
+        return list(CONTEXTUAL_EXTERNAL_NUMERIC_FEATURES)
     if feature_mode == "camera_contextual":
         return list(CAMERA_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "image_contextual":

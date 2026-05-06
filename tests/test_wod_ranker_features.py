@@ -38,6 +38,7 @@ class WodRankerFeatureTests(unittest.TestCase):
         intent_contextual = selector_numeric_features("intent_contextual")
         world_contextual = selector_numeric_features("world_contextual")
         external_contextual = selector_numeric_features("external_contextual")
+        contextual_external = selector_numeric_features("contextual_external")
         camera_contextual = selector_numeric_features("camera_contextual")
         image_contextual = selector_numeric_features("image_contextual")
         squared = selector_numeric_features("squared")
@@ -57,6 +58,11 @@ class WodRankerFeatureTests(unittest.TestCase):
         self.assertIn("external_embedding_00", external_contextual)
         self.assertIn("source_scene_x_external_embedding_00", external_contextual)
         self.assertIn("source_temporal_x_external_embedding_00", external_contextual)
+        self.assertIn("source_temporal_x_speed_bin_slow", contextual_external)
+        self.assertIn("external_embedding_00", contextual_external)
+        self.assertIn("source_temporal_x_external_embedding_00", contextual_external)
+        self.assertNotIn("world_nearest_distance_log", contextual_external)
+        self.assertNotIn("family_reliability_mean_rfs", contextual_external)
         self.assertIn("sq_source_temporal", squared)
 
     def test_external_contextual_row_marks_embedding_features(self) -> None:

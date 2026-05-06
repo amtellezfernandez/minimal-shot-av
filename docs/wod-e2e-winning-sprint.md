@@ -11,8 +11,16 @@ produce a valid Waymo E2E submission that can challenge the active leaderboard.
 - The train split, test split, and official test frame list are not present.
 - The current best repo path is still mostly ego-history, route-intent, ridge
   residual candidates, and a structured selector.
-- The current validation-CV result is not enough to claim leaderboard-winning
-  scene understanding.
+- The current best local validation-CV artifact is
+  `artifacts/cache/wod_neural_ensemble_su_r3_f70_m05_d075_no_route_familycal_m6_veto_r100_p25_temp062.json`
+  at `7.7569` selected RFS / `8.0836` normalized RFS. This uses a two-model
+  neural proposal ensemble plus a temperature-0.62 listwise softmax selector,
+  speed/source/family calibration, learned-source veto, and ridge-3 safety-utility
+  postprocessing. Route-target routing did not improve this setup in the
+  current 479-frame validation CV contract.
+- This is stronger than the previous calibrated linear selector result
+  (`7.7061` selected RFS), but it is still not a hidden-test leaderboard result
+  and is not enough to claim leaderboard-winning scene understanding.
 - The candidate pool has useful oracle headroom, but the selector does not
   reliably exploit it and worsens some worst-slice regret.
 

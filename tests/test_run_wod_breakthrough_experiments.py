@@ -245,6 +245,42 @@ class WodBreakthroughExperimentRunnerTests(unittest.TestCase):
         self.assertEqual("8", command[command.index("--neural-top-k") + 1])
         self.assertEqual("1", command[command.index("--neural-residual-modes-per-anchor") + 1])
 
+    def test_neural_ensemble_adds_listwise_champion_recipe(self) -> None:
+        module = _load_module()
+        args = argparse.Namespace(
+            smoke=False,
+            pilot=True,
+            frame_cache=ROOT / "frames.json",
+            external_embedding_cache=ROOT / "missing_external_cache.json",
+            neural_candidate_model=None,
+            neural_candidate_models=f"{ROOT / 'neural_a.json'},{ROOT / 'neural_b.json'}",
+            transformer_candidate_model=None,
+        )
+        with unittest.mock.patch.object(Path, "is_file", return_value=True):
+            runs = module._experiment_matrix(args)
+        run = next(
+            row for row in runs if row["name"] == "neural_ensemble_listwise_temp062_safety_utility_familycal_veto"
+        )
+
+        command = module._command_for_run(run, ROOT / "out.json", args)
+
+        self.assertEqual("listwise_softmax", command[command.index("--selector-model") + 1])
+        self.assertEqual("100", command[command.index("--selector-ridge") + 1])
+        self.assertEqual("900", command[command.index("--selector-listwise-iterations") + 1])
+        self.assertEqual("0.18", command[command.index("--selector-listwise-lr") + 1])
+        self.assertEqual("0.62", command[command.index("--selector-listwise-temperature") + 1])
+        self.assertEqual("safety_utility", command[command.index("--selector-postprocess") + 1])
+        self.assertEqual("3", command[command.index("--safety-utility-ridge") + 1])
+        self.assertNotIn("--selector-route-targets", command)
+        self.assertNotIn("--selector-route-router", command)
+        self.assertEqual("speed_source_family", command[command.index("--selector-family-calibration") + 1])
+        self.assertEqual("6", command[command.index("--selector-family-calibration-min-count") + 1])
+        self.assertEqual("2", command[command.index("--neural-top-k") + 1])
+        self.assertEqual("train_margin", command[command.index("--source-veto-gate") + 1])
+        self.assertEqual("learned", command[command.index("--source-veto-sources") + 1])
+        self.assertEqual("kinematic", command[command.index("--source-veto-fallback-sources") + 1])
+        self.assertEqual("0.25", command[command.index("--source-veto-min-precision") + 1])
+
     def test_transformer_candidate_model_adds_breakthrough_runs_and_args(self) -> None:
         module = _load_module()
         with unittest.mock.patch.object(Path, "is_file", return_value=True):

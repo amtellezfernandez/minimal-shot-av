@@ -421,28 +421,58 @@ def _experiment_matrix(args: argparse.Namespace) -> list[dict[str, Any]]:
         )
     neural_ensemble_paths = _existing_paths_from_csv(str(getattr(args, "neural_candidate_models", "")))
     if neural_ensemble_paths:
-        base_runs.append(
-            {
-                "name": "neural_ensemble_sourcegate_speedfine_deny_residuals",
-                "selector_model": "pairwise_logistic",
-                "selector_features": "family_reliability_contextual",
-                "selector_target": "frame_delta",
-                "pairwise_iterations": "900",
-                "pairwise_lr": "0.12",
-                "pairwise_l2": "0.002",
-                "pairwise_max_pairs_per_frame": "160",
-                "selector_family_calibration": "speed_source_family",
-                "selector_family_calibration_min_count": "4",
-                "neural_candidate_models": ",".join(str(path) for path in neural_ensemble_paths),
-                "neural_top_k": "1",
-                "neural_residual_modes_per_anchor": "0",
-                "source_gate": "independent_train_margin",
-                "source_gate_sources": "learned",
-                "source_gate_router": "speed_fine",
-                "source_gate_max_rate": "0.35",
-                "source_gate_min_precision": "0.0",
-                "source_gate_deny_prefixes": "ridge_residual_pc2,ridge_residual_pc4,ridge_residual_pc5",
-            }
+        ensemble_models = ",".join(str(path) for path in neural_ensemble_paths)
+        base_runs.extend(
+            [
+                {
+                    "name": "neural_ensemble_listwise_temp062_safety_utility_familycal_veto",
+                    "selector_model": "listwise_softmax",
+                    "selector_features": "contextual",
+                    "selector_target": "frame_delta",
+                    "selector_listwise_iterations": "900",
+                    "selector_listwise_lr": "0.18",
+                    "selector_listwise_temperature": "0.62",
+                    "selector_ridge": "100",
+                    "selector_postprocess": "safety_utility",
+                    "safety_utility_ridge": "3",
+                    "selector_family_calibration": "speed_source_family",
+                    "selector_family_calibration_min_count": "6",
+                    "neural_candidate_models": ensemble_models,
+                    "neural_top_k": "2",
+                    "neural_residual_modes_per_anchor": "0",
+                    "source_veto_gate": "train_margin",
+                    "source_veto_sources": "learned",
+                    "source_veto_fallback_sources": "kinematic",
+                    "source_veto_router": "speed_fine",
+                    "source_veto_max_rate": "1.0",
+                    "source_veto_min_precision": "0.25",
+                    "kinematic_profile": "base",
+                    "residual_modes": "3",
+                    "residual_grouping": "off",
+                    "selector_fallback_source_options": "kinematic;kinematic,temporal",
+                },
+                {
+                    "name": "neural_ensemble_sourcegate_speedfine_deny_residuals",
+                    "selector_model": "pairwise_logistic",
+                    "selector_features": "family_reliability_contextual",
+                    "selector_target": "frame_delta",
+                    "pairwise_iterations": "900",
+                    "pairwise_lr": "0.12",
+                    "pairwise_l2": "0.002",
+                    "pairwise_max_pairs_per_frame": "160",
+                    "selector_family_calibration": "speed_source_family",
+                    "selector_family_calibration_min_count": "4",
+                    "neural_candidate_models": ensemble_models,
+                    "neural_top_k": "1",
+                    "neural_residual_modes_per_anchor": "0",
+                    "source_gate": "independent_train_margin",
+                    "source_gate_sources": "learned",
+                    "source_gate_router": "speed_fine",
+                    "source_gate_max_rate": "0.35",
+                    "source_gate_min_precision": "0.0",
+                    "source_gate_deny_prefixes": "ridge_residual_pc2,ridge_residual_pc4,ridge_residual_pc5",
+                },
+            ]
         )
     if getattr(args, "transformer_candidate_model", None) and args.transformer_candidate_model.is_file():
         base_runs.extend(
@@ -488,7 +518,7 @@ def _command_for_run(run: dict[str, Any], output: Path, args: argparse.Namespace
         "--selector-target",
         str(run["selector_target"]),
         "--selector-ridge",
-        "175",
+        str(run.get("selector_ridge", "175")),
         "--ridge",
         "30",
         "--residual-modes",
@@ -520,6 +550,26 @@ def _command_for_run(run: dict[str, Any], output: Path, args: argparse.Namespace
         command.extend(["--selector-pairwise-l2", str(run["pairwise_l2"])])
     if run.get("pairwise_max_pairs_per_frame"):
         command.extend(["--selector-pairwise-max-pairs-per-frame", str(run["pairwise_max_pairs_per_frame"])])
+    if run.get("selector_listwise_iterations"):
+        command.extend(["--selector-listwise-iterations", str(run["selector_listwise_iterations"])])
+    if run.get("selector_listwise_lr"):
+        command.extend(["--selector-listwise-lr", str(run["selector_listwise_lr"])])
+    if run.get("selector_listwise_temperature"):
+        command.extend(["--selector-listwise-temperature", str(run["selector_listwise_temperature"])])
+    if run.get("selector_route_targets"):
+        command.extend(["--selector-route-targets", str(run["selector_route_targets"])])
+    if run.get("selector_route_router"):
+        command.extend(["--selector-route-router", str(run["selector_route_router"])])
+    if run.get("selector_postprocess"):
+        command.extend(["--selector-postprocess", str(run["selector_postprocess"])])
+    if run.get("safety_utility_ridge"):
+        command.extend(["--safety-utility-ridge", str(run["safety_utility_ridge"])])
+    if run.get("safety_utility_floor"):
+        command.extend(["--safety-utility-floor", str(run["safety_utility_floor"])])
+    if run.get("safety_utility_min_risk_margin"):
+        command.extend(["--safety-utility-min-risk-margin", str(run["safety_utility_min_risk_margin"])])
+    if run.get("safety_utility_max_utility_drop"):
+        command.extend(["--safety-utility-max-utility-drop", str(run["safety_utility_max_utility_drop"])])
     if run.get("selector_source_policy"):
         command.extend(["--selector-source-policy", str(run["selector_source_policy"])])
     if run.get("selector_source_calibration"):
@@ -557,6 +607,18 @@ def _command_for_run(run: dict[str, Any], output: Path, args: argparse.Namespace
         command.extend(["--source-gate-route-allowlist", str(run["source_gate_route_allowlist"])])
     if run.get("source_gate_local_selector"):
         command.append("--source-gate-local-selector")
+    if run.get("source_veto_gate"):
+        command.extend(["--source-veto-gate", str(run["source_veto_gate"])])
+    if run.get("source_veto_sources"):
+        command.extend(["--source-veto-sources", str(run["source_veto_sources"])])
+    if run.get("source_veto_fallback_sources"):
+        command.extend(["--source-veto-fallback-sources", str(run["source_veto_fallback_sources"])])
+    if run.get("source_veto_router"):
+        command.extend(["--source-veto-router", str(run["source_veto_router"])])
+    if run.get("source_veto_max_rate"):
+        command.extend(["--source-veto-max-rate", str(run["source_veto_max_rate"])])
+    if run.get("source_veto_min_precision"):
+        command.extend(["--source-veto-min-precision", str(run["source_veto_min_precision"])])
     if run.get("scene_gate"):
         command.extend(["--scene-gate", str(run["scene_gate"])])
     if run.get("scene_gate_router"):

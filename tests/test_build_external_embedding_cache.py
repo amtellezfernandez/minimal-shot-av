@@ -63,6 +63,124 @@ class BuildExternalEmbeddingCacheTests(unittest.TestCase):
 
         self.assertEqual({"frame-a": [1.0, 2.0]}, cache)
 
+    def test_loads_reasoning_rows_with_tags_scalars_and_selector_width(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "reasoning.jsonl"
+            path.write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "frame_name": "frame-a",
+                                "embedding": [0.1, 0.2],
+                                "tags": ["occluded_pedestrian", "construction"],
+                                "risk": 0.75,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "frame_name": "frame-b",
+                                "embedding": [0.3, 0.4],
+                                "tags": ["cut_in"],
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            cache, metadata = module.load_reasoning_export(
+                path,
+                scalar_keys=["risk"],
+                selector_width=8,
+            )
+
+        self.assertEqual(["construction", "cut_in", "occluded_pedestrian"], metadata["tag_vocab"])
+        self.assertEqual([0.1, 0.2, 1.0, 0.0, 1.0, 0.75, 0.0, 0.0], cache["frame-a"])
+        self.assertEqual([0.3, 0.4, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0], cache["frame-b"])
+
+    def test_loads_reasoning_container_with_nested_frame_objects(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "alpamayo.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "model": "alpamayo-reasoner",
+                        "frames": {
+                            "frame-a": {
+                                "vector": [1.0, 2.0],
+                                "tags": "debris",
+                                "uncertainty": 0.2,
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            cache, metadata = module.load_reasoning_export(
+                path,
+                scalar_keys=["uncertainty"],
+                selector_width=4,
+            )
+
+        self.assertEqual(["debris"], metadata["tag_vocab"])
+        self.assertEqual({"frame-a": [1.0, 2.0, 1.0, 0.2]}, cache)
+
+    def test_main_writes_reasoning_metadata_sidecar(self) -> None:
+        module = _load_module()
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            input_path = root / "reasoning.json"
+            output_path = root / "cache.json"
+            metadata_path = root / "metadata.json"
+            input_path.write_text(
+                json.dumps(
+                    [
+                        {
+                            "frame_name": "frame-a",
+                            "embedding": [1.0, 2.0],
+                            "tags": ["construction"],
+                            "risk": 0.5,
+                        }
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            from unittest.mock import patch
+
+            with patch(
+                "sys.argv",
+                [
+                    "build_external_embedding_cache.py",
+                    "--input",
+                    str(input_path),
+                    "--output",
+                    str(output_path),
+                    "--source",
+                    "cosmos-reason-test",
+                    "--scalar-key",
+                    "risk",
+                    "--selector-width",
+                    "6",
+                    "--metadata-output",
+                    str(metadata_path),
+                ],
+            ):
+                exit_code = module.main()
+            payload = json.loads(output_path.read_text(encoding="utf-8"))
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(0, exit_code)
+        self.assertEqual(6, payload["dimension"])
+        self.assertEqual([1.0, 2.0, 1.0, 0.5, 0.0, 0.0], payload["frames"]["frame-a"])
+        self.assertEqual(["construction"], metadata["tag_vocab"])
+        self.assertEqual(["risk"], metadata["scalar_keys"])
+
     def test_rejects_ambiguous_json_object(self) -> None:
         module = _load_module()
         with TemporaryDirectory() as tmp:

@@ -77,6 +77,49 @@ def sample_frame(
     )
 
 
+def _safety_row(
+    candidate_name: str,
+    source: str,
+    *,
+    selector_score: float,
+    rfs: float,
+    reverse_distance: float = 0.0,
+    monotonic_forward_rate: float = 1.0,
+    max_abs_accel_mps2: float = 0.0,
+    x_5s: float = 40.0,
+    lateral_to_progress_ratio: float = 0.0,
+    curvature_per_meter: float = 0.0,
+) -> dict[str, object]:
+    return {
+        "frame_name": "segment-safety-100",
+        "candidate_name": candidate_name,
+        "candidate_index": 0,
+        "source": source,
+        "rfs_score": float(rfs),
+        "features": {
+            "selector_score": float(selector_score),
+            "candidate_family": candidate_name,
+            "intent": 1.0,
+            "init_speed_mps": 8.0,
+            "max_speed_mps": 8.0,
+            "final_speed_mps": 8.0,
+            "max_abs_accel_mps2": float(max_abs_accel_mps2),
+            "mean_abs_accel_mps2": float(max_abs_accel_mps2) * 0.5,
+            "expected_progress_5s": 40.0,
+            "x_1s": float(x_5s) * 0.2,
+            "x_3s": float(x_5s) * 0.6,
+            "x_5s": float(x_5s),
+            "progress_ratio_5s": float(x_5s) / 40.0,
+            "stop_distance_error": 0.0,
+            "reverse_distance": float(reverse_distance),
+            "monotonic_forward_rate": float(monotonic_forward_rate),
+            "lateral_to_progress_ratio": float(lateral_to_progress_ratio),
+            "curvature_per_meter": float(curvature_per_meter),
+            "final_speed_ratio": 1.0,
+        },
+    }
+
+
 class WodTrajectoryModelCvTests(unittest.TestCase):
     def test_segment_split_keeps_segment_frames_together(self) -> None:
         if cv is None:
@@ -552,6 +595,71 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         self.assertEqual("cosmos-test", report["embedding_source"])
         self.assertEqual("image_contextual", report["selector_features"])
         self.assertEqual(2, report["embedding_dimension"])
+
+    def test_cli_can_allow_missing_external_embeddings_for_selector_context(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frames = [
+            sample_frame(f"segment-{index}-100", step=1.0 + index * 0.1)
+            for index in range(6)
+        ]
+        with TemporaryDirectory() as tmp:
+            embedding_path = Path(tmp) / "embeddings.json"
+            output_path = Path(tmp) / "report.json"
+            write_external_embedding_cache(
+                {frame.frame_name: [float(index), float(index % 2)] for index, frame in enumerate(frames[:-1])},
+                embedding_path,
+                source="cosmos-partial-test",
+            )
+            argv = [
+                "evaluate_wod_trajectory_model_cv.py",
+                "--external-embedding-cache",
+                str(embedding_path),
+                "--allow-missing-external-embeddings",
+                "--selector-features",
+                "external_contextual",
+                "--rfs-backend",
+                "local",
+                "--folds",
+                "3",
+                "--residual-modes",
+                "1",
+                "--output",
+                str(output_path),
+            ]
+            with patch.object(sys, "argv", argv), patch.object(cv, "load_preference_frames", return_value=frames):
+                cv.main()
+
+            report = json.loads(output_path.read_text(encoding="utf-8"))
+
+        self.assertEqual("cosmos-partial-test", report["embedding_source"])
+        self.assertEqual("external_contextual", report["selector_features"])
+        self.assertEqual(2, report["embedding_dimension"])
+        self.assertEqual(5, report["embedding_frame_count"])
+
+    def test_cli_rejects_missing_external_embeddings_for_external_world_model(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        with TemporaryDirectory() as tmp:
+            embedding_path = Path(tmp) / "embeddings.json"
+            write_external_embedding_cache({"segment-0-100": [1.0, 2.0]}, embedding_path, source="partial")
+            argv = [
+                "evaluate_wod_trajectory_model_cv.py",
+                "--world-model",
+                cv.FEATURE_MODE_EXTERNAL_EMBEDDINGS,
+                "--external-embedding-cache",
+                str(embedding_path),
+                "--allow-missing-external-embeddings",
+                "--rfs-backend",
+                "local",
+            ]
+            with patch.object(sys, "argv", argv), patch.object(
+                cv,
+                "load_preference_frames",
+                return_value=[sample_frame("segment-0-100", step=1.0), sample_frame("segment-1-100", step=1.1)],
+            ):
+                with self.assertRaisesRegex(ValueError, "cannot be used"):
+                    cv.main()
 
     def test_selector_targets_can_use_frame_delta(self) -> None:
         if cv is None:
@@ -1273,6 +1381,171 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
         )
 
         self.assertEqual("constant_velocity", selected["candidate_name"])
+
+    def test_safety_utility_rejects_unsafe_high_utility_candidate(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        class FakeSelector:
+            def predict_row(self, row):
+                return float(row["features"].get("selector_score", 0.0))
+
+        policy = {
+            "mode": "safety_utility",
+            "feature_mean": [0.0 for _ in cv.SAFETY_UTILITY_FEATURES],
+            "feature_scale": [1.0 for _ in cv.SAFETY_UTILITY_FEATURES],
+            "risk_bias": 0.0,
+            "risk_weights": [0.0 for _ in cv.SAFETY_UTILITY_FEATURES],
+            "utility_bias": 0.0,
+            "utility_weights": [
+                1.0 if name == "source_is_learned" else 0.0
+                for name in cv.SAFETY_UTILITY_FEATURES
+            ],
+        }
+        kinematic = _safety_row("constant_velocity", "kinematic", selector_score=0.2, rfs=7.0)
+        unsafe = _safety_row(
+            "learned_reverse",
+            "learned",
+            selector_score=1.0,
+            rfs=10.0,
+            reverse_distance=30.0,
+        )
+
+        selected = cv._apply_safety_utility_policy(
+            policy,
+            FakeSelector(),
+            [kinematic, unsafe],
+            unsafe,
+            source_calibration=None,
+            family_calibration=None,
+        )
+
+        self.assertEqual("constant_velocity", selected["candidate_name"])
+
+    def test_safety_filter_only_replaces_hard_unsafe_selection(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        class FakeSelector:
+            def predict_row(self, row):
+                return float(row["features"].get("selector_score", 0.0))
+
+        kinematic = _safety_row("constant_velocity", "kinematic", selector_score=0.2, rfs=7.0)
+        safe_learned = _safety_row("learned_safe", "learned", selector_score=0.4, rfs=8.0)
+        unsafe = _safety_row(
+            "learned_reverse",
+            "learned",
+            selector_score=1.0,
+            rfs=10.0,
+            reverse_distance=30.0,
+        )
+
+        kept = cv._apply_safety_utility_policy(
+            {"mode": "safety_filter"},
+            FakeSelector(),
+            [kinematic, safe_learned, unsafe],
+            safe_learned,
+            source_calibration=None,
+            family_calibration=None,
+        )
+        replaced = cv._apply_safety_utility_policy(
+            {"mode": "safety_filter"},
+            FakeSelector(),
+            [kinematic, safe_learned, unsafe],
+            unsafe,
+            source_calibration=None,
+            family_calibration=None,
+        )
+
+        self.assertEqual("learned_safe", kept["candidate_name"])
+        self.assertEqual("learned_safe", replaced["candidate_name"])
+
+    def test_safety_filter_ignores_affordance_only_rejection(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        class FakeSelector:
+            def predict_row(self, row):
+                return float(row["features"].get("selector_score", 0.0))
+
+        kinematic = _safety_row("constant_velocity", "kinematic", selector_score=0.2, rfs=7.0)
+        affordance_only = _safety_row(
+            "learned_affordance_only",
+            "learned",
+            selector_score=1.0,
+            rfs=9.0,
+            reverse_distance=4.0,
+        )
+
+        selected = cv._apply_safety_utility_policy(
+            {"mode": "safety_filter"},
+            FakeSelector(),
+            [kinematic, affordance_only],
+            affordance_only,
+            source_calibration=None,
+            family_calibration=None,
+        )
+
+        self.assertEqual("learned_affordance_only", selected["candidate_name"])
+
+    def test_safety_utility_keeps_safe_learned_candidate(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+
+        class FakeSelector:
+            def predict_row(self, row):
+                return float(row["features"].get("selector_score", 0.0))
+
+        policy = {
+            "mode": "safety_utility",
+            "feature_mean": [0.0 for _ in cv.SAFETY_UTILITY_FEATURES],
+            "feature_scale": [1.0 for _ in cv.SAFETY_UTILITY_FEATURES],
+            "risk_bias": 0.0,
+            "risk_weights": [0.0 for _ in cv.SAFETY_UTILITY_FEATURES],
+            "utility_bias": 0.0,
+            "utility_weights": [
+                1.0 if name == "source_is_learned" else 0.0
+                for name in cv.SAFETY_UTILITY_FEATURES
+            ],
+        }
+        kinematic = _safety_row("constant_velocity", "kinematic", selector_score=0.2, rfs=7.0)
+        learned = _safety_row("learned_safe", "learned", selector_score=1.0, rfs=9.0)
+
+        selected = cv._apply_safety_utility_policy(
+            policy,
+            FakeSelector(),
+            [kinematic, learned],
+            kinematic,
+            source_calibration=None,
+            family_calibration=None,
+        )
+
+        self.assertEqual("learned_safe", selected["candidate_name"])
+
+    def test_safety_utility_postprocess_cv_smoke(self) -> None:
+        if cv is None:
+            self.skipTest("numpy is not installed")
+        frames = [
+            sample_frame(f"segment-{index}-100", step=1.0 + index * 0.1)
+            for index in range(6)
+        ]
+
+        report = cv.cross_validate_trajectory_model(
+            frames,
+            folds=3,
+            seed=5,
+            ridge=1.0,
+            feature_set=cv.FEATURE_SET_BASE,
+            residual_modes=1,
+            scorer=cv._local_rfs_score,
+            selector_postprocess="safety_utility",
+            safety_utility_ridge=1.0,
+            safety_utility_floor=7.0,
+        )
+
+        self.assertEqual("safety_utility", report["selector_postprocess"])
+        self.assertIn("safety_utility_selected_rate", report)
+        self.assertIn("safety_utility_mean_gain", report)
 
     def test_source_calibration_scale_shrinks_offsets(self) -> None:
         if cv is None:
