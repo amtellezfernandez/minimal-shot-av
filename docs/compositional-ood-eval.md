@@ -159,6 +159,9 @@ budget is not a single hidden mix of obstacle size, count, and location. Phantom
 obstacles are capped at 1.45m radius in the stealth-bounded regime, and collapse
 reasons are decomposed into collision, near miss, trajectory safety event,
 excessive intervention, slow crawl, goal failure, or progress collapse. The
-result is a controlled seizure-like proxy for false transition guards, not a
-claim that the simulator contains real neurological or physical seizure
-dynamics.
+artifact also emits a stratified topology/hazard/condition table and a confound
+audit. If collapses concentrate in one hazard family, the result should be
+reported as topology-by-scenario-family susceptibility rather than a pure
+topology effect. The result is a controlled seizure-like proxy for false
+transition guards, not a claim that the simulator contains real neurological or
+physical seizure dynamics.

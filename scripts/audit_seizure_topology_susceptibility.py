@@ -119,6 +119,8 @@ def main() -> None:
                     )
 
     topology_summary = _summarize_by_topology(sweep_rows)
+    stratified_summary = _summarize_strata(sweep_rows)
+    confound_audit = _confound_audit(sweep_rows)
     payload = {
         "attack_model": {
             "name": "phase_locked_phantom_guard_obstacles",
@@ -136,6 +138,8 @@ def main() -> None:
         "clean_runs": clean_rows,
         "sweep_runs": sweep_rows,
         "topology_summary": topology_summary,
+        "stratified_summary": stratified_summary,
+        "confound_audit": confound_audit,
         "ranking": sorted(
             topology_summary,
             key=lambda row: (
@@ -151,6 +155,7 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     _write_csv(args.output_dir / "topology_susceptibility_sweep.csv", sweep_rows)
     _write_csv(args.output_dir / "topology_susceptibility_summary.csv", topology_summary)
+    _write_csv(args.output_dir / "topology_susceptibility_strata.csv", stratified_summary)
     (args.output_dir / "topology_susceptibility.json").write_text(json.dumps(payload, indent=2))
     print(f"Wrote topology susceptibility audit to {args.output_dir}")
 
@@ -392,6 +397,124 @@ def _summarize_by_topology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             }
         )
     return summary
+
+
+def _summarize_strata(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    summary: list[dict[str, Any]] = []
+    keys = sorted(
+        {
+            (
+                str(row["topology"]),
+                str(row["sweep_family"]),
+                str(row["primary_hazard_type"]),
+                _condition(row),
+            )
+            for row in rows
+            if bool(row["clean_benchmark_pass"])
+        }
+    )
+    for topology, family, hazard, condition in keys:
+        scoped = [
+            row
+            for row in rows
+            if row["topology"] == topology
+            and row["sweep_family"] == family
+            and row["primary_hazard_type"] == hazard
+            and _condition(row) == condition
+            and bool(row["clean_benchmark_pass"])
+        ]
+        if not scoped:
+            continue
+        scenarios = {int(row["scenario_index"]) for row in scoped}
+        collapse_rows = [row for row in scoped if bool(row["collapse"])]
+        first_any = min((float(row["attack_budget"]) for row in collapse_rows), default=None)
+        max_budget = max(float(row["attack_budget"]) for row in scoped)
+        max_budget_rows = [row for row in scoped if abs(float(row["attack_budget"]) - max_budget) < 1e-9]
+        summary.append(
+            {
+                "topology": topology,
+                "sweep_family": family,
+                "primary_hazard_type": hazard,
+                "condition": condition,
+                "scenario_count": len(scenarios),
+                "sweep_rows": len(scoped),
+                "collapse_rows": len(collapse_rows),
+                "collapse_row_rate": round(len(collapse_rows) / len(scoped), 4),
+                "first_any_collapse_budget": first_any,
+                "collapse_rate_at_max_budget": round(
+                    sum(1 for row in max_budget_rows if bool(row["collapse"])) / len(max_budget_rows),
+                    4,
+                ),
+                "dominant_collapse_reason": _dominant_reason(collapse_rows),
+            }
+        )
+    return summary
+
+
+def _confound_audit(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    clean_rows = [row for row in rows if bool(row["clean_benchmark_pass"])]
+    collapse_rows = [row for row in clean_rows if bool(row["collapse"])]
+    collapse_count = len(collapse_rows)
+    hazards = _counts(collapse_rows, "primary_hazard_type")
+    topologies = _counts(collapse_rows, "topology")
+    families = _counts(collapse_rows, "sweep_family")
+    conditions = _condition_counts(collapse_rows)
+    top_hazard_count = max(hazards.values(), default=0)
+    top_hazard_share = top_hazard_count / collapse_count if collapse_count else 0.0
+    affected_topology_count = len(topologies)
+    affected_hazard_count = len(hazards)
+    interpretation = "no_clean_passing_collapses"
+    if collapse_count:
+        interpretation = "hazard_concentrated" if top_hazard_share >= 0.70 else "multi_hazard"
+        if affected_topology_count <= 2:
+            interpretation += "_narrow_topology"
+        else:
+            interpretation += "_multi_topology"
+    return {
+        "clean_passing_sweep_rows": len(clean_rows),
+        "collapse_rows": collapse_count,
+        "collapse_row_rate": round(collapse_count / len(clean_rows), 4) if clean_rows else 0.0,
+        "affected_topology_count": affected_topology_count,
+        "affected_hazard_count": affected_hazard_count,
+        "top_hazard_share": round(top_hazard_share, 4),
+        "hazard_counts": hazards,
+        "topology_counts": topologies,
+        "sweep_family_counts": families,
+        "condition_counts": conditions,
+        "interpretation": interpretation,
+        "claim_boundary": (
+            "Use this as a topology-by-scenario-family susceptibility audit. Do not claim a pure topology "
+            "effect unless collapse rows remain distributed across hazards or a matched-hazard sweep is run."
+        ),
+    }
+
+
+def _condition(row: dict[str, Any]) -> str:
+    for axis in str(row.get("ood_axes", "")).split(","):
+        if axis.startswith("condition:"):
+            return axis.split(":", maxsplit=1)[1]
+    return "unknown"
+
+
+def _counts(rows: list[dict[str, Any]], key: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        value = str(row[key])
+        counts[value] = counts.get(value, 0) + 1
+    return dict(sorted(counts.items(), key=lambda item: (-item[1], item[0])))
+
+
+def _condition_counts(rows: list[dict[str, Any]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        condition = _condition(row)
+        counts[condition] = counts.get(condition, 0) + 1
+    return dict(sorted(counts.items(), key=lambda item: (-item[1], item[0])))
+
+
+def _dominant_reason(rows: list[dict[str, Any]]) -> str:
+    counts = _counts(rows, "collapse_reason_family")
+    return next(iter(counts), "none")
 
 
 def _mean(rows: list[dict[str, Any]], key: str) -> float:
