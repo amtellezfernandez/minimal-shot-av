@@ -17,7 +17,12 @@ if str(SRC) not in sys.path:
 if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
-from evaluate_scenarios import summarize_rollout
+from evaluate_scenarios import (
+    _max_intervention_rate,
+    _min_avg_progress,
+    _near_miss_clearance,
+    summarize_rollout,
+)
 from minimal_shot_av.simulator.compositional_scenarios import (  # noqa: E402
     COMPOSITIONAL_TOPOLOGIES,
     generate_compositional_scenario,
@@ -27,6 +32,7 @@ from minimal_shot_av.simulator.policy import run_spotlight_reflex_policy
 
 
 DEFAULT_BUDGETS = (0.0, 0.1, 0.2, 0.35, 0.5, 0.7, 0.9, 1.15, 1.5, 2.0)
+SWEEP_FAMILIES = ("coupled_stealth", "radius_only", "count_only", "placement_only")
 
 
 def main() -> None:
@@ -43,6 +49,12 @@ def main() -> None:
         nargs="*",
         default=list(DEFAULT_BUDGETS),
         help="Perturbation budgets to sweep. Zero is the clean condition.",
+    )
+    parser.add_argument(
+        "--sweep-family",
+        choices=(*SWEEP_FAMILIES, "all"),
+        default="all",
+        help="Attack control to sweep. 'all' separates radius, count, and placement controls.",
     )
     args = parser.parse_args()
 
@@ -66,35 +78,45 @@ def main() -> None:
 
             clean_progress = _total_progress(clean_rollout.steps)
             clean_pass = bool(clean_summary["benchmark_pass"])
-            for budget in args.budgets:
-                attacked = _with_seizure_phantoms(scenario, budget)
-                rollout = run_spotlight_reflex_policy(attacked)
-                summary = summarize_rollout(
-                    args.suite,
-                    attacked.cluster,
-                    attacked.seed,
-                    "spotlight-reflex+seizure-phantoms",
-                    rollout,
-                    attacked.goal,
-                    attacked.tags,
-                )
-                progress_ratio = _total_progress(rollout.steps) / max(clean_progress, 1e-9)
-                collapse = _collapse(clean_pass, clean_summary, summary, progress_ratio)
-                sweep_rows.append(
-                    {
-                        **summary,
-                        **_topology_metrics(scenario),
-                        "scenario_index": scenario_index,
-                        "attack_budget": budget,
-                        "clean_benchmark_pass": clean_pass,
-                        "clean_progress": round(clean_progress, 4),
-                        "attacked_progress": round(_total_progress(rollout.steps), 4),
-                        "progress_ratio": round(progress_ratio, 4),
-                        "collapse": collapse,
-                        "collapse_reason": _collapse_reason(clean_pass, summary, progress_ratio),
-                        "attack_model": "phase_locked_phantom_guard_obstacles",
-                    }
-                )
+            for family in _selected_families(args.sweep_family):
+                for budget in args.budgets:
+                    attack_parameters = _attack_parameters(family, budget)
+                    attacked = _with_seizure_phantoms(scenario, attack_parameters)
+                    rollout = run_spotlight_reflex_policy(attacked)
+                    summary = summarize_rollout(
+                        args.suite,
+                        attacked.cluster,
+                        attacked.seed,
+                        "spotlight-reflex+seizure-phantoms",
+                        rollout,
+                        attacked.goal,
+                        attacked.tags,
+                    )
+                    progress_ratio = _total_progress(rollout.steps) / max(clean_progress, 1e-9)
+                    collapse = _collapse(clean_pass, clean_summary, summary, progress_ratio)
+                    collapse_reason = _collapse_reason(args.suite, clean_pass, summary, progress_ratio)
+                    sweep_rows.append(
+                        {
+                            **summary,
+                            **_topology_metrics(scenario),
+                            "scenario_index": scenario_index,
+                            "sweep_family": family,
+                            "attack_budget": budget,
+                            "phantom_count": attack_parameters["phantom_count"],
+                            "phantom_radius_m": attack_parameters["phantom_radius_m"],
+                            "phantom_lateral_scale": attack_parameters["phantom_lateral_scale"],
+                            "placement_strategy": attack_parameters["placement_strategy"],
+                            "stealth_bounded": attack_parameters["stealth_bounded"],
+                            "clean_benchmark_pass": clean_pass,
+                            "clean_progress": round(clean_progress, 4),
+                            "attacked_progress": round(_total_progress(rollout.steps), 4),
+                            "progress_ratio": round(progress_ratio, 4),
+                            "collapse": collapse,
+                            "collapse_reason": collapse_reason,
+                            "collapse_reason_family": collapse_reason.split(":", maxsplit=1)[0],
+                            "attack_model": "phase_locked_phantom_guard_obstacles",
+                        }
+                    )
 
     topology_summary = _summarize_by_topology(sweep_rows)
     payload = {
@@ -102,13 +124,14 @@ def main() -> None:
             "name": "phase_locked_phantom_guard_obstacles",
             "interpretation": (
                 "A bounded perception/control seizure proxy: false obstacle guards are injected at repeated "
-                "route phases. It tests which route topologies lose mission progress under small synchronized "
-                "guard perturbations; it is not a claim that the simulator contains a real neural seizure."
+                "route phases. The default evidence separates radius-only, count-only, placement-only, and "
+                "coupled stealth controls; it is not a claim that the simulator contains a real neural seizure."
             ),
             "collapse_definition": (
-                "A clean-passing scenario collapses if the attacked rollout collides, fails the benchmark, "
-                "or keeps less than 65% of clean progress."
+                "A clean-passing scenario collapses if the attacked rollout collides, fails a decomposed "
+                "benchmark criterion, or keeps less than 65% of clean progress."
             ),
+            "sweep_families": list(_selected_families(args.sweep_family)),
         },
         "clean_runs": clean_rows,
         "sweep_runs": sweep_rows,
@@ -117,6 +140,8 @@ def main() -> None:
             topology_summary,
             key=lambda row: (
                 float(row["critical_attack_budget"]) if row["critical_attack_budget"] is not None else math.inf,
+                float(row["first_any_collapse_budget"]) if row["first_any_collapse_budget"] is not None else math.inf,
+                -float(row["collapse_rate_at_max_budget"]),
                 -float(row["collapse_rate_at_0_35"]),
                 -float(row["mean_curvature_per_100m"]),
             ),
@@ -146,13 +171,55 @@ def _select_scenarios(suite: str, seed_start: int, seeds_per_topology: int) -> d
     return selected
 
 
-def _with_seizure_phantoms(scenario: Scenario, budget: float) -> Scenario:
+def _selected_families(requested: str) -> tuple[str, ...]:
+    if requested == "all":
+        return SWEEP_FAMILIES
+    return (requested,)
+
+
+def _attack_parameters(family: str, budget: float) -> dict[str, Any]:
+    budget = max(0.0, float(budget))
+    if family == "radius_only":
+        phantom_count = 4
+        radius = 0.45 + budget * 0.95
+        lateral_scale = 0.08
+        placement = "curvature_guard"
+    elif family == "count_only":
+        phantom_count = max(1, int(round(2 + budget * 7)))
+        radius = 0.95
+        lateral_scale = 0.08
+        placement = "curvature_guard"
+    elif family == "placement_only":
+        phantom_count = 4
+        radius = 0.95
+        lateral_scale = max(0.02, 0.14 - budget * 0.10)
+        placement = "curvature_guard"
+    elif family == "coupled_stealth":
+        phantom_count = max(1, int(round(2 + budget * 4)))
+        radius = 0.55 + budget * 0.80
+        lateral_scale = max(0.035, 0.11 - budget * 0.065)
+        placement = "curvature_guard"
+    else:
+        raise ValueError(f"unknown sweep family {family!r}")
+    return {
+        "sweep_family": family,
+        "attack_budget": round(budget, 4),
+        "phantom_count": phantom_count,
+        "phantom_radius_m": round(min(radius, 1.45), 4),
+        "phantom_lateral_scale": round(lateral_scale, 4),
+        "placement_strategy": placement,
+        "stealth_bounded": True,
+    }
+
+
+def _with_seizure_phantoms(scenario: Scenario, attack: dict[str, Any]) -> Scenario:
+    budget = float(attack["attack_budget"])
     if budget <= 0.0:
         return scenario
     lane = interpolate_lane(scenario.lane_center, samples_per_segment=12)
-    count = max(1, int(round(2 + budget * 7)))
-    radius = 0.55 + budget * 2.0
-    lateral_scale = max(0.0, 0.09 - budget * 0.045)
+    count = int(attack["phantom_count"])
+    radius = float(attack["phantom_radius_m"])
+    lateral_scale = float(attack["phantom_lateral_scale"])
     phase_indices = _guard_phase_indices(lane, count)
     phantoms: list[Obstacle] = []
     for index, lane_index in enumerate(phase_indices):
@@ -177,6 +244,10 @@ def _with_seizure_phantoms(scenario: Scenario, budget: float) -> Scenario:
         **scenario.tags,
         "seizure_attack_budget": round(budget, 4),
         "seizure_attack_model": "phase_locked_phantom_guard_obstacles",
+        "seizure_sweep_family": attack["sweep_family"],
+        "seizure_phantom_count": count,
+        "seizure_phantom_radius_m": radius,
+        "seizure_phantom_lateral_scale": lateral_scale,
     }
     return replace(scenario, obstacles=[*scenario.obstacles, *phantoms], tags=tags)
 
@@ -247,23 +318,33 @@ def _collapse(clean_pass: bool, clean_summary: dict[str, Any], attacked_summary:
     return progress_ratio < 0.65 and float(clean_summary["avg_progress"]) > 0.0
 
 
-def _collapse_reason(clean_pass: bool, attacked_summary: dict[str, Any], progress_ratio: float) -> str:
+def _collapse_reason(suite: str, clean_pass: bool, attacked_summary: dict[str, Any], progress_ratio: float) -> str:
     if not clean_pass:
         return "clean_failed"
     if bool(attacked_summary["collision"]):
         return "collision"
-    if not bool(attacked_summary["benchmark_pass"]):
-        return "benchmark_failure"
+    if bool(attacked_summary["near_miss"]):
+        return f"near_miss:min_clearance<{_near_miss_clearance(suite):.2f}"
+    if bool(attacked_summary["trajectory_safety_event_count"]):
+        return "trajectory_safety_event"
+    if bool(attacked_summary["excessive_intervention"]):
+        return f"excessive_intervention:rate>{_max_intervention_rate(suite):.2f}"
+    if bool(attacked_summary["slow_crawl"]):
+        return f"slow_crawl:avg_progress<{_min_avg_progress(suite):.2f}"
+    if not bool(attacked_summary["reached_goal"]):
+        return "goal_failure"
     if progress_ratio < 0.65:
         return "progress_collapse"
+    if not bool(attacked_summary["benchmark_pass"]):
+        return "benchmark_failure:other"
     return "no_collapse"
 
 
 def _summarize_by_topology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     summary: list[dict[str, Any]] = []
-    topologies = sorted({str(row["topology"]) for row in rows})
-    for topology in topologies:
-        scoped = [row for row in rows if row["topology"] == topology]
+    groups = sorted({(str(row["topology"]), str(row["sweep_family"])) for row in rows})
+    for topology, family in groups:
+        scoped = [row for row in rows if row["topology"] == topology and row["sweep_family"] == family]
         budgets = sorted({float(row["attack_budget"]) for row in scoped})
         scenario_count = len({int(row["scenario_index"]) for row in scoped})
         clean_passes = {
@@ -272,8 +353,11 @@ def _summarize_by_topology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             if float(row["attack_budget"]) == 0.0 and bool(row["clean_benchmark_pass"])
         }
         critical: float | None = None
+        first_any: float | None = None
         for budget in budgets:
             at_budget = [row for row in scoped if float(row["attack_budget"]) == budget and int(row["scenario_index"]) in clean_passes]
+            if first_any is None and any(bool(row["collapse"]) for row in at_budget):
+                first_any = budget
             if at_budget and sum(1 for row in at_budget if bool(row["collapse"])) / len(at_budget) >= 0.5:
                 critical = budget
                 break
@@ -283,14 +367,25 @@ def _summarize_by_topology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             if abs(float(row["attack_budget"]) - 0.35) < 1e-9 and int(row["scenario_index"]) in clean_passes
         ]
         collapse_rate_035 = (sum(1 for row in at_035 if bool(row["collapse"])) / len(at_035)) if at_035 else 0.0
+        max_budget = max(budgets)
+        at_max = [
+            row
+            for row in scoped
+            if abs(float(row["attack_budget"]) - max_budget) < 1e-9 and int(row["scenario_index"]) in clean_passes
+        ]
+        collapse_rate_max = (sum(1 for row in at_max if bool(row["collapse"])) / len(at_max)) if at_max else 0.0
         clean_rows = [row for row in scoped if float(row["attack_budget"]) == 0.0]
         summary.append(
             {
                 "topology": topology,
+                "sweep_family": family,
                 "scenario_count": scenario_count,
                 "clean_pass_count": len(clean_passes),
                 "critical_attack_budget": critical,
+                "first_any_collapse_budget": first_any,
                 "collapse_rate_at_0_35": round(collapse_rate_035, 4),
+                "collapse_rate_at_max_budget": round(collapse_rate_max, 4),
+                "max_attack_budget": max_budget,
                 "mean_lane_half_width_m": round(_mean(clean_rows, "lane_half_width_m"), 3),
                 "mean_curvature_per_100m": round(_mean(clean_rows, "curvature_per_100m"), 4),
                 "mean_route_length_m": round(_mean(clean_rows, "route_length_m"), 3),

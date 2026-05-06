@@ -46,13 +46,24 @@ class SeizureTopologySusceptibilityAuditTests(unittest.TestCase):
             sweep_csv = (Path(temp_dir) / "topology_susceptibility_sweep.csv").read_text()
 
         self.assertEqual({row["topology"] for row in payload["topology_summary"]}, set(COMPOSITIONAL_TOPOLOGIES))
-        self.assertEqual(len(payload["ranking"]), len(COMPOSITIONAL_TOPOLOGIES))
+        self.assertEqual(
+            {row["sweep_family"] for row in payload["topology_summary"]},
+            {"coupled_stealth", "radius_only", "count_only", "placement_only"},
+        )
+        self.assertEqual(len(payload["ranking"]), len(COMPOSITIONAL_TOPOLOGIES) * 4)
+        self.assertEqual(len(payload["sweep_runs"]), len(COMPOSITIONAL_TOPOLOGIES) * 2 * 4)
         self.assertEqual(
             "phase_locked_phantom_guard_obstacles",
             payload["attack_model"]["name"],
         )
+        self.assertTrue(all(float(row["phantom_radius_m"]) <= 1.45 for row in payload["sweep_runs"]))
+        self.assertTrue(all(row["stealth_bounded"] for row in payload["sweep_runs"]))
         self.assertIn("critical_attack_budget", summary_csv)
+        self.assertIn("first_any_collapse_budget", summary_csv)
+        self.assertIn("collapse_rate_at_max_budget", summary_csv)
         self.assertIn("collapse_reason", sweep_csv)
+        self.assertIn("collapse_reason_family", sweep_csv)
+        self.assertIn("sweep_family", sweep_csv)
         self.assertIn("curvature_per_100m", sweep_csv)
 
 

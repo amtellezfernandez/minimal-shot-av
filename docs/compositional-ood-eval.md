@@ -85,6 +85,12 @@ Topology susceptibility audit:
 uv run --no-sync python scripts/audit_seizure_topology_susceptibility.py --seeds-per-topology 3 --suite hidden --output-dir artifacts/seizure_topology_susceptibility
 ```
 
+Paper-grade topology susceptibility sweep:
+
+```bash
+uv run --no-sync python scripts/audit_seizure_topology_susceptibility.py --seeds-per-topology 20 --suite hidden --sweep-family all --output-dir artifacts/seizure_topology_susceptibility_paper
+```
+
 ## Metrics And Evidence Discipline
 
 `artifacts/rlvr_curriculum_v1.json` makes the gym explicit:
@@ -147,6 +153,12 @@ The topology susceptibility audit asks a different question: which route
 geometries are most fragile under synchronized guard perturbations? It injects
 phase-locked phantom guard obstacles at curvature and corridor decision points,
 sweeps perturbation budget, and reports the first budget where at least half of
-clean-passing scenarios collapse. The result is a controlled seizure-like proxy
-for false transition guards, not a claim that the simulator contains real
-neurological or physical seizure dynamics.
+clean-passing scenarios collapse. The default command separates `radius_only`,
+`count_only`, `placement_only`, and `coupled_stealth` sweeps so the reported
+budget is not a single hidden mix of obstacle size, count, and location. Phantom
+obstacles are capped at 1.45m radius in the stealth-bounded regime, and collapse
+reasons are decomposed into collision, near miss, trajectory safety event,
+excessive intervention, slow crawl, goal failure, or progress collapse. The
+result is a controlled seizure-like proxy for false transition guards, not a
+claim that the simulator contains real neurological or physical seizure
+dynamics.
