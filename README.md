@@ -42,6 +42,14 @@ is correct whether the obstacle is a cone, a fallen tree, or a sheep.
 
 *Intersection stress — conflict zone, two crossing actors at different timings, 207 steps.*
 
+## AlpaSim: Sensor-Realistic Validation
+
+The same policy runs inside Waymo's AlpaSim simulator via a custom adapter. Real
+WOD-E2E front-camera frames (sensor input) alongside the adapter's maneuver decision,
+obstacle pressure, and route blockage readout.
+
+![AlpaSim sensor input and reasoning output](docs/images/alpasim_reasoning_panel.png)
+
 ---
 
 ## What Worked

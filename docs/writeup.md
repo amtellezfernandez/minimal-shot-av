@@ -99,7 +99,10 @@ The entire simulator is original code. Key components:
 ### AlpaSim Adapter
 
 The same Spotlight Reflex policy runs inside Waymo's sensor-realistic AlpaSim
-simulator via a custom adapter. The engineering challenge: AlpaSim provides cameras,
+simulator via a custom adapter. Below: real WOD-E2E front-camera frames (AlpaSim
+sensor input) alongside the adapter's selected maneuver and world-state readout.
+
+![AlpaSim reasoning panel](images/alpasim_reasoning_panel.png) The engineering challenge: AlpaSim provides cameras,
 speed, and a route command; Spotlight Reflex needs an obstacle field, a lane spline,
 and a world state. Four signal channels bridge the representations:
 

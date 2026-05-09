@@ -451,7 +451,144 @@ of camera inputs.
 
 ---
 
-## Part 5: Honest Claims
+## Part 5: Reproducing Every Claimed Result
+
+All results in this submission are reproducible from the scripts in `scripts/`.
+Below are the exact commands for each number we report.
+
+### Simulator: 326/350 pass rate, 0 collisions
+
+```bash
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy spotlight-reflex \
+  --suite all \
+  --seed-start 1 \
+  --seed-end 10 \
+  --output-dir artifacts/eval_all
+```
+
+Runs 350 rollouts (11 WOD clusters + compositional + adversarial + gauntlet + hidden,
+10 seeds each). Results written to `artifacts/eval_all/`. The archived result is in
+`benchmarks/current/spotlight_reflex_procedural_wod.json`.
+
+### Gauntlet: 36/60 pass rate
+
+```bash
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy spotlight-reflex \
+  --suite gauntlet \
+  --seed-start 1 \
+  --seed-end 20 \
+  --output-dir artifacts/eval_gauntlet
+```
+
+### WOD-E2E 7.880 RFS (HGB stability-selected ranker)
+
+The full pipeline runs in five steps. Requires WOD-E2E validation TFRecords under
+`waymo_open_dataset_end_to_end_camera_v_1_0_0/val/`.
+
+**Step 1 — Generate kinematic candidates:**
+```bash
+uv run --no-sync python scripts/generate_wod_kinematic_candidates.py \
+  --output artifacts/wod_kinematic_candidates.jsonl
+```
+
+**Step 2 — Generate learned candidates (ridge model, 5-fold CV):**
+```bash
+uv run --no-sync python scripts/generate_wod_learned_candidates.py \
+  --output artifacts/wod_learned_candidates.jsonl
+```
+
+**Step 3 — Score candidates with the trained ranker:**
+```bash
+uv run --no-sync python scripts/score_wod_candidates_with_ranker.py \
+  --candidates artifacts/wod_kinematic_candidates.jsonl \
+               artifacts/wod_learned_candidates.jsonl \
+  --output artifacts/wod_scored_candidates.jsonl
+```
+
+**Step 4 — Evaluate selected RFS:**
+```bash
+uv run --no-sync python scripts/evaluate_wod_e2e_rfs.py \
+  --candidates artifacts/wod_scored_candidates.jsonl \
+  --output artifacts/wod_rfs_eval.json
+```
+
+**Step 5 — Package submission:**
+```bash
+uv run --no-sync python scripts/write_wod_e2e_submission.py \
+  --candidates artifacts/wod_scored_candidates.jsonl \
+  --frame-list <official_frame_list.json> \
+  --output artifacts/wod_submission.tar.gz
+
+uv run --no-sync python scripts/validate_wod_e2e_submission.py \
+  --submission artifacts/wod_submission.tar.gz
+```
+
+The archived champion result is in
+`benchmarks/current/` — search for `hgb` or `stability` in the filenames.
+The bias audit (per-cluster breakdown) is at
+`benchmarks/current/wod_model_bias_audit.json`.
+
+### AlpaSim: 30-scene sensor-realistic run
+
+```bash
+uv run alpasim-evidence alpasim_spotlight_run \
+  --output artifacts/alpasim_spotlight_evidence.json
+```
+
+Requires AlpaSim and the `alpasim_driver` package installed. The archived 30-scene
+merged result is at
+`benchmarks/current/spotlight_reflex_alpasim_front_camera_30scene_merged.json`.
+
+Key metrics from the archived run:
+- `collision_at_fault: 0.0`
+- `dist_to_gt_trajectory: 0.42 m`
+- `offroad_rate: 0.0`
+
+### AlpaSignal Bridge Audit
+
+```bash
+uv run --no-sync python scripts/audit_alpasignal_bridge.py \
+  --output artifacts/alpasignal_bridge_audit.json
+```
+
+Three deterministic cases: static hazard, moving actor, low-visibility + braking.
+All three produce finite trajectories and correct `reasoning_text`.
+
+### Runtime Audit (50 ms step budget)
+
+```bash
+uv run --no-sync python scripts/audit_minor_runtime_constraints.py \
+  --seed-start 1 --seed-end 3 \
+  --target-step-ms 50 \
+  --output artifacts/minor_runtime_constraints.json
+```
+
+### COMPASS Benchmark
+
+```bash
+PYTHONPATH=src uv run --no-sync python -m minimal_shot_av.simulator.compass ladder \
+  --policy spotlight-reflex \
+  --profile compass-v0 \
+  --seed-start 1 \
+  --seed-end 10 \
+  --output artifacts/compass_ladder.json
+```
+
+### Full Test Suite
+
+```bash
+uv run --no-sync python scripts/run_tests.py
+```
+
+All results should pass. Use `--quick` to skip slow benchmark modules during
+development. The test suite covers selector geometry, maneuver generation,
+COMPASS scoring, CLI artifacts, and deterministic simulator seeds.
+
+---
+
+## Part 6: Honest Claims
 
 **What this system is:**
 - A runnable closed-loop minimal-shot driving policy for procedural long-tail scenarios

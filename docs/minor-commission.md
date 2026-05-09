@@ -209,6 +209,14 @@ files are accepted via `--odd-spec` and `--thresholds` flags.
 The same Spotlight Reflex policy runs in AlpaSim through a custom adapter.
 This section describes exactly what AlpaSim provides and what was engineered.
 
+**AlpaSim sensor input → Spotlight Reflex reasoning output.** Four panels showing
+real WOD-E2E front-camera frames (what AlpaSim's camera sensor provides) alongside
+the adapter's selected maneuver, obstacle pressure bar, route blockage bar, and
+decision reason. No vision model runs — the adapter extracts brightness and dynamics
+from the raw pixel values and converts the route command to lane geometry.
+
+![AlpaSim reasoning panel](images/alpasim_reasoning_panel.png)
+
 ### What AlpaSim Provides
 
 | Component | Description |
