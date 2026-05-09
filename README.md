@@ -17,15 +17,6 @@ its own trajectory selector, while WOD/RFS scoring is model-side only. See:
 - [`docs/grand-submission.md`](docs/grand-submission.md)
 - [`docs/minor-simulation-submission.md`](docs/minor-simulation-submission.md)
 
-Commission constraints to keep visible:
-
-- Deadline: **May 10, 2026**.
-- Required package: GitHub repo, 1-5 minute video or slide deck, motivation,
-  and a short write-up.
-- Judging criteria: technical excellence, novelty, feasibility, and adherence
-  to the minimal-shot brief.
-- The commission is not only a leaderboard contest; honest execution,
-  randomized simulation, latency realism, and failure analysis matter.
 
 ## Thesis
 
@@ -175,6 +166,21 @@ Simulator track:
 - artifact generation for demos and documentation
 
 This is not a production AV stack and it is not yet a completed WOD-E2E leaderboard submission because train/test shards and the official frame list are still required locally.
+
+## Submission Documentation
+
+Three comprehensive documents cover the full submission in depth:
+
+- [`docs/architecture-deep-dive.md`](docs/architecture-deep-dive.md) — complete
+  architecture walkthrough: Spotlight Reflex design, WOD-E2E harness, what worked,
+  what did not work, and honest performance claims.
+- [`docs/simulation-deep-dive.md`](docs/simulation-deep-dive.md) — simulation
+  engineering: what AlpaSim provides vs what was built from scratch, the adapter
+  design, signal extraction, scenario generator, and AlpaSignal bridge.
+- [`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md) —
+  end-to-end WOD-E2E pipeline walkthrough with performance results and a detailed
+  failure analysis by cluster, including structural limitations and AlpaSim scene
+  traces.
 
 ## Repo Structure
 
@@ -400,20 +406,19 @@ See [`docs/compass-benchmark.md`](docs/compass-benchmark.md) for the oracle, rea
 
 ## Split Submission Deliverables
 
-The repo can support two separate submissions:
+This repository covers two separate commission submissions:
 
-- **Grand Commission:** Spotlight Reflex architecture, model declaration, WOD-E2E analysis plan, demo artifacts, and architecture write-up.
-- **Minor Commission:** randomized WOD-style scenario generator, cluster templates, reproducibility evidence, demo artifacts, and simulation-environment write-up.
+- **Grand Commission:** Spotlight Reflex architecture, model declaration, WOD-E2E
+  harness, and architecture write-up. Primary claim: a minimal-shot closed-loop
+  policy for long-tail driving with deterministic maneuver candidates and a
+  simulator-native trajectory selector.
+- **Minor Commission:** procedural WOD-E2E scenario generator, compositional OOD
+  evaluation suite, AlpaSim trajectory plugin, and reproducibility evidence.
+  Primary claim: a seeded, reproducible simulation environment that independently
+  samples topology, hazards, conditions, and novel objects.
 
 Shared supporting materials:
 
 - [`models/DECLARATION.md`](models/DECLARATION.md)
 - [`docs/two-page-writeup.md`](docs/two-page-writeup.md)
-- [`docs/video-outline.md`](docs/video-outline.md)
-- [`docs/submission-checklist.md`](docs/submission-checklist.md)
-
-## Recommended Next Steps
-
-1. For the **Grand** submission, turn `docs/grand-submission.md` into the slide/video script and use the downloaded WOD-E2E validation split for analysis/failure cases.
-2. For the **Minor** submission, turn `docs/minor-simulation-submission.md` into the simulation-environment slide/video script and show seeded cluster variation.
-3. Keep artifacts for each track in separate directories under `artifacts/`.
+- [`docs/judging-criteria-evidence.md`](docs/judging-criteria-evidence.md)

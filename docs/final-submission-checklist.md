@@ -6,7 +6,7 @@
 - Verify SHA-256 against `artifacts/sota_submission_bundles/SUBMISSION_INDEX.md`.
 - Use repository URL: `https://github.com/amtellezfernandez/minimal-shot-av`.
 - Reference tag: `sota-commission-2026-submission`.
-- Attach or link the slide deck generated from `docs/sota-grand-slide-deck.md`.
+- Architecture is documented in `docs/architecture-deep-dive.md` and `docs/grand-submission.md`.
 - Paste the form response from `docs/sota-grand-submission-form.md`.
 
 Grand claim:
@@ -18,7 +18,7 @@ Minimal-shot autonomy architecture prototype with closed-loop long-tail demos, W
 - Upload `artifacts/sota_submission_bundles/minor_commission.tar.gz`.
 - Verify SHA-256 against `artifacts/sota_submission_bundles/SUBMISSION_INDEX.md`.
 - Use the same repository URL and tag.
-- Attach or link the slide deck generated from `docs/sota-minor-slide-script.md`.
+- Simulation environment is documented in `docs/simulation-deep-dive.md` and `docs/minor-simulation-submission.md`.
 
 Minor claim:
 

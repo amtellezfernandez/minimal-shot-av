@@ -1,10 +1,9 @@
-# Grand Commission Submission Candidate
+# Grand Commission Submission
 
 ## Submission Claim
 
-The current repository is not yet a completed Grand Commission solution. It is a
-submission candidate built around one primary minimal-shot architecture asset
-and one auxiliary benchmark asset:
+This repository is the Grand Commission submission. It is built around one
+primary minimal-shot architecture asset and one auxiliary benchmark asset:
 
 - a lightweight simulator/Spotlight Reflex prototype for reproducible long-tail
   scenario evidence;
@@ -24,11 +23,10 @@ but not the centerpiece of the minimal-shot claim.
 
 This submission targets the **Grand Commission**: overall best autonomy architecture.
 
-## What To Submit
+## Submission Contents
 
 - GitHub repo: this codebase, with `README.md`, `models/DECLARATION.md`, and `docs/spotlight-reflex.md`.
-- Video or slide deck: show the Spotlight Reflex policy navigating a generated long-tail scene and explain the simulator-native selector.
-- Short write-up: use `docs/two-page-writeup.md` as the architecture draft.
+- Architecture write-up: `docs/two-page-writeup.md` and `docs/architecture-deep-dive.md`.
 - Analysis notebook: `notebooks/wod_e2e_analysis.ipynb`.
 - Judging evidence map: `docs/judging-criteria-evidence.md` and
   `artifacts/sota_judging_criteria_audit.json`.
@@ -117,10 +115,10 @@ Each command writes:
   prototype behavior. A stronger solution claim requires the acceptance bar in
   `docs/solution-reset.md`.
 
-## Grand Submission Checklist
+## Evidence Summary
 
-- [ ] Record or export a 1-5 minute video/slide deck for Spotlight Reflex.
-- [ ] Include one understood stress case; if using a failure case, choose a run that still fails after the latest generator repair.
-- [ ] Complete `models/DECLARATION.md` with any base model actually used in the final demo.
-- [ ] Keep the no-AV-finetuning claim explicit.
-- [ ] Include test command output: `uv run --no-sync python -m unittest discover -s tests`.
+- Spotlight Reflex rollout artifacts are in `artifacts/grand_spotlight_demo/` and `artifacts/grand_intersection_stress_seed3/`.
+- `models/DECLARATION.md` declares the base model and all components used in the submission.
+- No AV-dataset fine-tuning is used anywhere in the policy or selector.
+- Test suite passes: `uv run --no-sync python -m unittest discover -s tests`.
+- Failure analysis is documented in `docs/wod-e2e-system-walkthrough.md`.

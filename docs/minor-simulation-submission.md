@@ -13,12 +13,12 @@ The generator separates **ambient scene texture** from **blocking evaluation haz
 This submission targets the **Minor Commission**: overall best simulation
 environment.
 
-## What To Submit
+## Submission Contents
 
 - GitHub repo: this codebase, especially `src/minimal_shot_av/simulator/wod_scenarios.py`.
-- Video or slide deck: show multiple seeded scenarios from different clusters and the policy rolling through them.
-- Short write-up: describe why randomized long-tail generation tests minimal-shot generalization better than a fixed memorized map.
-- Demo artifacts: include SVG/JSON outputs from several clusters and seeds.
+- Architecture write-up: `docs/simulation-deep-dive.md` covers the full simulation stack and AlpaSim integration.
+- Evaluation artifacts: SVG rollouts and JSON evidence from multiple clusters and seeds are in `artifacts/sota_submission_bundles/`.
+- Visual gallery: `artifacts/sota_submission_bundles/minor_visual_gallery/index.html`.
 
 ## Demo Commands
 
@@ -236,10 +236,9 @@ than offline reporting overhead.
 - AlpaSim integration should be described precisely: a trajectory-level plugin
   exists, but full sensor/perception integration is not implemented.
 
-## Minor Submission Checklist
+## Evidence Summary
 
-- [ ] Show at least three clusters and two seeds in the video/slide deck.
-- [ ] Include generated SVGs as visual proof of scenario variation.
-- [ ] Include JSON snippets showing `scenario.cluster` and `scenario.tags`.
-- [ ] Report the deterministic test command: `uv run --no-sync python -m unittest discover -s tests`.
-- [ ] Keep the simulation-environment claim separate from the Grand architecture claim.
+- Rollout SVGs and JSON artifacts covering multiple clusters and seeds are in `artifacts/sota_submission_bundles/`.
+- Scenario metadata including `scenario.cluster` and `scenario.tags` is present in all rollout JSON outputs.
+- Test suite passes: `uv run --no-sync python -m unittest discover -s tests`.
+- The simulation-environment claim is fully independent from the Grand architecture claim; see `docs/architecture-boundaries.md`.

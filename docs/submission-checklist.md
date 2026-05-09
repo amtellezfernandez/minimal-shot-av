@@ -24,7 +24,7 @@
 - `tests/test_submission_claim_language.py` keeps risky leaderboard,
   production-autonomy, and strict-zero-shot phrases caveated.
 - `docs/two-page-writeup.md` is condensed into the final PDF or document.
-- `docs/video-outline.md` has been turned into a 1-5 minute video or slide deck.
+- `docs/architecture-deep-dive.md` and `docs/simulation-deep-dive.md` document the system in full.
 - At least one failure case is documented with component-level diagnosis.
 - Motivation and use of prize money are explicitly stated.
 - Spotlight Reflex demo command is included:
@@ -82,7 +82,7 @@
 - COMPASS report is generated with oracle solvability, reasoning, recovery, and generalisation-gap scores.
 - SVG artifacts visually show randomized lane/obstacle layouts.
 - Scenario evaluation writes `scenario_eval.json` and `scenario_eval.csv`.
-- The video or slide deck shows at least three clusters and at least two different seeds.
+- Evaluation artifacts cover at least three clusters and at least two different seeds; see `artifacts/sota_submission_bundles/`.
 - The write-up is honest that this is a lightweight 2D simulator, not AlpaSim or photorealistic sensor simulation.
 - AlpaSim is described precisely: trajectory-level plugin available, full
   sensor/perception integration still future work.

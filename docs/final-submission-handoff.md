@@ -21,7 +21,7 @@ Attach:
 
 - `artifacts/sota_submission_bundles/grand_commission.tar.gz`
 - SHA-256: see `artifacts/sota_submission_bundles/submission_bundles_manifest.json`
-- Video or slide deck based on `docs/sota-grand-slide-script.md`
+- Architecture write-up: `docs/architecture-deep-dive.md`
 - Analysis notebook: `notebooks/wod_e2e_analysis.ipynb`
 - Judging evidence audit: `artifacts/sota_judging_criteria_audit.json`
 - Final readiness audit: `artifacts/final_submission_readiness_audit.json`
@@ -89,7 +89,7 @@ Attach:
 
 - `artifacts/sota_submission_bundles/minor_commission.tar.gz`
 - SHA-256: see `artifacts/sota_submission_bundles/submission_bundles_manifest.json`
-- Video or slide deck based on `docs/sota-minor-slide-script.md`
+- Simulation write-up: `docs/simulation-deep-dive.md`
 
 Short claim:
 
