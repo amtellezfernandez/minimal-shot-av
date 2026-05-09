@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="540" viewBox="0 0 820 540" style="font-family:'Helvetica Neue',Arial,sans-serif">
+<rect width="820" height="540" fill="#1a1a2e"/>
+<defs>
+  <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L0,6 L8,3 z" fill="#4fc3f7"/>
+  </marker>
+  <marker id="arr_gold" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L0,6 L8,3 z" fill="#ffd54f"/>
+  </marker>
+  <marker id="arr_grn" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L0,6 L8,3 z" fill="#81c784"/>
+  </marker>
+</defs>
+<text x="410" y="30" text-anchor="middle" fill="#e0e0e0" font-size="16" font-weight="700">AlpaSim Integration — Spotlight Reflex Adapter</text>
+<rect x="20" y="55" width="175" height="420" rx="8" fill="#0a1628" stroke="#1565c0" stroke-width="1.5"/>
+<text x="107" y="78" text-anchor="middle" fill="#64b5f6" font-size="13" font-weight="700">AlpaSim</text>
+<text x="107" y="100" text-anchor="middle" fill="#90caf9" font-size="10">8-camera frames</text>
+<text x="107" y="122" text-anchor="middle" fill="#90caf9" font-size="10">route command</text>
+<text x="107" y="144" text-anchor="middle" fill="#90caf9" font-size="10">speed + accel</text>
+<text x="107" y="166" text-anchor="middle" fill="#90caf9" font-size="10">ego pose history</text>
+<text x="107" y="188" text-anchor="middle" fill="#90caf9" font-size="10">structured hazards</text>
+<text x="107" y="210" text-anchor="middle" fill="#90caf9" font-size="10">(optional AlpaSignal)</text>
+<line x1="195" y1="265" x2="240" y2="265" stroke="#4fc3f7" stroke-width="2" marker-end="url(#arr)"/>
+<text x="217" y="258" text-anchor="middle" fill="#90caf9" font-size="9">PredictionInput</text>
+<rect x="240" y="55" width="335" height="420" rx="8" fill="#0d2137" stroke="#4fc3f7" stroke-width="2"/>
+<text x="407" y="78" text-anchor="middle" fill="#4fc3f7" font-size="13" font-weight="700">SpotlightReflexAlpaSimModel</text>
+<text x="407" y="93" text-anchor="middle" fill="#4fc3f7" font-size="9">alpasim_spotlight.py  ·  BaseTrajectoryModel</text>
+<text x="407" y="108" text-anchor="middle" fill="#90caf9" font-size="10" font-style="italic">extract_alpasim_signal()</text>
+<rect x="248" y="112" width="319" height="98" rx="5" fill="#091824" stroke="#2a5a8a" stroke-width="1" stroke-dasharray="3 2"/>
+<rect x="255" y="115" width="148" height="38" rx="4" fill="#101e2e" stroke="#e91e63" stroke-width="1.5"/>
+<text x="329" y="128" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">Route → Lane Geometry</text>
+<text x="329" y="144" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">LEFT/STRAIGHT/RIGHT → sigmoid spline</text>
+<rect x="175" y="130" width="148" height="38" rx="4" fill="#101e2e" stroke="#ff9800" stroke-width="1.5"/>
+<text x="249" y="143" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">Camera → Visibility Risk</text>
+<text x="249" y="159" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">mean brightness < 0.35 → risk signal</text>
+<rect x="175" y="162" width="148" height="38" rx="4" fill="#101e2e" stroke="#ff9800" stroke-width="1.5"/>
+<text x="249" y="175" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">Dynamics → Braking Risk</text>
+<text x="249" y="191" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">accel < −4 m/s²  or  speed < 1.5 m/s</text>
+<rect x="255" y="162" width="148" height="38" rx="4" fill="#101e2e" stroke="#9c27b0" stroke-width="1.5"/>
+<text x="329" y="175" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">AlpaSignal → Obstacles/Actors</text>
+<text x="329" y="191" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">static: Obstacle · moving: Actor</text>
+<line x1="407" y1="210" x2="407" y2="232" stroke="#4fc3f7" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="290" y="232" width="234" height="40" rx="6" fill="#0f2233" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="407" y="246" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">scenario_from_command()</text>
+<text x="407" y="262" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">Scenario with obstacles + actors</text>
+<line x1="407" y1="272" x2="407" y2="296" stroke="#4fc3f7" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="268" y="296" width="278" height="44" rx="6" fill="#163820" stroke="#81c784" stroke-width="1.5"/>
+<text x="407" y="312" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">Spotlight Reflex Policy</text>
+<text x="407" y="328" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">perceive → world_state → select_maneuver</text>
+<line x1="407" y1="340" x2="407" y2="364" stroke="#4fc3f7" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="290" y="364" width="234" height="40" rx="6" fill="#1a1a10" stroke="#ffd54f" stroke-width="1.5"/>
+<text x="407" y="378" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">_resample_to_frequency()</text>
+<text x="407" y="394" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">20 pts @ 4 Hz → N pts @ output Hz</text>
+<line x1="407" y1="404" x2="407" y2="428" stroke="#4fc3f7" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="266" y="428" width="280" height="40" rx="6" fill="#163820" stroke="#81c784" stroke-width="1.5"/>
+<text x="406" y="442" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">ModelPrediction</text>
+<text x="406" y="458" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">trajectory_xy · headings · reasoning_text</text>
+<line x1="575" y1="448" x2="620" y2="448" stroke="#4fc3f7" stroke-width="2" marker-end="url(#arr)"/>
+<text x="597" y="442" text-anchor="middle" fill="#90caf9" font-size="9">ModelPrediction</text>
+<rect x="620" y="55" width="175" height="420" rx="8" fill="#0a1628" stroke="#1565c0" stroke-width="1.5"/>
+<text x="707" y="78" text-anchor="middle" fill="#64b5f6" font-size="13" font-weight="700">AlpaSim</text>
+<text x="707" y="100" text-anchor="middle" fill="#90caf9" font-size="10">trajectory controller</text>
+<text x="707" y="124" text-anchor="middle" fill="#90caf9" font-size="10">closed-loop physics</text>
+<text x="707" y="148" text-anchor="middle" fill="#90caf9" font-size="10">collision detection</text>
+<text x="707" y="172" text-anchor="middle" fill="#90caf9" font-size="10">metrics collection:</text>
+<text x="707" y="196" text-anchor="middle" fill="#90caf9" font-size="10">collision_at_fault</text>
+<text x="707" y="220" text-anchor="middle" fill="#90caf9" font-size="10">offroad</text>
+<text x="707" y="244" text-anchor="middle" fill="#90caf9" font-size="10">plan_deviation</text>
+<text x="707" y="268" text-anchor="middle" fill="#90caf9" font-size="10">safety_monitor</text>
+</svg>

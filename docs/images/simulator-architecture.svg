@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="580" viewBox="0 0 820 580" style="font-family:'Helvetica Neue',Arial,sans-serif">
+<rect width="820" height="580" fill="#1a1a2e"/>
+<defs>
+  <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L0,6 L8,3 z" fill="#4fc3f7"/>
+  </marker>
+  <marker id="arr_gold" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L0,6 L8,3 z" fill="#ffd54f"/>
+  </marker>
+  <marker id="arr_grn" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L0,6 L8,3 z" fill="#81c784"/>
+  </marker>
+</defs>
+<text x="410" y="30" text-anchor="middle" fill="#e0e0e0" font-size="16" font-weight="700">Spotlight Reflex Simulator Architecture</text>
+<rect x="280" y="52" width="260" height="44" rx="6" fill="#0d3b66" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="410" y="68" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">Scenario (cluster + seed)</text>
+<text x="410" y="84" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">deterministic · reproducible · 11 WOD clusters</text>
+<line x1="410" y1="96" x2="410" y2="124" stroke="#4fc3f7" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="290" y="124" width="240" height="44" rx="6" fill="#1a3a5c" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="410" y="140" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">ScenePerception</text>
+<text x="410" y="156" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">obstacle field · actor set · visibility</text>
+<line x1="410" y1="168" x2="410" y2="196" stroke="#4fc3f7" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="270" y="196" width="280" height="52" rx="6" fill="#1a2a4a" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="410" y="216" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">WorldState</text>
+<text x="410" y="232" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">pressure · route_blockage · corridor · clearances · escape_side</text>
+<line x1="410" y1="248" x2="410" y2="275" stroke="#4fc3f7" stroke-width="2" marker-end="url(#arr)"/>
+<text x="410" y="272" text-anchor="middle" fill="#90caf9" font-size="11">Maneuver Candidate Library</text>
+<rect x="40" y="278" width="740" height="56" rx="8" fill="#0f2942" stroke="#2a5a8a" stroke-width="1" stroke-dasharray="4 3"/>
+<rect x="46" y="284" width="72" height="40" rx="6" fill="#163551" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="82" y="304" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">stop</text>
+<rect x="126" y="284" width="72" height="40" rx="6" fill="#163551" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="162" y="304" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">crawl</text>
+<rect x="206" y="284" width="72" height="40" rx="6" fill="#163551" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="242" y="304" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">maintain</text>
+<rect x="286" y="284" width="72" height="40" rx="6" fill="#163551" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="322" y="304" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">slow_yield</text>
+<rect x="366" y="284" width="72" height="40" rx="6" fill="#163551" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="402" y="304" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">nudge_L</text>
+<rect x="446" y="284" width="72" height="40" rx="6" fill="#163551" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="482" y="304" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">nudge_R</text>
+<rect x="526" y="284" width="72" height="40" rx="6" fill="#163551" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="562" y="304" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">evasive_L</text>
+<rect x="606" y="284" width="72" height="40" rx="6" fill="#163551" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="642" y="304" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">evasive_R</text>
+<rect x="686" y="284" width="72" height="40" rx="6" fill="#163551" stroke="#4fc3f7" stroke-width="1.5"/>
+<text x="722" y="304" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">recover</text>
+<line x1="410" y1="334" x2="410" y2="362" stroke="#4fc3f7" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="220" y="362" width="380" height="56" rx="6" fill="#1a2a1a" stroke="#81c784" stroke-width="1.5"/>
+<text x="410" y="384" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">Reference Rule Engine</text>
+<text x="410" y="400" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">clear → maintain/center  ·  obstacle → slow/nudge/evasive  ·  uncertain → crawl/stop</text>
+<line x1="410" y1="418" x2="410" y2="446" stroke="#4fc3f7" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="240" y="446" width="340" height="52" rx="6" fill="#2a1a0a" stroke="#ffd54f" stroke-width="1.5"/>
+<text x="410" y="466" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">Trajectory Selector</text>
+<text x="410" y="482" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">3s region (1.0m lat · 4.0m lng)  +  5s region (1.8m · 7.2m)</text>
+<line x1="410" y1="498" x2="410" y2="526" stroke="#4fc3f7" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="250" y="526" width="320" height="44" rx="6" fill="#1a3a1a" stroke="#81c784" stroke-width="1.5"/>
+<text x="410" y="542" text-anchor="middle" dominant-baseline="middle" fill="#f0f0f0" font-size="13" font-weight="600">Selected Maneuver + reasoning_text</text>
+<text x="410" y="558" text-anchor="middle" dominant-baseline="middle" fill="#a0a0c0" font-size="10">20-pt trajectory · full decision JSON</text>
+<rect x="640" y="196" width="165" height="120" rx="6" fill="#1a1020" stroke="#7b1fa2" stroke-width="1"/>
+<text x="722" y="214" text-anchor="middle" fill="#ce93d8" font-size="11" font-weight="600">WorldState fields</text>
+<text x="648" y="230" fill="#b39ddb" font-size="9">obstacle_pressure  [0,1]</text>
+<text x="648" y="245" fill="#b39ddb" font-size="9">route_blockage     [0,1]</text>
+<text x="648" y="260" fill="#b39ddb" font-size="9">corridor_blocked   bool</text>
+<text x="648" y="275" fill="#b39ddb" font-size="9">left_clearance     m</text>
+<text x="648" y="290" fill="#b39ddb" font-size="9">right_clearance    m</text>
+<text x="648" y="305" fill="#b39ddb" font-size="9">preferred_escape_side</text>
+</svg>

@@ -1,5 +1,21 @@
 # WOD-E2E System Walkthrough: Operation and Failure Analysis
 
+## System Diagram
+
+**WOD-E2E Model Pipeline**
+![WOD-E2E Pipeline](images/grand-pipeline.svg)
+
+**Spotlight Reflex on spotlight scenario (success)**
+![Spotlight success](images/spotlight_success.gif)
+
+**Baseline policy on spotlight scenario (failure for comparison)**
+![Baseline failure](images/baseline_spotlight.gif)
+
+**Intersection stress case**
+![Intersection stress](images/intersection_stress.gif)
+
+---
+
 ## Overview
 
 This document walks through the complete pipeline for the WOD-E2E model track:

@@ -1,5 +1,24 @@
 # Simulation Deep Dive: AlpaSim Integration and Custom Engineering
 
+## System Diagrams
+
+**Minor Commission — Simulation Environment Pipeline**
+![Minor Pipeline](images/minor-pipeline.svg)
+
+**AlpaSim Adapter Bridge**
+![AlpaSim Bridge](images/alpasim-bridge.svg)
+
+**Spotlight Reflex navigating a construction scenario**
+![Construction rollout](images/construction_success.gif)
+
+**Spotlight Reflex navigating a spotlight/long-tail scenario**
+![Spotlight rollout](images/spotlight_success.gif)
+
+**Foreign object debris scenario**
+![FOD rollout](images/fod_success.gif)
+
+---
+
 ## Overview
 
 The simulation track has two layers:

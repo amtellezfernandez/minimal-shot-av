@@ -1,5 +1,18 @@
 # Architecture Deep Dive: Minimal-Shot AV
 
+## System Diagrams
+
+**WOD-E2E Model Pipeline (Grand Commission)**
+![WOD-E2E Pipeline](images/grand-pipeline.svg)
+
+**Spotlight Reflex Simulator Architecture**
+![Spotlight Reflex Architecture](images/simulator-architecture.svg)
+
+**AlpaSim Integration**
+![AlpaSim Bridge](images/alpasim-bridge.svg)
+
+---
+
 ## Thesis
 
 This project builds a minimal-shot autonomy prototype for long-tail driving.
