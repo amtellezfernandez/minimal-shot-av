@@ -97,12 +97,21 @@ def write_submission_tar(
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
     with TemporaryDirectory() as tmpdir:
+        # Waymo backend uses tar cvf SubDir.tar SubDir, which creates a directory
+        # entry followed by part0, part1, ... — replicate that structure exactly.
+        # See tutorial_vision_based_e2e_driving.ipynb packaging instructions.
+        subdir = output.stem.split(".")[0]
+        subdir_path = Path(tmpdir) / subdir
+        subdir_path.mkdir()
         with tarfile.open(output, "w:gz") as archive:
+            # Add directory entry first, as `tar cvf SubDir.tar SubDir` does.
+            archive.add(subdir_path, arcname=subdir)
             for shard_index, shard_predictions in enumerate(_prediction_shards(predictions, num_shards)):
                 submission = _build_submission_proto(shard_predictions, metadata)
-                proto_path = Path(tmpdir) / f"{member_name if num_shards == 1 else f'part{shard_index}'}"
+                shard_name = member_name if num_shards == 1 else f"part{shard_index}"
+                proto_path = subdir_path / shard_name
                 proto_path.write_bytes(submission.SerializeToString())
-                archive.add(proto_path, arcname=proto_path.name)
+                archive.add(proto_path, arcname=f"{subdir}/{shard_name}")
     return output
 
 
