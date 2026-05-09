@@ -75,6 +75,56 @@ class KinematicCandidateTests(unittest.TestCase):
         self.assertAlmostEqual(candidates["avoid_left_return"][-1][1], 0.0, places=6)
         self.assertLess(candidates["yield_creep"][-1][0], candidates["constant_velocity"][-1][0])
 
+    def test_internnav_profile_adds_intent_waypoint_hypotheses(self) -> None:
+        left = dict(
+            kinematic_trajectories(
+                sample_frame().past_trajectory,
+                profile="internnav",
+                intent=2,
+                init_speed_mps=4.0,
+            )
+        )
+        right = dict(
+            kinematic_trajectories(
+                sample_frame().past_trajectory,
+                profile="internnav",
+                intent=3,
+                init_speed_mps=4.0,
+            )
+        )
+
+        self.assertIn("internnav_s2_waypoint_progress", left)
+        self.assertIn("internnav_s2_waypoint_intent", left)
+        self.assertIn("internnav_s1_yield_then_track", left)
+        self.assertIn("internnav_s1_yield_creep", left)
+        self.assertIn("internnav_s1_late_stop_progress", left)
+        self.assertGreater(left["internnav_s2_waypoint_progress"][-1][1], 1.0)
+        self.assertGreater(left["internnav_s2_waypoint_intent"][-1][1], 2.5)
+        self.assertLess(right["internnav_s2_waypoint_progress"][-1][1], -1.0)
+        self.assertLess(right["internnav_s2_waypoint_intent"][-1][1], -2.5)
+        self.assertLess(
+            left["internnav_s2_waypoint_cautious"][-1][0],
+            left["internnav_s2_waypoint_progress"][-1][0],
+        )
+        self.assertLess(
+            left["internnav_s1_yield_creep"][-1][0] - left["internnav_s1_yield_creep"][-2][0],
+            left["internnav_s1_yield_then_track"][-1][0] - left["internnav_s1_yield_then_track"][-2][0],
+        )
+
+    def test_payloads_pass_frame_context_to_internnav_profile(self) -> None:
+        frame = WodE2EPreferenceFrame(
+            frame_name="frame-left",
+            past_trajectory=sample_frame().past_trajectory,
+            future_trajectory=sample_frame().future_trajectory,
+            intent=2,
+            init_speed_mps=4.0,
+            references=[],
+        )
+        payloads = kinematic_candidate_payloads([frame], profile="internnav")
+        intent_payload = next(row for row in payloads if row["candidate_name"] == "internnav_s2_waypoint_intent")
+
+        self.assertGreater(intent_payload["trajectory_20wp_4hz"][-1][1], 2.5)
+
 
 if __name__ == "__main__":
     unittest.main()

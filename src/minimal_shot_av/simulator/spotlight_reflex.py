@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import math
 
-from .environment import Actor, Obstacle, Scenario
-from .perception import ScenePerception
+from .environment import DEFAULT_EGO_RADIUS_M, SIM_TICK_DT_S, Actor, Obstacle, Scenario, actor_to_obstacle_at_time, min_segment_clearance, min_time_swept_clearance, static_obstacles_at_time
+from .perception import ScenePerception, perceived_obstacle_axis_extent
 from .planner import PlannedAction
 from .trajectory_selector import TrajectoryCandidate, TrajectoryReference, TrajectorySelectorScore, TrajectorySelectorConfig, Trajectory, score_candidate
 from .world_model import WorldState
@@ -370,8 +370,8 @@ def _explain_simulator_backed_score(
     config: SpotlightReflexConfig,
 ) -> CandidateScoreExplanation:
     scoring = config.scoring
-    action_clearance = _action_clearance(candidate.trajectory, scenario, config)
-    full_clearance = _min_obstacle_clearance_with_config(candidate.trajectory, scenario, config)
+    action_clearance = _action_clearance(candidate.trajectory, scenario, config, origin=position)
+    full_clearance = _min_obstacle_clearance_with_config(candidate.trajectory, scenario, config, origin=position)
     progress_bonus = 0.0
     near_penalty = 0.0
     horizon_penalty = 0.0
@@ -481,28 +481,62 @@ def _round_float(value: float) -> float | str:
     return round(float(value), 3)
 
 
-def _action_clearance(trajectory: Trajectory, scenario: Scenario, config: SpotlightReflexConfig | None = None) -> float:
+def _action_clearance(
+    trajectory: Trajectory,
+    scenario: Scenario,
+    config: SpotlightReflexConfig | None = None,
+    origin: tuple[float, float] | None = None,
+) -> float:
     config = config or DEFAULT_SPOTLIGHT_CONFIG
-    return _min_obstacle_clearance_with_config(trajectory[: config.trajectory.action_index + 1], scenario, config)
+    return _min_obstacle_clearance_with_config(trajectory[: config.trajectory.action_index + 1], scenario, config, origin=origin)
 
 
-def _min_obstacle_clearance(trajectory: Trajectory, scenario: Scenario) -> float:
-    return _min_obstacle_clearance_with_config(trajectory, scenario, DEFAULT_SPOTLIGHT_CONFIG)
+def _min_obstacle_clearance(
+    trajectory: Trajectory,
+    scenario: Scenario,
+    origin: tuple[float, float] | None = None,
+) -> float:
+    return _min_obstacle_clearance_with_config(trajectory, scenario, DEFAULT_SPOTLIGHT_CONFIG, origin=origin)
 
 
 def _min_obstacle_clearance_with_config(
     trajectory: Trajectory,
     scenario: Scenario,
     config: SpotlightReflexConfig,
+    origin: tuple[float, float] | None = None,
 ) -> float:
     min_clearance = math.inf
+    previous_point = origin
     for point_index, point in enumerate(trajectory):
-        point_x, point_y = point
-        for obstacle in _trajectory_step_obstacles(scenario, point_index, config):
-            clearance = math.hypot(point_x - obstacle.x, point_y - obstacle.y) - obstacle.radius
-            if clearance < min_clearance:
-                min_clearance = clearance
+        start = point if previous_point is None else previous_point
+        clearance = _trajectory_segment_clearance(start, point, scenario, point_index, config)
+        if clearance < min_clearance:
+            min_clearance = clearance
+        previous_point = point
     return min_clearance
+
+
+def _trajectory_segment_clearance(
+    start: tuple[float, float],
+    end: tuple[float, float],
+    scenario: Scenario,
+    point_index: int,
+    config: SpotlightReflexConfig,
+) -> float:
+    if not config.scoring.use_privileged_actor_forecast or not scenario.actors:
+        return min_segment_clearance(start, end, scenario.obstacles, ego_radius=DEFAULT_EGO_RADIUS_M)
+
+    current_tick = float(scenario.environment.get("tick", 0))
+    segment_start_seconds = (point_index / config.trajectory.point_count) * config.trajectory.horizon_seconds
+    segment_end_seconds = ((point_index + 1) / config.trajectory.point_count) * config.trajectory.horizon_seconds
+    return min_time_swept_clearance(
+        scenario,
+        start,
+        end,
+        current_tick + segment_start_seconds / SIM_TICK_DT_S,
+        current_tick + segment_end_seconds / SIM_TICK_DT_S,
+        ego_radius=DEFAULT_EGO_RADIUS_M,
+    )
 
 
 def _trajectory_step_obstacles(
@@ -518,12 +552,12 @@ def _trajectory_step_obstacles(
         return cache[point_index]
 
     static_obstacles, moving_actors = _forecast_static_and_moving_obstacles(scenario)
-
-    current_tick = int(scenario.environment.get("tick", 0))
+    current_tick = float(scenario.environment.get("tick", 0))
+    point_seconds = ((point_index + 1) / config.trajectory.point_count) * config.trajectory.horizon_seconds
     actor_obstacles = [
         obstacle
         for actor in moving_actors
-        if (obstacle := _project_actor_to_obstacle(actor, current_tick + point_index + 1)) is not None
+        if (obstacle := actor_to_obstacle_at_time(actor, current_tick + point_seconds / SIM_TICK_DT_S)) is not None
     ]
     obstacles = static_obstacles + actor_obstacles
     cache[point_index] = obstacles
@@ -541,17 +575,8 @@ def _forecast_static_and_moving_obstacles(scenario: Scenario) -> tuple[list[Obst
         scenario.environment[cache_key] = result
         return result
 
-    current_tick = int(scenario.environment.get("tick", 0))
-    current_actor_obstacles = [
-        obstacle
-        for actor in moving_actors
-        if (obstacle := _project_actor_to_obstacle(actor, current_tick)) is not None
-    ]
-    static_obstacles = [
-        obstacle
-        for obstacle in scenario.obstacles
-        if not any(_same_obstacle(obstacle, actor_obstacle) for actor_obstacle in current_actor_obstacles)
-    ]
+    current_tick = float(scenario.environment.get("tick", 0))
+    static_obstacles = static_obstacles_at_time(scenario, current_tick)
     result = (static_obstacles, moving_actors)
     scenario.environment[cache_key] = result
     return result
@@ -559,48 +584,6 @@ def _forecast_static_and_moving_obstacles(scenario: Scenario) -> tuple[list[Obst
 
 def _actor_is_moving(actor: Actor) -> bool:
     return any(abs(float(getattr(actor, field_name))) > 1e-9 for field_name in ("speed", "vx", "vy"))
-
-
-def _same_obstacle(first: Obstacle, second: Obstacle) -> bool:
-    return (
-        first.kind == second.kind
-        and first.label == second.label
-        and math.isclose(first.x, second.x, abs_tol=1e-9)
-        and math.isclose(first.y, second.y, abs_tol=1e-9)
-        and math.isclose(first.radius, second.radius, abs_tol=1e-9)
-    )
-
-
-def _project_actor_to_obstacle(actor: Actor, tick: int, dt: float = 0.25) -> Obstacle | None:
-    if tick < actor.active_from or tick > actor.active_until:
-        return None
-    elapsed = max(0, tick - actor.active_from) * dt
-    x = actor.x
-    y = actor.y
-    if actor.behavior in {"cut_in", "swerve"}:
-        longitudinal = actor.speed * elapsed
-        lateral = min(4.5, 0.38 * elapsed * elapsed)
-        lateral *= -1.0 if actor.vy < 0.0 else 1.0
-        x += math.cos(actor.heading) * longitudinal
-        y += math.sin(actor.heading) * longitudinal + lateral
-    elif actor.behavior in {"darting", "erratic_pedestrian"}:
-        pause = 0.4 if int(elapsed * 2.0) % 3 == 0 else 1.0
-        wobble = math.sin(elapsed * 3.7) * 0.55
-        x += actor.vx * elapsed * pause
-        y += actor.vy * elapsed * pause + wobble
-    elif actor.behavior in {"sudden_brake", "hesitating"}:
-        moving_time = min(elapsed, 1.2)
-        creep_time = max(0.0, elapsed - 1.2)
-        distance = actor.speed * moving_time + actor.speed * 0.15 * creep_time
-        x += math.cos(actor.heading) * distance
-        y += math.sin(actor.heading) * distance
-    elif actor.behavior == "wrong_way":
-        x -= abs(actor.vx) * elapsed
-        y += actor.vy * elapsed
-    else:
-        x += actor.vx * elapsed
-        y += actor.vy * elapsed
-    return Obstacle(x, y, max(actor.width, actor.length) * 0.5, kind=actor.kind, label=actor.role)
 
 
 def _trajectory(
@@ -752,11 +735,12 @@ def _avoidance_side(
         if forward_distance < scoring.obstacle_ignore_behind_m:
             continue
         lateral = dx * left[0] + dy * left[1]
+        lateral_extent = perceived_obstacle_axis_extent(obstacle, left)
         weight = 1.0 / max(
             obstacle.signed_distance + obstacle.radius + scoring.obstacle_weight_epsilon_m,
             scoring.obstacle_weight_epsilon_m,
         )
-        weighted_lateral += lateral * weight
+        weighted_lateral += (lateral + math.copysign(lateral_extent, lateral if lateral != 0.0 else 1.0)) * weight
         total_weight += weight
     if total_weight == 0.0:
         return "left"

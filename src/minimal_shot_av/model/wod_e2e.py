@@ -217,7 +217,7 @@ def _import_official_parser():
     except ImportError as exc:
         raise ImportError(
             "WOD-E2E parsing requires the local parser environment. Run with "
-            "`PYTHONPATH=.wod-protos .venv-wod/bin/python`, after following "
+            "`PYTHONPATH=.wod-protos .venv-v20/bin/python`, after following "
             "`docs/wod-e2e-parser-setup.md`."
         ) from exc
     return tf, wod_e2ed_pb2

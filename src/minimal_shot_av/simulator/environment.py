@@ -8,6 +8,12 @@ from pathlib import Path
 from typing import Any
 
 
+SIM_TICK_DT_S = 0.25
+DEFAULT_TIME_SWEEP_MAX_DEPTH = 3
+DEFAULT_TIME_SWEEP_CURVATURE_TOLERANCE_M = 0.1
+DEFAULT_EGO_RADIUS_M = 0.35
+
+
 @dataclass
 class Obstacle:
     x: float
@@ -15,6 +21,8 @@ class Obstacle:
     radius: float
     kind: str = "obstacle"
     label: str = "obstacle"
+    length: float | None = None
+    heading: float = 0.0
 
 
 @dataclass
@@ -88,10 +96,10 @@ def generate_scenario(seed: int, width: float = 120.0, height: float = 80.0) -> 
     return Scenario(width, height, lane_center, lane_half_width, obstacles, start, goal, seed)
 
 
-def actor_at_tick(actor: Actor, tick: int, dt: float = 0.25) -> Actor:
-    if tick < actor.active_from:
+def actor_at_time_index(actor: Actor, time_index: float, dt: float = SIM_TICK_DT_S) -> Actor:
+    if time_index < actor.active_from:
         return actor
-    elapsed = max(0, tick - actor.active_from) * dt
+    elapsed = max(0.0, time_index - actor.active_from) * dt
     if actor.behavior in {"cut_in", "swerve"}:
         longitudinal = actor.speed * elapsed
         lateral = min(4.5, 0.38 * elapsed * elapsed)
@@ -115,24 +123,357 @@ def actor_at_tick(actor: Actor, tick: int, dt: float = 0.25) -> Actor:
     return replace(actor, x=actor.x + actor.vx * elapsed, y=actor.y + actor.vy * elapsed)
 
 
-def actor_to_obstacle(actor: Actor, tick: int = 0, dt: float = 0.25) -> Obstacle | None:
-    if tick < actor.active_from or tick > actor.active_until:
+def actor_at_tick(actor: Actor, tick: int, dt: float = SIM_TICK_DT_S) -> Actor:
+    return actor_at_time_index(actor, float(tick), dt)
+
+
+def actor_to_obstacle_at_time(actor: Actor, time_index: float, dt: float = SIM_TICK_DT_S) -> Obstacle | None:
+    if time_index < actor.active_from or time_index > actor.active_until:
         return None
-    projected = actor_at_tick(actor, tick, dt)
-    return Obstacle(projected.x, projected.y, projected.radius, kind=projected.kind, label=projected.role)
+    projected = actor_at_time_index(actor, time_index, dt)
+    return Obstacle(
+        projected.x,
+        projected.y,
+        projected.width * 0.5,
+        kind=projected.kind,
+        label=projected.role,
+        length=projected.length,
+        heading=projected.heading,
+    )
 
 
-def obstacles_at_tick(scenario: Scenario, tick: int, dt: float = 0.25) -> list[Obstacle]:
+def actor_to_obstacle(actor: Actor, tick: int = 0, dt: float = SIM_TICK_DT_S) -> Obstacle | None:
+    return actor_to_obstacle_at_time(actor, float(tick), dt)
+
+
+def _same_obstacle(first: Obstacle, second: Obstacle) -> bool:
+    return (
+        first.kind == second.kind
+        and first.label == second.label
+        and math.isclose(first.x, second.x, abs_tol=1e-9)
+        and math.isclose(first.y, second.y, abs_tol=1e-9)
+        and math.isclose(first.radius, second.radius, abs_tol=1e-9)
+    )
+
+
+def static_obstacles_at_time(scenario: Scenario, time_index: float, dt: float = SIM_TICK_DT_S) -> list[Obstacle]:
     obstacles = [obstacle for obstacle in scenario.obstacles if obstacle.kind != "ambient"]
+    if not scenario.actors:
+        return obstacles
+    actor_obstacles = [
+        obstacle
+        for actor in scenario.actors
+        if (obstacle := actor_to_obstacle_at_time(actor, time_index, dt)) is not None
+    ]
+    if not actor_obstacles:
+        return obstacles
+    return [
+        obstacle
+        for obstacle in obstacles
+        if not any(_same_obstacle(obstacle, actor_obstacle) for actor_obstacle in actor_obstacles)
+    ]
+
+
+def obstacles_at_time(scenario: Scenario, time_index: float, dt: float = SIM_TICK_DT_S) -> list[Obstacle]:
+    obstacles = static_obstacles_at_time(scenario, time_index, dt)
     for actor in scenario.actors:
-        obstacle = actor_to_obstacle(actor, tick, dt)
+        obstacle = actor_to_obstacle_at_time(actor, time_index, dt)
         if obstacle is not None:
             obstacles.append(obstacle)
     return obstacles
 
 
-def scenario_at_tick(scenario: Scenario, tick: int, dt: float = 0.25) -> Scenario:
-    return replace(scenario, obstacles=obstacles_at_tick(scenario, tick, dt), environment={**scenario.environment, "tick": tick})
+def obstacles_at_tick(scenario: Scenario, tick: int, dt: float = SIM_TICK_DT_S) -> list[Obstacle]:
+    return obstacles_at_time(scenario, float(tick), dt)
+
+
+def scenario_at_tick(scenario: Scenario, tick: int, dt: float = SIM_TICK_DT_S) -> Scenario:
+    return replace(scenario, obstacles=obstacles_at_time(scenario, float(tick), dt), environment={**scenario.environment, "tick": tick})
+
+
+def point_clearance(point: tuple[float, float], obstacle: Obstacle) -> float:
+    start, end = obstacle_spine(obstacle)
+    return segment_point_distance(start, end, point) - obstacle.radius
+
+
+def segment_point_distance(
+    start: tuple[float, float],
+    end: tuple[float, float],
+    point: tuple[float, float],
+) -> float:
+    segment = (end[0] - start[0], end[1] - start[1])
+    length_sq = segment[0] * segment[0] + segment[1] * segment[1]
+    if length_sq == 0.0:
+        return math.dist(start, point)
+    offset = (point[0] - start[0], point[1] - start[1])
+    projection = (offset[0] * segment[0] + offset[1] * segment[1]) / length_sq
+    projection = min(1.0, max(0.0, projection))
+    nearest = (
+        start[0] + segment[0] * projection,
+        start[1] + segment[1] * projection,
+    )
+    return math.dist(nearest, point)
+
+
+def obstacle_spine(obstacle: Obstacle) -> tuple[tuple[float, float], tuple[float, float]]:
+    length = obstacle.length if obstacle.length is not None else obstacle.radius * 2.0
+    half_spine = max(0.0, length * 0.5 - obstacle.radius)
+    dx = math.cos(obstacle.heading) * half_spine
+    dy = math.sin(obstacle.heading) * half_spine
+    return ((obstacle.x - dx, obstacle.y - dy), (obstacle.x + dx, obstacle.y + dy))
+
+
+def obstacle_local_spine(obstacle: Obstacle) -> tuple[tuple[float, float], tuple[float, float]]:
+    length = obstacle.length if obstacle.length is not None else obstacle.radius * 2.0
+    half_spine = max(0.0, length * 0.5 - obstacle.radius)
+    dx = math.cos(obstacle.heading) * half_spine
+    dy = math.sin(obstacle.heading) * half_spine
+    return ((-dx, -dy), (dx, dy))
+
+
+def obstacle_axis_extent(
+    obstacle: Obstacle,
+    axis: tuple[float, float],
+) -> float:
+    local_start, local_end = obstacle_local_spine(obstacle)
+    return max(abs(local_start[0] * axis[0] + local_start[1] * axis[1]), abs(local_end[0] * axis[0] + local_end[1] * axis[1])) + obstacle.radius
+
+
+def _orientation(a: tuple[float, float], b: tuple[float, float], c: tuple[float, float]) -> float:
+    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+
+
+def _on_segment(a: tuple[float, float], b: tuple[float, float], c: tuple[float, float]) -> bool:
+    return (
+        min(a[0], c[0]) - 1e-9 <= b[0] <= max(a[0], c[0]) + 1e-9
+        and min(a[1], c[1]) - 1e-9 <= b[1] <= max(a[1], c[1]) + 1e-9
+    )
+
+
+def segments_intersect(
+    first_start: tuple[float, float],
+    first_end: tuple[float, float],
+    second_start: tuple[float, float],
+    second_end: tuple[float, float],
+) -> bool:
+    o1 = _orientation(first_start, first_end, second_start)
+    o2 = _orientation(first_start, first_end, second_end)
+    o3 = _orientation(second_start, second_end, first_start)
+    o4 = _orientation(second_start, second_end, first_end)
+    if (o1 > 0.0) != (o2 > 0.0) and (o3 > 0.0) != (o4 > 0.0):
+        return True
+    if math.isclose(o1, 0.0, abs_tol=1e-9) and _on_segment(first_start, second_start, first_end):
+        return True
+    if math.isclose(o2, 0.0, abs_tol=1e-9) and _on_segment(first_start, second_end, first_end):
+        return True
+    if math.isclose(o3, 0.0, abs_tol=1e-9) and _on_segment(second_start, first_start, second_end):
+        return True
+    if math.isclose(o4, 0.0, abs_tol=1e-9) and _on_segment(second_start, first_end, second_end):
+        return True
+    return False
+
+
+def segment_distance(
+    first_start: tuple[float, float],
+    first_end: tuple[float, float],
+    second_start: tuple[float, float],
+    second_end: tuple[float, float],
+) -> float:
+    if segments_intersect(first_start, first_end, second_start, second_end):
+        return 0.0
+    return min(
+        segment_point_distance(first_start, first_end, second_start),
+        segment_point_distance(first_start, first_end, second_end),
+        segment_point_distance(second_start, second_end, first_start),
+        segment_point_distance(second_start, second_end, first_end),
+    )
+
+
+def obstacle_signed_distance(point: tuple[float, float], obstacle: Obstacle) -> float:
+    return point_clearance(point, obstacle)
+
+
+def segment_clearance(
+    start: tuple[float, float],
+    end: tuple[float, float],
+    obstacle: Obstacle,
+    ego_radius: float = 0.0,
+) -> float:
+    obstacle_start, obstacle_end = obstacle_spine(obstacle)
+    return segment_distance(start, end, obstacle_start, obstacle_end) - obstacle.radius - ego_radius
+
+
+def min_segment_clearance(
+    start: tuple[float, float],
+    end: tuple[float, float],
+    obstacles: list[Obstacle],
+    ego_radius: float = 0.0,
+) -> float:
+    return min((segment_clearance(start, end, obstacle, ego_radius=ego_radius) for obstacle in obstacles), default=math.inf)
+
+
+def moving_obstacle_segment_clearance(
+    ego_start: tuple[float, float],
+    ego_end: tuple[float, float],
+    obstacle_start: tuple[float, float],
+    obstacle_end: tuple[float, float],
+    obstacle_radius: float,
+    ego_radius: float = 0.0,
+    obstacle_spine_start: tuple[float, float] | None = None,
+    obstacle_spine_end: tuple[float, float] | None = None,
+) -> float:
+    relative_start = (
+        ego_start[0] - obstacle_start[0],
+        ego_start[1] - obstacle_start[1],
+    )
+    relative_end = (
+        ego_end[0] - obstacle_end[0],
+        ego_end[1] - obstacle_end[1],
+    )
+    local_spine_start = obstacle_spine_start if obstacle_spine_start is not None else (0.0, 0.0)
+    local_spine_end = obstacle_spine_end if obstacle_spine_end is not None else (0.0, 0.0)
+    return segment_distance(relative_start, relative_end, local_spine_start, local_spine_end) - obstacle_radius - ego_radius
+
+
+def _actor_motion_curvature(
+    actor: Actor,
+    start_time_index: float,
+    end_time_index: float,
+    dt: float,
+) -> float:
+    midpoint_time_index = (start_time_index + end_time_index) * 0.5
+    start_obstacle = actor_to_obstacle_at_time(actor, start_time_index, dt)
+    midpoint_obstacle = actor_to_obstacle_at_time(actor, midpoint_time_index, dt)
+    end_obstacle = actor_to_obstacle_at_time(actor, end_time_index, dt)
+    if start_obstacle is None or midpoint_obstacle is None or end_obstacle is None:
+        return 0.0
+    interpolated_midpoint = (
+        (start_obstacle.x + end_obstacle.x) * 0.5,
+        (start_obstacle.y + end_obstacle.y) * 0.5,
+    )
+    return math.dist((midpoint_obstacle.x, midpoint_obstacle.y), interpolated_midpoint)
+
+
+def _moving_actor_segment_clearance(
+    actor: Actor,
+    ego_start: tuple[float, float],
+    ego_end: tuple[float, float],
+    start_time_index: float,
+    end_time_index: float,
+    dt: float,
+    max_depth: int,
+    curvature_tolerance_m: float,
+    ego_radius: float,
+) -> float:
+    start_obstacle = actor_to_obstacle_at_time(actor, start_time_index, dt)
+    end_obstacle = actor_to_obstacle_at_time(actor, end_time_index, dt)
+    if start_obstacle is None and end_obstacle is None:
+        return math.inf
+    if start_obstacle is None:
+        start_obstacle = end_obstacle
+    if end_obstacle is None:
+        end_obstacle = start_obstacle
+    assert start_obstacle is not None
+    assert end_obstacle is not None
+    clearance = moving_obstacle_segment_clearance(
+        ego_start,
+        ego_end,
+        (start_obstacle.x, start_obstacle.y),
+        (end_obstacle.x, end_obstacle.y),
+        max(start_obstacle.radius, end_obstacle.radius),
+        ego_radius=ego_radius,
+        obstacle_spine_start=obstacle_local_spine(start_obstacle)[0],
+        obstacle_spine_end=obstacle_local_spine(start_obstacle)[1],
+    )
+    if max_depth <= 0:
+        return clearance
+    curvature = _actor_motion_curvature(actor, start_time_index, end_time_index, dt)
+    if curvature <= curvature_tolerance_m:
+        return clearance
+    midpoint_fraction = 0.5
+    midpoint_time_index = (start_time_index + end_time_index) * midpoint_fraction
+    midpoint = interpolate_point(ego_start, ego_end, midpoint_fraction)
+    return min(
+        clearance,
+        _moving_actor_segment_clearance(
+            actor,
+            ego_start,
+            midpoint,
+            start_time_index,
+            midpoint_time_index,
+            dt,
+            max_depth - 1,
+            curvature_tolerance_m,
+            ego_radius,
+        ),
+        _moving_actor_segment_clearance(
+            actor,
+            midpoint,
+            ego_end,
+            midpoint_time_index,
+            end_time_index,
+            dt,
+            max_depth - 1,
+            curvature_tolerance_m,
+            ego_radius,
+        ),
+    )
+
+
+def interpolate_point(
+    start: tuple[float, float],
+    end: tuple[float, float],
+    fraction: float,
+) -> tuple[float, float]:
+    return (
+        start[0] + (end[0] - start[0]) * fraction,
+        start[1] + (end[1] - start[1]) * fraction,
+    )
+
+
+def min_time_swept_clearance(
+    scenario: Scenario,
+    start: tuple[float, float],
+    end: tuple[float, float],
+    start_time_index: float,
+    end_time_index: float,
+    samples: int = 5,
+    dt: float = SIM_TICK_DT_S,
+    max_depth: int = DEFAULT_TIME_SWEEP_MAX_DEPTH,
+    curvature_tolerance_m: float = DEFAULT_TIME_SWEEP_CURVATURE_TOLERANCE_M,
+    ego_radius: float = 0.0,
+) -> float:
+    samples = max(1, samples)
+    static_clearance = min_segment_clearance(
+        start,
+        end,
+        static_obstacles_at_time(scenario, start_time_index, dt),
+        ego_radius=ego_radius,
+    )
+    min_clearance = static_clearance
+    for sample in range(samples):
+        first_fraction = sample / samples
+        second_fraction = (sample + 1) / samples
+        segment_start = interpolate_point(start, end, first_fraction)
+        segment_end = interpolate_point(start, end, second_fraction)
+        first_time_index = start_time_index + (end_time_index - start_time_index) * first_fraction
+        second_time_index = start_time_index + (end_time_index - start_time_index) * second_fraction
+        for actor in scenario.actors:
+            min_clearance = min(
+                min_clearance,
+                _moving_actor_segment_clearance(
+                    actor,
+                    segment_start,
+                    segment_end,
+                    first_time_index,
+                    second_time_index,
+                    dt,
+                    max_depth,
+                    curvature_tolerance_m,
+                    ego_radius,
+                ),
+            )
+    return min_clearance
 
 
 def interpolate_lane(centerline: list[tuple[float, float]], samples_per_segment: int = 16) -> list[tuple[float, float]]:

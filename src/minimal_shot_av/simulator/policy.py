@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 import math
 from typing import Any, Callable
 
-from .environment import Scenario, scenario_at_tick
+from .environment import DEFAULT_EGO_RADIUS_M, Scenario, min_segment_clearance, min_time_swept_clearance, obstacle_axis_extent, scenario_at_tick
 from .perception import ScenePerception, perceive_scene
 from .planner import PlannedAction, plan_action
 from .safety import SafeAction, apply_safety_filter
@@ -60,6 +60,15 @@ class Rollout:
     steps: list[StepRecord]
 
 
+@dataclass(frozen=True)
+class EgoState:
+    x: float
+    y: float
+    heading_rad: float
+    speed_mps: float
+    steering_rad: float
+
+
 PolicyPlanner = Callable[
     [Scenario, tuple[float, float], WorldState, ScenePerception, "RolloutConfig"],
     tuple[PlannedAction, dict[str, Any]],
@@ -70,8 +79,14 @@ PolicyPlanner = Callable[
 class RolloutConfig:
     max_steps: int = 220
     step_size: float = 1.25
+    dt_s: float = 1.0
     goal_tolerance_m: float = 3.0
     stall_goal_distance_m: float = 3.0
+    max_accel_mps2: float = 3.0
+    max_decel_mps2: float = 4.0
+    max_abs_steering_rad: float = 0.95
+    max_steering_rate_rad_s: float = 2.2
+    wheelbase_m: float = 2.8
     preserve_planned_direction: bool = False
     spotlight: SpotlightReflexConfig = field(default_factory=SpotlightReflexConfig)
 
@@ -117,8 +132,14 @@ def _rollout_config(
     return RolloutConfig(
         max_steps=max_steps,
         step_size=step_size,
+        dt_s=default.dt_s,
         goal_tolerance_m=default.goal_tolerance_m,
         stall_goal_distance_m=default.stall_goal_distance_m,
+        max_accel_mps2=default.max_accel_mps2,
+        max_decel_mps2=default.max_decel_mps2,
+        max_abs_steering_rad=default.max_abs_steering_rad,
+        max_steering_rate_rad_s=default.max_steering_rate_rad_s,
+        wheelbase_m=default.wheelbase_m,
         preserve_planned_direction=default.preserve_planned_direction,
         spotlight=default.spotlight,
     )
@@ -158,13 +179,21 @@ def _run_rollout(
     planner: PolicyPlanner,
     config: RolloutConfig,
 ) -> Rollout:
-    position = scenario.start
+    initial_heading = _initial_heading(scenario)
+    ego_state = EgoState(
+        x=scenario.start[0],
+        y=scenario.start[1],
+        heading_rad=initial_heading,
+        speed_mps=0.0,
+        steering_rad=0.0,
+    )
     steps: list[StepRecord] = []
     collision = False
     reached_goal = False
 
     for tick in range(config.max_steps):
         active_scenario = scenario_at_tick(scenario, tick)
+        position = (ego_state.x, ego_state.y)
         previous_position = position
         perception = perceive_scene(active_scenario, position)
         world_state = update_world_state(active_scenario, position, perception)
@@ -181,20 +210,18 @@ def _run_rollout(
         ):
             safe_action.direction = planned_action.direction
 
-        position = (
-            position[0] + safe_action.direction[0] * safe_action.speed,
-            position[1] + safe_action.direction[1] * safe_action.speed,
-        )
+        ego_state = advance_ego_state(ego_state, safe_action.direction, safe_action.speed, config)
+        position = (ego_state.x, ego_state.y)
 
-        for obstacle in active_scenario.obstacles:
-            if math.dist(position, (obstacle.x, obstacle.y)) <= obstacle.radius:
-                collision = True
-                break
-
-        min_obstacle_distance = min(
-            (math.dist(position, (obstacle.x, obstacle.y)) - obstacle.radius for obstacle in active_scenario.obstacles),
-            default=math.inf,
+        min_obstacle_distance = min_time_swept_clearance(
+            scenario,
+            previous_position,
+            position,
+            tick,
+            tick + 1,
+            ego_radius=DEFAULT_EGO_RADIUS_M,
         )
+        collision = min_obstacle_distance <= 0.0
         previous_goal_distance = math.dist(previous_position, scenario.goal)
         goal_distance = math.dist(position, scenario.goal)
         steps.append(
@@ -211,6 +238,7 @@ def _run_rollout(
                 steps[-1].speed if steps else None,
                 metadata,
                 config,
+                ego_state,
             )
         )
 
@@ -430,6 +458,7 @@ def _step_record(
     previous_speed: float | None,
     metadata: dict[str, Any],
     config: RolloutConfig,
+    ego_state: EgoState,
 ) -> StepRecord:
     return StepRecord(
         t=tick,
@@ -447,7 +476,7 @@ def _step_record(
         preferred_escape_side=world_state.preferred_escape_side,
         world_model_summary=_world_model_summary(world_state),
         action_mode=safe_action.mode,
-        speed=safe_action.speed,
+        speed=ego_state.speed_mps * config.dt_s,
         intervention=safe_action.intervention,
         goal_distance=goal_distance,
         progress=previous_goal_distance - goal_distance,
@@ -500,6 +529,8 @@ def _direction_to_target(world_state: WorldState) -> tuple[float, float]:
 
 
 def _blocking_obstacle_row(scenario: Scenario) -> tuple[float, float] | None:
+    x_axis = (1.0, 0.0)
+    y_axis = (0.0, 1.0)
     candidates = [
         obstacle
         for obstacle in scenario.obstacles
@@ -521,11 +552,11 @@ def _blocking_obstacle_row(scenario: Scenario) -> tuple[float, float] | None:
     upper = lane_y + scenario.lane_half_width * 0.95
     intervals = sorted(
         (
-            max(lower, obstacle.y - obstacle.radius - 0.95),
-            min(upper, obstacle.y + obstacle.radius + 0.95),
+            max(lower, obstacle.y - obstacle_axis_extent(obstacle, y_axis) - 0.95),
+            min(upper, obstacle.y + obstacle_axis_extent(obstacle, y_axis) + 0.95),
         )
         for obstacle in row_obstacles
-        if lower <= obstacle.y <= upper
+        if lower <= obstacle.y + obstacle_axis_extent(obstacle, y_axis) and obstacle.y - obstacle_axis_extent(obstacle, y_axis) <= upper
     )
 
     gaps: list[tuple[float, float]] = []
@@ -547,7 +578,13 @@ def _blocking_obstacle_row(scenario: Scenario) -> tuple[float, float] | None:
 
 
 def _near_x_band(obstacles: list[Any], anchor_x: float, half_width: float) -> list[Any]:
-    return [obstacle for obstacle in obstacles if abs(obstacle.x - anchor_x) <= half_width]
+    x_axis = (1.0, 0.0)
+    return [
+        obstacle
+        for obstacle in obstacles
+        if obstacle.x - obstacle_axis_extent(obstacle, x_axis) <= anchor_x + half_width
+        and obstacle.x + obstacle_axis_extent(obstacle, x_axis) >= anchor_x - half_width
+    ]
 
 
 def _lane_band_contains(
@@ -560,10 +597,7 @@ def _lane_band_contains(
 
 
 def _static_clearance_at(scenario: Scenario, position: tuple[float, float]) -> float:
-    return min(
-        (math.dist(position, (obstacle.x, obstacle.y)) - obstacle.radius for obstacle in scenario.obstacles),
-        default=math.inf,
-    )
+    return min_segment_clearance(position, position, scenario.obstacles, ego_radius=DEFAULT_EGO_RADIUS_M)
 
 
 def _visible_clearance_after_step(
@@ -578,9 +612,11 @@ def _visible_clearance_after_step(
         world_state.position[0] + direction[0] * speed,
         world_state.position[1] + direction[1] * speed,
     )
-    return min(
-        math.dist(next_position, (obstacle.x, obstacle.y)) - obstacle.radius
-        for obstacle in perception.visible_obstacles
+    return min_segment_clearance(
+        world_state.position,
+        next_position,
+        perception.visible_obstacles,
+        ego_radius=DEFAULT_EGO_RADIUS_M,
     )
 
 
@@ -640,3 +676,56 @@ def _normalize(vector: tuple[float, float]) -> tuple[float, float]:
     if norm == 0.0:
         return (0.0, 0.0)
     return (vector[0] / norm, vector[1] / norm)
+
+
+def advance_ego_state(
+    ego_state: EgoState,
+    target_direction: tuple[float, float],
+    target_step_distance: float,
+    config: RolloutConfig,
+) -> EgoState:
+    dt_s = max(config.dt_s, 1e-6)
+    target_speed_mps = max(0.0, target_step_distance / dt_s)
+    speed_delta = target_speed_mps - ego_state.speed_mps
+    accel_limit = config.max_accel_mps2 if speed_delta >= 0.0 else config.max_decel_mps2
+    speed_delta = _clamp(speed_delta, -accel_limit * dt_s, accel_limit * dt_s)
+    speed_mps = max(0.0, ego_state.speed_mps + speed_delta)
+
+    target_heading = ego_state.heading_rad if target_direction == (0.0, 0.0) else math.atan2(target_direction[1], target_direction[0])
+    desired_steering = _clamp(_wrap_angle(target_heading - ego_state.heading_rad), -config.max_abs_steering_rad, config.max_abs_steering_rad)
+    steering_delta = _clamp(
+        desired_steering - ego_state.steering_rad,
+        -config.max_steering_rate_rad_s * dt_s,
+        config.max_steering_rate_rad_s * dt_s,
+    )
+    steering_rad = _clamp(
+        ego_state.steering_rad + steering_delta,
+        -config.max_abs_steering_rad,
+        config.max_abs_steering_rad,
+    )
+
+    heading_rate = 0.0 if config.wheelbase_m <= 1e-6 else speed_mps / config.wheelbase_m * math.tan(steering_rad)
+    heading_rad = _wrap_angle(ego_state.heading_rad + heading_rate * dt_s)
+    step_distance = speed_mps * dt_s
+    x = ego_state.x + math.cos(heading_rad) * step_distance
+    y = ego_state.y + math.sin(heading_rad) * step_distance
+    return EgoState(x=x, y=y, heading_rad=heading_rad, speed_mps=speed_mps, steering_rad=steering_rad)
+
+
+def _initial_heading(scenario: Scenario) -> float:
+    if len(scenario.lane_center) >= 2:
+        dx = scenario.lane_center[1][0] - scenario.start[0]
+        dy = scenario.lane_center[1][1] - scenario.start[1]
+        if not math.isclose(dx, 0.0, abs_tol=1e-9) or not math.isclose(dy, 0.0, abs_tol=1e-9):
+            return math.atan2(dy, dx)
+    dx = scenario.goal[0] - scenario.start[0]
+    dy = scenario.goal[1] - scenario.start[1]
+    return math.atan2(dy, dx) if not (math.isclose(dx, 0.0, abs_tol=1e-9) and math.isclose(dy, 0.0, abs_tol=1e-9)) else 0.0
+
+
+def _wrap_angle(angle_rad: float) -> float:
+    return math.atan2(math.sin(angle_rad), math.cos(angle_rad))
+
+
+def _clamp(value: float, lower: float, upper: float) -> float:
+    return max(lower, min(upper, value))

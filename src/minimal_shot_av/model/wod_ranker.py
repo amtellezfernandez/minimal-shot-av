@@ -55,6 +55,9 @@ SOURCE_FEATURES = [
     "source_temporal",
     "source_anchor",
     "source_world",
+    "source_internnav",
+    "source_internvla",
+    "source_system2",
 ]
 CONTEXT_FEATURES = [
     "speed_bin_stopped_or_creep",
@@ -82,6 +85,34 @@ WORLD_CANDIDATE_FEATURES = [
     "world_neighbor_count",
     "source_world_x_world_nearest_distance_log",
 ]
+CANDIDATE_MODEL_FEATURES = [
+    "candidate_model_confidence",
+    "candidate_model_confidence_signed_log",
+    "candidate_model_confidence_abs_log",
+    "candidate_model_confidence_present",
+]
+RETRIEVAL_LATENT_DISAGREEMENT_FEATURES = [
+    "retrieval_support_score",
+    "latent_feasibility_score",
+    "retrieval_latent_disagreement",
+    "retrieval_latent_abs_disagreement",
+    "retrieval_latent_agreement",
+    "retrieval_without_latent",
+    "latent_without_retrieval",
+    "retrieval_latent_low_support",
+]
+WORLD_PRIOR_FEATURES = [
+    "world_prior_latent_error",
+    "world_prior_latent_error_log",
+    "world_prior_latent_error_z",
+    "world_prior_progress_error",
+    "world_prior_lateral_error",
+    "world_prior_speed_error",
+    "world_prior_heading_error",
+    "world_prior_constraint_cost",
+    "world_prior_predicted_final_x",
+    "world_prior_predicted_final_y",
+]
 GEOMETRY_PRIOR_FEATURES = [
     "signed_lateral_3s",
     "turn_lateral_alignment_3s",
@@ -97,6 +128,29 @@ GEOMETRY_PRIOR_FEATURES = [
     "curvature_per_meter",
     "final_speed_ratio",
 ]
+FRAME_RELATIVE_FEATURES = [
+    "endpoint_distance_frame_z",
+    "endpoint_distance_frame_rank",
+    "total_distance_frame_z",
+    "total_distance_frame_rank",
+    "forward_progress_frame_z",
+    "forward_progress_frame_rank",
+    "final_lateral_abs_frame_z",
+    "final_lateral_abs_frame_rank",
+    "signed_lateral_5s_frame_z",
+    "mean_abs_heading_change_frame_z",
+    "max_abs_accel_mps2_frame_z",
+    "progress_error_abs_5s_frame_z",
+    "lateral_to_progress_ratio_frame_z",
+    "curvature_per_meter_frame_z",
+    "waypoint_mean_l2_to_frame_median",
+    "waypoint_final_l2_to_frame_median",
+    "waypoint_mean_l2_to_frame_mean",
+    "waypoint_nearest_neighbor_l2",
+    "waypoint_outlier_ratio",
+    "candidate_count_log",
+    "candidate_index_fraction",
+]
 FAMILY_RELIABILITY_FEATURES = [
     "family_reliability_mean_rfs",
     "family_reliability_oracle_rate",
@@ -106,6 +160,22 @@ FAMILY_RELIABILITY_FEATURES = [
     "source_reliability_oracle_rate",
     "source_reliability_regret_mean",
     "source_reliability_count_log",
+]
+LEARNED_RELIABILITY_FEATURES = [
+    "learned_reliability_mean_rfs",
+    "learned_reliability_oracle_score",
+    "learned_reliability_regret",
+    "learned_reliability_margin",
+    "learned_reliability_frame_delta_score",
+    "learned_reliability_frame_rank_score",
+    "learned_reliability_rfs_frame_delta",
+    "learned_reliability_oracle_frame_delta",
+    "learned_reliability_regret_frame_delta",
+    "learned_reliability_frame_delta_centered",
+    "learned_reliability_rfs_frame_rank",
+    "learned_reliability_oracle_frame_rank",
+    "learned_reliability_regret_frame_rank",
+    "learned_reliability_frame_delta_rank",
 ]
 EXTERNAL_EMBEDDING_FEATURES = [f"external_embedding_{index:02d}" for index in range(64)]
 EXTERNAL_EMBEDDING_SOURCE_INTERACTION_FEATURES = [
@@ -143,7 +213,32 @@ SOURCE_NUMERIC_FEATURES = [*DEFAULT_NUMERIC_FEATURES, *SOURCE_FEATURES]
 INTENT_CONTEXTUAL_NUMERIC_FEATURES = [*SOURCE_NUMERIC_FEATURES, *CONTEXT_FEATURES, *INTENT_INTERACTION_FEATURES]
 CONTEXTUAL_NUMERIC_FEATURES = [*SOURCE_NUMERIC_FEATURES, *CONTEXT_FEATURES, *CONTEXT_INTERACTION_FEATURES]
 WORLD_CONTEXTUAL_NUMERIC_FEATURES = [*CONTEXTUAL_NUMERIC_FEATURES, *WORLD_CANDIDATE_FEATURES]
+WORLD_PRIOR_CONTEXTUAL_NUMERIC_FEATURES = [*CONTEXTUAL_NUMERIC_FEATURES, *WORLD_PRIOR_FEATURES]
 GEOMETRY_CONTEXTUAL_NUMERIC_FEATURES = [*CONTEXTUAL_NUMERIC_FEATURES, *GEOMETRY_PRIOR_FEATURES]
+RELATIVE_CONTEXTUAL_NUMERIC_FEATURES = [
+    *GEOMETRY_CONTEXTUAL_NUMERIC_FEATURES,
+    *FRAME_RELATIVE_FEATURES,
+]
+RELATIVE_WORLD_PRIOR_CONTEXTUAL_NUMERIC_FEATURES = [
+    *RELATIVE_CONTEXTUAL_NUMERIC_FEATURES,
+    *WORLD_PRIOR_FEATURES,
+]
+RELATIVE_CONFIDENCE_CONTEXTUAL_NUMERIC_FEATURES = [
+    *RELATIVE_CONTEXTUAL_NUMERIC_FEATURES,
+    *CANDIDATE_MODEL_FEATURES,
+]
+RELATIVE_RETRIEVAL_LATENT_CONTEXTUAL_NUMERIC_FEATURES = [
+    *RELATIVE_CONTEXTUAL_NUMERIC_FEATURES,
+    *CANDIDATE_MODEL_FEATURES,
+    *WORLD_PRIOR_FEATURES,
+    *RETRIEVAL_LATENT_DISAGREEMENT_FEATURES,
+]
+RELATIVE_PRECEDENT_LATENT_CONTEXTUAL_NUMERIC_FEATURES = [
+    *RELATIVE_CONTEXTUAL_NUMERIC_FEATURES,
+    *WORLD_PRIOR_FEATURES,
+    *FAMILY_RELIABILITY_FEATURES,
+    *RETRIEVAL_LATENT_DISAGREEMENT_FEATURES,
+]
 FAMILY_RELIABILITY_CONTEXTUAL_NUMERIC_FEATURES = [
     *WORLD_CONTEXTUAL_NUMERIC_FEATURES,
     *FAMILY_RELIABILITY_FEATURES,
@@ -155,6 +250,27 @@ EXTERNAL_CONTEXTUAL_NUMERIC_FEATURES = [
 ]
 CONTEXTUAL_EXTERNAL_NUMERIC_FEATURES = [
     *CONTEXTUAL_NUMERIC_FEATURES,
+    *EXTERNAL_EMBEDDING_FEATURES,
+    *EXTERNAL_EMBEDDING_SOURCE_INTERACTION_FEATURES,
+]
+LEARNED_RELIABILITY_SIGNAL_NUMERIC_FEATURES = [
+    *CONTEXTUAL_NUMERIC_FEATURES,
+    *LEARNED_RELIABILITY_FEATURES,
+]
+LEARNED_RELIABILITY_CONTEXTUAL_NUMERIC_FEATURES = [
+    *CONTEXTUAL_NUMERIC_FEATURES,
+    *WORLD_CANDIDATE_FEATURES,
+    *GEOMETRY_PRIOR_FEATURES,
+    *FRAME_RELATIVE_FEATURES,
+    *FAMILY_RELIABILITY_FEATURES,
+    *LEARNED_RELIABILITY_FEATURES,
+]
+LEARNED_RELIABILITY_CONFIDENCE_CONTEXTUAL_NUMERIC_FEATURES = [
+    *LEARNED_RELIABILITY_CONTEXTUAL_NUMERIC_FEATURES,
+    *CANDIDATE_MODEL_FEATURES,
+]
+LEARNED_RELIABILITY_EXTERNAL_NUMERIC_FEATURES = [
+    *LEARNED_RELIABILITY_CONTEXTUAL_NUMERIC_FEATURES,
     *EXTERNAL_EMBEDDING_FEATURES,
     *EXTERNAL_EMBEDDING_SOURCE_INTERACTION_FEATURES,
 ]
@@ -181,6 +297,37 @@ class WodPreferenceRanker:
     weights: Sequence[float]
     bias: float
 
+    def __post_init__(self) -> None:
+        safe_scale = [scale if abs(float(scale)) > 1e-12 else 1.0 for scale in self.feature_scale]
+        weight_over_scale = [
+            float(weight) / float(scale)
+            for weight, scale in zip(self.weights, safe_scale)
+        ]
+        numeric_count = len(self.numeric_features)
+        candidate_count = len(self.candidate_names)
+        family_count = len(self.candidate_families)
+        onehot_start = numeric_count
+        onehot_end = numeric_count + candidate_count + family_count
+        zero_onehot_bias = 0.0
+        limit = min(onehot_end, len(self.feature_mean), len(self.weights), len(safe_scale))
+        for index in range(onehot_start, limit):
+            zero_onehot_bias += ((0.0 - float(self.feature_mean[index])) / float(safe_scale[index])) * float(
+                self.weights[index]
+            )
+        object.__setattr__(self, "_safe_feature_scale", safe_scale)
+        object.__setattr__(self, "_weight_over_scale", weight_over_scale)
+        object.__setattr__(
+            self,
+            "_candidate_index_by_name",
+            {name: index for index, name in enumerate(self.candidate_names)},
+        )
+        object.__setattr__(
+            self,
+            "_candidate_family_index_by_name",
+            {family: index for index, family in enumerate(self.candidate_families)},
+        )
+        object.__setattr__(self, "_zero_onehot_bias", zero_onehot_bias)
+
     @classmethod
     def load(cls, path: str | Path) -> WodPreferenceRanker:
         payload = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -195,13 +342,32 @@ class WodPreferenceRanker:
         )
 
     def predict_row(self, row: dict[str, Any]) -> float:
-        raw = raw_features(row, self.numeric_features, self.candidate_names, self.candidate_families)
-        if not (len(raw) == len(self.feature_mean) == len(self.feature_scale) == len(self.weights)):
+        expected_length = len(self.numeric_features) + len(self.candidate_names) + len(self.candidate_families)
+        if not (
+            expected_length
+            == len(self.feature_mean)
+            == len(self.feature_scale)
+            == len(self.weights)
+            == len(self._safe_feature_scale)
+            == len(self._weight_over_scale)
+        ):
             raise ValueError("ranker feature vector and model parameter lengths do not match")
-        score = self.bias
-        for value, mean, scale, weight in zip(raw, self.feature_mean, self.feature_scale, self.weights):
-            safe_scale = scale if abs(scale) > 1e-12 else 1.0
-            score += ((value - mean) / safe_scale) * weight
+        features = row["features"]
+        score = self.bias + self._zero_onehot_bias
+        for index, name in enumerate(self.numeric_features):
+            score += (float(features[name]) - float(self.feature_mean[index])) * float(self._weight_over_scale[index])
+        candidate_name = str(row["candidate_name"])
+        candidate_index = self._candidate_index_by_name.get(candidate_name)
+        if candidate_index is not None:
+            score += float(self._weight_over_scale[len(self.numeric_features) + int(candidate_index)])
+        candidate_family = str(features.get("candidate_family", candidate_name))
+        family_index = self._candidate_family_index_by_name.get(candidate_family)
+        if family_index is not None:
+            score += float(
+                self._weight_over_scale[
+                    len(self.numeric_features) + len(self.candidate_names) + int(family_index)
+                ]
+            )
         return float(score)
 
     def select_row(self, rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
@@ -241,14 +407,36 @@ def selector_numeric_features(feature_mode: str) -> list[str]:
         return list(INTENT_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "world_contextual":
         return list(WORLD_CONTEXTUAL_NUMERIC_FEATURES)
+    if feature_mode == "world_prior_contextual":
+        return list(WORLD_PRIOR_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "geometry_contextual":
         return list(GEOMETRY_CONTEXTUAL_NUMERIC_FEATURES)
+    if feature_mode == "relative_contextual":
+        return list(RELATIVE_CONTEXTUAL_NUMERIC_FEATURES)
+    if feature_mode == "relative_world_prior_contextual":
+        return list(RELATIVE_WORLD_PRIOR_CONTEXTUAL_NUMERIC_FEATURES)
+    if feature_mode == "relative_confidence_contextual":
+        return list(RELATIVE_CONFIDENCE_CONTEXTUAL_NUMERIC_FEATURES)
+    if feature_mode == "relative_retrieval_latent_contextual":
+        return list(RELATIVE_RETRIEVAL_LATENT_CONTEXTUAL_NUMERIC_FEATURES)
+    if feature_mode == "relative_precedent_latent_contextual":
+        return list(RELATIVE_PRECEDENT_LATENT_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "family_reliability_contextual":
         return list(FAMILY_RELIABILITY_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "external_contextual":
         return list(EXTERNAL_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "contextual_external":
         return list(CONTEXTUAL_EXTERNAL_NUMERIC_FEATURES)
+    if feature_mode == "learned_reliability_signal":
+        return list(LEARNED_RELIABILITY_SIGNAL_NUMERIC_FEATURES)
+    if feature_mode == "learned_reliability_signal_external":
+        return list(LEARNED_RELIABILITY_SIGNAL_NUMERIC_FEATURES)
+    if feature_mode == "learned_reliability_contextual":
+        return list(LEARNED_RELIABILITY_CONTEXTUAL_NUMERIC_FEATURES)
+    if feature_mode == "learned_reliability_confidence_contextual":
+        return list(LEARNED_RELIABILITY_CONFIDENCE_CONTEXTUAL_NUMERIC_FEATURES)
+    if feature_mode == "learned_reliability_external":
+        return list(LEARNED_RELIABILITY_EXTERNAL_NUMERIC_FEATURES)
     if feature_mode == "camera_contextual":
         return list(CAMERA_CONTEXTUAL_NUMERIC_FEATURES)
     if feature_mode == "image_contextual":
@@ -297,7 +485,12 @@ def add_selector_context_features(
     _add_source_features(features, source_family)
     _add_context_features(features, frame)
     _add_world_candidate_defaults(features)
+    _add_candidate_model_defaults(features)
+    _add_world_prior_defaults(features)
+    _add_retrieval_latent_disagreement_defaults(features)
+    _add_frame_relative_defaults(features)
     _add_family_reliability_defaults(features)
+    _add_learned_reliability_defaults(features)
     _add_external_embedding_features(features, frame)
     _add_context_interactions(features)
     _add_external_embedding_source_interactions(features)
@@ -311,6 +504,16 @@ def add_selector_context_features(
 def candidate_source_family(*, source: str, candidate_name: str) -> str:
     lowered_source = source.lower()
     lowered_name = candidate_name.lower()
+    if "internvla" in lowered_source or lowered_name.startswith("internvla_"):
+        return "internvla"
+    if "internnav" in lowered_source or lowered_name.startswith("internnav_"):
+        return "internnav"
+    if (
+        "system2" in lowered_source
+        or "v20" in lowered_source
+        or lowered_name.startswith("neural_system2_")
+    ):
+        return "system2"
     if "temporal" in lowered_source or lowered_name.startswith("temporal_"):
         return "temporal"
     if "world" in lowered_source or lowered_name.startswith("world_"):
@@ -357,8 +560,33 @@ def _add_world_candidate_defaults(features: dict[str, object]) -> None:
     features["source_world_x_world_nearest_distance_log"] = 0.0
 
 
+def _add_candidate_model_defaults(features: dict[str, object]) -> None:
+    for name in CANDIDATE_MODEL_FEATURES:
+        features[name] = 0.0
+
+
+def _add_world_prior_defaults(features: dict[str, object]) -> None:
+    for name in WORLD_PRIOR_FEATURES:
+        features[name] = 0.0
+
+
+def _add_retrieval_latent_disagreement_defaults(features: dict[str, object]) -> None:
+    for name in RETRIEVAL_LATENT_DISAGREEMENT_FEATURES:
+        features[name] = 0.0
+
+
+def _add_frame_relative_defaults(features: dict[str, object]) -> None:
+    for name in FRAME_RELATIVE_FEATURES:
+        features[name] = 0.0
+
+
 def _add_family_reliability_defaults(features: dict[str, object]) -> None:
     for name in FAMILY_RELIABILITY_FEATURES:
+        features[name] = 0.0
+
+
+def _add_learned_reliability_defaults(features: dict[str, object]) -> None:
+    for name in LEARNED_RELIABILITY_FEATURES:
         features[name] = 0.0
 
 

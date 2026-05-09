@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import math
 
 from .environment import Scenario, interpolate_lane
-from .perception import ScenePerception
+from .perception import ScenePerception, perceived_obstacle_axis_extent
 
 
 @dataclass
@@ -90,17 +90,19 @@ def _label_free_geometry_summary(
         forward_distance = dx * heading[0] + dy * heading[1]
         lateral_distance = dx * left[0] + dy * left[1]
         clearance = obstacle.signed_distance
+        forward_extent = perceived_obstacle_axis_extent(obstacle, heading)
+        lateral_extent = perceived_obstacle_axis_extent(obstacle, left)
         if lateral_distance >= 0.0:
             left_clearance = min(left_clearance, clearance)
         else:
             right_clearance = min(right_clearance, clearance)
-        if forward_distance >= -obstacle.radius and abs(lateral_distance) <= scenario.lane_half_width + obstacle.radius:
+        if forward_distance >= -forward_extent and abs(lateral_distance) <= scenario.lane_half_width + lateral_extent:
             forward_pressure = max(0.0, min(1.0, (12.0 - forward_distance) / 12.0))
             lateral_intrusion = max(
                 0.0,
                 min(
                     1.0,
-                    (scenario.lane_half_width + obstacle.radius - abs(lateral_distance)) / scenario.lane_half_width,
+                    (scenario.lane_half_width + lateral_extent - abs(lateral_distance)) / scenario.lane_half_width,
                 ),
             )
             route_blockage = max(route_blockage, forward_pressure * lateral_intrusion)

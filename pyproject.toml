@@ -13,6 +13,7 @@ dependencies = ["numpy>=1.26"]
 [project.optional-dependencies]
 sim-viz = ["Pillow>=10"]
 alpasim = ["numpy", "torch"]
+tuning = ["optuna>=3.6"]
 
 [project.entry-points."alpasim.models"]
 spotlight_reflex = "minimal_shot_av.simulator.alpasim_spotlight:SpotlightReflexAlpaSimModel"

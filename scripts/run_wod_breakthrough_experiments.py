@@ -188,6 +188,31 @@ def _experiment_matrix(args: argparse.Namespace) -> list[dict[str, Any]]:
             "scene_aux_feature_set": "external_embeddings",
         },
         {
+            "name": "internnav_cautious_stop_source_scene_gate",
+            "selector_model": "linear",
+            "selector_features": "contextual",
+            "selector_target": "frame_delta",
+            "selector_ridge": "1000",
+            "kinematic_profile": "internnav",
+            "aux_feature_set": "temporal_summary",
+            "residual_modes": "3",
+            "residual_grouping": "off",
+            "selector_fallback_local_selector": True,
+            "selector_fallback_source_options": "kinematic;kinematic,temporal",
+            "source_gate": "train_margin",
+            "source_gate_sources": "internnav",
+            "source_gate_candidate_prefixes": "internnav_s2_waypoint_cautious,internnav_s1_stop_progress",
+            "source_gate_router": "speed",
+            "source_gate_ridge": "0.14",
+            "source_gate_max_rate": "0.30",
+            "source_gate_local_selector": True,
+            "scene_gate": "train_margin",
+            "scene_gate_router": "speed",
+            "scene_gate_ridge": "1.5",
+            "scene_gate_max_rate": "0.18",
+            "scene_aux_feature_set": "external_embeddings",
+        },
+        {
             "name": "source_policy_speed_oracle_prior",
             "selector_model": "linear",
             "selector_features": "contextual",
@@ -551,6 +576,8 @@ def _command_for_run(run: dict[str, Any], output: Path, args: argparse.Namespace
         str(run.get("selector_ridge", "175")),
         "--ridge",
         "30",
+        "--feature-set",
+        str(run.get("feature_set", "base")),
         "--residual-modes",
         str(run.get("residual_modes", "5")),
         "--residual-grouping",
@@ -629,6 +656,8 @@ def _command_for_run(run: dict[str, Any], output: Path, args: argparse.Namespace
         command.extend(["--source-gate-deny-prefixes", str(run["source_gate_deny_prefixes"])])
     if run.get("source_gate_router"):
         command.extend(["--source-gate-router", str(run["source_gate_router"])])
+    if run.get("source_gate_ridge"):
+        command.extend(["--source-gate-ridge", str(run["source_gate_ridge"])])
     if run.get("source_gate_max_rate"):
         command.extend(["--source-gate-max-rate", str(run["source_gate_max_rate"])])
     if run.get("source_gate_min_precision"):
@@ -653,6 +682,8 @@ def _command_for_run(run: dict[str, Any], output: Path, args: argparse.Namespace
         command.extend(["--scene-gate", str(run["scene_gate"])])
     if run.get("scene_gate_router"):
         command.extend(["--scene-gate-router", str(run["scene_gate_router"])])
+    if run.get("scene_gate_ridge"):
+        command.extend(["--scene-gate-ridge", str(run["scene_gate_ridge"])])
     if run.get("scene_gate_max_rate"):
         command.extend(["--scene-gate-max-rate", str(run["scene_gate_max_rate"])])
     if run.get("memory_candidates"):

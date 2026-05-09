@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 
-from .environment import Obstacle, Scenario, interpolate_lane, nearest_lane_point
+from .environment import Obstacle, Scenario, interpolate_lane, nearest_lane_point, obstacle_signed_distance
 
 
 @dataclass
@@ -11,6 +11,8 @@ class PerceivedObstacle:
     x: float
     y: float
     radius: float
+    length: float | None
+    heading: float
     signed_distance: float
 
 
@@ -34,7 +36,31 @@ def _normalize(vector: tuple[float, float]) -> tuple[float, float]:
 
 
 def _signed_distance(position: tuple[float, float], obstacle: Obstacle) -> float:
-    return math.dist(position, (obstacle.x, obstacle.y)) - obstacle.radius
+    return obstacle_signed_distance(position, obstacle)
+
+
+def perceived_obstacle_to_obstacle(obstacle: PerceivedObstacle) -> Obstacle:
+    return Obstacle(
+        x=obstacle.x,
+        y=obstacle.y,
+        radius=obstacle.radius,
+        length=obstacle.length,
+        heading=obstacle.heading,
+    )
+
+
+def perceived_obstacle_signed_distance(point: tuple[float, float], obstacle: PerceivedObstacle) -> float:
+    return obstacle_signed_distance(point, perceived_obstacle_to_obstacle(obstacle))
+
+
+def perceived_obstacle_axis_extent(
+    obstacle: PerceivedObstacle,
+    axis: tuple[float, float],
+) -> float:
+    length = obstacle.length if obstacle.length is not None else obstacle.radius * 2.0
+    half_spine = max(0.0, length * 0.5 - obstacle.radius)
+    heading = (math.cos(obstacle.heading), math.sin(obstacle.heading))
+    return abs(axis[0] * heading[0] + axis[1] * heading[1]) * half_spine + obstacle.radius
 
 
 def perceive_scene(scenario: Scenario, position: tuple[float, float], visibility_radius: float = 18.0) -> ScenePerception:
@@ -58,6 +84,8 @@ def perceive_scene(scenario: Scenario, position: tuple[float, float], visibility
                     x=obstacle.x,
                     y=obstacle.y,
                     radius=obstacle.radius,
+                    length=obstacle.length,
+                    heading=obstacle.heading,
                     signed_distance=signed_distance,
                 )
             )

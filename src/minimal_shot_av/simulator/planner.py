@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 
-from .perception import ScenePerception
+from .perception import ScenePerception, perceived_obstacle_signed_distance
 from .world_model import WorldState
 
 
@@ -54,7 +54,7 @@ def _score_direction(
     obstacle_term = 0.0
 
     for obstacle in perception.visible_obstacles:
-        signed_distance = math.dist(proposed, (obstacle.x, obstacle.y)) - obstacle.radius
+        signed_distance = perceived_obstacle_signed_distance(proposed, obstacle)
         if signed_distance < 0.0:
             return -1e9
         obstacle_term += min(4.0, signed_distance) * 0.25

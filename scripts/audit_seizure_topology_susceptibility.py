@@ -358,7 +358,12 @@ def _total_progress(steps: list[Any]) -> float:
     return sum(max(0.0, float(step.progress or 0.0)) for step in steps)
 
 
-def _collapse(clean_pass: bool, clean_summary: dict[str, Any], attacked_summary: dict[str, Any], progress_ratio: float) -> bool:
+def _collapse(
+    clean_pass: bool,
+    clean_summary: dict[str, Any],
+    attacked_summary: dict[str, Any],
+    progress_ratio: float,
+) -> bool:
     if not clean_pass:
         return False
     if bool(attacked_summary["collision"]):
@@ -405,7 +410,11 @@ def _summarize_by_topology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         critical: float | None = None
         first_any: float | None = None
         for budget in budgets:
-            at_budget = [row for row in scoped if float(row["attack_budget"]) == budget and int(row["scenario_index"]) in clean_passes]
+            at_budget = [
+                row
+                for row in scoped
+                if float(row["attack_budget"]) == budget and int(row["scenario_index"]) in clean_passes
+            ]
             if first_any is None and any(bool(row["collapse"]) for row in at_budget):
                 first_any = budget
             if at_budget and sum(1 for row in at_budget if bool(row["collapse"])) / len(at_budget) >= 0.5:

@@ -20,7 +20,12 @@ def kinematic_candidate_payloads(
     payloads: list[dict[str, object]] = []
     for frame in frames:
         for candidate_index, (candidate_name, trajectory) in enumerate(
-            kinematic_trajectories(frame.past_trajectory, profile=profile)
+            kinematic_trajectories(
+                frame.past_trajectory,
+                profile=profile,
+                intent=frame.intent,
+                init_speed_mps=frame.init_speed_mps,
+            )
         ):
             payloads.append(
                 {
@@ -55,10 +60,12 @@ def kinematic_trajectories(
     past_trajectory: Sequence[tuple[float, float]],
     *,
     profile: str = "base",
+    intent: int | None = None,
+    init_speed_mps: float | None = None,
 ) -> list[tuple[str, Trajectory]]:
     if len(past_trajectory) < 2:
         raise ValueError("at least two past trajectory points are required")
-    if profile not in {"base", "expanded", "reflex"}:
+    if profile not in {"base", "expanded", "reflex", "internnav"}:
         raise ValueError(f"unsupported kinematic profile: {profile!r}")
     last_step = _step(past_trajectory[-2], past_trajectory[-1])
     trajectories = [
@@ -80,6 +87,14 @@ def kinematic_trajectories(
         )
     if profile == "reflex":
         trajectories.extend(_reflex_trajectories(last_step))
+    if profile == "internnav":
+        trajectories.extend(
+            _internnav_zero_shot_trajectories(
+                last_step,
+                intent=intent,
+                init_speed_mps=init_speed_mps,
+            )
+        )
     return trajectories
 
 
@@ -116,6 +131,91 @@ def _reflex_trajectories(step: tuple[float, float]) -> list[tuple[str, Trajector
         ("avoid_left_return", _avoid_and_return(step, lateral_m=2.2)),
         ("avoid_right_return", _avoid_and_return(step, lateral_m=-2.2)),
     ]
+
+
+def _internnav_zero_shot_trajectories(
+    step: tuple[float, float],
+    *,
+    intent: int | None,
+    init_speed_mps: float | None,
+) -> list[tuple[str, Trajectory]]:
+    """InternNav-inspired waypoint hypotheses without importing its heavy runtime."""
+    expected_progress = _expected_progress_5s(step, init_speed_mps)
+    cautious_progress = max(0.0, expected_progress * 0.65)
+    direct_progress = max(0.0, expected_progress * 0.92)
+    intent_lateral = _intent_lateral_offset(intent)
+    progress_lateral = intent_lateral * 0.55
+    cautious_lateral = intent_lateral * 0.35
+    probe_lateral = 2.4 if intent_lateral == 0.0 else abs(intent_lateral) * 0.7
+    return [
+        (
+            "internnav_s2_waypoint_progress",
+            _smooth_waypoint_path(step, forward_m=direct_progress, lateral_m=progress_lateral),
+        ),
+        (
+            "internnav_s2_waypoint_cautious",
+            _smooth_waypoint_path(step, forward_m=cautious_progress, lateral_m=cautious_lateral),
+        ),
+        (
+            "internnav_s2_waypoint_intent",
+            _smooth_waypoint_path(step, forward_m=direct_progress * 0.82, lateral_m=intent_lateral),
+        ),
+        (
+            "internnav_s2_left_probe",
+            _smooth_waypoint_path(step, forward_m=direct_progress * 0.78, lateral_m=probe_lateral),
+        ),
+        (
+            "internnav_s2_right_probe",
+            _smooth_waypoint_path(step, forward_m=direct_progress * 0.78, lateral_m=-probe_lateral),
+        ),
+        (
+            "internnav_s1_yield_then_track",
+            _yield_then_go(step, yield_steps=6, resume_scale=0.75),
+        ),
+        (
+            "internnav_s1_yield_creep",
+            _decelerate_to_scale(step, final_scale=0.18),
+        ),
+        (
+            "internnav_s1_stop_progress",
+            _decelerate_to_stop(step, stop_index=12),
+        ),
+        (
+            "internnav_s1_late_stop_progress",
+            _decelerate_to_stop(step, stop_index=20),
+        ),
+    ]
+
+
+def _smooth_waypoint_path(
+    step: tuple[float, float],
+    *,
+    forward_m: float,
+    lateral_m: float,
+) -> Trajectory:
+    forward, lateral = _basis(step)
+    trajectory: Trajectory = []
+    for index in range(1, WOD_FUTURE_WAYPOINTS + 1):
+        ratio = index / WOD_FUTURE_WAYPOINTS
+        progress = _smoothstep(ratio)
+        x = forward[0] * forward_m * progress + lateral[0] * lateral_m * progress
+        y = forward[1] * forward_m * progress + lateral[1] * lateral_m * progress
+        trajectory.append((x, y))
+    return trajectory
+
+
+def _expected_progress_5s(step: tuple[float, float], init_speed_mps: float | None) -> float:
+    if init_speed_mps is not None:
+        return max(0.0, float(init_speed_mps) * 5.0)
+    return _step_norm(step) * WOD_FUTURE_WAYPOINTS
+
+
+def _intent_lateral_offset(intent: int | None) -> float:
+    if intent == 2:
+        return 3.0
+    if intent == 3:
+        return -3.0
+    return 0.0
 
 
 def _decelerate_to_scale(step: tuple[float, float], *, final_scale: float) -> Trajectory:

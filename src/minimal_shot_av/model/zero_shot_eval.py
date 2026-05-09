@@ -23,6 +23,7 @@ class CandidateRecord:
     candidate_name: str = "candidate"
     candidate_index: int = 0
     latency_ms: float | None = None
+    confidence: float | None = None
 
 
 RfsScorer = Callable[[CandidateRecord, WodE2EPreferenceFrame], float]
@@ -118,6 +119,7 @@ def candidate_record_from_json(payload: dict[str, Any]) -> CandidateRecord:
     else:
         raise ValueError("record must contain trajectory_20wp_4hz or trajectory_64wp_10hz")
     latency_ms = payload.get("latency_ms")
+    confidence = payload.get("confidence", payload.get("score"))
     return CandidateRecord(
         frame_name=frame_name,
         trajectory=trajectory,
@@ -125,6 +127,7 @@ def candidate_record_from_json(payload: dict[str, Any]) -> CandidateRecord:
         candidate_name=candidate_name,
         candidate_index=candidate_index,
         latency_ms=None if latency_ms is None else float(latency_ms),
+        confidence=None if confidence is None else float(confidence),
     )
 
 

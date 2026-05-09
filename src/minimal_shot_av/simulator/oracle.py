@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 
-from .environment import Scenario, interpolate_lane, nearest_lane_point, scenario_at_tick
+from .environment import DEFAULT_EGO_RADIUS_M, Scenario, interpolate_lane, min_time_swept_clearance, nearest_lane_point, scenario_at_tick
 from .perception import perceive_scene
-from .policy import Rollout, StepRecord
+from .policy import EgoState, Rollout, RolloutConfig, StepRecord, advance_ego_state
 from .world_model import update_world_state
 
 
@@ -58,7 +58,14 @@ def run_oracle_policy(
     feasible route through the current abstract simulator.
     """
     config = _oracle_config(config, max_steps, step_size)
-    position = scenario.start
+    dynamics = _oracle_rollout_config(config)
+    ego_state = EgoState(
+        x=scenario.start[0],
+        y=scenario.start[1],
+        heading_rad=_initial_heading(scenario),
+        speed_mps=0.0,
+        steering_rad=0.0,
+    )
     dense_lane = interpolate_lane(scenario.lane_center, samples_per_segment=config.lane_samples_per_segment)
     steps: list[StepRecord] = []
     collision = False
@@ -66,21 +73,23 @@ def run_oracle_policy(
 
     for tick in range(config.max_steps):
         active_scenario = scenario_at_tick(scenario, tick)
+        position = (ego_state.x, ego_state.y)
         previous_position = position
-        direction, speed, mode = _choose_privileged_action(scenario, position, tick, dense_lane, config)
-        position = (position[0] + direction[0] * speed, position[1] + direction[1] * speed)
-
-        for obstacle in active_scenario.obstacles:
-            if math.dist(position, (obstacle.x, obstacle.y)) <= obstacle.radius:
-                collision = True
-                break
+        direction, target_step_distance, mode = _choose_privileged_action(scenario, position, tick, dense_lane, config, ego_state)
+        ego_state = advance_ego_state(ego_state, direction, target_step_distance, dynamics)
+        position = (ego_state.x, ego_state.y)
 
         perception = perceive_scene(active_scenario, position)
         world_state = update_world_state(active_scenario, position, perception)
-        min_clearance = min(
-            (math.dist(position, (obstacle.x, obstacle.y)) - obstacle.radius for obstacle in active_scenario.obstacles),
-            default=math.inf,
+        min_clearance = min_time_swept_clearance(
+            scenario,
+            previous_position,
+            position,
+            tick,
+            tick + 1,
+            ego_radius=DEFAULT_EGO_RADIUS_M,
         )
+        collision = min_clearance <= 0.0
         previous_goal_distance = math.dist(previous_position, scenario.goal)
         goal_distance = math.dist(position, scenario.goal)
         steps.append(
@@ -93,13 +102,13 @@ def run_oracle_policy(
                 uncertainty=world_state.uncertainty,
                 collision_risk=world_state.collision_risk,
                 action_mode=f"oracle:{mode}",
-                speed=speed,
+                speed=ego_state.speed_mps * dynamics.dt_s,
                 intervention=False,
                 goal_distance=goal_distance,
                 progress=previous_goal_distance - goal_distance,
-                comfort_cost=0.0 if not steps else abs(speed - steps[-1].speed),
+                comfort_cost=0.0 if not steps else abs(ego_state.speed_mps * dynamics.dt_s - steps[-1].speed),
                 active_actor_count=len(active_scenario.actors),
-                stall=speed == 0.0 and goal_distance >= config.stall_goal_distance_m,
+                stall=ego_state.speed_mps * dynamics.dt_s == 0.0 and goal_distance >= config.stall_goal_distance_m,
             )
         )
 
@@ -129,6 +138,16 @@ def _oracle_config(config: OracleConfig | None, max_steps: int, step_size: float
     return OracleConfig(max_steps=max_steps, step_size=step_size)
 
 
+def _oracle_rollout_config(config: OracleConfig) -> RolloutConfig:
+    return RolloutConfig(
+        max_steps=config.max_steps,
+        step_size=config.step_size,
+        dt_s=1.0,
+        goal_tolerance_m=config.goal_tolerance_m,
+        stall_goal_distance_m=config.stall_goal_distance_m,
+    )
+
+
 def oracle_reasoning_trace(scenario: Scenario, rollout: Rollout | None = None) -> str:
     hazard = scenario.tags.get("primary_hazard_type", "unknown_hazard")
     composition = scenario.tags.get("hazard_composition", hazard)
@@ -149,20 +168,18 @@ def _choose_privileged_action(
     tick: int,
     dense_lane: list[tuple[float, float]],
     config: OracleConfig,
+    ego_state: EgoState,
 ) -> tuple[tuple[float, float], float, str]:
     target = _lookahead_target(scenario, position, dense_lane, config)
     base = _normalize((target[0] - position[0], target[1] - position[1]))
     if base == (0.0, 0.0):
         base = _normalize((scenario.goal[0] - position[0], scenario.goal[1] - position[1]))
-    future_scenarios = tuple(
-        scenario_at_tick(scenario, tick + offset) for offset in range(1, config.horizon_steps + 1)
-    )
     candidates: list[tuple[float, tuple[float, float], float, str]] = []
     for speed_scale in config.speed_scales:
         for angle in config.steering_angles_rad:
             direction = _normalize(_rotate(base, angle))
             speed = config.step_size * speed_scale
-            score = _horizon_score(scenario, position, direction, speed, future_scenarios, config)
+            score = _horizon_score(scenario, ego_state, direction, speed, tick, config)
             mode = _candidate_mode(speed_scale, angle, config)
             candidates.append((score, direction, speed, mode))
     _, direction, speed, mode = max(candidates, key=lambda item: item[0])
@@ -181,26 +198,37 @@ def _candidate_mode(speed_scale: float, angle: float, config: OracleConfig) -> s
 
 def _horizon_score(
     scenario: Scenario,
-    position: tuple[float, float],
+    ego_state: EgoState,
     direction: tuple[float, float],
-    speed: float,
-    future_scenarios: tuple[Scenario, ...],
+    target_step_distance: float,
+    tick: int,
     config: OracleConfig,
 ) -> float:
-    simulated = position
+    dynamics = _oracle_rollout_config(config)
+    simulated = ego_state
     min_clearance = math.inf
     progress = 0.0
     lane_penalty = 0.0
-    for active in future_scenarios:
-        previous_goal = math.dist(simulated, scenario.goal)
-        simulated = (simulated[0] + direction[0] * speed, simulated[1] + direction[1] * speed)
-        progress += previous_goal - math.dist(simulated, scenario.goal)
-        for obstacle in active.obstacles:
-            clearance = math.dist(simulated, (obstacle.x, obstacle.y)) - obstacle.radius
-            min_clearance = min(min_clearance, clearance)
-            if clearance < 0.0:
-                return -config.collision_penalty + clearance * config.collision_penalty_slope
-        perception = perceive_scene(active, simulated)
+    for horizon_offset in range(config.horizon_steps):
+        active = scenario_at_tick(scenario, tick + horizon_offset)
+        current_position = (simulated.x, simulated.y)
+        previous_goal = math.dist(current_position, scenario.goal)
+        next_state = advance_ego_state(simulated, direction, target_step_distance, dynamics)
+        next_position = (next_state.x, next_state.y)
+        step_clearance = min_time_swept_clearance(
+            scenario,
+            current_position,
+            next_position,
+            tick + horizon_offset,
+            tick + horizon_offset + 1,
+            ego_radius=DEFAULT_EGO_RADIUS_M,
+        )
+        simulated = next_state
+        progress += previous_goal - math.dist(next_position, scenario.goal)
+        min_clearance = min(min_clearance, step_clearance)
+        if step_clearance < 0.0:
+            return -config.collision_penalty + step_clearance * config.collision_penalty_slope
+        perception = perceive_scene(active, next_position)
         lane_penalty += max(0.0, perception.lane_error - active.lane_half_width * config.lane_error_fraction)
     clearance_score = min(config.clearance_score_cap_m, min_clearance) * config.clearance_score_weight
     return (
@@ -234,3 +262,14 @@ def _rotate(vector: tuple[float, float], angle: float) -> tuple[float, float]:
     c = math.cos(angle)
     s = math.sin(angle)
     return (vector[0] * c - vector[1] * s, vector[0] * s + vector[1] * c)
+
+
+def _initial_heading(scenario: Scenario) -> float:
+    if len(scenario.lane_center) >= 2:
+        dx = scenario.lane_center[1][0] - scenario.start[0]
+        dy = scenario.lane_center[1][1] - scenario.start[1]
+        if not math.isclose(dx, 0.0, abs_tol=1e-9) or not math.isclose(dy, 0.0, abs_tol=1e-9):
+            return math.atan2(dy, dx)
+    dx = scenario.goal[0] - scenario.start[0]
+    dy = scenario.goal[1] - scenario.start[1]
+    return math.atan2(dy, dx) if not (math.isclose(dx, 0.0, abs_tol=1e-9) and math.isclose(dy, 0.0, abs_tol=1e-9)) else 0.0

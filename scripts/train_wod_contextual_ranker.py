@@ -37,7 +37,14 @@ def main() -> int:
     )
     parser.add_argument(
         "--selector-features",
-        choices=("linear", "squared", "contextual", "camera_contextual", "image_contextual"),
+        choices=(
+            "linear",
+            "squared",
+            "contextual",
+            "geometry_contextual",
+            "camera_contextual",
+            "image_contextual",
+        ),
         default="contextual",
     )
     parser.add_argument("--max-shards", type=int)

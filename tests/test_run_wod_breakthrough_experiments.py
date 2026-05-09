@@ -36,9 +36,10 @@ class WodBreakthroughExperimentRunnerTests(unittest.TestCase):
         runs = module._experiment_matrix(args)
         command = module._command_for_run(runs[0], ROOT / "out.json", args)
 
-        self.assertGreaterEqual(len(runs), 16)
+        self.assertGreaterEqual(len(runs), 13)
         self.assertIn("champion_fastkin_scene_gate_rate020", {run["name"] for run in runs})
         self.assertIn("champion_fastkin_scene_gate_rate024", {run["name"] for run in runs})
+        self.assertIn("internnav_cautious_stop_source_scene_gate", {run["name"] for run in runs})
         self.assertIn("fallback_local_selector_linear", {run["name"] for run in runs})
         self.assertIn("blend_mean_pairs", {run["name"] for run in runs})
         self.assertIn("blend_residual_pairs", {run["name"] for run in runs})
@@ -143,6 +144,38 @@ class WodBreakthroughExperimentRunnerTests(unittest.TestCase):
         self.assertEqual("external_embeddings", command[command.index("--scene-aux-feature-set") + 1])
         external_cache_index = command.index("--external-embedding-cache") + 1
         self.assertEqual(str(ROOT / "missing_external_cache.json"), command[external_cache_index])
+
+    def test_internnav_champion_run_passes_cautious_stop_gate_recipe(self) -> None:
+        module = _load_module()
+        args = argparse.Namespace(
+            smoke=False,
+            pilot=True,
+            frame_cache=ROOT / "frames.json",
+            external_embedding_cache=ROOT / "missing_external_cache.json",
+            neural_candidate_model=None,
+        )
+        run = next(
+            row
+            for row in module._experiment_matrix(args)
+            if row["name"] == "internnav_cautious_stop_source_scene_gate"
+        )
+
+        command = module._command_for_run(run, ROOT / "out.json", args)
+
+        self.assertEqual("internnav", command[command.index("--kinematic-profile") + 1])
+        self.assertEqual("1000", command[command.index("--selector-ridge") + 1])
+        self.assertEqual("3", command[command.index("--residual-modes") + 1])
+        self.assertEqual("off", command[command.index("--residual-grouping") + 1])
+        self.assertIn("--selector-fallback-local-selector", command)
+        self.assertEqual("internnav", command[command.index("--source-gate-sources") + 1])
+        prefix_index = command.index("--source-gate-candidate-prefixes") + 1
+        self.assertEqual("internnav_s2_waypoint_cautious,internnav_s1_stop_progress", command[prefix_index])
+        self.assertEqual("0.14", command[command.index("--source-gate-ridge") + 1])
+        self.assertEqual("0.30", command[command.index("--source-gate-max-rate") + 1])
+        self.assertIn("--source-gate-local-selector", command)
+        self.assertEqual("1.5", command[command.index("--scene-gate-ridge") + 1])
+        self.assertEqual("0.18", command[command.index("--scene-gate-max-rate") + 1])
+        self.assertEqual("external_embeddings", command[command.index("--scene-aux-feature-set") + 1])
 
     def test_fallback_local_selector_and_blend_args_are_passed(self) -> None:
         module = _load_module()

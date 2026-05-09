@@ -103,6 +103,8 @@ def signal_obstacles(signal: dict[str, Any]) -> list[Obstacle]:
             radius=float(hazard["radius"]),
             kind=str(hazard["kind"]),
             label=str(hazard["label"]),
+            length=float(hazard["length"]) if "length" in hazard else None,
+            heading=float(hazard.get("heading", 0.0)),
         )
         for hazard in signal.get("structured_hazards", [])
         if not _is_moving_hazard(hazard)
@@ -130,21 +132,24 @@ def signal_actors(signal: dict[str, Any]) -> list[Actor]:
         vx = float(hazard.get("vx", 0.0))
         vy = float(hazard.get("vy", 0.0))
         speed = math.hypot(vx, vy)
-        heading = math.atan2(vy, vx) if speed > 0.0 else 0.0
         radius = float(hazard["radius"])
+        width = float(hazard.get("width", radius * 2.0))
+        length = float(hazard.get("length", radius * 2.0))
+        behavior = _hazard_behavior(hazard)
+        heading = _hazard_heading(hazard, speed=speed, width=width, length=length, behavior=behavior)
         actors.append(
             Actor(
                 actor_id=str(hazard.get("label", f"alpasignal_actor_{index}")),
                 kind=str(hazard.get("kind", "signal_hazard")),
                 x=float(hazard["x"]),
                 y=float(hazard["y"]),
-                width=radius * 2.0,
-                length=radius * 2.0,
+                width=width,
+                length=length,
                 heading=heading,
                 speed=speed,
                 vx=vx,
                 vy=vy,
-                behavior="linear",
+                behavior=behavior,
                 role=str(hazard.get("label", f"alpasignal_actor_{index}")),
             )
         )
@@ -156,6 +161,11 @@ def _hazard_from_item(item: Any, index: int) -> dict[str, float | str] | None:
         x = item.get("x", item.get("forward_m", item.get("longitudinal_m")))
         y = item.get("y", item.get("left_m", item.get("lateral_m", 0.0)))
         radius = item.get("radius", item.get("radius_m", item.get("extent_m", 1.25)))
+        width = item.get("width", item.get("width_m"))
+        length = item.get("length", item.get("length_m"))
+        heading = item.get("heading", item.get("heading_rad", item.get("yaw_rad", 0.0)))
+        behavior = item.get("behavior", item.get("motion_behavior", item.get("intent")))
+        acceleration = item.get("acceleration", item.get("acceleration_mps2", item.get("longitudinal_acceleration_mps2")))
         kind = item.get("kind", item.get("type", "signal_hazard"))
         label = item.get("label", item.get("id", f"alpasignal_{index}"))
         vx = item.get("vx", item.get("velocity_x_mps", item.get("forward_velocity_mps", 0.0)))
@@ -164,13 +174,22 @@ def _hazard_from_item(item: Any, index: int) -> dict[str, float | str] | None:
         x = getattr(item, "x", getattr(item, "forward_m", getattr(item, "longitudinal_m", None)))
         y = getattr(item, "y", getattr(item, "left_m", getattr(item, "lateral_m", 0.0)))
         radius = getattr(item, "radius", getattr(item, "radius_m", getattr(item, "extent_m", 1.25)))
+        width = getattr(item, "width", getattr(item, "width_m", None))
+        length = getattr(item, "length", getattr(item, "length_m", None))
+        heading = getattr(item, "heading", getattr(item, "heading_rad", getattr(item, "yaw_rad", 0.0)))
+        behavior = getattr(item, "behavior", getattr(item, "motion_behavior", getattr(item, "intent", None)))
+        acceleration = getattr(
+            item,
+            "acceleration",
+            getattr(item, "acceleration_mps2", getattr(item, "longitudinal_acceleration_mps2", None)),
+        )
         kind = getattr(item, "kind", getattr(item, "type", "signal_hazard"))
         label = getattr(item, "label", getattr(item, "id", f"alpasignal_{index}"))
         vx = getattr(item, "vx", getattr(item, "velocity_x_mps", getattr(item, "forward_velocity_mps", 0.0)))
         vy = getattr(item, "vy", getattr(item, "velocity_y_mps", getattr(item, "lateral_velocity_mps", 0.0)))
     if x is None:
         return None
-    return {
+    hazard = {
         "x": float(x),
         "y": float(y),
         "radius": max(0.25, float(radius)),
@@ -179,10 +198,81 @@ def _hazard_from_item(item: Any, index: int) -> dict[str, float | str] | None:
         "vx": float(vx),
         "vy": float(vy),
     }
+    if width is not None:
+        hazard["width"] = max(0.25, float(width))
+    if length is not None:
+        hazard["length"] = max(0.25, float(length))
+    if heading is not None:
+        hazard["heading"] = float(heading)
+    if behavior is not None:
+        hazard["behavior"] = str(behavior)
+    if acceleration is not None:
+        hazard["acceleration"] = float(acceleration)
+    return hazard
 
 
 def _is_moving_hazard(hazard: dict[str, float | str]) -> bool:
     return abs(float(hazard.get("vx", 0.0))) > 1e-6 or abs(float(hazard.get("vy", 0.0))) > 1e-6
+
+
+def _hazard_behavior(hazard: dict[str, float | str]) -> str:
+    explicit = str(hazard.get("behavior", "")).strip().lower().replace("-", "_").replace(" ", "_")
+    if explicit in {
+        "linear",
+        "cut_in",
+        "swerve",
+        "darting",
+        "erratic_pedestrian",
+        "sudden_brake",
+        "hesitating",
+        "wrong_way",
+    }:
+        return explicit
+
+    signal = " ".join(
+        str(hazard.get(key, ""))
+        for key in ("label", "kind")
+    ).lower().replace("-", "_").replace(" ", "_")
+    if "wrong_way" in signal:
+        return "wrong_way"
+    if "cut_in" in signal or "cutin" in signal:
+        return "cut_in"
+    if "erratic_pedestrian" in signal or ("pedestrian" in signal and "erratic" in signal):
+        return "erratic_pedestrian"
+    if "dart" in signal or "animal" in signal:
+        return "darting"
+    if float(hazard.get("acceleration", 0.0)) <= -2.0:
+        return "sudden_brake"
+    if "sudden_brake" in signal or "hard_brake" in signal or "braking" in signal:
+        return "sudden_brake"
+    if (
+        str(hazard.get("kind", "")).lower() == "pedestrian"
+        and math.hypot(float(hazard.get("vx", 0.0)), float(hazard.get("vy", 0.0))) <= 0.6
+    ):
+        return "hesitating"
+    if "hesitating" in signal or ("pedestrian" in signal and "crossing" in signal):
+        return "hesitating"
+    return "linear"
+
+
+def _hazard_heading(
+    hazard: dict[str, float | str],
+    *,
+    speed: float,
+    width: float,
+    length: float,
+    behavior: str,
+) -> float:
+    explicit_heading = float(hazard.get("heading", 0.0))
+    if speed <= 1e-6:
+        return explicit_heading
+    velocity_heading = math.atan2(float(hazard.get("vy", 0.0)), float(hazard.get("vx", 0.0)))
+    if "heading" not in hazard:
+        return velocity_heading
+    elongated = length > width * 1.25
+    if behavior in {"wrong_way", "cut_in", "sudden_brake"} or elongated:
+        return explicit_heading
+    return velocity_heading
 
 
 def _first_present_attr(value: Any, names: tuple[str, ...]) -> Any:

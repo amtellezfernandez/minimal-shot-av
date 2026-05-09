@@ -2,24 +2,24 @@
   "archives": {
     "grand_commission": {
       "content_errors": [],
-      "manifest_sha256": "15d5e1f4ee903d04b1390477de646ef14325e22cc6fbcedba5208e75329d90dc",
+      "manifest_sha256": "79c5f7743e2d61e1727be1a8cc11cc7e203479735ef6f7616de3e883ce766391",
       "manifest_sha_matches": true,
       "missing_required": [],
       "path": "/home/amdev/sota/minimal-shot-av/artifacts/sota_submission_bundles/grand_commission.tar.gz",
       "present": true,
-      "required_count": 6,
-      "sha256": "15d5e1f4ee903d04b1390477de646ef14325e22cc6fbcedba5208e75329d90dc",
+      "required_count": 7,
+      "sha256": "79c5f7743e2d61e1727be1a8cc11cc7e203479735ef6f7616de3e883ce766391",
       "valid": true
     },
     "minor_commission": {
       "content_errors": [],
-      "manifest_sha256": "7bacc8b666de0f4c735b1e9be871ae2bb3851401bd15c791cf66c8cdfd233a9e",
+      "manifest_sha256": "a6f6f2e7e88c66ba64638f32543bbafac830cb13e7dc6e4f72d4ce64a7d582c4",
       "manifest_sha_matches": true,
       "missing_required": [],
       "path": "/home/amdev/sota/minimal-shot-av/artifacts/sota_submission_bundles/minor_commission.tar.gz",
       "present": true,
       "required_count": 2,
-      "sha256": "7bacc8b666de0f4c735b1e9be871ae2bb3851401bd15c791cf66c8cdfd233a9e",
+      "sha256": "a6f6f2e7e88c66ba64638f32543bbafac830cb13e7dc6e4f72d4ce64a7d582c4",
       "valid": true
     }
   },
@@ -48,6 +48,29 @@
       "real_vehicle_control_authorized": false,
       "schema": "production_av_readiness_audit_v1",
       "valid": true
+    },
+    "wod_symbolic_trust": {
+      "failures": [],
+      "path": "/home/amdev/sota/minimal-shot-av/artifacts/wod_symbolic_trust_tradeoff_audit.json",
+      "present": true,
+      "recommendation": "keep_score_baseline_default_and_offer_symbolic_trust_as_risk_control",
+      "required_role": "risk_control",
+      "risk_control_candidate": {
+        "delta_rfs": -0.04236021338867868,
+        "max_utility_drop": 1.5,
+        "mean_rfs": 7.4778635076458695,
+        "mean_symbolic_risk": 0.09014262941409044,
+        "min_risk_margin": 0.25,
+        "name": "symbolic_trust_margin0p25_drop1p5",
+        "output": "artifacts/wod_symbolic_trust_official_sweep/symbolic_trust_margin0p25_drop1p5.json",
+        "postprocess_changed_count": 67.0,
+        "postprocess_changed_rate": 0.13987473903966596,
+        "risk_reduction": 0.17914924800627752
+      },
+      "schema": "wod_symbolic_trust_tradeoff_audit_v1",
+      "score_backend": "official",
+      "score_default_candidate_present": false,
+      "valid": true
     }
   },
   "gates": {
@@ -56,7 +79,8 @@
     "manifest_present": true,
     "minimal_shot_integrity": true,
     "minor_archive_ready": true,
-    "production_no_go_boundary": true
+    "production_no_go_boundary": true,
+    "wod_symbolic_trust_risk_control_boundary": true
   },
   "schema": "final_submission_readiness_audit_v1",
   "valid": true

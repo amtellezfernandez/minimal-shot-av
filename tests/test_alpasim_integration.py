@@ -17,6 +17,7 @@ if str(SRC) not in sys.path:
 
 from minimal_shot_av.neutral.alpasim_metrics import build_alpasim_evidence, load_alpasim_metrics
 from minimal_shot_av.simulator.alpasim_signal import extract_alpasim_signal, scenario_from_command
+from minimal_shot_av.simulator.alpasim_spotlight import DriveCommand, SpotlightReflexAlpaSimModel
 
 
 class AlpaSimIntegrationTests(unittest.TestCase):
@@ -64,6 +65,33 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertEqual(scenario.obstacles[0].x, 12.0)
         self.assertEqual(scenario.obstacles[0].kind, "vehicle")
 
+    def test_alpasim_signal_preserves_static_hazard_shape_metadata(self) -> None:
+        prediction_input = SimpleNamespace(
+            camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+            speed=6.0,
+            acceleration=0.0,
+            ego_pose_history=[object()],
+            structured_hazards=[
+                {
+                    "x": 10.0,
+                    "y": 1.5,
+                    "radius": 0.8,
+                    "length_m": 5.2,
+                    "heading_rad": 1.57,
+                    "kind": "vehicle",
+                    "label": "parked_van",
+                }
+            ],
+        )
+
+        signal = extract_alpasim_signal(prediction_input)
+        scenario = scenario_from_command("straight", signal)
+
+        self.assertEqual(len(scenario.obstacles), 1)
+        obstacle = scenario.obstacles[0]
+        self.assertAlmostEqual(obstacle.length or 0.0, 5.2)
+        self.assertAlmostEqual(obstacle.heading, 1.57, places=2)
+
     def test_alpasim_signal_adds_caution_zone_for_low_visibility_braking(self) -> None:
         prediction_input = SimpleNamespace(
             camera_images={"front": [SimpleNamespace(image=np.zeros((4, 4, 3), dtype=np.uint8))]},
@@ -105,6 +133,179 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertEqual(len(scenario.actors), 1)
         self.assertEqual(scenario.actors[0].role, "crossing_0")
         self.assertEqual(scenario.actors[0].vy, -2.0)
+
+    def test_alpasim_signal_preserves_moving_hazard_shape_metadata(self) -> None:
+        prediction_input = SimpleNamespace(
+            camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+            speed=8.0,
+            acceleration=0.0,
+            ego_pose_history=[],
+            traffic_hazards=[
+                {
+                    "x": 14.0,
+                    "y": 2.0,
+                    "radius": 0.9,
+                    "width_m": 2.2,
+                    "length_m": 4.8,
+                    "heading_rad": 1.2,
+                    "kind": "vehicle",
+                    "label": "crossing_vehicle",
+                    "vx": 0.0,
+                    "vy": -2.0,
+                }
+            ],
+        )
+
+        signal = extract_alpasim_signal(prediction_input)
+        scenario = scenario_from_command("straight", signal)
+
+        self.assertEqual(len(scenario.actors), 1)
+        actor = scenario.actors[0]
+        self.assertAlmostEqual(actor.width, 2.2)
+        self.assertAlmostEqual(actor.length, 4.8)
+        self.assertEqual(actor.role, "crossing_vehicle")
+
+    def test_alpasim_signal_preserves_explicit_moving_behavior(self) -> None:
+        prediction_input = SimpleNamespace(
+            camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+            speed=8.0,
+            acceleration=0.0,
+            ego_pose_history=[],
+            traffic_hazards=[
+                {
+                    "x": 14.0,
+                    "y": 2.0,
+                    "radius": 1.0,
+                    "kind": "vehicle",
+                    "label": "lead_vehicle",
+                    "vx": 0.0,
+                    "vy": -2.0,
+                    "behavior": "sudden_brake",
+                }
+            ],
+        )
+
+        signal = extract_alpasim_signal(prediction_input)
+        scenario = scenario_from_command("straight", signal)
+
+        self.assertEqual(scenario.actors[0].behavior, "sudden_brake")
+
+    def test_alpasim_signal_infers_supported_behavior_from_label(self) -> None:
+        prediction_input = SimpleNamespace(
+            camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+            speed=8.0,
+            acceleration=0.0,
+            ego_pose_history=[],
+            traffic_hazards=[
+                {
+                    "x": 14.0,
+                    "y": 2.0,
+                    "radius": 1.0,
+                    "kind": "vehicle",
+                    "label": "wrong_way_vehicle",
+                    "vx": -3.0,
+                    "vy": 0.0,
+                },
+                {
+                    "x": 8.0,
+                    "y": 3.0,
+                    "radius": 0.6,
+                    "kind": "pedestrian",
+                    "label": "erratic_pedestrian",
+                    "vx": 0.0,
+                    "vy": -1.5,
+                },
+            ],
+        )
+
+        signal = extract_alpasim_signal(prediction_input)
+        scenario = scenario_from_command("straight", signal)
+        behaviors = {actor.role: actor.behavior for actor in scenario.actors}
+
+        self.assertEqual(behaviors["wrong_way_vehicle"], "wrong_way")
+        self.assertEqual(behaviors["erratic_pedestrian"], "erratic_pedestrian")
+
+    def test_alpasim_signal_infers_sudden_brake_from_acceleration(self) -> None:
+        prediction_input = SimpleNamespace(
+            camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+            speed=8.0,
+            acceleration=0.0,
+            ego_pose_history=[],
+            traffic_hazards=[
+                {
+                    "x": 14.0,
+                    "y": 0.0,
+                    "radius": 1.0,
+                    "kind": "vehicle",
+                    "label": "lead_vehicle",
+                    "vx": 2.0,
+                    "vy": 0.0,
+                    "acceleration_mps2": -3.5,
+                }
+            ],
+        )
+
+        signal = extract_alpasim_signal(prediction_input)
+        scenario = scenario_from_command("straight", signal)
+
+        self.assertEqual(scenario.actors[0].behavior, "sudden_brake")
+
+    def test_alpasim_signal_preserves_explicit_heading_for_elongated_vehicle(self) -> None:
+        prediction_input = SimpleNamespace(
+            camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+            speed=8.0,
+            acceleration=0.0,
+            ego_pose_history=[],
+            traffic_hazards=[
+                {
+                    "x": 14.0,
+                    "y": 2.0,
+                    "radius": 0.9,
+                    "width_m": 2.0,
+                    "length_m": 5.5,
+                    "heading_rad": 1.2,
+                    "kind": "vehicle",
+                    "label": "cut_in_vehicle",
+                    "vx": 2.0,
+                    "vy": 0.0,
+                }
+            ],
+        )
+
+        signal = extract_alpasim_signal(prediction_input)
+        scenario = scenario_from_command("straight", signal)
+
+        self.assertAlmostEqual(scenario.actors[0].heading, 1.2, places=6)
+
+    def test_alpasim_adapter_reasoning_exposes_world_state_summary(self) -> None:
+        model = SpotlightReflexAlpaSimModel(camera_ids=["front"], context_length=1, output_frequency_hz=4)
+        prediction_input = SimpleNamespace(
+            camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+            command=DriveCommand.STRAIGHT,
+            speed=6.0,
+            acceleration=0.0,
+            ego_pose_history=[],
+            structured_hazards=[
+                {
+                    "x": 8.0,
+                    "y": 1.0,
+                    "radius": 0.9,
+                    "length_m": 4.5,
+                    "heading_rad": 0.0,
+                    "kind": "vehicle",
+                    "label": "lead_vehicle",
+                }
+            ],
+        )
+
+        prediction = model.predict(prediction_input)
+        reasoning = prediction.reasoning_text
+
+        self.assertIsNotNone(reasoning)
+        assert reasoning is not None
+        self.assertIn('"route_blockage"', reasoning)
+        self.assertIn('"preferred_escape_side"', reasoning)
+        self.assertIn('"obstacle_pressure"', reasoning)
 
     def test_imports_alpasim_aggregate_text_metrics(self) -> None:
         with TemporaryDirectory() as tmp:

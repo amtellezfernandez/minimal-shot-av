@@ -37,8 +37,13 @@ class WodRankerFeatureTests(unittest.TestCase):
         contextual = selector_numeric_features("contextual")
         intent_contextual = selector_numeric_features("intent_contextual")
         world_contextual = selector_numeric_features("world_contextual")
+        relative_contextual = selector_numeric_features("relative_contextual")
         external_contextual = selector_numeric_features("external_contextual")
         contextual_external = selector_numeric_features("contextual_external")
+        learned_reliability_signal = selector_numeric_features("learned_reliability_signal")
+        learned_reliability_signal_external = selector_numeric_features("learned_reliability_signal_external")
+        learned_reliability_contextual = selector_numeric_features("learned_reliability_contextual")
+        learned_reliability_external = selector_numeric_features("learned_reliability_external")
         camera_contextual = selector_numeric_features("camera_contextual")
         image_contextual = selector_numeric_features("image_contextual")
         squared = selector_numeric_features("squared")
@@ -53,8 +58,15 @@ class WodRankerFeatureTests(unittest.TestCase):
         self.assertIn("source_temporal_x_camera_front_luma_mean", image_contextual)
         self.assertIn("source_world", contextual)
         self.assertIn("source_scene", contextual)
+        self.assertIn("source_internnav", contextual)
+        self.assertIn("source_internvla", contextual)
+        self.assertIn("source_system2", contextual)
         self.assertIn("world_nearest_distance_log", world_contextual)
         self.assertIn("source_world_x_world_nearest_distance_log", world_contextual)
+        self.assertIn("waypoint_nearest_neighbor_l2", relative_contextual)
+        self.assertIn("endpoint_distance_frame_rank", relative_contextual)
+        self.assertIn("retrieval_support_score", selector_numeric_features("relative_retrieval_latent_contextual"))
+        self.assertIn("retrieval_latent_disagreement", selector_numeric_features("relative_retrieval_latent_contextual"))
         self.assertIn("external_embedding_00", external_contextual)
         self.assertIn("source_scene_x_external_embedding_00", external_contextual)
         self.assertIn("source_temporal_x_external_embedding_00", external_contextual)
@@ -63,7 +75,23 @@ class WodRankerFeatureTests(unittest.TestCase):
         self.assertIn("source_temporal_x_external_embedding_00", contextual_external)
         self.assertNotIn("world_nearest_distance_log", contextual_external)
         self.assertNotIn("family_reliability_mean_rfs", contextual_external)
+        self.assertIn("source_temporal_x_speed_bin_slow", learned_reliability_signal)
+        self.assertIn("learned_reliability_mean_rfs", learned_reliability_signal)
+        self.assertIn("learned_reliability_frame_delta_score", learned_reliability_signal)
+        self.assertIn("learned_reliability_oracle_frame_rank", learned_reliability_signal_external)
+        self.assertIn("learned_reliability_frame_delta_rank", learned_reliability_signal_external)
+        self.assertNotIn("external_embedding_00", learned_reliability_signal_external)
+        self.assertNotIn("family_reliability_mean_rfs", learned_reliability_signal_external)
+        self.assertIn("learned_reliability_mean_rfs", learned_reliability_contextual)
+        self.assertIn("learned_reliability_rfs_frame_rank", learned_reliability_contextual)
+        self.assertIn("family_reliability_mean_rfs", learned_reliability_contextual)
+        self.assertIn("waypoint_nearest_neighbor_l2", learned_reliability_contextual)
+        self.assertIn("external_embedding_00", learned_reliability_external)
+        self.assertIn("source_temporal_x_external_embedding_00", learned_reliability_external)
         self.assertIn("sq_source_temporal", squared)
+        self.assertIn("sq_source_internnav", squared)
+        self.assertIn("sq_source_internvla", squared)
+        self.assertIn("sq_source_system2", squared)
 
     def test_external_contextual_row_marks_embedding_features(self) -> None:
         frame = WodE2EPreferenceFrame(
@@ -108,6 +136,90 @@ class WodRankerFeatureTests(unittest.TestCase):
             "scene",
             candidate_source_family(source="scene", candidate_name="scene_aux_ridge_scene_mean"),
         )
+        self.assertEqual(
+            "internnav",
+            candidate_source_family(source="kinematic", candidate_name="internnav_s2_waypoint_progress"),
+        )
+        self.assertEqual(
+            "internvla",
+            candidate_source_family(source="candidate_file", candidate_name="internvla_s2_pixel_goal"),
+        )
+        self.assertEqual(
+            "system2",
+            candidate_source_family(
+                source="wod_v20_neural_system2_planner",
+                candidate_name="neural_system2_mode_0_rank0",
+            ),
+        )
+
+    def test_internnav_row_marks_source_family(self) -> None:
+        frame = WodE2EPreferenceFrame(
+            frame_name="segment-100",
+            past_trajectory=[(-1.0, 0.0), (0.0, 0.0)],
+            future_trajectory=[(float(index), 0.0) for index in range(20)],
+            intent=2,
+            init_speed_mps=3.0,
+            references=[],
+        )
+
+        row = candidate_ranker_row(
+            frame=frame,
+            trajectory=[(float(index), float(index) * 0.1) for index in range(1, 21)],
+            candidate_name="internnav_s2_waypoint_intent",
+            candidate_index=7,
+            source="internnav",
+        )
+        features = row["features"]
+
+        self.assertEqual("internnav", row["source"])
+        self.assertEqual(1.0, features["source_internnav"])
+        self.assertEqual(1.0, features["source_internnav_x_speed_bin_slow"])
+
+    def test_internvla_row_marks_source_family(self) -> None:
+        frame = WodE2EPreferenceFrame(
+            frame_name="segment-100",
+            past_trajectory=[(-1.0, 0.0), (0.0, 0.0)],
+            future_trajectory=[(float(index), 0.0) for index in range(20)],
+            intent=1,
+            init_speed_mps=3.0,
+            references=[],
+        )
+
+        row = candidate_ranker_row(
+            frame=frame,
+            trajectory=[(float(index), 0.0) for index in range(1, 21)],
+            candidate_name="internvla_s2_pixel_goal",
+            candidate_index=8,
+            source="internvla",
+        )
+        features = row["features"]
+
+        self.assertEqual("internvla", row["source"])
+        self.assertEqual(1.0, features["source_internvla"])
+        self.assertEqual(1.0, features["source_internvla_x_speed_bin_slow"])
+
+    def test_system2_row_marks_source_family(self) -> None:
+        frame = WodE2EPreferenceFrame(
+            frame_name="segment-100",
+            past_trajectory=[(-1.0, 0.0), (0.0, 0.0)],
+            future_trajectory=[(float(index), 0.0) for index in range(20)],
+            intent=1,
+            init_speed_mps=3.0,
+            references=[],
+        )
+
+        row = candidate_ranker_row(
+            frame=frame,
+            trajectory=[(float(index), 0.0) for index in range(1, 21)],
+            candidate_name="neural_system2_mode_0_rank0",
+            candidate_index=0,
+            source="wod_v20_neural_system2_planner",
+        )
+        features = row["features"]
+
+        self.assertEqual("system2", row["source"])
+        self.assertEqual(1.0, features["source_system2"])
+        self.assertEqual(1.0, features["source_system2_x_speed_bin_slow"])
 
     def test_camera_contextual_row_marks_camera_payload_features(self) -> None:
         frame = WodE2EPreferenceFrame(
@@ -167,7 +279,6 @@ class WodRankerFeatureTests(unittest.TestCase):
         self.assertGreaterEqual(features["camera_front_luma_std"], 0.0)
         self.assertGreaterEqual(features["camera_front_edge_mean"], 0.0)
         self.assertGreater(features["source_learned_x_camera_front_luma_mean"], 0.0)
-
 
 def _tiny_gray_jpeg() -> bytes:
     from io import BytesIO

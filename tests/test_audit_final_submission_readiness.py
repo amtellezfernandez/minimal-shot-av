@@ -117,7 +117,6 @@ class AuditFinalSubmissionReadinessTests(unittest.TestCase):
                 any("scenario_eval.json" in blocker for blocker in report["blockers"])
             )
 
-
 def _write_archive(path: Path, members: set[str], *, stale_minor_eval: bool = False) -> Path:
     with tarfile.open(path, "w:gz") as stream:
         for member in members:

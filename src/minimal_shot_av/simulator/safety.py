@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 
-from .perception import ScenePerception
+from .perception import ScenePerception, perceived_obstacle_signed_distance
 from .planner import PlannedAction
 from .world_model import WorldState
 
@@ -137,7 +137,7 @@ def _predicted_visible_clearance(
         world_state.position[1] + direction[1] * speed,
     )
     return min(
-        math.dist(next_position, (obstacle.x, obstacle.y)) - obstacle.radius
+        perceived_obstacle_signed_distance(next_position, obstacle)
         for obstacle in perception.visible_obstacles
     )
 

@@ -48,6 +48,10 @@ WORLD_SUMMARY_FEATURES = [
 ]
 SCENE_TOKEN_CACHE_SCHEMA = "wod_scene_tokens_v1"
 EXTERNAL_FRAME_EMBEDDING_CACHE_SCHEMA = "external_frame_embeddings_v1"
+WORLD_PRIOR_MASK_OFF = "off"
+WORLD_PRIOR_MASK_TAIL = "tail"
+WORLD_PRIOR_MASK_RANDOM = "random"
+WORLD_PRIOR_MASK_MIXED = "mixed"
 
 
 @dataclass(frozen=True)
@@ -66,6 +70,12 @@ class WorldPrediction:
     future_summary: dict[str, float]
     nearest_experiences: list[tuple[str, float]]
     trajectory: Trajectory
+
+
+@dataclass(frozen=True)
+class LatentPredictiveWorldPriorPrediction:
+    target_embedding: list[float]
+    predicted_summary: dict[str, float]
 
 
 @dataclass(frozen=True)
@@ -314,6 +324,159 @@ class LearnedWorldModel:
         output_path.write_text(json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+@dataclass(frozen=True)
+class LatentPredictiveWorldPrior:
+    context_feature_mean: list[float]
+    context_feature_scale: list[float]
+    target_summary_mean: list[float]
+    target_summary_scale: list[float]
+    target_axes: list[list[float]]
+    context_weights: list[list[float]]
+    feature_mode: str
+    latent_source: str
+    scene_token_names: list[str]
+    ridge: float
+    latent_dim: int
+    train_rows: int
+    residual_error_mean: float
+    residual_error_scale: float
+    context_mask_mode: str = WORLD_PRIOR_MASK_OFF
+    external_embedding_dimension: int = 0
+
+    def predict_frame(self, frame: WodE2EPreferenceFrame) -> LatentPredictiveWorldPriorPrediction:
+        context = _world_latent_features(
+            frame,
+            feature_mode=self.feature_mode,
+            latent_source=self.latent_source,
+        )
+        normalized = _normalize_row(context, self.context_feature_mean, self.context_feature_scale)
+        embedding = normalized @ np.asarray(self.context_weights, dtype=np.float64)
+        summary = _decode_target_summary(
+            embedding,
+            target_axes=np.asarray(self.target_axes, dtype=np.float64),
+            target_summary_mean=self.target_summary_mean,
+            target_summary_scale=self.target_summary_scale,
+        )
+        return LatentPredictiveWorldPriorPrediction(
+            target_embedding=[float(value) for value in embedding.tolist()],
+            predicted_summary={
+                name: float(value)
+                for name, value in zip(WORLD_SUMMARY_FEATURES, summary.tolist())
+            },
+        )
+
+    def encode_trajectory(self, trajectory: Trajectory) -> list[float]:
+        summary = np.asarray(_future_summary_vector(trajectory), dtype=np.float64)
+        mean = np.asarray(self.target_summary_mean, dtype=np.float64)
+        scale = np.asarray(self.target_summary_scale, dtype=np.float64)
+        axes = np.asarray(self.target_axes, dtype=np.float64)
+        normalized = (summary - mean) / np.where(np.abs(scale) > 1e-12, scale, 1.0)
+        return (normalized @ axes.T).tolist()
+
+    def candidate_features(self, frame: WodE2EPreferenceFrame, trajectory: Trajectory) -> dict[str, float]:
+        prediction = self.predict_frame(frame)
+        predicted_embedding = np.asarray(prediction.target_embedding, dtype=np.float64)
+        candidate_embedding = np.asarray(self.encode_trajectory(trajectory), dtype=np.float64)
+        latent_error = float(np.linalg.norm(candidate_embedding - predicted_embedding))
+        latent_error_z = (latent_error - float(self.residual_error_mean)) / max(1e-6, float(self.residual_error_scale))
+        candidate_summary = np.asarray(_future_summary_vector(trajectory), dtype=np.float64)
+        predicted_summary = np.asarray(
+            [prediction.predicted_summary[name] for name in WORLD_SUMMARY_FEATURES],
+            dtype=np.float64,
+        )
+        progress_error = abs(float(candidate_summary[0] - predicted_summary[0]))
+        lateral_error = abs(float(candidate_summary[1] - predicted_summary[1])) + abs(
+            float(candidate_summary[3] - predicted_summary[3])
+        )
+        speed_error = abs(float(candidate_summary[4] - predicted_summary[4])) + abs(
+            float(candidate_summary[5] - predicted_summary[5])
+        )
+        heading_error = abs(float(candidate_summary[7] - predicted_summary[7]))
+        return {
+            "world_prior_latent_error": latent_error,
+            "world_prior_latent_error_log": float(math.log1p(max(0.0, latent_error))),
+            "world_prior_latent_error_z": float(latent_error_z),
+            "world_prior_progress_error": progress_error,
+            "world_prior_lateral_error": lateral_error,
+            "world_prior_speed_error": speed_error,
+            "world_prior_heading_error": heading_error,
+            "world_prior_constraint_cost": float(
+                max(0.0, latent_error_z)
+                + 0.05 * progress_error
+                + 0.25 * lateral_error
+                + 0.10 * speed_error
+                + heading_error
+            ),
+            "world_prior_predicted_final_x": float(predicted_summary[0]),
+            "world_prior_predicted_final_y": float(predicted_summary[1]),
+        }
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "model_type": "latent_predictive_world_prior_v1",
+            "feature_set": FEATURE_SET_TEMPORAL,
+            "feature_mode": self.feature_mode,
+            "latent_source": self.latent_source,
+            "scene_token_names": self.scene_token_names,
+            "external_embedding_dimension": self.external_embedding_dimension,
+            "world_summary_features": WORLD_SUMMARY_FEATURES,
+            "context_feature_mean": self.context_feature_mean,
+            "context_feature_scale": self.context_feature_scale,
+            "target_summary_mean": self.target_summary_mean,
+            "target_summary_scale": self.target_summary_scale,
+            "target_axes": self.target_axes,
+            "context_weights": self.context_weights,
+            "ridge": self.ridge,
+            "latent_dim": self.latent_dim,
+            "train_rows": self.train_rows,
+            "residual_error_mean": self.residual_error_mean,
+            "residual_error_scale": self.residual_error_scale,
+            "context_mask_mode": self.context_mask_mode,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "LatentPredictiveWorldPrior":
+        if payload.get("model_type") != "latent_predictive_world_prior_v1":
+            raise ValueError(f"unsupported world prior type: {payload.get('model_type')!r}")
+        feature_mode = str(payload.get("feature_mode", FEATURE_MODE_EGO_TEMPORAL))
+        _validate_feature_mode(feature_mode)
+        latent_source = str(payload.get("latent_source", LATENT_SOURCE_ALL))
+        _validate_latent_source(latent_source, feature_mode=feature_mode)
+        token_names = [str(value) for value in payload.get("scene_token_names", [])]
+        if feature_mode == FEATURE_MODE_SCENE_TOKENS and not token_names:
+            token_names = scene_token_names()
+        external_dimension = int(payload.get("external_embedding_dimension", 0))
+        if feature_mode == FEATURE_MODE_EXTERNAL_EMBEDDINGS and external_dimension <= 0:
+            raise ValueError("external embedding world prior requires external_embedding_dimension")
+        return cls(
+            context_feature_mean=[float(value) for value in payload["context_feature_mean"]],
+            context_feature_scale=[float(value) for value in payload["context_feature_scale"]],
+            target_summary_mean=[float(value) for value in payload["target_summary_mean"]],
+            target_summary_scale=[float(value) for value in payload["target_summary_scale"]],
+            target_axes=[[float(value) for value in row] for row in payload["target_axes"]],
+            context_weights=[[float(value) for value in row] for row in payload["context_weights"]],
+            feature_mode=feature_mode,
+            latent_source=latent_source,
+            scene_token_names=token_names,
+            ridge=float(payload["ridge"]),
+            latent_dim=int(payload["latent_dim"]),
+            train_rows=int(payload["train_rows"]),
+            residual_error_mean=float(payload["residual_error_mean"]),
+            residual_error_scale=float(payload["residual_error_scale"]),
+            context_mask_mode=str(payload.get("context_mask_mode", WORLD_PRIOR_MASK_OFF)),
+            external_embedding_dimension=external_dimension,
+        )
+
+    @classmethod
+    def load(cls, path: str | Path) -> "LatentPredictiveWorldPrior":
+        return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
+
+    def save(self, path: str | Path) -> None:
+        output_path = Path(path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
 def fit_world_model(
     frames: Iterable[WodE2EPreferenceFrame],
     *,
@@ -383,6 +546,89 @@ def fit_world_model(
         ridge=float(ridge),
         latent_dim=int(axes.shape[0]),
         train_rows=len(rows),
+        external_embedding_dimension=(
+            _external_embedding_dimension(rows)
+            if feature_mode == FEATURE_MODE_EXTERNAL_EMBEDDINGS
+            else 0
+        ),
+    )
+
+
+def fit_latent_predictive_world_prior(
+    frames: Iterable[WodE2EPreferenceFrame],
+    *,
+    latent_dim: int = 6,
+    ridge: float = 10.0,
+    feature_mode: str = FEATURE_MODE_EGO_TEMPORAL,
+    latent_source: str = LATENT_SOURCE_ALL,
+    context_mask_mode: str = WORLD_PRIOR_MASK_OFF,
+    seed: int = 0,
+) -> LatentPredictiveWorldPrior:
+    rows = [frame for frame in frames if len(frame.future_trajectory) == 20]
+    if not rows:
+        raise ValueError("no frames with 20-waypoint future trajectories")
+    if latent_dim <= 0:
+        raise ValueError("latent_dim must be positive")
+    _validate_feature_mode(feature_mode)
+    _validate_latent_source(latent_source, feature_mode=feature_mode)
+    _validate_world_prior_mask_mode(context_mask_mode)
+    rng = np.random.default_rng(int(seed))
+    context_rows: list[WodE2EPreferenceFrame] = []
+    target_frames: list[WodE2EPreferenceFrame] = []
+    for frame in rows:
+        for masked_frame in _masked_world_prior_training_frames(
+            frame,
+            feature_mode=feature_mode,
+            latent_source=latent_source,
+            mask_mode=context_mask_mode,
+            rng=rng,
+        ):
+            context_rows.append(masked_frame)
+            target_frames.append(frame)
+    context = np.asarray(
+        [
+            _world_latent_features(
+                frame,
+                feature_mode=feature_mode,
+                latent_source=latent_source,
+            )
+            for frame in context_rows
+        ],
+        dtype=np.float64,
+    )
+    context_mean = context.mean(axis=0)
+    context_scale = context.std(axis=0)
+    context_scale[context_scale < 1e-8] = 1.0
+    context_norm = (context - context_mean) / context_scale
+    summaries = np.asarray([_future_summary_vector(frame.future_trajectory) for frame in target_frames], dtype=np.float64)
+    target_mean = summaries.mean(axis=0)
+    target_scale = summaries.std(axis=0)
+    target_scale[target_scale < 1e-8] = 1.0
+    target_norm = (summaries - target_mean) / target_scale
+    target_axes = _principal_axes(target_norm, latent_dim)
+    target_embeddings = target_norm @ target_axes.T
+    context_weights = _fit_latent_regression(context_norm, target_embeddings, ridge)
+    predicted_embeddings = context_norm @ context_weights
+    residual_errors = np.linalg.norm(target_embeddings - predicted_embeddings, axis=1)
+    residual_scale = float(residual_errors.std())
+    if residual_scale < 1e-8:
+        residual_scale = 1.0
+    return LatentPredictiveWorldPrior(
+        context_feature_mean=context_mean.tolist(),
+        context_feature_scale=context_scale.tolist(),
+        target_summary_mean=target_mean.tolist(),
+        target_summary_scale=target_scale.tolist(),
+        target_axes=target_axes.tolist(),
+        context_weights=context_weights.tolist(),
+        feature_mode=feature_mode,
+        latent_source=latent_source,
+        scene_token_names=scene_token_names() if feature_mode == FEATURE_MODE_SCENE_TOKENS else [],
+        ridge=float(ridge),
+        latent_dim=int(target_axes.shape[0]),
+        train_rows=len(context_rows),
+        residual_error_mean=float(residual_errors.mean()),
+        residual_error_scale=residual_scale,
+        context_mask_mode=context_mask_mode,
         external_embedding_dimension=(
             _external_embedding_dimension(rows)
             if feature_mode == FEATURE_MODE_EXTERNAL_EMBEDDINGS
@@ -709,6 +955,16 @@ def _validate_feature_mode(feature_mode: str) -> None:
         raise ValueError(f"unsupported world model feature mode: {feature_mode}")
 
 
+def _validate_world_prior_mask_mode(mask_mode: str) -> None:
+    if mask_mode not in {
+        WORLD_PRIOR_MASK_OFF,
+        WORLD_PRIOR_MASK_TAIL,
+        WORLD_PRIOR_MASK_RANDOM,
+        WORLD_PRIOR_MASK_MIXED,
+    }:
+        raise ValueError(f"unsupported world prior mask mode: {mask_mode}")
+
+
 def _validate_latent_source(latent_source: str, *, feature_mode: str) -> None:
     if latent_source not in {LATENT_SOURCE_ALL, LATENT_SOURCE_SCENE}:
         raise ValueError(f"unsupported world model latent source: {latent_source}")
@@ -755,6 +1011,107 @@ def _principal_axes(x_norm: np.ndarray, latent_dim: int) -> np.ndarray:
 def _fit_latent_regression(embeddings: np.ndarray, target: np.ndarray, ridge: float) -> np.ndarray:
     penalty = np.eye(embeddings.shape[1], dtype=np.float64) * float(ridge)
     return np.linalg.solve(embeddings.T @ embeddings + penalty, embeddings.T @ target)
+
+
+def _masked_world_prior_training_frames(
+    frame: WodE2EPreferenceFrame,
+    *,
+    feature_mode: str,
+    latent_source: str,
+    mask_mode: str,
+    rng: np.random.Generator,
+) -> list[WodE2EPreferenceFrame]:
+    variants = [frame]
+    if mask_mode in {WORLD_PRIOR_MASK_TAIL, WORLD_PRIOR_MASK_MIXED}:
+        variants.append(_masked_world_prior_frame(frame, feature_mode=feature_mode, latent_source=latent_source, mode="tail", rng=rng))
+    if mask_mode in {WORLD_PRIOR_MASK_RANDOM, WORLD_PRIOR_MASK_MIXED}:
+        variants.append(
+            _masked_world_prior_frame(frame, feature_mode=feature_mode, latent_source=latent_source, mode="random", rng=rng)
+        )
+    return variants
+
+
+def _masked_world_prior_frame(
+    frame: WodE2EPreferenceFrame,
+    *,
+    feature_mode: str,
+    latent_source: str,
+    mode: str,
+    rng: np.random.Generator,
+) -> WodE2EPreferenceFrame:
+    masked_past = _masked_past_trajectory(frame.past_trajectory, mode=mode, rng=rng)
+    masked_scene_tokens = frame.scene_tokens
+    masked_external_embedding = frame.external_embedding
+    if feature_mode == FEATURE_MODE_SCENE_TOKENS or latent_source == LATENT_SOURCE_SCENE:
+        if masked_scene_tokens is not None:
+            masked_scene_tokens = _masked_vector(masked_scene_tokens, mode=mode, rng=rng)
+        if feature_mode == FEATURE_MODE_EXTERNAL_EMBEDDINGS and masked_external_embedding is not None:
+            masked_external_embedding = _masked_vector(masked_external_embedding, mode=mode, rng=rng)
+    elif feature_mode == FEATURE_MODE_EXTERNAL_EMBEDDINGS and masked_external_embedding is not None:
+        masked_external_embedding = _masked_vector(masked_external_embedding, mode=mode, rng=rng)
+    return replace(
+        frame,
+        past_trajectory=masked_past,
+        scene_tokens=None if masked_scene_tokens is None else [float(value) for value in masked_scene_tokens],
+        external_embedding=(
+            None if masked_external_embedding is None else [float(value) for value in masked_external_embedding]
+        ),
+    )
+
+
+def _masked_past_trajectory(
+    trajectory: Sequence[tuple[float, float]],
+    *,
+    mode: str,
+    rng: np.random.Generator,
+) -> Trajectory:
+    points = [(float(x), float(y)) for x, y in trajectory]
+    if len(points) <= 2:
+        return points
+    keep = max(2, int(math.ceil(len(points) * 0.5)))
+    if mode == "tail":
+        return points[-keep:]
+    if mode != "random":
+        raise ValueError(f"unsupported mask variant: {mode}")
+    candidate_indices = list(range(max(0, len(points) - 1)))
+    pick = sorted(rng.choice(candidate_indices, size=max(0, keep - 1), replace=False).tolist()) if keep > 1 else []
+    indices = sorted({*pick, len(points) - 1})
+    return [points[index] for index in indices]
+
+
+def _masked_vector(
+    values: Sequence[float],
+    *,
+    mode: str,
+    rng: np.random.Generator,
+) -> list[float]:
+    array = np.asarray([float(value) for value in values], dtype=np.float64)
+    if array.size <= 1:
+        return array.tolist()
+    keep = max(1, int(math.ceil(array.size * 0.5)))
+    if mode == "tail":
+        mask = np.zeros(array.size, dtype=np.float64)
+        mask[:keep] = 1.0
+        return (array * mask).tolist()
+    if mode != "random":
+        raise ValueError(f"unsupported mask variant: {mode}")
+    indices = rng.choice(array.size, size=keep, replace=False)
+    mask = np.zeros(array.size, dtype=np.float64)
+    mask[indices] = 1.0
+    return (array * mask).tolist()
+
+
+def _decode_target_summary(
+    embedding: np.ndarray,
+    *,
+    target_axes: np.ndarray,
+    target_summary_mean: Sequence[float],
+    target_summary_scale: Sequence[float],
+) -> np.ndarray:
+    mean = np.asarray(target_summary_mean, dtype=np.float64)
+    scale = np.asarray(target_summary_scale, dtype=np.float64)
+    normalized = embedding @ target_axes
+    return mean + normalized * scale
 
 
 def _normalize_row(

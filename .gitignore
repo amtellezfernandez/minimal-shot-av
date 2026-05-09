@@ -1,4 +1,8 @@
 .venv/
+.venv-v20
+.venv-v20/
+.venv-internvla-download/
+.venv-internvla-runtime/
 .venv-wod/
 .venv-qwen/
 .uv-cache/
@@ -16,6 +20,8 @@ artifacts/*
 !artifacts/sota_submission_bundles/**
 !artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json
 !artifacts/wod_fastkin_gate_ridge175_rate020_fallback_breakthrough_audit.json
+artifact/external/*
+!artifact/external/README.md
 outputs/
 runs/
 waymo_open_dataset_end_to_end_camera_v_1_0_0/

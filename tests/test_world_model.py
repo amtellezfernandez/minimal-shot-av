@@ -17,10 +17,12 @@ from minimal_shot_av.model.world_model import (
     FEATURE_MODE_EXTERNAL_EMBEDDINGS,
     FEATURE_MODE_SCENE_TOKENS,
     LATENT_SOURCE_SCENE,
+    LatentPredictiveWorldPrior,
     LearnedWorldModel,
     attach_external_embedding_cache,
     attach_scene_token_cache,
     external_embedding_features,
+    fit_latent_predictive_world_prior,
     fit_world_model,
     load_external_embedding_cache,
     load_scene_token_cache,
@@ -358,6 +360,57 @@ class LearnedWorldModelTests(unittest.TestCase):
             fit_world_model([])
         with self.assertRaises(ValueError):
             fit_world_model([sample_frame("a")], latent_dim=0)
+
+    def test_latent_predictive_world_prior_scores_plausible_future_lower(self) -> None:
+        prior = fit_latent_predictive_world_prior(
+            [
+                sample_frame("straight_slow", step=0.5),
+                sample_frame("straight", step=1.0),
+                sample_frame("left", step=1.0, lateral=4.0, intent=2),
+                sample_frame("right", step=1.0, lateral=-4.0, intent=3),
+            ],
+            latent_dim=3,
+            ridge=0.1,
+        )
+        frame = sample_frame("query_left", step=1.0, lateral=4.0, intent=2)
+        plausible = frame.future_trajectory
+        implausible = sample_frame("query_wrong", step=1.0, lateral=-4.0, intent=3).future_trajectory
+
+        plausible_features = prior.candidate_features(frame, plausible)
+        implausible_features = prior.candidate_features(frame, implausible)
+
+        self.assertLess(
+            plausible_features["world_prior_constraint_cost"],
+            implausible_features["world_prior_constraint_cost"],
+        )
+        self.assertLess(
+            plausible_features["world_prior_latent_error"],
+            implausible_features["world_prior_latent_error"],
+        )
+
+    def test_latent_predictive_world_prior_round_trips(self) -> None:
+        prior = fit_latent_predictive_world_prior(
+            [sample_frame("a", step=1.0), sample_frame("b", step=2.0), sample_frame("c", lateral=2.0, intent=2)],
+            latent_dim=2,
+        )
+
+        loaded = LatentPredictiveWorldPrior.from_dict(prior.to_dict())
+
+        self.assertEqual(prior.latent_dim, loaded.latent_dim)
+        self.assertEqual(prior.feature_mode, loaded.feature_mode)
+        self.assertEqual(prior.latent_source, loaded.latent_source)
+        self.assertEqual(prior.train_rows, loaded.train_rows)
+
+    def test_latent_predictive_world_prior_can_train_with_mixed_context_masks(self) -> None:
+        prior = fit_latent_predictive_world_prior(
+            [sample_frame("a", step=1.0), sample_frame("b", step=2.0), sample_frame("c", lateral=2.0, intent=2)],
+            latent_dim=2,
+            context_mask_mode="mixed",
+            seed=7,
+        )
+
+        self.assertEqual("mixed", prior.context_mask_mode)
+        self.assertGreater(prior.train_rows, 3)
 
 
 if __name__ == "__main__":
