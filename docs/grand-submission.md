@@ -25,11 +25,11 @@ This submission targets the **Grand Commission**: overall best autonomy architec
 
 ## Submission Contents
 
-- GitHub repo: this codebase, with `README.md`, `models/DECLARATION.md`, and `docs/spotlight-reflex.md`.
-- Architecture write-up: `docs/two-page-writeup.md` and `docs/architecture-deep-dive.md`.
+- GitHub repo: this codebase, with `README.md` and `models/DECLARATION.md`.
+- Architecture write-up: `docs/architecture-deep-dive.md`.
+- WOD-E2E pipeline walkthrough and failure analysis: `docs/wod-e2e-system-walkthrough.md`.
 - Analysis notebook: `notebooks/wod_e2e_analysis.ipynb`.
-- Judging evidence map: `docs/judging-criteria-evidence.md` and
-  `artifacts/sota_judging_criteria_audit.json`.
+- Judging evidence: `artifacts/sota_judging_criteria_audit.json`.
 
 ## Demo Commands
 
@@ -112,8 +112,7 @@ Each command writes:
 - The current scene critic is procedural/context-derived, not a deployed VLM
   camera stack.
 - The strongest honest claim is infrastructure plus reproducible closed-loop
-  prototype behavior. A stronger solution claim requires the acceptance bar in
-  `docs/solution-reset.md`.
+  prototype behavior with a preference-calibrated trajectory selector.
 
 ## Evidence Summary
 

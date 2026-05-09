@@ -1,13 +1,7 @@
 # SoTA Minor Commission Submission Bundle
 
-Randomized long-tail simulation environment with WOD-style cluster coverage, compositional OOD stress cases, and reproducible closed-loop evaluation.
-
-## Include In Submission
-
-- GitHub repository URL
-- 1-5 minute video or slide deck
-- Short write-up
-- Demo artifacts listed below
+Randomized long-tail simulation environment with WOD-style cluster coverage,
+compositional OOD stress cases, and reproducible closed-loop evaluation.
 
 ## Demo Artifacts
 
@@ -23,14 +17,8 @@ Randomized long-tail simulation environment with WOD-style cluster coverage, com
 ## Source Documents
 
 - `README.md`
-- `docs/sota-minor-submission-form.md`
-- `docs/sota-minor-slide-script.md`
-- `docs/submission-tracks.md`
-- `docs/minor-simulation-submission.md`
-- `docs/alpasim-integration.md`
-- `docs/compositional-ood-eval.md`
-- `docs/final-submission-handoff.md`
-- `docs/video-outline.md`
+- `docs/minor-commission.md`
+- `docs/architecture-deep-dive.md`
 
 ## Verification
 
