@@ -60,24 +60,6 @@ flowchart LR
 
 ---
 
-## Live Rollouts
-
-**Construction scenario — seed 1**
-*Ego (teal) navigates narrow lane with cone field and lane closure. HUD shows
-maneuver selection, obstacle pressure, and route blockage at each step.*
-![Construction rollout](images/construction_success.gif)
-
-**Spotlight scenario — seed 3** *(wrong-way animal, night conditions, visibility 0.69)*
-![Spotlight rollout](images/spotlight_success.gif)
-
-**Foreign object debris — seed 2**
-![FOD rollout](images/fod_success.gif)
-
-**Intersection stress — seed 3** *(207 steps, conflict zone, crossing actors)*
-![Intersection stress](images/intersection_stress.gif)
-
----
-
 ## Layer 1: Abstract Simulator (Built From Scratch)
 
 Every file in `src/minimal_shot_av/simulator/` is original code. Nothing is
@@ -134,6 +116,11 @@ Every rollout step records the full decision trace in JSON: selected maneuver,
 reference labels, scores at 3 s and 5 s, whether each region was satisfied,
 world state fields, and top candidate summaries.
 
+**Spotlight scenario** — wrong-way actor, low visibility (0.69), night conditions.
+HUD shows maneuver name, obstacle pressure, and route blockage at each step.
+
+![Spotlight rollout](images/spotlight_success.gif)
+
 ### WOD-E2E Scenario Generator (`wod_scenarios.py`)
 
 Procedural generator for all 11 WOD-E2E named clusters, driven by a seeded
@@ -163,6 +150,11 @@ Each scenario JSON includes: `cluster`, `seed`, `tags`, `environment`
 (weather, visibility, time of day, road friction, latency budget), typed actors
 with `role` and `behavior`, map features (crosswalks, lane closures, merge zones,
 conflict zones), and the obstacle field.
+
+**Construction zone** — cone field, narrow corridor (5.2 m half-width), lane closure.
+Policy selects `nudge_right`, maintains progress through the gap.
+
+![Construction rollout](images/construction_success.gif)
 
 ### Compositional OOD Generator (`compositional_scenarios.py`)
 
@@ -346,6 +338,11 @@ Every `ModelPrediction` includes a full decision JSON:
 
 AlpaSim reviewers can inspect exactly why a trajectory was chosen at every step.
 
+**Foreign object debris** — debris blocking primary lane; adapter converts AlpaSignal
+static hazard to simulator obstacle; policy selects `evasive_left`.
+
+![FOD rollout](images/fod_success.gif)
+
 #### AlpaSignal Bridge Audit (`audit_alpasignal_bridge.py`)
 
 Three deterministic adapter cases verified:
@@ -377,6 +374,10 @@ in AlpaSim — no code path is AlpaSim-specific.
 | Benchmark passes | 550 / 550 | 326 / 350 (93.1%) |
 | Gauntlet passes | — | 36 / 60 (60%) |
 | Mean min clearance | 2.80 m | — |
+
+**Intersection stress** — conflict zone, two crossing actors at different timings (207 steps):
+
+![Intersection stress](images/intersection_stress.gif)
 
 The gauntlet is deliberately not saturated. 60% pass rate on synchronised
 multi-hazard narrow-corridor scenarios exposes a measurable failure boundary

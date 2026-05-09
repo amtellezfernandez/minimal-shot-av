@@ -323,6 +323,18 @@ Benchmark pass rate: 326/350 (93.1%). Gauntlet (hardest suite) pass rate: 36/60
 limits under near-miss, intervention, and progress gates rather than inflating
 scores with easy scenarios.
 
+**Spotlight scenario** — wrong-way actor, low visibility, night conditions:
+
+![Spotlight Reflex success](images/spotlight_success.gif)
+
+**Construction zone** — cone field, narrow corridor, lane closure:
+
+![Construction rollout](images/construction_success.gif)
+
+**Intersection stress** — conflict zone, two crossing actors at different timings (207 steps):
+
+![Intersection stress](images/intersection_stress.gif)
+
 ### 3.6 AlpaSim trajectory plugin integration
 
 The Spotlight Reflex policy was successfully integrated as an AlpaSim trajectory
@@ -334,6 +346,7 @@ plugin under the `alpasim.models` entry point protocol. The adapter handles:
 - heading computation and trajectory resampling to arbitrary output frequencies
 
 The AlpaSignal bridge audit verified all signal paths with deterministic inputs.
+See [`minor-commission.md`](minor-commission.md) for the full adapter engineering detail.
 
 ---
 
