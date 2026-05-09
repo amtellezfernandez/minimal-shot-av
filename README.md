@@ -11,23 +11,15 @@ independently:
 
 ## Submission Documentation
 
-Three documents cover the full submission. Read these first:
-
-- [`docs/architecture-deep-dive.md`](docs/architecture-deep-dive.md) — complete
+- [`docs/writeup.md`](docs/writeup.md) — **Start here.** ≤2-page write-up:
+  motivation, architecture, what worked, what didn't, where the prize goes.
+- [`docs/architecture-deep-dive.md`](docs/architecture-deep-dive.md) — full
   architecture walkthrough: Spotlight Reflex design, WOD-E2E harness, what worked,
-  what did not work, and honest performance claims.
+  what did not work, honest performance claims.
 - [`docs/minor-commission.md`](docs/minor-commission.md) — simulation environment:
-  abstract simulator (built from scratch) and AlpaSim adapter (same policy at
-  sensor-realistic fidelity). Covers all custom engineering, evidence results, and
-  the clean boundary between the two layers.
+  abstract simulator and AlpaSim adapter (same policy at two fidelity levels).
 - [`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md) —
-  end-to-end WOD-E2E pipeline walkthrough with performance results and per-cluster
-  failure analysis including structural limitations and decision traces.
-
-Submission summaries:
-
-- [`docs/grand-submission.md`](docs/grand-submission.md) — Grand Commission summary
-- [`docs/minor-commission.md`](docs/minor-commission.md) — Minor Commission summary
+  WOD-E2E pipeline, performance results, and per-cluster failure analysis.
 
 ---
 
