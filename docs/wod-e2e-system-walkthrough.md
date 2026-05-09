@@ -3,7 +3,18 @@
 ## System Diagram
 
 **WOD-E2E Model Pipeline**
-![WOD-E2E Pipeline](images/grand-pipeline.svg)
+
+```mermaid
+flowchart LR
+    A[TFRecord Shards\n93 validation] --> B[E2EDFrame Parser\nwod_e2e.py]
+    B --> C{Candidate\nGeneration}
+    C --> D[Kinematic\nconst-vel · accel\nheading · stop]
+    C --> E[Ridge Learned\n31 features · 5-fold CV]
+    C --> F[Temporal Ridge\nego-history trends]
+    D & E & F --> G[WodPreferenceRanker\nHGB · 137 features\nstability-selected]
+    G --> H[Selected Trajectory\n20 × 2 waypoints]
+    H --> I[E2EDChallenge\nSubmission.tar.gz]
+```
 
 **Spotlight Reflex on spotlight scenario (success)**
 ![Spotlight success](images/spotlight_success.gif)

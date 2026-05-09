@@ -3,13 +3,44 @@
 ## System Diagrams
 
 **WOD-E2E Model Pipeline (Grand Commission)**
-![WOD-E2E Pipeline](images/grand-pipeline.svg)
 
-**Spotlight Reflex Simulator Architecture**
-![Spotlight Reflex Architecture](images/simulator-architecture.svg)
+```mermaid
+flowchart LR
+    A[TFRecord Shards\n93 validation] --> B[E2EDFrame Parser\nwod_e2e.py]
+    B --> C{Candidate\nGeneration}
+    C --> D[Kinematic\nconst-vel · accel\nheading · stop]
+    C --> E[Ridge Learned\n31 features · 5-fold CV]
+    C --> F[Temporal Ridge\nego-history trends]
+    D & E & F --> G[WodPreferenceRanker\nHGB · 137 features\nstability-selected]
+    G --> H[Selected Trajectory\n20 × 2 waypoints]
+    H --> I[E2EDChallenge\nSubmission.tar.gz]
+```
 
-**AlpaSim Integration**
-![AlpaSim Bridge](images/alpasim-bridge.svg)
+**Spotlight Reflex Closed-Loop Policy**
+
+```mermaid
+flowchart TD
+    S[Scenario\nobstacles · actors · lane] --> P[ScenePerception\nobstacle_pressure\nroute_blockage · axis extents]
+    P --> W[WorldState\ncorridor_blocked\nleft/right_clearance\npreferred_escape_side]
+    W --> R[ReferenceRuleEngine\nworld state → pseudo-rater\nreferences with scores]
+    W --> C[Maneuver Candidates ×9\nstop · crawl · maintain\nslow_yield · nudge_left/right\nevasive_left/right · lane_recover]
+    R & C --> T[TrajectorySelector\nscore at 3s + 5s regions\nsafety penalty · progress bonus]
+    T --> O[SpotlightSelection\nselected_maneuver · score\ndecision_reason · full metadata]
+```
+
+**AlpaSim Adapter Bridge**
+
+```mermaid
+flowchart LR
+    A[AlpaSim\nPredictionInput] --> B[extract_alpasim_signal]
+    B --> B1[visibility_risk\ncamera brightness]
+    B --> B2[dynamics_risk\nspeed + accel]
+    B --> B3[structured_hazards\n→ Obstacle / Actor]
+    A --> B4[DriveCommand\nLEFT / STRAIGHT / RIGHT]
+    B4 --> C[scenario_from_command\nsigmoid lane geometry]
+    B1 & B2 & B3 & C --> D[Spotlight Reflex\nselect_maneuver]
+    D --> E[ModelPrediction\ntrajectory_xy · headings\nreasoning_text JSON]
+```
 
 ---
 
