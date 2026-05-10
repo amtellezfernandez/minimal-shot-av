@@ -19,7 +19,7 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usepackage{fontawesome5}
-\usepackage{microtype}
+\usepackage[expansion=false]{microtype}
 \usepackage{hyperref}
 
 % ── Colour palette ────────────────────────────────────────────────────────────
@@ -365,9 +365,9 @@
     \code{maintain}      & Hold speed         & 1.0  & 0.0 m   & smooth \\
     \code{slow\_yield}   & Decelerate, yield  & 0.5  & 0.0 m   & smooth \\
     \code{nudge\_left}   & Minor left shift   & 0.8  & +0.9 m  & smooth \\
-    \code{nudge\_right}  & Minor right shift  & 0.8  & −0.9 m  & smooth \\
+    \code{nudge\_right}  & Minor right shift  & 0.8  & $-$0.9 m  & smooth \\
     \code{evasive\_left} & Strong left evasion  & 0.7 & +2.2 m & \textbf{early} \\
-    \code{evasive\_right}& Strong right evasion & 0.7 & −2.2 m & \textbf{early} \\
+    \code{evasive\_right}& Strong right evasion & 0.7 & $-$2.2 m & \textbf{early} \\
     \code{lane\_recover} & Return to centre   & 0.9  & 0.0 m   & smooth \\
     \bottomrule
   \end{tabular}
