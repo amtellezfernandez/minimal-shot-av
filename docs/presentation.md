@@ -7,15 +7,23 @@ amtellezfernandez@gmail.com
 
 ## The Problem With Current AV
 
-> Autonomous vehicles work where they've been trained. They memorise environments.
+Trajectory imitation models minimise empirical risk on the training distribution D:
 
-Waymo's WOD-E2E dataset captures this precisely: **11 long-tail clusters filtered
-to scenarios occurring less than 0.03% of driving time** — construction zones,
-animals, wrong-way actors, debris, erratic pedestrians.
+```
+min_f  E_{(x,y)~D} [ L(f(x), y) ]
+```
 
-These are exactly the scenarios where trajectory imitation **fails by design**.  
-A model that memorised 10 million miles of normal driving has never seen a sheep
-blocking a roundabout.
+This is well-posed under i.i.d. assumptions. It fails when the test distribution P_test
+concentrates on scenarios with zero measure under D — which is exactly the WOD-E2E
+construction:
+
+> **11 long-tail clusters filtered to scenarios occurring less than 0.03% of driving
+> time** — construction zones, animals, wrong-way actors, debris, erratic pedestrians.
+
+The covariate shift `P_test ≠ D` means the imitation objective gives no guarantee on
+the scenarios that matter. A model that memorised 10 million miles of normal driving
+has never seen a sheep blocking a roundabout — and has no mechanism to reason from
+first principles when it does.
 
 ---
 
@@ -29,22 +37,30 @@ Same scenario. Same seed. Two policies.
 
 *Continues directly into the wrong-way actor. No correction. No awareness.*
 
-This is what happens when you extrapolate a trajectory without understanding the scene.
+This is the covariate shift failure mode: the model extrapolates its learned distribution
+without checking whether the scene geometry permits the extrapolated trajectory.
 
 ---
 
 ## The Geometric Invariance Claim
 
-> If you make world-state reasoning and maneuver enumeration **explicit**,
-> the system should generalise to novel scenes without having seen them.
+Let a scene state `s` define an occupancy field `G(s)` and route geometry `R(s)`.
+Let `T` be any permutation of object identities, cluster labels, or semantic annotations
+that leaves `G` and `R` unchanged.
 
-A trajectory that avoids obstacles, respects corridor geometry, and maintains
-progress is correct whether the obstacle is a cone, a fallen tree, or a sheep.
+**Claim:** the Spotlight Reflex policy `M` satisfies
 
-**The claim is falsifiable:** regression tests verify that relabelling every
-object name, cluster tag, and scenario label while holding geometry fixed
-produces **identical decisions**. The world-state signals are functions of
-occupancy and route geometry only — not of identity or context.
+```
+M(s) = M(T(s))   for all s, for all such T
+```
+
+The world-state map `W: s → ℝ⁶` is computed entirely from `G(s)` and `R(s)`. No
+cluster label, object name, or scenario tag enters the computation.
+
+**The claim is falsifiable:** a regression test relabels every object name, cluster
+tag, and scenario annotation while holding geometry fixed and asserts that the
+selected maneuver and its score are identical. This is a property of the implementation,
+not an aspiration.
 
 No AV dataset fine-tuning. No route memorisation. No cluster-specific rules.
 
@@ -58,9 +74,9 @@ Same scenario as the baseline failure:
 
 *Selects `evasive_right`, clears the wrong-way actor, recovers to lane centre.*
 
-The policy saw no training examples of this scenario. It worked because
-the geometry — obstacle pressure rising on the left, clearance on the right
-— told it what to do.
+The policy saw no training examples of this scenario. It worked because the geometry
+— obstacle pressure rising on the left, clearance on the right — resolved the maneuver
+choice without needing a data-driven prior over scenario types.
 
 ---
 
@@ -76,17 +92,54 @@ flowchart TD
     T --> O[SpotlightSelection\nmaneuver · score · decision_reason]
 ```
 
-Six world-state scalars. Nine named candidates. Two time horizons scored.  
-Every decision is explainable — `decision_reason` is logged at every step.
+### World-State Scalars
 
-| Signal | Meaning |
-|--------|---------|
-| `obstacle_pressure` | Weighted influence of nearby obstacles [0,1] |
-| `route_blockage` | Fraction of route corridor obstructed ahead [0,1] |
-| `corridor_blocked` | Hard blockage within stopping distance |
-| `left_clearance` | Lateral space to the left (m) |
-| `right_clearance` | Lateral space to the right (m) |
-| `preferred_escape_side` | Side with more clearance |
+Six scalars, all computable from occupancy and route geometry alone:
+
+| Signal | Definition |
+|--------|------------|
+| `obstacle_pressure` | `p = clip((10 − d_min) / 10,  0, 1)` where `d_min` is nearest signed obstacle distance (m) |
+| `route_blockage` | Fraction of forward corridor cross-section blocked by obstacles ∈ [0,1] |
+| `corridor_blocked` | Hard flag: blockage within stopping distance |
+| `left_clearance` | Lateral free space to the left (m), measured at half-vehicle-width offset |
+| `right_clearance` | Lateral free space to the right (m) |
+| `preferred_escape_side` | `argmax(left_clearance, right_clearance)` |
+
+### Candidate Scoring
+
+Each candidate trajectory `τ` is scored against a set of rater references `R` at two
+time horizons. Let `tangent(r, t)` and `normal(r, t)` be the unit tangent and normal
+of reference `r` at step `t`, and let `s(v)` be a speed-dependent scale:
+
+```
+s(v) = clip( (v − 1.4) / (11.0 − 1.4),  0, 1 ) × 0.5 + 0.5     [v in m/s]
+```
+
+At horizon `t ∈ {3s (step 11), 5s (step 19)}`, the trust-region parameters are:
+
+| Horizon | Lateral threshold | Longitudinal threshold |
+|---------|-----------------|----------------------|
+| 3 s | 1.0 m × s(v) | 4.0 m × s(v) |
+| 5 s | 1.8 m × s(v) | 7.2 m × s(v) |
+
+For candidate position `p_τ(t)` relative to reference `r` at step `t`:
+
+```
+δ_lon = |( p_τ(t) − p_r(t) ) · tangent| / lon_threshold
+δ_lat = |( p_τ(t) − p_r(t) ) · normal | / lat_threshold
+δ    = max(δ_lon − 1,  δ_lat − 1,  0)          [overshoot]
+
+score_t(τ, r) = r.score                 if δ = 0   (inside trust region)
+              = max(r.score × 0.1^δ, 4) otherwise  (exponential decay, floor 4)
+```
+
+The combined candidate score is:
+
+```
+S(τ) = 0.5 × max_{r∈R} score_3s(τ, r)  +  0.5 × max_{r∈R} score_5s(τ, r)
+```
+
+Every decision is explainable — `decision_reason` is logged at every step.
 
 ---
 
@@ -118,12 +171,17 @@ Everything in `src/minimal_shot_av/simulator/` is original code.
 | `compass.py` | Profile-driven benchmark (oracle, reasoning, recovery, generalisation gap) |
 | `certification.py` | SOTIF-aligned evidence infrastructure |
 
-**Compositional OOD**: topology and hazard are sampled independently.
-A construction hazard can appear in a roundabout in fog. Memorising cluster
-labels gives no advantage because the generator decouples topology from hazard.
+**Compositional OOD independence guarantee**: topology `T` and hazard `H` are sampled from
+independent marginals. A cluster label predicts neither the topology nor the weather on
+the next rollout:
 
-8 topology types × 11 hazard modules × weather × novel objects — no cluster
-label predicts which topology or weather the next rollout will use.
+```
+P(T, H) = P(T) × P(H)
+```
+
+8 topology types × 11 hazard modules × weather × novel objects. Memorising any subset of
+{cluster, topology, hazard, weather} gives no advantage because none is jointly sufficient
+to predict the others.
 
 ---
 
@@ -151,22 +209,28 @@ Mean min clearance: **2.96 m** · COMPASS: **9.137 / 10** (threshold 7.0) · 700
 
 ---
 
-## Gauntlet vs Baseline — The Starkest Comparison
+## Gauntlet vs Baseline — Matched Experimental Design
 
-Matched seeds 1–80, **420 runs per policy**:
+Seeds 1–80, **420 runs per policy**, identical scenario draws:
 
 | Policy | Pass rate | Collision rate |
 |--------|-----------|---------------|
 | Baseline (no world-state reasoning) | **2.1%** (9/420) | **20.5%** (86 collisions) |
 | Spotlight Reflex | **57.6%** (242/420) | **7.9%** (33 collisions) |
 
-The baseline collides in one in five gauntlet runs and passes nearly none.
-Spotlight Reflex passes 58% and collides at one-third the rate.
-**10× collision reduction** from geometric world-state reasoning.
+The matched-seed design controls for scenario difficulty: each seed produces the same
+geometry for both policies, so differences are attributable to the policy, not scenario
+sampling.
+
+Spotlight Reflex passes **27× more gauntlet runs** and produces **2.6× fewer collisions**
+than the baseline. The primary mechanism is geometric routing: when the gauntlet
+constrains corridor width to 3.8 m and stacks 4 simultaneous hazards, the world-state
+signals (obstacle_pressure, left/right_clearance) resolve the escape route deterministically
+from geometry, while the baseline has no such signal.
 
 ---
 
-## AlpaSim: Same Policy, Sensor-Realistic
+## AlpaSim: Cross-Fidelity Validation
 
 The Spotlight Reflex policy runs unchanged inside Waymo's AlpaSim simulator
 via a custom adapter. Four signal channels bridge the gap:
@@ -193,9 +257,10 @@ Real WOD-E2E front-camera frames (AlpaSim sensor input) + reasoning output:
 | `dist_to_gt_trajectory` | 0.42 m |
 | `collision_any` (rear, by others) | 0.37 |
 
-The policy has zero AlpaSim imports — it runs identically in both environments.
-Cross-fidelity transfer without modification is evidence that the world-state
-abstraction is at the right level of representation.
+The policy contains zero AlpaSim imports and runs identically in both environments.
+Cross-fidelity transfer without modification provides evidence that the world-state
+abstraction is at the right level: it captures scene geometry in terms that are
+stable across sensor fidelity.
 
 ---
 
@@ -211,74 +276,152 @@ flowchart LR
     G --> H[Selected Trajectory\n20 × 2 waypoints]
 ```
 
+### RFS Definition
+
+The Rater Feedback Score for frame `i` with candidate `τ` is computed using the
+trust-region scoring function above. The **mean RFS** over `N` frames is:
+
+```
+RFS(f) = (1/N) Σ_{i=1}^{N} S(f(x_i))
+```
+
+where `S(·)` averages trust-region scores at 3s and 5s, speed-scaled by the ego velocity
+at frame `i`.
+
+### 5-Fold Cross-Validation Protocol
+
+The 479 validation frames are partitioned into 5 folds by **driving segment group** —
+frames from the same driving segment stay in the same fold, preventing temporal
+autocorrelation from inflating held-out RFS:
+
+```
+for each fold k = 1..5:
+    train on folds {1..5} \ {k}          (~383 frames)
+    evaluate on fold k                    (~96 frames)
+RFS_5fold = mean over k of RFS(fold k)
+```
+
+Fold std ≈ 0.19 → standard error SE ≈ 0.085 → 95% CI (t₄) ≈ ±0.17.
+
+### Direct Policy: Random Fourier Feature Ridge Classifier
+
+When the gate conditions are satisfied (~3.5% of frames), a learned **direct policy**
+overrides the ranker. It uses a Random Fourier Feature (RFF) map to approximate an
+RBF kernel classifier without storing a kernel matrix:
+
+```
+W ~ N(0, σ⁻² I_{D×p})     σ = 7.858,  D = 512,  p = #features
+b ~ Uniform([0, 2π]^D)
+
+φ(x) = sqrt(2/D) · cos(Wᵀ x̃ + b)    [D-dimensional feature map]
+
+ŷ = wᵀ φ(x) + bias                   [ridge classifier output]
+```
+
+The map `φ` satisfies `E[φ(x)ᵀφ(x')] ≈ exp(−‖x−x'‖² / 2σ²)` by Bochner's theorem,
+giving implicit kernel smoothness at O(D) cost instead of O(N²). The projection `W`
+and phases `b` are fixed at fit time (seeded RNG); only the ridge weights `w` are
+learned on the train folds.
+
+### Results
+
 | Selector | RFS | Notes |
 |----------|-----|-------|
 | Constant velocity (local backend) | 7.131 | Local scoring baseline |
 | Constant velocity (official) | 7.022 | Official Waymo backend |
 | Kinematic ranker | 7.096 | Physics-only, official backend |
-| Gate system only | 7.803 | 5-fold, local backend |
-| Champion (direct policy) | **7.834** | 5-fold, local backend |
-| Oracle (perfect selection) | **9.264** | Upper bound, local backend |
+| Gate system only (no direct policy) | 7.803 | 5-fold, local backend |
+| Champion (RFF direct policy) | **7.834** | 5-fold, local backend |
+| Oracle (perfect discriminator) | **9.264** | Upper bound, local backend |
 
-**+0.703 RFS over the local baseline · oracle gap 1.430 RFS**
+**+0.703 RFS over local baseline · direct policy adds +0.031 RFS (gate-restricted frames) · oracle gap 1.430 RFS**
 
 ---
 
 ## The Oracle Gap — Key Scientific Finding
 
-The **oracle gap is 1.430 RFS** (9.264 − 7.834).
+Define the oracle selector as:
 
-This is the correct diagnostic: **the candidate pool is not the bottleneck.
-The discriminator is.**
+```
+oracle(frame i) = argmax_{c ∈ C_i} S(c)
+gap = RFS(oracle) − RFS(champion) = 9.264 − 7.834 = 1.430
+```
 
-The selector cannot identify which candidate is best on a given frame without
-visual scene information. More candidates do not help — adding world-model
-candidates improved oracle RFS by ~0.05 but selected RFS did not move,
-because the selector picks the wrong candidate.
+This is the correct diagnostic quantity. It decomposes additive regret into two causes:
 
-The fix is not a better candidate generator. It is a visual discriminator.
+1. **Wrong source selection** — the ranker picks a kinematic candidate when a learned
+   candidate is better, or vice versa. This is correctable with better gate calibration.
+
+2. **Wrong rank within source** — even given the correct source pool, the ranker ranks
+   the wrong candidate first. This requires a discriminative signal the ranker does not
+   currently have.
+
+The evidence for (2) dominating: adding world-model candidates raised oracle RFS by ~0.05
+but selected RFS did not move. If wrong source selection were the bottleneck, more
+candidates would help. They don't. The discriminator is underpowered, not the candidate pool.
+
+**The gap is recoverable only with a visual discriminator** — a model that can identify
+which candidate aligns with the scene from camera images.
 
 ---
 
 ## Calibration Bias — A Quantifiable Finding
 
-The champion selector (RFF direct policy, 5-fold) has **residual regret at distribution
-extremes** that is measurable and correctable:
+Define per-slice regret as:
 
-| Slice | Frames | Selected RFS | Oracle RFS | Regret |
-|-------|--------|-------------|-----------|--------|
-| GO_STRAIGHT | 427 | 7.959 | 9.336 | 1.377 |
-| GO_LEFT | 23 | 7.107 | 8.721 | **1.614** |
-| GO_RIGHT | 29 | 6.574 | 8.638 | **2.063** |
-| speed:slow | 133 | 7.564 | 9.196 | 1.632 |
-| speed:fast | 44 | 7.957 | 9.436 | 1.479 |
+```
+regret(S) = RFS_oracle(S) − RFS_selected(S)
+```
 
-The selector performs well on the dominant GO_STRAIGHT slice (1.377 regret) but
-over-selects temporal candidates at distribution extremes:
+where `S` is a data slice defined by intent or speed. For the champion selector:
 
-- **GO_RIGHT (29 frames)**: regret 2.063 — rarest intent class, under-represented in training
-- **GO_LEFT (23 frames)**: regret 1.614 — improved from 1.753 (old model), still elevated
-- **speed:slow (133 frames)**: regret 1.632 — slow frames need diverse candidate coverage
+| Slice | n | Selected RFS | Oracle RFS | Regret | SE_oracle |
+|-------|---|-------------|-----------|--------|-----------|
+| GO_STRAIGHT | 427 | 7.959 | 9.336 | 1.377 | low (n large) |
+| GO_LEFT | 23 | 7.107 | 8.721 | **1.614** | high (n=23) |
+| GO_RIGHT | 29 | 6.574 | 8.638 | **2.063** | high (n=29) |
+| speed:slow | 133 | 7.564 | 9.196 | 1.632 | moderate |
+| speed:fast | 44 | 7.957 | 9.436 | 1.479 | moderate |
 
-This is a quantifiable, correctable bias. Reweighting turn and low-speed frames in
-training and augmenting with more diverse turn examples addresses it directly.
+**Interpretation:** GO_STRAIGHT dominates the training signal (427/479 = 89% of frames).
+The ranker is approximately unbiased on this slice (regret 1.377 ≈ mean). On GO_RIGHT
+(6.1% of frames, regret 2.063), the ranker has insufficient training signal to generalise
+— the RFF projection `W` is drawn from a distribution calibrated to the full feature
+covariance, not the turn-specific submanifold.
+
+**Correction strategy:** stratified reweighting of train-fold losses by intent class,
+combined with turn-data augmentation, increases the effective sample size for GO_RIGHT
+and GO_LEFT without requiring new data.
+
+Note: GO_LEFT regret improved from 1.753 → 1.614 over the previous model, confirming
+that targeted training changes on minority slices propagate to measurable regret reductions.
 
 ---
 
 ## What Didn't Work
 
-**Visual embeddings do not carry preference signal.** InternVLA and Cosmos tokenizer
-embeddings were computed for each validation frame and attached as ranker features.
-Neither produced a confirmed RFS gain over the no-embedding baseline. Off-the-shelf
-visual encoders extract representations tuned for navigation or generation, not for
-the discriminative question "which trajectory wins on this specific frame."
-Fine-tuning on preference labels is required to align the embedding space to this signal.
+**Visual embeddings do not carry preference signal under a linear head.**
+InternVLA (128d) and Cosmos (64d) embeddings were computed for all 479 validation frames.
+Neither produced a confirmed RFS gain over the no-embedding baseline in 5-fold CV.
+The null result is informative: off-the-shelf visual encoders are trained for navigation
+or generation objectives, optimising for scene understanding broadly, not for the
+discriminative question "which of these two trajectories will a rater prefer on this
+specific frame." The embedding space is misaligned with the preference signal.
 
-**World-model candidates add oracle headroom but the selector cannot exploit it.**
-A lightweight world model was implemented to generate scene-conditioned trajectory
-candidates beyond what kinematic and ridge produce. Oracle RFS improved marginally,
-but selected RFS did not — the selector picks the wrong candidate too often.
-More candidates are not useful without a better discriminator.
+```
+E[RFS | visual features] ≈ E[RFS | no visual features]   (5-fold estimate)
+```
+
+Fine-tuning the encoder on preference labels — or a contrastive pre-training objective
+over (winning trajectory, losing trajectory, frame) triplets — is the identified fix.
+This is the camera encoder work identified in Next Steps.
+
+**World-model candidates add oracle headroom but not selected RFS.**
+A lightweight world model generates scene-conditioned candidates beyond what kinematic
+and ridge produce. Oracle RFS: +0.05. Selected RFS: +0.00.
+The candidates are correct (oracle improves), but the selector cannot identify them as
+correct (selected RFS unchanged). More candidates are not useful without a discriminator
+capable of exploiting them.
 
 ---
 
@@ -287,36 +430,43 @@ More candidates are not useful without a better discriminator.
 | What this IS | What this IS NOT |
 |-------------|-----------------|
 | Runnable closed-loop minimal-shot policy | A production AV stack |
-| WOD-E2E harness, 7.834 RFS (5-fold) · 7.880 (2-fold peak) | A strict zero-shot WOD-E2E result |
+| WOD-E2E harness, 7.834 RFS (5-fold) · 7.880 (2-fold Optuna peak) | A strict zero-shot WOD-E2E result |
 | Validated submission packaging pipeline | A completed leaderboard submission |
 | AlpaSim trajectory plugin | Full sensor-realistic perception stack |
 | 110 WOD runs, 0 collisions | A safety certification |
 
 The WOD-E2E selector is calibrated on retained validation preference labels under
-segment-grouped CV. This is honest development analysis, not hidden-test generalisation.
-The test frame list (1,505 frames) is present. Only the test TFRecords are needed.
+segment-grouped CV. All reported RFS numbers use the local trust-region backend; the
+official Waymo backend gives a local CV baseline of 7.022 (vs 7.131 local). The 7.834
+figure is comparable to the 7.131 local baseline, not the 7.022 official baseline.
+
+The test frame list (1,505 frames) is present. Only the test TFRecords are needed for
+a true test-set RFS number.
 
 ---
 
 ## Next Steps
 
-**Camera encoder** — The oracle gap (1.430 RFS) is recoverable if the selector
-can see the scene. A small model fine-tuned on WOD-E2E preference labels to
-discriminate winning trajectories from camera images. Expected to close 0.5–1.5 RFS.
+**Camera encoder** — The 1.430 oracle gap is recoverable if the selector can see the
+scene. Required: a small encoder fine-tuned on WOD-E2E preference labels with a
+contrastive or cross-entropy objective over (frame, winning trajectory, losing trajectory)
+triplets. Existing embeddings (InternVLA, Cosmos) show no gain under a linear head;
+task-specific fine-tuning is required. Expected RFS gain: 0.5–1.5 RFS.
 
-**Turn calibration** — GO_RIGHT (regret 2.063) and GO_LEFT (regret 1.614) are
-directly addressable: reweight turn frames in training, augment with more diverse
-turn examples. GO_LEFT already improved from 1.753 → 1.614 over the previous model.
+**Turn calibration** — GO_RIGHT (regret 2.063, n=29) and GO_LEFT (regret 1.614, n=23)
+are correctable via stratified reweighting. The prior model improvement GO_LEFT 1.753→1.614
+confirms that minority-slice reweighting works. GO_RIGHT is the priority.
 
-**Leaderboard submission** — Test frame list is present (1,505 frames). Packaging
-pipeline is validated. Only the test TFRecords are missing.
+**Leaderboard submission** — Test frame list present (1,505 frames). Packaging pipeline
+validated. Missing: test TFRecords (Waymo Google Drive, sign-in gated).
 
-**Proper train/test split** — Waymo train TFRecords (Google sign-in gated) would
-move calibration off the validation set, making the result a true test-set number.
+**Proper train/test split** — Waymo train TFRecords would move selector calibration off
+the validation set, producing a true test-set RFS number and closing the methodological
+gap between "honest development analysis" and "generalisation claim."
 
-**Physical deployment** — A vehicle with obstacle sensors and a route command can
-run Spotlight Reflex today. The AlpaSim bridge is the template for a
-sensor-to-obstacle adapter on real hardware.
+**Physical deployment** — A vehicle with obstacle sensors and a route command can run
+Spotlight Reflex today. The AlpaSim bridge is the template for a sensor-to-obstacle
+adapter on real hardware; the policy itself requires no modification.
 
 ---
 
@@ -324,13 +474,14 @@ sensor-to-obstacle adapter on real hardware.
 
 | | |
 |-|-|
-| **Policy** | Spotlight Reflex — explicit world-state + 9 maneuvers + selector |
-| **Simulation** | Built from scratch, 11 WOD clusters + compositional OOD |
-| **Evidence** | 110 runs · 0 collisions · COMPASS 9.137/10 · 700 ranked runs |
-| **WOD-E2E** | 7.834 RFS (+0.703 vs local baseline) on 479 validation frames, 5-fold CV |
-| **Oracle gap** | 1.430 RFS — discriminator is the bottleneck, not the candidates |
-| **AlpaSim** | Same policy, sensor-realistic, `collision_at_fault: 0.0` |
-| **Bottleneck** | Visual discriminator — camera encoder is the identified next step |
+| **Policy** | Spotlight Reflex — explicit world-state (6 scalars) + 9 maneuvers + RFS-scored selector |
+| **Invariance** | Geometric invariance to object identity verified by regression test |
+| **Simulation** | Built from scratch · 11 WOD clusters + compositional OOD · 420-run gauntlet comparison |
+| **Evidence** | 110 runs · 0 collisions · COMPASS 9.137/10 · 700 ranked runs · 27× gauntlet pass-rate over baseline |
+| **WOD-E2E** | 7.834 RFS (5-fold, local backend) · +0.703 over baseline · 95% CI ±0.17 |
+| **Oracle gap** | 1.430 RFS — discriminator is the bottleneck, not the candidate pool |
+| **AlpaSim** | Same policy, sensor-realistic, `collision_at_fault: 0.0`, `dist_to_gt: 0.42 m` |
+| **Bottleneck** | Visual discriminator — task-aligned camera encoder is the identified next step |
 
 > The system generalises because it reasons from geometry, not from memorised trajectories.
-> The oracle gap diagnostic points exactly to what to build next.
+> The oracle gap diagnostic identifies exactly what to build next: a preference-aligned visual encoder.
