@@ -515,7 +515,16 @@ uv run --no-sync python scripts/evaluate_scenarios.py \
 Archived result: `artifacts/score_baseline_gauntlet_20260425/scenario_eval.json`.  
 Baseline: 0/120 pass, 55 collisions. Spotlight Reflex: 72/120 pass, 1 collision.
 
-### WOD-E2E Reproducibility: HGB Pipeline (2-fold evaluation, 7.880 RFS)
+### WOD-E2E Reproducibility: HGB Pipeline
+
+**Note on evaluation protocol:** All submitted claims use **5-fold** segment-grouped
+cross-validation (80% train / 20% test per fold, five folds averaged). The HGB variant
+below was evaluated under **2-fold** CV during an Optuna hyperparameter search — it
+reached 7.880 RFS, but 2-fold and 5-fold results are not directly comparable: 2-fold
+sees less training data per fold, runs fewer held-out evaluations, and Optuna pressure
+on a 2-fold split inflates the score. The confirmed 5-fold champion is the **GPU MLP
++ Cosmos 64d at 7.845 RFS**. This section documents the HGB pipeline for
+reproducibility.
 
 The full pipeline runs in five steps. Requires WOD-E2E validation TFRecords under
 `waymo_open_dataset_end_to_end_camera_v_1_0_0/val/`.

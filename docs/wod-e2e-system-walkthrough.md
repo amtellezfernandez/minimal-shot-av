@@ -178,7 +178,34 @@ Packaged archives are in `artifacts/wod_e2e_submission_matrix/` including
 
 All results are internal validation CV evidence on the 479-frame preference contract.
 
-### 5.1 Model Timeline
+### 5.1 Cross-Validation Protocol
+
+Because we have only 479 labeled frames, we use **k-fold cross-validation** to measure
+selector performance without test-set leakage:
+
+1. Split the 479 frames into k groups ("folds"), keeping frames from the same driving
+   segment in the same fold (segment-grouped split — prevents the model from seeing
+   future frames from a segment it was trained on).
+2. For each fold i, train the selector on the other k-1 folds and evaluate RFS on
+   fold i alone.
+3. Average the k held-out RFS scores. This is the reported number.
+
+**Why the number of folds matters — 2-fold vs 5-fold are not comparable.**
+
+With **2-fold** CV: each training set is 50% of 479 frames (~240 frames). Each
+held-out test set is also ~240 frames. Two evaluations, averaged.
+
+With **5-fold** CV: each training set is 80% of 479 frames (~383 frames). Each
+held-out test set is ~96 frames. Five evaluations, averaged.
+
+The 2-fold estimate is noisier (fewer test folds, wider CI) and the model sees less
+training data per fold. Hyperparameter search (Optuna) done within 2-fold further
+inflates the estimate — optimising against only 2 folds over-fits the fold split
+itself. The **5-fold estimate is the rigorous number** used for all claims in this
+submission. A 2-fold result of 7.880 cannot be directly compared to a 5-fold result
+of 7.845 and claimed to be "better."
+
+### 5.2 Model Timeline
 
 All RFS results use local scoring backend (CV baseline 7.131; official Waymo baseline 7.022).
 
@@ -187,16 +214,16 @@ All RFS results use local scoring backend (CV baseline 7.131; official Waymo bas
 | Constant velocity (official) | 7.022 | — | Official Waymo baseline |
 | Constant velocity (local) | 7.131 | — | Local scoring baseline |
 | Kinematic ranker | 7.096 | — | Physics-only, official backend |
-| Ridge r175 contextual router | 7.695 | 2 | Intermediate, local backend |
-| HGB (Optuna 2-fold best) | 7.880 | 2 | Optuna-found peak — commit `69b4efb` |
+| Ridge r175 contextual router | 7.695 | 2 | Intermediate result — 2-fold, not comparable to 5-fold |
+| HGB (Optuna 2-fold best) | 7.880 | 2 | Optuna-found peak — 2-fold only, not comparable to 5-fold |
 | Gate only (5-fold) | 7.803 | 5 | No direct policy |
 | RFF direct policy | 7.834 | 5 | D=512, σ=7.858, precision 0.41 |
-| **GPU MLP + Cosmos 64d** | **7.845** | **5** | **h=64, precision 0.60 — current best** |
+| **GPU MLP + Cosmos 64d** | **7.845** | **5** | **h=64, precision 0.60 — current champion** |
 | Oracle (perfect selector) | **9.264** | — | Upper bound, local backend |
 
-Champion gap: **1.419 RFS** (9.264 − 7.845). The candidate pool is good.
-The discriminator is the bottleneck. HGB variant reached 7.880 under 2-fold evaluation
-but is not confirmed at 5-fold.
+Champion gap: **1.419 RFS** (9.264 − 7.845). The candidate pool is good;
+the discriminator is the bottleneck. The HGB variant reached 7.880 under 2-fold
+Optuna search but was not evaluated under the 5-fold protocol used for all submitted claims.
 
 ### 5.2 Source Selection Rates (Champion — RFF direct policy)
 
