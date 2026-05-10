@@ -40,7 +40,7 @@ flowchart TD
         AD --> P
     end
 
-    P --> O1["COMPASS Benchmark\n326/350 pass · 0 collisions"]
+    P --> O1["COMPASS Benchmark\n326/350 pass · 0 collisions\n9.137/10 · 700 ranked runs"]
     P --> O2["ModelPrediction\ntrajectory + reasoning_text"]
 ```
 
@@ -375,13 +375,24 @@ in AlpaSim — no code path is AlpaSim-specific.
 
 ### Closed-Loop Rollout Summary
 
-| Metric | WOD sweep (550 rollouts) | OOD sweep (350 rollouts) |
-|--------|--------------------------|--------------------------|
-| Successful rollouts | 550 / 550 | 350 / 350 |
-| Collisions | 0 | 0 |
-| Benchmark passes | 550 / 550 | 326 / 350 (93.1%) |
-| Gauntlet passes | — | 36 / 60 (60%) |
-| Mean min clearance | 2.80 m | — |
+| Suite | Runs | Collisions | Pass |
+|-------|------|-----------|------|
+| WOD-style (all 11 clusters) | 110 | **0** | **100%** |
+| Compositional OOD | 60 | **0** | **100%** |
+| Adversarial (2–3 simultaneous hazards) | 60 | **0** | **100%** |
+| Hidden holdout | 60 | **0** | **100%** |
+| Gauntlet (4 hazards, narrow corridor) | 60 | **0** | **60%** |
+| **Total** | **350** | **0** | **326/350 (93.1%)** |
+
+Mean minimum clearance: **2.96 m** · COMPASS: **9.137 / 10** (threshold 7.0)  
+Statistical evidence: 700 ranked runs · 95% CI success [0.9945, 1.0] · CI collision [0.0, 0.0053]
+
+**Gauntlet comparison — same 120 scenarios, two policies:**
+
+| Policy | Pass rate | Collisions |
+|--------|-----------|-----------|
+| Baseline (no world-state reasoning) | **0 / 120 (0%)** | **55** |
+| Spotlight Reflex | **72 / 120 (60%)** | **1** |
 
 **Intersection stress** — conflict zone, two crossing actors at different timings (207 steps):
 

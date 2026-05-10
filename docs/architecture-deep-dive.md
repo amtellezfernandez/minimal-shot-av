@@ -310,18 +310,28 @@ misses.
 ### 3.5 Closed-loop Spotlight Reflex policy (simulator track)
 
 The simulator track runs fully closed-loop with deterministic seeded scenarios.
-The policy was tested across 350 OOD rollouts with 0 collisions:
+350 rollouts across 5 suites — **0 collisions total**:
 
-- WOD-style cluster suite: 11 clusters, 20 seeds each
-- Compositional OOD: independently sampled topology, hazards, conditions, novel objects
-- Adversarial: multiple hazards composed on the same route
-- Gauntlet: narrow corridors, low visibility, synchronized threats
-- Hidden holdout: frozen-policy seed offsets
+| Suite | Runs | Pass |
+|-------|------|------|
+| WOD-style (all 11 clusters, 10 seeds each) | 110 | **100%** |
+| Compositional OOD | 60 | **100%** |
+| Adversarial (2–3 simultaneous hazards) | 60 | **100%** |
+| Hidden holdout | 60 | **100%** |
+| Gauntlet (4 hazards, narrow corridor) | 60 | **60%** |
+| **Total** | **350** | **326/350 (93.1%)** |
 
-Benchmark pass rate: 326/350 (93.1%). Gauntlet (hardest suite) pass rate: 36/60
-(60.0%). The gauntlet failure boundary is intentional — it exposes the policy
-limits under near-miss, intervention, and progress gates rather than inflating
-scores with easy scenarios.
+Mean min clearance: 2.96 m · COMPASS: 9.137/10 (700 ranked runs)  
+95% CI collision rate: [0.0, 0.0053]
+
+**Gauntlet comparison — same 120 scenarios, two policies:**
+
+| Policy | Pass rate | Collisions |
+|--------|-----------|-----------|
+| Baseline (no world-state reasoning) | 0 / 120 (0%) | **55** |
+| Spotlight Reflex | 72 / 120 (60%) | **1** |
+
+Source: `artifacts/score_baseline_gauntlet_20260425/scenario_eval.json`
 
 **Spotlight scenario** — wrong-way actor, low visibility, night conditions:
 
@@ -467,20 +477,31 @@ uv run --no-sync python scripts/evaluate_scenarios.py \
   --output-dir artifacts/eval_all
 ```
 
-Runs 350 rollouts (11 WOD clusters + compositional + adversarial + gauntlet + hidden,
-10 seeds each). Results written to `artifacts/eval_all/`. The archived result is in
-`benchmarks/current/spotlight_reflex_procedural_wod.json`.
+Runs 350 rollouts: WOD 110 + compositional 60 + adversarial 60 + hidden 60 + gauntlet 60.
+Archived result: `artifacts/minor_ood_eval/scenario_eval.json`.
 
-### Gauntlet: 36/60 pass rate
+### Gauntlet comparison: baseline 0/120 vs Spotlight 72/120
 
 ```bash
+# Baseline policy
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy baseline \
+  --suite gauntlet \
+  --seed-start 1 \
+  --seed-end 30 \
+  --output-dir artifacts/eval_baseline_gauntlet
+
+# Spotlight Reflex
 uv run --no-sync python scripts/evaluate_scenarios.py \
   --policy spotlight-reflex \
   --suite gauntlet \
   --seed-start 1 \
-  --seed-end 20 \
-  --output-dir artifacts/eval_gauntlet
+  --seed-end 30 \
+  --output-dir artifacts/eval_spotlight_gauntlet
 ```
+
+Archived result: `artifacts/score_baseline_gauntlet_20260425/scenario_eval.json`.  
+Baseline: 0/120 pass, 55 collisions. Spotlight Reflex: 72/120 pass, 1 collision.
 
 ### WOD-E2E 7.880 RFS (HGB stability-selected ranker)
 

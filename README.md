@@ -52,34 +52,51 @@ obstacle pressure, and route blockage readout.
 
 ---
 
-## What Worked
+## Results
 
-- **350 OOD rollouts, 0 collisions, 93.1% COMPASS benchmark pass rate** across all
-  scenario suites (compositional, adversarial, gauntlet, hidden holdout)
-- **WOD-E2E: 7.880 RFS** vs 7.022 constant-velocity baseline (+0.86 RFS) on the
-  479-frame preference contract using a stability-selected HGB ranker
-- **AlpaSim integration** — same Spotlight Reflex policy runs inside Waymo's
-  sensor-realistic simulator via a custom adapter. Route command, camera brightness,
-  ego dynamics, and structured hazards all bridge to the policy's world-state
-  representation without any AlpaSim-specific code in the policy itself
+**350 rollouts across 5 suites — 0 collisions total:**
+
+| Suite | Runs | Pass |
+|-------|------|------|
+| WOD-style (all 11 clusters) | 110 | 100% |
+| Compositional OOD | 60 | 100% |
+| Adversarial (2–3 hazards) | 60 | 100% |
+| Hidden holdout | 60 | 100% |
+| Gauntlet (4 hazards, narrow) | 60 | 60% |
+
+COMPASS composite score: **9.137 / 10** across 700 ranked runs (threshold 7.0).  
+95% CI collision rate: **[0.0, 0.0053]**.
+
+**Gauntlet comparison — same 120 scenarios, two policies:**
+
+| Policy | Pass | Collisions |
+|--------|------|-----------|
+| Baseline (no world-state reasoning) | 0 / 120 | **55** |
+| Spotlight Reflex | 72 / 120 | **1** |
+
+**WOD-E2E: 7.880 RFS** vs 7.022 constant-velocity baseline on the 479-frame
+preference contract using a stability-selected HGB ranker. Oracle gap: 1.188 RFS
+(the discriminator, not the candidate pool, is the bottleneck).
+
+**AlpaSim**: same policy, sensor-realistic, `collision_at_fault: 0.0`, `dist_to_gt: 0.42 m`.
 
 ## What Didn't Work
 
-- **No camera perception** — the WOD-E2E model path processes ego history, speed,
-  and route intent only. It cannot see pedestrians, debris, or traffic signals.
-  This is the honest reason the result sits below the 8.05 leaderboard top.
+- **No camera perception in the WOD-E2E path** — processes ego history, speed, and
+  route intent only. Cannot see pedestrians, debris, or traffic signals. This is the
+  honest reason the result sits below the 8.05 leaderboard top.
 - **Visual embeddings didn't transfer** — InternVLA and Cosmos tokenizer embeddings
-  attached as ranker features produced no confirmed RFS gain. Their embedding spaces
-  are not aligned to the discriminative signal the ranker needs.
-- **Turn calibration gap** — GO_LEFT frames are the worst slice: 6.782 RFS selected
-  vs 8.535 oracle. The training distribution is dominated by straight-ahead frames.
+  attached as ranker features produced no confirmed RFS gain. Fine-tuning on
+  preference labels is required to align the embedding space to this signal.
+- **Turn calibration gap** — GO_LEFT: 6.782 RFS selected vs 8.535 oracle (regret 1.753).
+  The training distribution is dominated by straight-ahead frames.
 
-## Where the Prize Goes
+## Next Steps
 
 The bottleneck is the discriminator, not the candidates. A lightweight camera encoder
-fine-tuned on WOD-E2E preference labels should close 0.5–1.5 RFS of the 1.19-point
-oracle gap. The rest goes to Waymo train-split access, proper train/test split
-calibration, and a live leaderboard submission.
+fine-tuned on WOD-E2E preference labels should close 0.5–1.5 RFS of the 1.188-point
+oracle gap. Waymo train-split access would move calibration off the validation set.
+The test frame list (1,505 frames) and submission pipeline are both ready.
 
 ---
 

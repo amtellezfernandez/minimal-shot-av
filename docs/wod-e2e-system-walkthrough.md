@@ -1,8 +1,19 @@
 # WOD-E2E System Walkthrough: Operation and Failure Analysis
 
-## System Diagram
+![Spotlight success](images/spotlight_success.gif)
+*Spotlight Reflex — wrong-way actor, night, no training data. Selects `evasive_right`,
+clears the actor, recovers to lane centre.*
 
-**WOD-E2E Model Pipeline**
+![Baseline failure](images/baseline_spotlight.gif)
+*Baseline policy on the same scenario — trajectory extrapolation without scene
+understanding, continues into the actor.*
+
+![Intersection stress](images/intersection_stress.gif)
+*Intersection stress — conflict zone, two crossing actors, 207 steps. 0 collisions.*
+
+---
+
+## System Diagram
 
 ```mermaid
 flowchart LR
@@ -11,28 +22,10 @@ flowchart LR
     C --> D[Kinematic\nconst-vel · accel\nheading · stop]
     C --> E[Ridge Learned\n31 features · 5-fold CV]
     C --> F[Temporal Ridge\nego-history trends]
-    D & E & F --> G[WodPreferenceRanker\nHGB · 137 features\nstability-selected]
+    D & E & F --> G[WodPreferenceRanker\nHGB · ~137 features\nstability-selected]
     G --> H[Selected Trajectory\n20 × 2 waypoints]
     H --> I[E2EDChallenge\nSubmission.tar.gz]
 ```
-
-**Spotlight Reflex on spotlight scenario (success)**
-![Spotlight success](images/spotlight_success.gif)
-
-**Baseline policy on spotlight scenario (failure for comparison)**
-![Baseline failure](images/baseline_spotlight.gif)
-
-**Intersection stress case**
-![Intersection stress](images/intersection_stress.gif)
-
----
-
-## Overview
-
-This document walks through the complete pipeline for the WOD-E2E model track:
-how the system processes frames, generates candidates, scores them, and produces
-a submission. It also documents failure cases honestly, including per-cluster
-performance gaps and structural limitations.
 
 ---
 
@@ -49,6 +42,7 @@ The Waymo Open Dataset for End-to-End Driving (WOD-E2E) provides:
 Local availability:
 - Validation split: 93 shards, 479 preference-labeled frames with rater scores
 - Train and test splits: not downloaded (require Waymo Google sign-in access)
+- Test frame list present: `data/waymo/e2e/submission_frames/test_frames.json` (1,505 frames)
 
 ### 1.2 Frame Structure
 
@@ -86,9 +80,6 @@ Four base families:
 3. **Heading change** — vary heading at multiple rates (left/right, slow/fast)
 4. **Hold position** — zero displacement (stopping candidate)
 
-These provide physically grounded coverage of the most common behaviors:
-continue, slow, stop, and gentle turns.
-
 ### 2.2 Ridge Learned Candidates
 
 **File:** `src/minimal_shot_av/model/learned_trajectory_model.py`
@@ -115,8 +106,7 @@ constant-velocity candidate on the same frame.
 
 A second ridge model with temporal ego-history features — differences and
 trends in past velocity, heading, and acceleration. The temporal model captures
-the "follow the recent trajectory" signal that the kinematic model computes
-from physics.
+the "follow the recent trajectory" signal.
 
 Temporal candidates are selected on ~60% of frames in the champion run —
 the highest of any source — because most WOD-E2E frames are unambiguous
@@ -130,9 +120,6 @@ Each candidate is serialized as a JSONL row with:
 - `source` — candidate family (kinematic, learned, temporal, etc.)
 - `rfs_score` — measured on frames with preference labels
 - `ranker_score` — contextual ranker score (used for final selection)
-
-Scripts: `score_wod_candidates_with_ranker.py` reads candidates from JSONL,
-applies the trained `WodPreferenceRanker`, and writes `ranker_score` back.
 
 ---
 
@@ -156,18 +143,16 @@ Total: ~137 features per candidate row.
 - Cross-validation: 5-fold, grouped by scenario segment (frames from the same
   segment never span a fold boundary)
 - Target: `frame_delta` = gain vs constant-velocity on the same frame
-- Positive class: any candidate that gains > 0 RFS vs constant velocity
 - Model: `sklearn.ensemble.HistGradientBoosting` with stability selection
 
 Stability selection: train the HGB multiple times on bootstrapped subsets and
 select the feature + hyperparameter configuration that consistently produces
-similar fold scores. This prevents the overfitted outlier run from being promoted.
+similar fold scores.
 
 ### 3.3 Fallback Router
 
 At low speeds (< 1.5 m/s), the ranker switches to preferring kinematic
-stop/crawl candidates. This prevents the learned model from outputting
-implausible trajectories when the ego is nearly stopped.
+stop/crawl candidates.
 
 ---
 
@@ -175,21 +160,17 @@ implausible trajectories when the ego is nearly stopped.
 
 **Script:** `scripts/write_wod_e2e_submission.py`
 
-The submission pipeline:
-1. Reads the official challenge frame list JSON (defines which frames require predictions)
+1. Reads the official challenge frame list JSON
 2. Reads the merged candidates JSONL (one row per candidate per frame)
-3. For each frame, selects the candidate with the highest `ranker_score` (or `hgb_score`)
+3. For each frame, selects the candidate with the highest `ranker_score`
 4. Packs the selected trajectory into `E2EDChallengeSubmission` proto format
 5. Writes a `.tar.gz` archive matching the official submission format
 
-Validation: `scripts/validate_wod_e2e_submission.py` verifies that:
-- All required frames have exactly one trajectory
-- Each trajectory is exactly (20, 2) float32
-- No NaN or Inf values
-- The tar.gz is correctly structured
+Validation: `scripts/validate_wod_e2e_submission.py` verifies frame coverage,
+trajectory shape (20, 2), and no NaN/Inf values.
 
-The submission archive is complete and ready; it only requires the test TFRecords
-and official frame list to produce test predictions.
+Packaged archives are in `artifacts/wod_e2e_submission_matrix/` including
+`hgb_selector_v3.tar.gz`.
 
 ---
 
@@ -199,36 +180,26 @@ All results are internal validation CV evidence on the 479-frame preference cont
 
 ### 5.1 Model Timeline
 
-| Commit / Config | RFS | Notes |
-|-----------------|-----|-------|
-| Constant velocity baseline | 7.022 | Zero-learning baseline |
-| Ridge r175 contextual speed router | 7.695 | Intermediate champion |
-| Ridge trajectory CV (official contract) | 7.659 | Earlier official run |
-| HGB stability-selected policy | **7.880** | Latest promoted |
-| Combined candidate oracle | 9.068 | Upper bound (if selector were perfect) |
-| Neural ensemble (159-frame held-out) | 7.738 | Not full 479 frames |
+| Selector | RFS | Notes |
+|----------|-----|-------|
+| Constant velocity | 7.022 | Zero-learning baseline |
+| Kinematic ranker | 7.096 | Physics-only candidates |
+| Ridge r175 contextual router | 7.695 | Intermediate champion |
+| **HGB stability-selected** | **7.880** | Promoted champion — commit `69b4efb` |
+| Oracle (perfect selector) | **9.068** | Upper bound given candidate pool |
 
-The oracle gap on the champion run is 9.068 − 7.880 = **1.188 RFS**.
+Oracle gap: **1.188 RFS** (9.068 − 7.880). The candidate pool is good.
+The discriminator is the bottleneck.
 
 ### 5.2 Source Selection Rates (Champion)
 
 - Temporal candidates: ~60% of frames
 - Kinematic candidates: ~37% of frames
 - Learned candidates: ~3% of frames
-- Anchor candidates: 0%
 
 The temporal dominance shows the WOD-E2E validation set is mostly frames where
-recent ego motion is predictive. The selector correctly identifies this.
-
-### 5.3 Leaderboard Context
-
-The WOD-E2E 2025 leaderboard snapshot shows:
-- Top methods: ~8.05 RFS (DiffusionLTF, Open X-AV, Poutine)
-- Spotlight cluster ceiling (top methods): ~7.2 RFS
-- This project: 7.880 on the validation preference contract (internal)
-
-The 7.880 is a held-in development result, not a hidden-test leaderboard score.
-The two are not directly comparable.
+recent ego motion is predictive. The selector correctly identifies this — but
+over-applies it at distribution extremes (see Part 6).
 
 ---
 
@@ -236,206 +207,167 @@ The two are not directly comparable.
 
 ### 6.1 Structural Failure: Visual Blindness
 
-The most fundamental limitation is that the system has no camera perception.
-It processes only ego trajectory history, speed, and route intent. It cannot see:
+The system has no camera perception. It processes only ego trajectory history,
+speed, and route intent. The camera-based clusters require scene understanding
+that numeric ego-history features cannot provide.
 
-| Scenario type | System behavior | Ground truth requirement |
-|---------------|-----------------|--------------------------|
-| Pedestrian crossing | Continues forward; no detection | Yield or stop |
-| Debris in road (FOD cluster) | Trajectory from history only | Evasive offset or stop |
-| Traffic signal (red light) | Continues at road speed | Stop |
-| Cut-in vehicle | Cannot detect lateral threat | Evasive or slow |
-| Construction zone | Kinematic baseline only | Precise narrow corridor |
+### 6.2 Per-Slice Bias Audit
 
-This visual blindness caps the maximum achievable RFS. The camera-based clusters
-(FOD, pedestrian, cyclist, cut-in, spotlight) require scene understanding that
-numeric ego-history features cannot provide.
+Source: `benchmarks/current/wod_model_bias_audit.json`
 
-The selector partially compensates using intent-based priors (e.g., prefer
-stopping/slowing for GO_STRAIGHT + stopped-speed scenarios) but this is not
-equivalent to seeing the scene.
+The HGB selector has a systematic temporal bias — it over-applies the
+temporal heuristic at distribution extremes:
 
-### 6.2 Per-Cluster Failure Analysis
+| Slice | Frames | Selected RFS | Oracle RFS | Regret | Temporal selected | Temporal oracle |
+|-------|--------|-------------|-----------|--------|-------------------|-----------------|
+| GO_STRAIGHT | 427 | 7.750 | 9.133 | 1.383 | 65% | 19% |
+| GO_LEFT | 23 | 6.782 | 8.535 | **1.753** | 4% | 30% |
+| GO_RIGHT | 29 | 6.088 | 7.674 | 1.586 | — | — |
+| speed:slow | 133 | 7.191 | 8.829 | **1.638** | 85% | 25% |
+| speed:fast | 44 | 7.534 | 9.105 | 1.571 | **97%** | 14% |
 
-From the bias audit (`benchmarks/current/wod_model_bias_audit.json`):
+Key patterns:
+- **speed:fast (44 frames)**: selector picks temporal 97% of the time; oracle prefers
+  kinematic 68%. At high speed, kinematic candidates model the physics correctly;
+  the selector is incorrectly confident in temporal extrapolation.
+- **GO_LEFT (23 frames)**: selector abandons temporal (4%); oracle wants it 30% of
+  the time. The selector over-relies on kinematic for turns (87% vs oracle 57%).
+- **speed:slow (133 frames)**: selector picks temporal 85%; oracle splits kinematic
+  38% / temporal 25% / learned 38%. Slow-speed frames need diverse candidates.
 
-**Worst slice: intent:2 (GO_LEFT, 23 frames)**
-- Selected RFS: 6.782
-- Oracle RFS: 8.535
-- Mean regret: 1.753 (worst)
-- Oracle source rates: kinematic 57%, temporal 30%, learned 13%
-- Selected source rates: kinematic 87%, temporal 4%, learned 9%
+This is a calibration problem caused by training distribution imbalance —
+GO_STRAIGHT at urban speed is the majority. **It is directly addressable** by
+reweighting underrepresented slices in the HGB training loss.
 
-The selector over-relies on kinematic candidates for left-turn frames (87% vs
-57% oracle). Left turns require trajectory curvature that kinematic baselines
-generate better than the temporal ridge, but the selector is not confident in
-the learned model for turns.
+### 6.3 Global Oracle Gap
 
-**Second worst: intent:3 (GO_RIGHT, 133 frames)**
-- Selected RFS: 7.191
-- Oracle RFS: 8.829
-- Mean regret: 1.638
-- Oracle source rates: kinematic 38%, temporal 25%, learned 38%
-- Selected source rates: kinematic 5%, temporal 60%, learned 9%
+The 1.188 RFS oracle gap is frames where the right candidate exists in the pool
+but the selector doesn't pick it. Root cause: trajectory statistics cannot
+discriminate "good for this specific scene" without visual scene features.
 
-The selector under-uses kinematic candidates for right turns and over-relies on
-temporal. The right-turn oracle often wants a kinematic curved trajectory, but
-the selector picks temporal.
+### 6.4 Known Failure Modes in Simulation (Gauntlet)
 
-**Observation:** The selector is mis-calibrated for turns because the training
-data (479 frames) has limited turn diversity. The straight-ahead bias of the
-training distribution causes the selector to transfer straight-driving intuitions
-to turn frames.
+From the gauntlet suite (60 rollouts, 36/60 pass, 0 collisions):
 
-**Global selector oracle gap: 1.188 RFS**
-Even with perfect candidate enumeration (oracle), 1.19 RFS remains. This gap
-represents frames where the oracle candidate exists but the selector doesn't
-pick it. Root cause: the trajectory features cannot discriminate between
-"good for this specific scene" and "locally reasonable trajectory." Without
-visual scene features, many frames are ambiguous from trajectory statistics alone.
+**Over-stopping under cumulative pressure**: In narrow corridors with multiple
+background obstacles, obstacle pressure accumulates and pushes the selector toward
+`stop` or `crawl` even when the primary route is clear.
 
-### 6.3 Known Failure Modes in Simulator
+**Slow re-entry after evasive maneuver**: After a nudge, `lane_recover` adds 2–3
+steps of latency. The gauntlet progress gate penalizes this.
 
-From gauntlet suite results (60 rollouts, 36/60 pass rate):
-
-**Failure mode 1: Over-stopping under cumulative obstacle pressure**
-In narrow corridors with multiple background obstacles, the obstacle pressure
-score accumulates, pushing the selector toward `stop` or `crawl` maneuvers
-even when the primary route is clear. The corridor clearance contract helps
-but doesn't eliminate this for very narrow scenes.
-
-**Failure mode 2: Slow re-entry after evasive maneuver**
-After an evasive nudge, the `lane_recover` maneuver adds latency. In high-speed
-scenarios, this means the policy spends 2–3 time steps recovering instead of
-resuming progress. The gauntlet progress gate penalizes this.
-
-**Failure mode 3: Synchronized hazard overload**
-In gauntlet scenarios with multiple simultaneous threats (left obstacle + right
-obstacle + hard-braking actor ahead), the reference generation can produce
-conflicting signals. `evasive_left` scores high on one reference and `evasive_right`
-on another; the combined score averages to a mediocre result. The policy defaults
-to `slow_yield` which avoids collision but also avoids the goal.
-
-**Failure mode 4: Late heading recovery in sharp turns**
-The trajectory generator uses a 25 m goal heading projection. For very sharp
-turns (90°+ in 40 m), this produces a trajectory that lags the actual turn
-and violates corridor clearance near the apex. The evasive maneuver family was
-designed for lateral avoidance, not sharp-turn geometry.
-
-### 6.4 What the System Does Well in Simulation
-
-For completeness, the system handles these well:
-- Straight-ahead obstacle avoidance: `nudge_left/right` and `evasive` maneuvers
-  score correctly when one side is clearly more open
-- Complete blockage: correctly selects `stop` or `crawl` when all forward paths
-  have high obstacle pressure
-- Recovery from stopped: after stopping, the corridor clears and `maintain`
-  scores highest again — the policy resumes without oscillation
-- Low-visibility conditions (via camera brightness signal): adds caution zone,
-  selects `crawl` or `slow_yield` appropriately
-- Structured hazard integration from AlpaSignal: `cut_in` actors are correctly
-  converted and trigger evasive/yield responses
+**Synchronized hazard overload**: Multiple simultaneous threats produce conflicting
+reference signals. The combined score averages to a mediocre result; the policy
+defaults to `slow_yield`, avoids collision but also avoids the goal.
 
 ---
 
-## Part 7: System Operating on WOD-E2E Scenes
+## Part 7: Gauntlet Comparison
 
-### 7.1 What the System Sees
+Same 120 gauntlet scenarios (4 topologies × 30 seeds). Two policies.
 
-For each validation frame, the system receives only:
-- 16-point ego past trajectory (−4s to 0s)
-- Initial speed at t=0
-- Route intent (0–3)
+| Policy | Pass rate | Collisions |
+|--------|-----------|-----------|
+| Baseline (no world-state reasoning) | **0 / 120 (0%)** | **55** |
+| Spotlight Reflex | **72 / 120 (60%)** | **1** |
 
-It generates 4–8 candidate trajectories and scores them with the ranker. The
-selected trajectory is output as 20 (x, y) waypoints.
+Source: `artifacts/score_baseline_gauntlet_20260425/scenario_eval.json`
 
-### 7.2 Example: Clear Forward-Driving Frame (Success)
+The baseline collides in 45% of the hardest scenarios and passes zero.
+The geometric reasoning approach maintains near-zero collisions under the same load.
 
-Frame characteristics: GO_STRAIGHT, speed ≈ 8 m/s, no unusual geometry
-- Temporal candidate extrapolates recent velocity → smooth forward trajectory
-- Kinematic constant-velocity matches closely
-- Ranker prefers temporal (speed-bin: urban, source: temporal wins)
-- Selected RFS: ~9.0 (close to oracle)
-- This is the majority of validation frames
+---
 
-### 7.3 Example: Slow/Turning Frame (Typical Failure)
+## Part 8: Reproducing Results
 
-Frame characteristics: GO_LEFT, speed ≈ 3 m/s, approaching intersection
-- Kinematic heading-change candidates curve left at various rates
-- Temporal candidate: ego was decelerating, extends the deceleration
-- Ranker: temporal is dominant source, picks deceleration trajectory
-- Oracle: kinematic tight-left-turn is the right answer
-- Selected RFS: ~6.5, Oracle RFS: ~8.5, Regret: 2.0
-- Root cause: ranker was calibrated on mostly straight-driving frames;
-  for turns, kinematic is better but ranker underweights it
+### Full 350-run evaluation
 
-### 7.4 Example: FOD/Pedestrian Frame (Structural Failure)
-
-Frame characteristics: GO_STRAIGHT, unusual speed profile, debris in road
-- System: sees deceleration in past trajectory, generates kinematic-stop candidate
-- If recent ego was braking → stop candidate may be selected
-- If recent ego was at speed → forward candidate is selected (wrong)
-- The debris is invisible to the system; success is coincidental
-- Selected RFS: highly variable (6–9) depending on whether history happened
-  to capture pre-braking state
-- Root cause: no camera input → no direct scene evidence
-
-### 7.5 AlpaSim Scene: Full Decision Trace
-
-When running under AlpaSim (sensor-realistic closed-loop):
-
-**Input:** Camera frames from front-wide-120fov, speed 7.2 m/s, GO_STRAIGHT
-
-**Signal extraction:**
-- Brightness mean = 0.62 → visibility_risk = 0.0 (clear conditions)
-- Acceleration = −0.3 m/s² → dynamics_risk = 0.075 (light deceleration)
-- No structured hazards attached → signal_obstacles = []
-
-**Scenario construction:**
-- GO_STRAIGHT → lateral_goal = 0.0, straight lane center
-- No obstacles from signal → clean corridor
-
-**Policy execution:**
-- Obstacle pressure: 0.05 (no obstacles)
-- Route blockage: 0.0
-- Corridor blocked: false
-- References generated: maintain (92), lane center (88)
-- Candidates scored: maintain wins at combined score 91.2
-
-**Output:**
-```json
-{
-  "selected_maneuver": "maintain",
-  "selector_score": 91.2,
-  "selector_3s_reference": "maintain",
-  "decision_reason": "clear_corridor:maintain",
-  "obstacle_pressure": 0.05
-}
+```bash
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy spotlight-reflex \
+  --suite all \
+  --seed-start 1 \
+  --seed-end 10 \
+  --output-dir artifacts/eval_full_350
 ```
 
-Trajectory: 20 points extending straight ahead at 7.2 m/s.
+This reproduces: `artifacts/minor_ood_eval/scenario_eval.json`  
+Expected: 326/350 (93.1%) pass, 0 collisions
 
----
+### WOD cluster sweep (110 runs)
 
-## Part 8: What Is Needed for a Complete Leaderboard Submission
+```bash
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy spotlight-reflex \
+  --suite wod \
+  --seed-start 1 \
+  --seed-end 10 \
+  --output-dir artifacts/eval_wod_110
+```
 
-1. **Test TFRecords**: Download from Waymo (Google sign-in required). The parsing
-   and candidate generation pipeline is ready; it just needs the data.
+This reproduces: `artifacts/agnostic_sim_eval_wod_1_10/scenario_eval.json`  
+Expected: 110/110 (100%) pass, 0 collisions, mean min clearance 2.96 m
 
-2. **Official frame list**: The challenge provides a JSON listing which test frame
-   names require predictions. Without this, the submission writer cannot filter
-   to the correct frames.
+### Gauntlet comparison (baseline vs Spotlight)
 
-3. **Train split processing** (optional but recommended): Training the ridge model
-   on the full train split rather than the validation split would improve calibration
-   and allow the validation split to be held out as a clean eval set.
+```bash
+# Baseline
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy baseline \
+  --suite gauntlet \
+  --seed-start 1 \
+  --seed-end 30 \
+  --output-dir artifacts/eval_baseline_gauntlet
 
-4. **Camera integration** (future work): Replacing the current numeric-only path
-   with a lightweight camera encoder trained on preference labels would address
-   the visual blindness gap. Expected gain: +0.5–1.5 RFS if the encoder can
-   reliably detect pedestrians, FOD, and cut-in vehicles.
+# Spotlight Reflex
+uv run --no-sync python scripts/evaluate_scenarios.py \
+  --policy spotlight-reflex \
+  --suite gauntlet \
+  --seed-start 1 \
+  --seed-end 30 \
+  --output-dir artifacts/eval_spotlight_gauntlet
+```
 
-The submission packaging, validation, and format are verified correct against the
-official WOD-E2E schema. The pipeline is ready to run the moment the data is
-available.
+This reproduces: `artifacts/score_baseline_gauntlet_20260425/scenario_eval.json`  
+Expected: baseline 0/120 + 55 collisions, Spotlight 72/120 + 1 collision
+
+### COMPASS evidence package
+
+```bash
+uv run --no-sync python scripts/run_compass_evidence.py \
+  --policy spotlight-reflex \
+  --output artifacts/compass_evidence_report_new.json
+```
+
+This reproduces: `artifacts/compass_evidence_report.json`  
+Expected: COMPASS 9.137/10, 700 ranked runs, success CI [0.9945, 1.0]
+
+### WOD-E2E champion (HGB selector)
+
+```bash
+uv run --no-sync python scripts/evaluate_wod_e2e.py \
+  --selector hgb \
+  --candidates artifacts/wod_e2e_submission_matrix/hgb_selector_v3.tar.gz \
+  --output artifacts/eval_hgb_champion.json
+```
+
+Expected: 7.880 RFS on 479 validation frames
+
+### Single demo rollout
+
+```bash
+uv run --no-sync python scripts/run_demo.py \
+  --policy spotlight-reflex \
+  --scenario-cluster spotlight \
+  --seed 3 \
+  --artifacts-dir artifacts/demo_spotlight
+```
+
+### Regression test (geometry invariance)
+
+```bash
+uv run --no-sync python scripts/run_tests.py --quick
+```
+
+Verifies that relabelling all object names, cluster tags, and scenario labels
+while holding geometry fixed produces identical decisions.
