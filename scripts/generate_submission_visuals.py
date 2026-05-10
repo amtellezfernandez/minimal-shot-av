@@ -71,7 +71,7 @@ ACTOR_COL = {
 
 SCALE     = 7        # px per meter
 MARGIN    = 16       # px margin around scene
-HUD_H     = 88       # px HUD strip height
+HUD_H     = 96       # px HUD strip height
 EGO_R     = 5        # ego radius px
 TRAIL_LEN = 30       # max trail steps to draw
 GIF_FPS   = 12       # frames per second
@@ -212,54 +212,65 @@ def _draw_frame(
     mcol = MANEUVER_COL.get(maneuver, (150, 150, 150))
 
     try:
-        font_sm = ImageFont.load_default(size=14)
-        font_lg = ImageFont.load_default(size=16)
+        font_sm = ImageFont.load_default(size=13)
+        font_lg = ImageFont.load_default(size=15)
     except Exception:
+        font_sm = font_lg = ImageFont.load_default()
+
+    def _tw(txt: str, font: Any) -> int:
         try:
-            font_sm = ImageFont.load_default()
-            font_lg = ImageFont.load_default()
+            return int(font.getlength(txt))
         except Exception:
-            font_sm = font_lg = None
+            return len(txt) * 7
 
-    # ── Left column: maneuver badge ──────────────────────────────────
-    bw = 170
-    draw.rectangle([8, hud_y+6, 8+bw, hud_y+HUD_H-6], fill=mcol)
+    # ── Adaptive three-column layout ─────────────────────────────────
+    # right column: fixed content "t=012.3s", "clust #s", "N/M"
+    right_w = max(90, _tw("t=999.9s", font_sm) + 10)
+    # left badge: proportional, max 170
+    badge_w = min(170, max(110, int(img_w * 0.37)))
+    # middle: whatever remains (at least 60px for bars)
+    mid_start = badge_w + 14
+    mid_avail = img_w - right_w - 8 - mid_start  # px for label+bar+value
+    lbl_w_m   = min(46, int(mid_avail * 0.25))
+    val_w     = _tw("0.00", font_sm) + 6
+    bar_w     = max(24, mid_avail - lbl_w_m - val_w - 4)
+    bx        = mid_start + lbl_w_m  # bar start x
+
+    # ── Left badge ───────────────────────────────────────────────────
+    draw.rectangle([6, hud_y+4, 6+badge_w, hud_y+HUD_H-4], fill=mcol)
     label_text = maneuver.upper().replace("_", " ")
-    draw.text((14, hud_y+12), label_text, fill=(255, 255, 255), font=font_lg)
-    draw.text((14, hud_y+38), f"score  {score:.1f}", fill=(230, 230, 230), font=font_sm)
+    draw.text((12, hud_y+10), label_text, fill=(255, 255, 255), font=font_lg)
+    draw.text((12, hud_y+34), f"score {score:.1f}", fill=(230, 230, 230), font=font_sm)
+    draw.text((12, hud_y+54), f"{idx+1}/{len(steps)}", fill=(190, 190, 190), font=font_sm)
 
-    # ── Middle column: bars with short labels before, value after ────
-    bar_left = 8 + bw + 14          # = 192
-    lbl_w    = 52                    # pixels reserved for "PRESSURE" / "BLOCKAGE" labels
-    bar_w    = 120                   # bar width in px
-    bx       = bar_left + lbl_w     # bar starts here
-
-    # Pressure
-    draw.text((bar_left, hud_y+14), "PRESSURE", fill=(180, 180, 180), font=font_sm)
-    draw.rectangle([bx, hud_y+12, bx+bar_w, hud_y+26], outline=(80, 80, 90), fill=(50, 50, 60))
+    # ── Middle bars ───────────────────────────────────────────────────
+    # PRES row
+    draw.text((mid_start, hud_y+13), "PRES:", fill=(160, 160, 160), font=font_sm)
+    draw.rectangle([bx, hud_y+10, bx+bar_w, hud_y+24],
+                   outline=(80, 80, 90), fill=(50, 50, 60))
     if pressure > 0:
-        draw.rectangle([bx, hud_y+12, bx+int(pressure*bar_w), hud_y+26], fill=(220, 53, 69))
-    draw.text((bx+bar_w+6, hud_y+14), f"{pressure:.2f}", fill=(210, 210, 210), font=font_sm)
+        draw.rectangle([bx, hud_y+10, bx+int(pressure*bar_w), hud_y+24],
+                       fill=(220, 53, 69))
+    draw.text((bx+bar_w+4, hud_y+13), f"{pressure:.2f}",
+              fill=(200, 200, 200), font=font_sm)
 
-    # Blockage
-    draw.text((bar_left, hud_y+42), "BLOCKAGE", fill=(180, 180, 180), font=font_sm)
-    draw.rectangle([bx, hud_y+40, bx+bar_w, hud_y+54], outline=(80, 80, 90), fill=(50, 50, 60))
+    # BLOC row
+    draw.text((mid_start, hud_y+43), "BLOC:", fill=(160, 160, 160), font=font_sm)
+    draw.rectangle([bx, hud_y+40, bx+bar_w, hud_y+54],
+                   outline=(80, 80, 90), fill=(50, 50, 60))
     if blockage > 0:
-        draw.rectangle([bx, hud_y+40, bx+int(blockage*bar_w), hud_y+54], fill=(255, 193, 7))
-    draw.text((bx+bar_w+6, hud_y+42), f"{blockage:.2f}", fill=(210, 210, 210), font=font_sm)
+        draw.rectangle([bx, hud_y+40, bx+int(blockage*bar_w), hud_y+54],
+                       fill=(255, 193, 7))
+    draw.text((bx+bar_w+4, hud_y+43), f"{blockage:.2f}",
+              fill=(200, 200, 200), font=font_sm)
 
     # ── Right column: anchored to right edge ─────────────────────────
     rx = img_w - 6
     def rtext(txt: str, y: int, col: tuple) -> None:
-        try:
-            tw = font_sm.getlength(txt) if font_sm else len(txt) * 7
-        except Exception:
-            tw = len(txt) * 7
-        draw.text((int(rx - tw), y), txt, fill=col, font=font_sm)
+        draw.text((int(rx - _tw(txt, font_sm)), y), txt, fill=col, font=font_sm)
 
-    rtext(t_str,                 hud_y+12, HUD_TEXT)
-    rtext(f"{cluster} #{seed}", hud_y+32, (150, 180, 200))
-    rtext(f"{idx+1}/{len(steps)}", hud_y+54, (120, 120, 120))
+    rtext(t_str,                  hud_y+13, HUD_TEXT)
+    rtext(f"{cluster}#{seed}",    hud_y+43, (140, 170, 195))
 
     return img
 

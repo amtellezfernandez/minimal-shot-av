@@ -274,6 +274,18 @@ Quantized Variational Autoencoder) adapted for spatiotemporal video:
   of real-world video, with adversarial regularisation to preserve high-frequency
   detail.
 
+```mermaid
+flowchart LR
+    V["Video input\n(T × H × W × 3)"] --> E1["3D Conv block\ndownsample ×2"]
+    E1 --> E2["3D Conv block\ndownsample ×2"]
+    E2 --> E3["3D Conv block\ndownsample ×2"]
+    E3 --> Lat["Latent tensor\n(T/8 × H/8 × W/8 × C)"]
+    Lat --> Q["Quantizer\n→ discrete tokens\n(not used by us)"]
+    Lat --> P["Spatial pool\n→ 64-dim vector\n✓ used by us"]
+    Lat --> Dec["Decoder\n→ reconstruction\n(training objective)"]
+    P --> Down["Downstream\nGPU MLP / ranker"]
+```
+
 NVIDIA trained this on large-scale physically plausible world video — real
 driving, robotics, and scene footage — making the latent space encode the
 structure of physical scenes rather than arbitrary image statistics.
@@ -329,17 +341,27 @@ Architecture (three components):
    is projected to an embedding vector and processed through a stack of
    multi-head self-attention layers (transformer blocks). The final sequence
    of patch embeddings is pooled to produce a scene-level representation.
-   ViTs capture long-range spatial relationships between image regions because
-   each patch attends to all others — unlike CNNs which are local.
+   ViTs capture long-range spatial relationships because each patch attends to
+   all others — unlike CNNs which are purely local.
 
 2. **Language decoder — LLM backbone:**
    A large language model that receives the visual embeddings and text instruction
-   tokens as a joint sequence. It produces language outputs (scene descriptions,
-   action descriptions) and is trained to follow navigation instructions.
+   tokens as a joint sequence. It produces language outputs and is trained to
+   follow navigation instructions.
 
 3. **Action head:**
    Additional prediction layers that map the joint visual-language representation
    to low-level control outputs (velocity, steering angle, stop/go decisions).
+
+```mermaid
+flowchart LR
+    Im["Camera frame\n(H × W × 3)"] --> P["Patch split\n14×14 px patches\n→ N tokens"]
+    P --> ViT["ViT encoder\nmulti-head self-attention\n× L transformer blocks\nall patches attend to all others"]
+    ViT --> Pool["CLS token / pool\n→ 128-dim scene embedding\n✓ used by us"]
+    Pool --> Lin["Linear ranker feature\n(no gain — task mismatch)"]
+    ViT --> LLM["LLM backbone\n+ instruction tokens\n→ scene descriptions"]
+    LLM --> Act["Action head\n→ velocity · steering\n(InternVLA's native output)"]
+```
 
 InternVLA is trained on large collections of robot manipulation demonstrations
 and driving data with a multitask objective: predict both language descriptions
@@ -489,6 +511,14 @@ Only the ridge regression weights `w` (a D-dimensional vector) are learned:
 This gives a **non-linear classifier at O(D·p) cost per inference** instead of
 O(N), making it practical for CV sweeps over 479 frames.
 
+```mermaid
+flowchart LR
+    X["Input features x\n137-dim trajectory\n+ context vector"] --> W["Fixed random matrix W\n512 × 137\nW ~ N(0, σ⁻²I),  σ=7.858\nsampled once at fit time"]
+    W --> Phi["φ(x) = √(2/D) · cos(Wᵀx + b)\n512-dimensional feature map\napproximates RBF kernel"]
+    Phi --> R["Ridge regression\nŷ = wᵀφ(x) + bias\nonly w is learned (512 weights)"]
+    R --> Pred["Preference\nprediction\n(fires if > gate threshold)"]
+```
+
 #### Configuration
 
 We did not derive D=512 and σ=7.858 from theory — they were found by a 1D sweep:
@@ -513,16 +543,16 @@ overrides, 10 incorrect), net contribution +0.031 RFS over the gate-only baselin
 
 A 2-layer feed-forward neural network trained in PyTorch, using GPU acceleration:
 
-```
-Input: [64-dimensional Cosmos embedding | trajectory features]
-         ↓
-Linear(64+k → h=64) → ReLU → Dropout(p≈0)
-         ↓
-Linear(64 → 64) → ReLU
-         ↓
-Linear(64 → 1) → sigmoid
-         ↓
-Predicted probability of being the best candidate on this frame
+```mermaid
+flowchart LR
+    Cam["WOD-E2E\ncamera frame"] --> CosmosEnc["Cosmos Encoder\nConv3D downsampling blocks\ntemporal + spatial compression"]
+    CosmosEnc --> Pool["Spatial pool\n→ 64-dim continuous\nlatent embedding"]
+    Pool --> L1["Linear(64 → 64)\nReLU · Dropout≈0"]
+    L1 --> L2["Linear(64 → 64)\nReLU"]
+    L2 --> L3["Linear(64 → 1)\nsigmoid"]
+    L3 --> Gate{"confidence\n> threshold?"}
+    Gate -- "yes\n4.2% of frames" --> Ov["Override gate choice\n+0.042 RFS · precision 0.60"]
+    Gate -- "no\n95.8%" --> Pass["Use HGB ranker\noutput unchanged"]
 ```
 
 Training details (champion trial_0004):

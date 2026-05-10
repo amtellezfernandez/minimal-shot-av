@@ -29,6 +29,20 @@ The policy makes this explicit:
    trust regions.
 4. Select the highest-scoring safe candidate.
 
+```mermaid
+flowchart TD
+    A["Scene Input\nobstacles · actors · lane geometry"] --> B["Perception\nray-cast to nearest obstacle\nproject corridor cross-section"]
+    B --> C["6 World-State Scalars\nobstacle_pressure · route_blockage\ncorridor_blocked\nleft_clearance · right_clearance\npreferred_escape_side"]
+    C --> D["9 Maneuver Candidates\nstop · crawl · maintain · slow_yield\nnudge_L · nudge_R · evasive_L · evasive_R · lane_recover\n20-pt trajectory each"]
+    C --> E["Reference Rule Engine\nworld state thresholds → pseudo-rater references\neach reference has a target score 76–94"]
+    D --> F["Trust-Region Scorer\n3 s check: ±1.0 m lat · ±4.0 m lng\n5 s check: ±1.8 m lat · ±7.2 m lng\nboth speed-scaled by s(v)"]
+    E --> F
+    F --> G["Safety Filter\n−1000 penalty if clearance < 0.55 m\nprogress bonus · clearance penalty"]
+    G --> H["Selected Maneuver + SpotlightSelection log\nmaneuver name · score_3s · score_5s\ndecision_reason · all world-state fields"]
+    H --> I["Advance Step\nego moves · actors move · t += Δt"]
+    I --> A
+```
+
 No trajectory is memorised. No scenario label enters the decision. The regression tests
 verify this: relabelling all object names, cluster tags, and scenario identifiers while
 holding geometry fixed produces identical decisions.
@@ -247,6 +261,18 @@ Our generator makes topology and hazard statistically independent:
 
 ```
 P(topology, hazard) = P(topology) × P(hazard)
+```
+
+```mermaid
+graph LR
+    T["8 Road Topologies\nstraight · curve · S_curve\nT_junction · roundabout\nlane_merge · highway · urban"]
+    H["11 Hazard Modules\nconstruction · spotlight · FOD\npedestrian · cyclist · cut_in\nanimal · stopped · special · intersection"]
+    W["4 Weather Modes\nclear · rain · fog · night"]
+    O["Novel Objects\ncone · debris · animal · barrier"]
+    T -->|sampled independently| S["Scenario\nfull geometry + actors + weather"]
+    H -->|sampled independently| S
+    W -->|sampled independently| S
+    O -->|sampled independently| S
 ```
 
 **8 road topology types:**
