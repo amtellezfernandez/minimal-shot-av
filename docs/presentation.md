@@ -207,24 +207,26 @@ flowchart LR
     C --> D[Kinematic\nconst-vel · accel\nheading · stop]
     C --> E[Ridge Learned\n31 features · 5-fold CV]
     C --> F[Temporal Ridge\nego-history trends]
-    D & E & F --> G[WodPreferenceRanker\nHGB · ~137 features\nstability-selected]
+    D & E & F --> G[WodPreferenceRanker\n~137 features\nsegment-grouped 5-fold CV]
     G --> H[Selected Trajectory\n20 × 2 waypoints]
 ```
 
 | Selector | RFS | Notes |
 |----------|-----|-------|
-| Constant velocity | 7.022 | Zero-learning baseline |
-| Kinematic ranker | 7.096 | Physics-only candidates |
-| HGB stability-selected | **7.880** | Champion — segment-grouped 5-fold CV |
-| Oracle (perfect selection) | **9.068** | Upper bound given candidate pool |
+| Constant velocity (local backend) | 7.131 | Local scoring baseline |
+| Constant velocity (official) | 7.022 | Official Waymo backend |
+| Kinematic ranker | 7.096 | Physics-only, official backend |
+| Gate system only | 7.803 | 5-fold, local backend |
+| Champion (direct policy) | **7.834** | 5-fold, local backend |
+| Oracle (perfect selection) | **9.264** | Upper bound, local backend |
 
-**+0.858 RFS over the constant-velocity baseline.**
+**+0.703 RFS over the local baseline · oracle gap 1.430 RFS**
 
 ---
 
 ## The Oracle Gap — Key Scientific Finding
 
-The **oracle gap is 1.188 RFS** (9.068 − 7.880).
+The **oracle gap is 1.430 RFS** (9.264 − 7.834).
 
 This is the correct diagnostic: **the candidate pool is not the bottleneck.
 The discriminator is.**
@@ -240,24 +242,26 @@ The fix is not a better candidate generator. It is a visual discriminator.
 
 ## Calibration Bias — A Quantifiable Finding
 
-The HGB selector has a **systematic temporal bias** that is measurable and correctable:
+The champion selector (RFF direct policy, 5-fold) has **residual regret at distribution
+extremes** that is measurable and correctable:
 
-| Slice | Frames | Selected (temporal%) | Oracle (temporal%) | Regret |
-|-------|--------|---------------------|--------------------|--------|
-| GO_STRAIGHT | 427 | 65% | 19% | 1.383 |
-| GO_LEFT | 23 | 4% | **30%** | **1.753** |
-| speed:slow | 133 | 85% | 25% | **1.638** |
-| speed:fast | 44 | **97%** | 14% | 1.571 |
+| Slice | Frames | Selected RFS | Oracle RFS | Regret |
+|-------|--------|-------------|-----------|--------|
+| GO_STRAIGHT | 427 | 7.959 | 9.336 | 1.377 |
+| GO_LEFT | 23 | 7.107 | 8.721 | **1.614** |
+| GO_RIGHT | 29 | 6.574 | 8.638 | **2.063** |
+| speed:slow | 133 | 7.564 | 9.196 | 1.632 |
+| speed:fast | 44 | 7.957 | 9.436 | 1.479 |
 
-The selector correctly relies on temporal candidates (ego-history trend extrapolation)
-for average straight-ahead driving, but over-applies this heuristic at distribution
-extremes:
+The selector performs well on the dominant GO_STRAIGHT slice (1.377 regret) but
+over-selects temporal candidates at distribution extremes:
 
-- **speed:fast**: selector picks temporal 97% of the time; oracle prefers kinematic 68%
-- **GO_LEFT**: selector abandons temporal entirely (4%); oracle wants it 30% of the time
+- **GO_RIGHT (29 frames)**: regret 2.063 — rarest intent class, under-represented in training
+- **GO_LEFT (23 frames)**: regret 1.614 — improved from 1.753 (old model), still elevated
+- **speed:slow (133 frames)**: regret 1.632 — slow frames need diverse candidate coverage
 
-This is a quantifiable, correctable bias — not a structural failure of the approach.
-Reweighting turn and high-speed frames in the HGB training loss addresses it directly.
+This is a quantifiable, correctable bias. Reweighting turn and low-speed frames in
+training and augmenting with more diverse turn examples addresses it directly.
 
 ---
 
@@ -283,7 +287,7 @@ More candidates are not useful without a better discriminator.
 | What this IS | What this IS NOT |
 |-------------|-----------------|
 | Runnable closed-loop minimal-shot policy | A production AV stack |
-| WOD-E2E evaluation harness with 7.880 RFS | A strict zero-shot WOD-E2E result |
+| WOD-E2E harness, 7.834 RFS (5-fold) · 7.880 (2-fold peak) | A strict zero-shot WOD-E2E result |
 | Validated submission packaging pipeline | A completed leaderboard submission |
 | AlpaSim trajectory plugin | Full sensor-realistic perception stack |
 | 110 WOD runs, 0 collisions | A safety certification |
@@ -296,13 +300,13 @@ The test frame list (1,505 frames) is present. Only the test TFRecords are neede
 
 ## Next Steps
 
-**Camera encoder** — The oracle gap (1.188 RFS) is recoverable if the selector
+**Camera encoder** — The oracle gap (1.430 RFS) is recoverable if the selector
 can see the scene. A small model fine-tuned on WOD-E2E preference labels to
 discriminate winning trajectories from camera images. Expected to close 0.5–1.5 RFS.
 
-**Turn calibration** — GO_LEFT (regret 1.753) and speed:fast (regret 1.571) are
-directly addressable: reweight turn and high-speed frames in the HGB training loss,
-augment with more diverse turn examples.
+**Turn calibration** — GO_RIGHT (regret 2.063) and GO_LEFT (regret 1.614) are
+directly addressable: reweight turn frames in training, augment with more diverse
+turn examples. GO_LEFT already improved from 1.753 → 1.614 over the previous model.
 
 **Leaderboard submission** — Test frame list is present (1,505 frames). Packaging
 pipeline is validated. Only the test TFRecords are missing.
@@ -323,8 +327,8 @@ sensor-to-obstacle adapter on real hardware.
 | **Policy** | Spotlight Reflex — explicit world-state + 9 maneuvers + selector |
 | **Simulation** | Built from scratch, 11 WOD clusters + compositional OOD |
 | **Evidence** | 110 runs · 0 collisions · COMPASS 9.137/10 · 700 ranked runs |
-| **WOD-E2E** | 7.880 RFS (+0.858 over baseline) on 479 validation frames |
-| **Oracle gap** | 1.188 RFS — discriminator is the bottleneck, not the candidates |
+| **WOD-E2E** | 7.834 RFS (+0.703 vs local baseline) on 479 validation frames, 5-fold CV |
+| **Oracle gap** | 1.430 RFS — discriminator is the bottleneck, not the candidates |
 | **AlpaSim** | Same policy, sensor-realistic, `collision_at_fault: 0.0` |
 | **Bottleneck** | Visual discriminator — camera encoder is the identified next step |
 

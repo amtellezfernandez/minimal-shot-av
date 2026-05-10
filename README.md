@@ -74,9 +74,10 @@ COMPASS composite score: **9.137 / 10** across 700 ranked runs (threshold 7.0).
 | Baseline (no world-state reasoning) | 0 / 120 | **55** |
 | Spotlight Reflex | 72 / 120 | **1** |
 
-**WOD-E2E: 7.880 RFS** vs 7.022 constant-velocity baseline on the 479-frame
-preference contract using a stability-selected HGB ranker. Oracle gap: 1.188 RFS
-(the discriminator, not the candidate pool, is the bottleneck).
+**WOD-E2E: 7.834 RFS** (5-fold CV, local backend; local CV baseline 7.131) on the
+479-frame preference contract. Gate-only selector: 7.803. Direct policy adds +0.031.
+Oracle: 9.264. Oracle gap: **1.430 RFS** — the discriminator is the bottleneck, not
+the candidate pool. HGB Optuna peak: 7.880 (2-fold). Official Waymo baseline: 7.022.
 
 **AlpaSim**: same policy, sensor-realistic, `collision_at_fault: 0.0`, `dist_to_gt: 0.42 m`.
 
@@ -94,7 +95,7 @@ preference contract using a stability-selected HGB ranker. Oracle gap: 1.188 RFS
 ## Next Steps
 
 The bottleneck is the discriminator, not the candidates. A lightweight camera encoder
-fine-tuned on WOD-E2E preference labels should close 0.5–1.5 RFS of the 1.188-point
+fine-tuned on WOD-E2E preference labels should close 0.5–1.5 RFS of the 1.430-point
 oracle gap. Waymo train-split access would move calibration off the validation set.
 The test frame list (1,505 frames) and submission pipeline are both ready.
 

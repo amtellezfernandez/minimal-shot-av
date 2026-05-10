@@ -117,34 +117,42 @@ abstraction is at the right level of representation.
 ## WOD-E2E Benchmark Analysis
 
 The WOD-E2E harness evaluates trajectory selection on 479 preference-labeled
-validation frames using Waymo's Rater Feedback Score (RFS).
+validation frames using Waymo's Rater Feedback Score (RFS). All results use
+segment-grouped 5-fold CV on the local scoring backend (CV baseline 7.131;
+official Waymo baseline 7.022).
 
-| Selector | RFS | Notes |
-|----------|-----|-------|
-| Constant velocity | 7.022 | Zero-learning baseline |
-| Kinematic ranker | 7.096 | Physics-only candidates |
-| HGB stability-selected | **7.880** | Champion — segment-grouped 5-fold CV |
-| Oracle (perfect selection) | **9.068** | Upper bound given candidate pool |
+| Selector | RFS (5-fold) | Notes |
+|----------|-------------|-------|
+| Constant velocity (local) | 7.131 | Local scoring baseline |
+| Constant velocity (official) | 7.022 | Official Waymo backend |
+| Kinematic ranker | 7.096 | Physics-only candidates, official backend |
+| Gate system only | 7.803 | No direct policy |
+| Champion (direct policy) | **7.834** | Random-Fourier direct policy, +0.703 vs local baseline |
+| Oracle (perfect selection) | **9.264** | Upper bound given candidate pool |
 
-The **oracle gap is 1.188 RFS** (9.068 − 7.880). This is the key scientific finding:
+The **oracle gap is 1.430 RFS** (9.264 − 7.834). This is the key scientific finding:
 the candidate pool is good — the bottleneck is the discriminator. The selector cannot
 identify which candidate is best on a given frame without visual scene information.
 
-**Source selection rates reveal systematic calibration bias:**
+The direct policy adds +0.031 RFS above the gate-only baseline (7.803 → 7.834).
+The HGB variant (optimised via Optuna) reached 7.880 in 2-fold evaluation but was
+not evaluated under 5-fold at time of writing.
 
-| Slice | Selected (temporal%) | Oracle (temporal%) | Regret |
-|-------|---------------------|--------------------|--------|
-| GO_STRAIGHT (427 frames) | 65% | 19% | 1.383 |
-| GO_LEFT (23 frames) | 4% | 30% | **1.753** |
-| speed:slow (133 frames) | 85% | 25% | **1.638** |
-| speed:fast (44 frames) | **97%** | 14% | 1.571 |
+**Per-slice bias audit reveals residual regret at distribution extremes:**
 
-The HGB selector has a systematic temporal bias. It correctly relies on temporal
-candidates (ego-history trend extrapolation) for average straight-ahead driving,
-but over-applies this heuristic at distribution extremes: fast-speed frames where
-kinematic candidates are oracle-preferred (68%), and turn frames where the selector
-fails to use temporal at the oracle rate. This is a quantifiable, correctable bias —
-not a structural failure of the approach.
+| Slice | Frames | Selected RFS | Oracle RFS | Regret |
+|-------|--------|-------------|-----------|--------|
+| GO_STRAIGHT | 427 | 7.959 | 9.336 | 1.377 |
+| GO_LEFT | 23 | 7.107 | 8.721 | **1.614** |
+| GO_RIGHT | 29 | 6.574 | 8.638 | **2.063** |
+| speed:slow | 133 | 7.564 | 9.196 | 1.632 |
+| speed:fast | 44 | 7.957 | 9.436 | 1.479 |
+
+GO_RIGHT has the highest regret (2.063) as the rarest intent class — under-represented
+in the 479-frame calibration set. GO_LEFT improved substantially from 1.753 (previous
+model) to 1.614. The dominant GO_STRAIGHT slice performs well (1.377 regret). This
+is a quantifiable, correctable imbalance: reweighting turn frames in training and
+augmenting with more diverse turn examples addresses it directly.
 
 ---
 
@@ -170,7 +178,7 @@ candidates are not useful without a better discriminator.
 **1. Task-specific camera encoder.** A small model fine-tuned on WOD-E2E preference
 labels to discriminate winning trajectories from camera images. Not a general VLM —
 a discriminative encoder for the specific signal the ranker needs. Expected to close
-0.5–1.5 RFS of the 1.188-point oracle gap.
+0.5–1.5 RFS of the 1.430-point oracle gap.
 
 **2. Proper train/test split.** The champion selector is calibrated on retained
 validation preference labels under segment-grouped CV. Waymo train TFRecords (Google
@@ -179,9 +187,10 @@ sign-in gated) would move calibration off the validation set, making it a true t
 **3. Leaderboard submission.** The official test frame list is present (1,505 frames).
 The packaging pipeline is validated. Only the test TFRecords are needed.
 
-**4. Turn calibration.** GO_LEFT (regret 1.753) and speed:fast (regret 1.571) slices
-are directly addressable by weighting turn and high-speed frames more heavily in the
-HGB training loss, and by augmenting the training set with more diverse turn examples.
+**4. Turn calibration.** GO_RIGHT (regret 2.063) and GO_LEFT (regret 1.614) slices
+are directly addressable by weighting turn frames more heavily in training and
+augmenting with more diverse turn examples. GO_LEFT improved from 1.753 (previous
+model) to 1.614 in the champion; GO_RIGHT remains the largest calibration gap.
 
 **5. Physical deployment.** The AlpaSim adapter is the template for a
 sensor-to-obstacle bridge on real hardware. A vehicle with obstacle sensors and a

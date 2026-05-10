@@ -180,26 +180,38 @@ All results are internal validation CV evidence on the 479-frame preference cont
 
 ### 5.1 Model Timeline
 
-| Selector | RFS | Notes |
-|----------|-----|-------|
-| Constant velocity | 7.022 | Zero-learning baseline |
-| Kinematic ranker | 7.096 | Physics-only candidates |
-| Ridge r175 contextual router | 7.695 | Intermediate champion |
-| **HGB stability-selected** | **7.880** | Promoted champion — commit `69b4efb` |
-| Oracle (perfect selector) | **9.068** | Upper bound given candidate pool |
+All RFS results use local scoring backend (CV baseline 7.131; official Waymo baseline 7.022).
 
-Oracle gap: **1.188 RFS** (9.068 − 7.880). The candidate pool is good.
-The discriminator is the bottleneck.
+| Selector | RFS | Folds | Notes |
+|----------|-----|-------|-------|
+| Constant velocity (official) | 7.022 | — | Official Waymo baseline |
+| Constant velocity (local) | 7.131 | — | Local scoring baseline |
+| Kinematic ranker | 7.096 | — | Physics-only, official backend |
+| Ridge r175 contextual router | 7.695 | 2 | Intermediate, local backend |
+| HGB (Optuna 2-fold best) | 7.880 | 2 | Optuna-found peak — commit `69b4efb` |
+| Gate only (5-fold) | 7.803 | 5 | No direct policy |
+| **Champion direct policy (5-fold)** | **7.834** | **5** | **Random-Fourier direct policy** |
+| Oracle (perfect selector) | **9.264** | — | Upper bound, local backend |
 
-### 5.2 Source Selection Rates (Champion)
+Champion gap: **1.430 RFS** (9.264 − 7.834). The candidate pool is good.
+The discriminator is the bottleneck. HGB variant reached 7.880 under 2-fold evaluation
+but is not confirmed at 5-fold.
 
-- Temporal candidates: ~60% of frames
-- Kinematic candidates: ~37% of frames
-- Learned candidates: ~3% of frames
+### 5.2 Source Selection Rates (Champion — RFF direct policy)
+
+Base gate selection (frames not overridden by direct policy, ~96.5%):
+- Temporal candidates: ~49%
+- Kinematic candidates: ~26%
+- Learned candidates: ~12%
+- Other: ~10%
+
+Direct policy overrides: ~3.5% of frames (17/479), precision 0.41 (7 TP / 10 FP).
+Net direct policy contribution: +0.031 RFS over gate-only baseline.
 
 The temporal dominance shows the WOD-E2E validation set is mostly frames where
-recent ego motion is predictive. The selector correctly identifies this — but
-over-applies it at distribution extremes (see Part 6).
+recent ego motion is predictive. Unlike the HGB 2-fold analysis (temporal ~60%),
+the RFF champion has more balanced kinematic and learned selection, reflecting
+different gate configuration and lower temporal over-reliance.
 
 ---
 
@@ -213,37 +225,35 @@ that numeric ego-history features cannot provide.
 
 ### 6.2 Per-Slice Bias Audit
 
-Source: `benchmarks/current/wod_model_bias_audit.json`
+Source: `benchmarks/current/wod_champion_v20_5fold_champion.json` (champion 5-fold)
 
-The HGB selector has a systematic temporal bias — it over-applies the
-temporal heuristic at distribution extremes:
+The champion selector (RFF direct policy, 5-fold) shows residual regret at distribution
+extremes, most pronounced for GO_RIGHT and low-speed turn frames:
 
-| Slice | Frames | Selected RFS | Oracle RFS | Regret | Temporal selected | Temporal oracle |
-|-------|--------|-------------|-----------|--------|-------------------|-----------------|
-| GO_STRAIGHT | 427 | 7.750 | 9.133 | 1.383 | 65% | 19% |
-| GO_LEFT | 23 | 6.782 | 8.535 | **1.753** | 4% | 30% |
-| GO_RIGHT | 29 | 6.088 | 7.674 | 1.586 | — | — |
-| speed:slow | 133 | 7.191 | 8.829 | **1.638** | 85% | 25% |
-| speed:fast | 44 | 7.534 | 9.105 | 1.571 | **97%** | 14% |
+| Slice | Frames | Selected RFS | Oracle RFS | Regret |
+|-------|--------|-------------|-----------|--------|
+| GO_STRAIGHT | 427 | 7.959 | 9.336 | 1.377 |
+| GO_LEFT | 23 | 7.107 | 8.721 | **1.614** |
+| GO_RIGHT | 29 | 6.574 | 8.638 | **2.063** |
+| speed:fast | 44 | 7.957 | 9.436 | 1.479 |
+| speed:slow | 133 | 7.564 | 9.196 | 1.632 |
+| speed:urban | 136 | 8.132 | 9.416 | 1.285 |
+| speed:stopped+creep | 166 | 7.775 | 9.148 | 1.373 |
 
-Key patterns:
-- **speed:fast (44 frames)**: selector picks temporal 97% of the time; oracle prefers
-  kinematic 68%. At high speed, kinematic candidates model the physics correctly;
-  the selector is incorrectly confident in temporal extrapolation.
-- **GO_LEFT (23 frames)**: selector abandons temporal (4%); oracle wants it 30% of
-  the time. The selector over-relies on kinematic for turns (87% vs oracle 57%).
-- **speed:slow (133 frames)**: selector picks temporal 85%; oracle splits kinematic
-  38% / temporal 25% / learned 38%. Slow-speed frames need diverse candidates.
+The champion improves substantially over earlier models (GO_LEFT improved from 6.782 to
+7.107; GO_RIGHT from 6.088 to 6.574), but GO_RIGHT remains the largest regret slice.
+Root cause: GO_RIGHT frames in the validation set are rare (29 frames) and
+under-represented in training. The direct policy selects temporal candidates
+disproportionately, while oracle often prefers kinematic or learned.
 
-This is a calibration problem caused by training distribution imbalance —
-GO_STRAIGHT at urban speed is the majority. **It is directly addressable** by
-reweighting underrepresented slices in the HGB training loss.
+*Historical comparison (r100 ridge model, for reference):*
+GO_LEFT: selected 6.782, regret 1.753 · GO_RIGHT: selected 6.088, regret 1.586 · speed:slow: regret 1.638
 
 ### 6.3 Global Oracle Gap
 
-The 1.188 RFS oracle gap is frames where the right candidate exists in the pool
-but the selector doesn't pick it. Root cause: trajectory statistics cannot
-discriminate "good for this specific scene" without visual scene features.
+The **1.430 RFS oracle gap** (9.264 − 7.834) is frames where the right candidate
+exists in the pool but the selector doesn't pick it. Root cause: trajectory statistics
+cannot discriminate "good for this specific scene" without visual scene features.
 
 ### 6.4 Known Failure Modes in Simulation (Gauntlet)
 

@@ -250,19 +250,23 @@ choose a configuration that is consistent across folds.
 
 ### 2.4 Performance Results
 
-All results are internal validation CV evidence, not leaderboard scores.
+All results are internal validation CV evidence on 479 preference-labeled frames.
+Local scoring backend (CV baseline 7.131); official Waymo baseline 7.022.
 
-| Model | Validation RFS (479 frames) | Notes |
-|-------|-----------------------------|-------|
-| Constant velocity baseline | 7.022 | No learning |
-| Ridge selector (r175 contextual speed router) | 7.695 | Earlier champion |
-| HGB stability-selected policy | **7.88046** | Latest promoted |
-| Neural ensemble (held-out 159 frames only) | 7.738 | Not full 479 |
-| Combined candidate oracle | 9.068 | Upper bound |
+| Model | RFS | Folds | Backend | Notes |
+|-------|-----|-------|---------|-------|
+| Constant velocity (official) | 7.022 | — | official | Waymo baseline |
+| Constant velocity (local) | 7.131 | — | local | Local scoring baseline |
+| Ridge selector r175 contextual | 7.695 | 2 | local | Earlier champion |
+| HGB Optuna peak (trial_0000) | 7.880 | 2 | local | Best 2-fold observed |
+| Gate system only | 7.803 | 5 | local | No direct policy |
+| **Champion direct policy (RFF)** | **7.834** | **5** | **local** | **Stable 5-fold result** |
+| Combined candidate oracle | 9.264 | — | local | Upper bound |
 
-The oracle-to-selected gap is 1.19 RFS on the champion run (9.068 − 7.88046).
-This gap represents the selector's inability to identify the best candidate
-family for each frame from trajectory features alone.
+The **oracle gap is 1.430 RFS** (9.264 − 7.834) on the 5-fold champion run.
+The HGB Optuna trial reached 7.880 under 2-fold evaluation; the 5-fold
+estimate for HGB is pending. The RFF champion is the strongest 5-fold result
+confirmed to date.
 
 Source selection rates on the champion run (approximate, varies by fold):
 - Temporal: ~60%
@@ -629,10 +633,11 @@ COMPASS scoring, CLI artifacts, and deterministic simulator seeds.
 - A completed leaderboard submission (test TFRecords are required but not downloaded)
 
 **Honest performance position:**
-The promoted result (7.88046 RFS) sits below the 8.05 leaderboard snapshot
-target but represents a meaningful improvement over the constant-velocity baseline
-(+0.86 RFS). The oracle gap (1.19 RFS) shows there is substantial headroom if
-a better candidate discriminator can be built from scene features.
+The stable 5-fold result (7.834 RFS, local backend) sits below the 8.05 leaderboard
+snapshot but is +0.70 above the local baseline (7.131). The HGB Optuna peak (7.880,
+2-fold) is the historically best observed score. The oracle gap (1.430 RFS, 5-fold
+local) shows there is substantial headroom if a better candidate discriminator can be
+built from scene features.
 
 The correct framing for the commission is: this is infrastructure and a
 reproducible prototype, with honest failure analysis and a clear path to what
