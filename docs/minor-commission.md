@@ -375,24 +375,33 @@ in AlpaSim — no code path is AlpaSim-specific.
 
 ### Closed-Loop Rollout Summary
 
+**Primary benchmark** (seeds 1–10, deterministic):
+
 | Suite | Runs | Collisions | Pass |
 |-------|------|-----------|------|
 | WOD-style (all 11 clusters) | 110 | **0** | **100%** |
-| Compositional OOD | 60 | **0** | **100%** |
-| Adversarial (2–3 simultaneous hazards) | 60 | **0** | **100%** |
-| Hidden holdout | 60 | **0** | **100%** |
-| Gauntlet (4 hazards, narrow corridor) | 60 | **0** | **60%** |
+| Compositional OOD | 60 | 0 | 100% |
+| Adversarial (2–3 hazards) | 60 | 0 | 100% |
+| Hidden holdout | 60 | 0 | 100% |
+| Gauntlet (4 hazards, narrow) | 60 | 0 | 60% |
 | **Total** | **350** | **0** | **326/350 (93.1%)** |
 
 Mean minimum clearance: **2.96 m** · COMPASS: **9.137 / 10** (threshold 7.0)  
-Statistical evidence: 700 ranked runs · 95% CI success [0.9945, 1.0] · CI collision [0.0, 0.0053]
+700 ranked runs · 95% CI success [0.9945, 1.0] · CI collision [0.0, 0.0053]
 
-**Gauntlet comparison — same 120 scenarios, two policies:**
+**Extended evaluation** (seeds 1–40, wider coverage):
 
-| Policy | Pass rate | Collisions |
-|--------|-----------|-----------|
-| Baseline (no world-state reasoning) | **0 / 120 (0%)** | **55** |
-| Spotlight Reflex | **72 / 120 (60%)** | **1** |
+| Suite | Runs | Collision rate | Pass |
+|-------|------|---------------|------|
+| Compositional OOD | 240 | 6.7% | 89% |
+| Adversarial | 240 | 11.7% | 83% |
+
+**Gauntlet comparison** (matched seeds 1–80, 420 runs per policy):
+
+| Policy | Pass rate | Collision rate |
+|--------|-----------|---------------|
+| Baseline (no world-state reasoning) | **2.1%** (9/420) | **20.5%** |
+| Spotlight Reflex | **57.6%** (242/420) | **7.9%** |
 
 **Intersection stress** — conflict zone, two crossing actors at different timings (207 steps):
 

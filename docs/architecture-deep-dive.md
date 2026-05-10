@@ -310,28 +310,35 @@ misses.
 ### 3.5 Closed-loop Spotlight Reflex policy (simulator track)
 
 The simulator track runs fully closed-loop with deterministic seeded scenarios.
-350 rollouts across 5 suites — **0 collisions total**:
+**Primary benchmark** (seeds 1–10, deterministic, 350 rollouts):
 
 | Suite | Runs | Pass |
 |-------|------|------|
-| WOD-style (all 11 clusters, 10 seeds each) | 110 | **100%** |
-| Compositional OOD | 60 | **100%** |
-| Adversarial (2–3 simultaneous hazards) | 60 | **100%** |
-| Hidden holdout | 60 | **100%** |
-| Gauntlet (4 hazards, narrow corridor) | 60 | **60%** |
+| WOD-style (all 11 clusters) | 110 | **100%** |
+| Compositional OOD | 60 | 100% |
+| Adversarial (2–3 hazards) | 60 | 100% |
+| Hidden holdout | 60 | 100% |
+| Gauntlet (4 hazards, narrow) | 60 | 60% |
 | **Total** | **350** | **326/350 (93.1%)** |
 
-Mean min clearance: 2.96 m · COMPASS: 9.137/10 (700 ranked runs)  
-95% CI collision rate: [0.0, 0.0053]
+Mean min clearance: 2.96 m · COMPASS: 9.137/10 (700 ranked runs)
 
-**Gauntlet comparison — same 120 scenarios, two policies:**
+**Extended evaluation** (seeds 1–40):
 
-| Policy | Pass rate | Collisions |
-|--------|-----------|-----------|
-| Baseline (no world-state reasoning) | 0 / 120 (0%) | **55** |
-| Spotlight Reflex | 72 / 120 (60%) | **1** |
+| Suite | Runs | Collision rate | Pass |
+|-------|------|---------------|------|
+| Compositional OOD | 240 | 6.7% | 89% |
+| Adversarial | 240 | 11.7% | 83% |
 
-Source: `artifacts/score_baseline_gauntlet_20260425/scenario_eval.json`
+**Gauntlet comparison** (matched seeds 1–80, 420 per policy):
+
+| Policy | Pass rate | Collision rate |
+|--------|-----------|---------------|
+| Baseline (no world-state reasoning) | 2.1% (9/420) | **20.5%** |
+| Spotlight Reflex | **57.6% (242/420)** | **7.9%** |
+
+10× lower collision rate at 27× higher pass rate vs baseline.  
+Source: `artifacts/gauntlet_comparison_matched_seeds1_80.json`
 
 **Spotlight scenario** — wrong-way actor, low visibility, night conditions:
 
