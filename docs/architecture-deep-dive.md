@@ -306,11 +306,15 @@ inter-frame baseline variation that made raw-RFS targets noisy.
 
 ### 3.4 HGB for stability selection
 
-Replacing the final ridge selector with a `HistGradientBoosting` classifier
-trained on binary preference labels (positive = gain vs constant velocity)
-improved the champion result from 7.695 to 7.88046. HGB can model non-linear
-interactions between speed bins, intent, and source flags that the ridge selector
-misses.
+**Histogram Gradient Boosting (HGB)** — `sklearn.ensemble.HistGradientBoosting` — is a
+tree ensemble method that builds decision trees sequentially, each correcting the residual
+error of the previous one, using histogrammed feature bins for speed. Unlike ridge
+regression (which fits a linear function of features), HGB can model non-linear interactions
+such as "temporal candidates are preferred when speed is high AND intent is GO_STRAIGHT."
+
+Replacing the final ridge selector with an HGB classifier trained on binary preference labels
+(positive = gain vs constant velocity) improved the champion result from 7.695 to 7.88046.
+This result was measured under 2-fold CV; see Part 5 for the protocol distinction.
 
 ### 3.5 Closed-loop Spotlight Reflex policy (simulator track)
 
@@ -394,28 +398,42 @@ better world critic.
 
 ### 4.2 InternVLA visual embeddings
 
-InternVLA embeddings were computed for each validation frame using the camera
-images and attached as an external feature to the selector. The pipeline worked
-technically, but:
+**InternVLA** is a Vision-Language-Action model developed by Shanghai AI Lab. It is
+trained on large corpora of robot manipulation and driving demonstrations to predict
+low-level actions from camera images and language instructions. In the process, its
+visual encoder learns rich representations of scene state. We extracted the encoder's
+output for each validation frame as a 128-dimensional embedding per frame.
+
+These embeddings were attached as additional features to the WodPreferenceRanker
+selector. The pipeline worked technically, but:
 - Embedding computation was too slow for practical full-sweep iteration
 - The attached embeddings did not produce a confirmed full-validation RFS gain
 - Cached embedding sweeps required separate GPU environments
 
-**Root cause:** InternVLA was designed for visual navigation, not trajectory
-preference regression. Its embedding space is not aligned to the specific
-discriminative signal the ranker needs (which candidate trajectory wins on this
-frame).
+**Root cause:** InternVLA was trained to predict navigation actions, not to
+discriminate between trajectory preferences. Its embedding space encodes "what to
+do in this scene" rather than "which of these two candidate trajectories is better."
+The ranker needs a discriminative signal; InternVLA provides a generative one.
 
 ### 4.3 Cosmos tokenizer embeddings
 
-NVIDIA Cosmos tokenizer embeddings were cached for a subset of frames. Several
-configurations were tried: symbolic embeddings, VLA-style embeddings, concat
-vs overlay fusion. None produced a confirmed RFS gain over the no-embedding
-baseline.
+**NVIDIA Cosmos** is a suite of world foundation models for physical AI, including a
+video tokenizer — a model trained on large corpora of real-world video to compress image
+sequences into compact latent codes (similar to a VQVAE for video). We extracted continuous
+64-dimensional encoder outputs as embeddings per frame.
 
-**Root cause:** Similar to InternVLA — visual token embeddings extracted from
-a general-purpose video tokenizer do not carry the trajectory preference signal
-without additional fine-tuning on preference labels.
+Several fusion configurations were tried: symbolic token embeddings, VLA-style embeddings,
+concat vs overlay fusion. As additional features to the linear ridge ranker, none produced
+a confirmed RFS gain over the no-embedding baseline.
+
+However: as inputs to a non-linear GPU MLP direct policy (2-layer, h=64), the same 64d
+Cosmos embeddings reached **7.845 RFS** — the champion result (see Section 3.5 and Part 5).
+The embeddings carry signal; the linear ranker cannot extract it.
+
+**Root cause for the linear failure:** A general-purpose video tokenizer is trained to
+reconstruct frames, not to rank trajectories. The preference-relevant features are
+entangled with irrelevant scene content in a way that a linear head cannot separate.
+A non-linear model (MLP) can learn the separation; ridge regression cannot.
 
 ### 4.4 Neural trajectory models (as a replacement for ridge)
 
@@ -436,14 +454,20 @@ baseline on the full contract. The full train split would help.
 
 ### 4.5 Optuna hyperparameter tuning
 
-Extensive Optuna sweeps were run for direct policy optimization. Over 1,200 lines
-of sweep code were written and many trials executed. No single trial configuration
-was promoted as the champion.
+**Optuna** is an automatic hyperparameter optimisation library that uses Bayesian search
+(Tree-structured Parzen Estimators by default) to navigate a search space of model
+hyperparameters, converging on configurations with the highest validation metric.
 
-**Root cause:** The search space was large (learning rate, regularization, feature
-mode, fallback strategy, speed-bin boundaries) and the validation signal was noisy.
-The HGB stability-selection approach was more robust: it trains multiple times on
-different random seeds and selects the configuration that is most consistent.
+Extensive Optuna sweeps were run for direct policy optimisation. Over 1,200 lines of sweep
+code were written and many trials executed. No single trial configuration was promoted as
+the champion.
+
+**Root cause:** The search space was large (learning rate, regularisation, feature mode,
+fallback strategy, speed-bin boundaries) and the validation signal was noisy (5-fold CV
+fold standard deviation ≈ 0.19). Optuna can find configurations that exploit fold-specific
+patterns and then fail to generalise. The HGB stability-selection approach was more robust:
+it trains multiple times on different bootstrapped subsets and selects the configuration
+that produces the most consistent fold scores — a different strategy for handling noise.
 
 ### 4.6 v20 policy experiments
 

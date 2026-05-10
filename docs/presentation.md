@@ -520,7 +520,7 @@ RFS did not move, meaning the ranker could not identify which new candidates wer
 **Why this is a sharp diagnostic:** if the bottleneck were candidate quality, adding
 better candidates would improve both oracle and selected RFS. If it is ranker quality,
 only oracle improves. We see the second case. The bottleneck is the discriminator,
-not the candidate pool. This is confirmed by the 1.430 oracle gap.
+not the candidate pool. This is confirmed by the 1.419 oracle gap.
 
 ---
 
@@ -637,7 +637,7 @@ The HGB Optuna peak 7.880 is 2-fold only and cannot be directly compared to 5-fo
 ## Next Steps
 
 **Camera encoder (highest impact).**
-The 1.430 oracle gap is recoverable only with visual scene information. A small encoder
+The 1.419 oracle gap is recoverable only with visual scene information. A small encoder
 fine-tuned on WOD-E2E preference labels — optimised over (frame, winning traj, losing traj)
 triplets — would give the ranker access to the scene. Existing InternVLA and Cosmos
 embeddings show no gain under a linear head; task-aligned fine-tuning is required.
@@ -677,4 +677,4 @@ The AlpaSim adapter is the template for a real sensor-to-obstacle bridge.
 | **Next step** | Task-aligned camera encoder fine-tuned on preference triplets |
 
 > The system generalises because it reasons from geometry, not from memorised trajectories.
-> The oracle gap is 1.430 RFS. The identified fix — a preference-aligned visual encoder — is the next step.
+> The oracle gap is 1.419 RFS. The identified fix — a preference-aligned visual encoder — is the next step.

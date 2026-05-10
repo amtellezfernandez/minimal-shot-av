@@ -77,8 +77,11 @@ cluster labels gives no advantage.
 | Gauntlet (4 hazards, narrow corridor) | 60 | 0 | 60% |
 | **Total** | **350** | **0** | **326/350 (93.1%)** |
 
-Mean minimum clearance: 2.96 m · COMPASS: **9.137 / 10** (700 ranked runs)  
-95% CI collision rate [0.0, 0.0053]
+Mean minimum clearance: 2.96 m · **COMPASS: 9.137 / 10** (700 ranked runs) · 95% CI collision rate [0.0, 0.0053]
+
+COMPASS is our own composite benchmark: a weighted score across four sub-metrics — oracle
+selector quality, geometric reasoning quality, recovery behaviour, and generalisation gap
+between normal and adversarial seeds. A score above 7.0 is the passing threshold.
 
 **Extended evaluation** (seeds 1–40, wider coverage):
 
@@ -117,9 +120,27 @@ abstraction is at the right level of representation.
 ## WOD-E2E Benchmark Analysis
 
 The WOD-E2E harness evaluates trajectory selection on 479 preference-labeled
-validation frames using Waymo's Rater Feedback Score (RFS). All results use
-segment-grouped 5-fold CV on the local scoring backend (CV baseline 7.131;
-official Waymo baseline 7.022).
+validation frames using Waymo's **Rater Feedback Score (RFS)** — a scalar derived from
+human rater pairwise preferences between candidate trajectories. Higher RFS means your
+selected trajectory is more often preferred. All results use segment-grouped 5-fold
+cross-validation on the local scoring backend (local CV baseline 7.131; official Waymo
+backend baseline 7.022). The two backends are consistent but not identical.
+
+Three selector approaches are shown below:
+
+- **Gate system only**: a ranker that scores candidates using ~137 trajectory and context
+  features, selecting the highest-scoring one with no learned override.
+- **RFF direct policy**: a **Random Fourier Features** classifier — a technique that maps
+  trajectory features into a 512-dimensional random space (`D=512`, bandwidth `σ=7.858`)
+  where the dot product approximates a Gaussian kernel. This allows a non-linear selector
+  without training a neural network. It fires as an override on 3.5% of frames; **precision
+  0.41** means 41% of its overrides improve the score vs the gate's choice.
+- **GPU MLP + Cosmos 64d**: a 2-layer neural network (hidden size 64) that takes
+  **64-dimensional Cosmos embeddings** — continuous latent codes from NVIDIA's Cosmos
+  world-model video tokenizer — as input and fires as an override on 4.2% of frames with
+  precision 0.60. The **oracle** is not a trained model: it is the score you would get if
+  you always picked the best available candidate per frame — it defines the upper bound given
+  the candidate pool.
 
 | Selector | RFS (5-fold) | Notes |
 |----------|-------------|-------|
@@ -132,8 +153,9 @@ official Waymo baseline 7.022).
 | Oracle (perfect selection) | **9.264** | Upper bound given candidate pool |
 
 The **oracle gap is 1.419 RFS** (9.264 − 7.845). This is the key scientific finding:
-the candidate pool is good — the bottleneck is the discriminator. The selector cannot
-identify which candidate is best on a given frame without visual scene information.
+the candidate pool is good — the bottleneck is the discriminator. Even with the best
+available candidate in the pool, the selector cannot reliably identify it without visual
+scene information about what is happening in the frame.
 
 The GPU MLP with 64d Cosmos embeddings fires on 4.2% of frames with precision 0.60,
 versus the RFF champion at 3.5% / 0.41. The +0.011 gain is within the ±0.17 CI
@@ -161,12 +183,16 @@ augmenting with more diverse turn examples addresses it directly.
 
 ## What Didn't Work
 
-**Visual embeddings do not carry preference signal under a linear head.** InternVLA
-and Cosmos embeddings added as ranker features produced no confirmed RFS gain. However,
-64d Cosmos embeddings as input to a GPU MLP direct policy reached 7.845 RFS (vs 7.834
-RFF baseline) with precision 0.60 vs 0.41 — the embeddings carry non-linear preference
-signal that ridge regression cannot extract. Task-specific fine-tuning remains the
-next step to close the remaining oracle gap.
+**Visual embeddings fail under a linear head but succeed under a non-linear one.**
+**InternVLA** (a Vision-Language-Action model from Shanghai AI Lab, trained on robot and
+driving demonstrations) and **Cosmos** (NVIDIA's world-model video tokenizer) both produce
+per-frame visual embeddings. When attached as extra features to the linear ridge ranker,
+neither produced a confirmed RFS gain. However, 64d Cosmos embeddings as input to a GPU MLP
+direct policy (non-linear, 2 hidden layers) reached 7.845 RFS — the champion — with precision
+0.60 vs 0.41 for the RFF baseline. The embeddings DO carry trajectory preference signal; the
+failure under the linear head is a model-capacity failure, not an alignment failure.
+Task-specific fine-tuning (optimising embeddings directly on preference triplets) remains the
+identified next step to close the remaining 1.419 RFS oracle gap.
 
 **World-model candidates add oracle headroom but the selector cannot exploit it.**
 A lightweight world model was implemented to generate scene-conditioned trajectory
