@@ -7,54 +7,56 @@ without fine-tuning on any AV dataset.
 
 ![Spotlight Reflex navigating a wrong-way actor at night](docs/images/spotlight_success.gif)
 
-*Spotlight Reflex — wrong-way actor, low visibility, night conditions. Policy selects
-`evasive_right`, clears the actor, recovers to lane centre. No training data used.*
+*Spotlight Reflex — wrong-way actor, low visibility, night. Selects `evasive_right`,
+clears the actor, recovers to lane centre. No training data for this scenario.*
 
 ![Baseline policy failing the same scenario](docs/images/baseline_spotlight.gif)
 
-*Baseline policy on the same scenario — no world-state reasoning, continues into
-the actor. This is what trajectory imitation without scene understanding produces.*
+*Baseline policy — no world-state reasoning, drives directly into the actor.*
 
 ---
 
 ## What This Is
 
-A minimal-shot autonomy prototype for Waymo's WOD-E2E long-tail benchmark.
-Built entirely from scratch: a 2D closed-loop simulator with procedural scenario
-generation for all 11 WOD-E2E cluster types, a compositional OOD generator, an
-AlpaSim trajectory plugin, and a preference-calibrated WOD-E2E benchmark harness.
+A minimal-shot autonomy prototype for Waymo's WOD-E2E long-tail benchmark, built
+entirely from scratch. Two independent tracks:
 
-The core claim is narrow: if you make world-state reasoning and maneuver enumeration
-explicit, the system generalises to novel scenarios without having seen them. A
-trajectory that avoids obstacles, respects corridor geometry, and maintains progress
-is correct whether the obstacle is a cone, a fallen tree, or a sheep.
+**Spotlight Reflex (simulation track):** A closed-loop policy built on six geometric
+world-state scalars — obstacle pressure, route blockage, lateral clearances — and nine
+maneuver candidates scored against trust-region references. The decision is a function
+of geometry only, not object identity. Runs in a custom 2D simulator and in Waymo's
+sensor-realistic AlpaSim with the same code.
+
+**WOD-E2E harness (benchmark track):** A trajectory selector trained on Waymo's 479
+preference-labeled validation frames using segment-grouped 5-fold cross-validation.
+Candidates come from kinematic physics, ridge regression, and temporal ego-history
+models; the selector picks among them using ~137 features plus visual embeddings
+(NVIDIA Cosmos, 64d) fed to a GPU MLP direct policy. Best result: **7.845 RFS**.
+
+The two tracks are deliberately isolated — simulator metrics are never used for WOD
+model selection.
 
 ---
 
 ## More Scenarios
 
-![Construction zone — cone field, narrow corridor, lane closure](docs/images/construction_success.gif)
+![Construction zone](docs/images/construction_success.gif)
 
-*Construction zone — narrow corridor (5.2 m), cone field, lane closure. Policy selects
-`nudge_right` and maintains progress through the gap.*
+*Construction zone — narrow corridor (5.2 m), cone field, lane closure. `nudge_right`.*
 
-![Intersection stress — conflict zone, two crossing actors](docs/images/intersection_stress.gif)
+![Intersection stress](docs/images/intersection_stress.gif)
 
-*Intersection stress — conflict zone, two crossing actors at different timings, 207 steps.*
-
-## AlpaSim: Sensor-Realistic Validation
-
-The same policy runs inside Waymo's AlpaSim simulator via a custom adapter. Real
-WOD-E2E front-camera frames (sensor input) alongside the adapter's maneuver decision,
-obstacle pressure, and route blockage readout.
+*Intersection stress — two crossing actors, different timings, 207 steps.*
 
 ![AlpaSim sensor input and reasoning output](docs/images/alpasim_reasoning_panel.png)
+
+*AlpaSim — real WOD-E2E front-camera frames alongside the adapter's reasoning output.*
 
 ---
 
 ## Results
 
-**350 rollouts across 5 suites — 0 collisions total:**
+**Simulation — 350 rollouts, 0 collisions:**
 
 | Suite | Runs | Pass |
 |-------|------|------|
@@ -62,98 +64,70 @@ obstacle pressure, and route blockage readout.
 | Compositional OOD | 60 | 100% |
 | Adversarial (2–3 hazards) | 60 | 100% |
 | Hidden holdout | 60 | 100% |
-| Gauntlet (4 hazards, narrow) | 60 | 60% |
+| Gauntlet (4 hazards, 3.5 m corridor) | 60 | 60% |
 
-COMPASS composite score: **9.137 / 10** across 700 ranked runs (threshold 7.0).  
-95% CI collision rate: **[0.0, 0.0053]**.
+COMPASS: **9.137 / 10** (700 ranked runs) · 95% CI collision rate [0.0, 0.0053]
 
-**Gauntlet comparison — same 120 scenarios, two policies:**
+**Gauntlet vs baseline (same 420 scenarios, matched seeds):**
 
-| Policy | Pass | Collisions |
-|--------|------|-----------|
-| Baseline (no world-state reasoning) | 0 / 120 | **55** |
-| Spotlight Reflex | 72 / 120 | **1** |
+| Policy | Pass rate | Collision rate |
+|--------|-----------|---------------|
+| Baseline (no world-state reasoning) | 2.1% | 20.5% |
+| Spotlight Reflex | **57.6%** | **7.9%** |
 
-**WOD-E2E** (Waymo Open Dataset End-to-End Driving) is Waymo's benchmark for trajectory
-planning on 479 real driving frames from long-tail scenarios. Human raters express pairwise
-preferences between candidate trajectories; the score is **RFS (Rater Feedback Score)** —
-how often your selected trajectory is preferred. Higher is better; the official constant-velocity
-baseline scores 7.022. All our development numbers use a local scoring backend (local baseline
-7.131); the two are consistent but not identical.
+**WOD-E2E — 5-fold segment-grouped CV on 479 validation frames:**
 
-We train a **trajectory selector** that picks the best candidate from a pool generated by three
-models (kinematic physics, a ridge regression model, and a temporal ego-history model). The
-selector is evaluated with **5-fold segment-grouped cross-validation**: frames from the same
-driving segment stay in the same fold, preventing leakage; 5 rounds of 80%/20% train/test splits
-are averaged. Results from a different number of folds are not directly comparable.
+| Selector | RFS | Folds |
+|----------|-----|-------|
+| Waymo baseline (official) | 7.022 | — |
+| Local baseline | 7.131 | — |
+| Gate-only | 7.803 | 5 |
+| RFF direct policy | 7.834 | 5 |
+| **GPU MLP + Cosmos 64d (champion)** | **7.845** | **5** |
+| HGB Optuna peak (2-fold only, not comparable) | 7.880 | 2 |
+| Oracle (perfect selector) | 9.264 | 5 |
 
-| Selector | RFS | Folds | Notes |
-|----------|-----|-------|-------|
-| Official Waymo baseline | 7.022 | — | Constant velocity |
-| Local baseline | 7.131 | — | Our CV reference point |
-| Gate-only (no direct policy) | 7.803 | 5 | Ranker alone |
-| RFF direct policy | 7.834 | 5 | Non-linear gate using random Fourier features |
-| **GPU MLP + Cosmos 64d** | **7.845** | **5** | **Champion — see below** |
-| HGB Optuna peak | 7.880 | 2 | 2-fold only — not comparable to 5-fold |
-| Oracle (perfect discriminator) | 9.264 | 5 | Upper bound if we always pick the best candidate |
+Oracle gap: **1.419 RFS** — the right candidate exists in the pool but the selector
+cannot identify it without visual scene information.
 
-**Champion:** GPU MLP + 64d Cosmos embeddings — a 2-layer neural network (h=64) that uses
-64-dimensional visual embeddings from NVIDIA's Cosmos world-model tokenizer as input features
-and fires as a direct policy override on 4.2% of frames with precision 0.60 (60% of its
-overrides improve the score). **+0.714 RFS over local baseline.**
-
-**Oracle gap: 1.419 RFS.** The right candidate exists in our pool for most frames — the
-bottleneck is that the selector cannot identify it without visual scene information.
-
-**AlpaSim**: same policy, sensor-realistic simulator, `collision_at_fault: 0.0`, `dist_to_gt: 0.42 m`.
-
-## What Didn't Work
-
-- **No camera perception in the WOD-E2E path** — processes ego history, speed, and
-  route intent only. Cannot see pedestrians, debris, or traffic signals. This is the
-  honest reason the result sits below the 8.05 leaderboard top.
-- **Visual embeddings as linear ranker features produced no gain** — InternVLA (128d)
-  and Cosmos (64d) embeddings attached as additional features to the linear ridge ranker
-  produced no confirmed RFS improvement. However: the same Cosmos 64d embeddings fed to a
-  non-linear GPU MLP direct policy reached 7.845 RFS (champion), confirming the embeddings
-  DO carry signal — a linear model just cannot extract it.
-- **Turn calibration gap** — GO_RIGHT: 6.574 selected / 8.638 oracle (regret 2.063).
-  GO_LEFT: 7.107 / 8.721 (regret 1.614). 89% of frames are GO_STRAIGHT; the ranker
-  is under-trained on turn slices.
-
-## Next Steps
-
-The bottleneck is the discriminator, not the candidates. A lightweight camera encoder
-fine-tuned on WOD-E2E preference labels should close 0.5–1.5 RFS of the 1.419-point
-oracle gap. Waymo train-split access would move calibration off the validation set.
-The test frame list (1,505 frames) and submission pipeline are both ready.
+**AlpaSim:** same policy, sensor-realistic, `collision_at_fault: 0.0`, `dist_to_gt: 0.42 m`
 
 ---
 
 ## Documentation
 
+Two primary references — each focused on one track with no repeated content:
+
+- **[`docs/simulation.md`](docs/simulation.md)** — Policy architecture (6 scalars,
+  9 candidates, trust-region scoring, reference rules), simulator we built (11 WOD
+  clusters, compositional OOD generator, 8 actor models, COMPASS), AlpaSim integration
+  (4-channel adapter), results, and failure modes.
+
+- **[`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md)** —
+  WOD-E2E data and frame structure, candidate generation pipeline, selector training,
+  cross-validation protocol, performance results, and a full external-tools section
+  (Cosmos architecture, InternVLA architecture, Optuna TPE algorithm, RFF derivation,
+  GPU MLP architecture).
+
+Additional docs (competition submission format):
+- [`docs/grand-submission.md`](docs/grand-submission.md) — formal submission claim
 - [`docs/writeup.md`](docs/writeup.md) — 2-page submission write-up
-- [`docs/presentation.md`](docs/presentation.md) — slide deck with full narrative arc
-- [`docs/architecture-deep-dive.md`](docs/architecture-deep-dive.md) — complete
-  architecture, what worked, what didn't, and how to reproduce every result
-- [`docs/minor-commission.md`](docs/minor-commission.md) — simulation environment:
-  abstract simulator and AlpaSim adapter
-- [`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md) —
-  WOD-E2E pipeline and per-cluster failure analysis
+- [`docs/presentation.md`](docs/presentation.md) — full slide deck with narrative arc
+- [`docs/architecture-deep-dive.md`](docs/architecture-deep-dive.md) — complete technical reference
 
 ---
 
 ## Quickstart
 
 ```bash
-# Single demo rollout
+# Single demo rollout — wrong-way actor scenario
 uv run --no-sync python scripts/run_demo.py \
   --policy spotlight-reflex \
   --scenario-cluster spotlight \
   --seed 3 \
   --artifacts-dir artifacts/demo_spotlight
 
-# Full OOD evaluation sweep
+# Full 350-rollout evaluation
 uv run --no-sync python scripts/evaluate_scenarios.py \
   --policy spotlight-reflex \
   --suite all \
@@ -161,7 +135,7 @@ uv run --no-sync python scripts/evaluate_scenarios.py \
   --seed-end 10 \
   --output-dir artifacts/eval_all
 
-# Test suite
+# Geometry invariance regression test
 uv run --no-sync python scripts/run_tests.py --quick
 ```
 

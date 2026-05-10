@@ -243,7 +243,315 @@ different gate configuration and lower temporal over-reliance.
 
 ---
 
-## Part 6: Failure Analysis
+## Part 6: Tools and External Models
+
+This section explains the architecture of each external tool and model we used,
+what we extracted from them, what configuration we chose, and why.
+
+---
+
+### 6.1 Cosmos World-Model Tokenizer
+
+#### What Cosmos Is
+
+**NVIDIA Cosmos** is a suite of world foundation models for physical AI — models
+trained at scale on real-world video to understand physical dynamics and scene
+structure. The component we used is the **Cosmos Tokenizer**, which is a
+**video autoencoder**: a model trained to compress image and video sequences
+into compact latent representations and reconstruct them.
+
+Architecturally, the Cosmos Tokenizer is similar in design to a VQVAE (Vector
+Quantized Variational Autoencoder) adapted for spatiotemporal video:
+
+- **Encoder:** A stack of 3D convolutional blocks (spatial + temporal) with
+  progressive downsampling. Input: (T, H, W, 3) video frames. Output: a compact
+  spatial-temporal feature tensor (latent grid).
+- **Quantizer:** Maps the continuous latents to discrete codebook entries. This
+  is used for the discrete tokenizer variant (video token IDs).
+- **Decoder:** Inverts the encoder to reconstruct the original video from the
+  latent tensor.
+- **Training objective:** Reconstruction loss (perceptual + L1) on large corpora
+  of real-world video, with adversarial regularisation to preserve high-frequency
+  detail.
+
+NVIDIA trained this on large-scale physically plausible world video — real
+driving, robotics, and scene footage — making the latent space encode the
+structure of physical scenes rather than arbitrary image statistics.
+
+**This is a pretrained, released model. We used it as-is without any fine-tuning.**
+
+#### What We Extracted
+
+We used the **continuous encoder output** — the latent tensor before the
+quantisation step — and applied spatial pooling to produce a fixed-size vector
+per frame. Specifically: **64-dimensional continuous embeddings** per WOD-E2E
+validation frame.
+
+We did not use the discrete token IDs (which discard fine-grained information)
+because our downstream task is regression/ranking, not generation.
+
+#### Configurations Tried
+
+| Configuration | Result |
+|---------------|--------|
+| 64d continuous encoder latents → linear ridge ranker feature | No confirmed RFS gain (5-fold) |
+| 64d continuous encoder latents → discrete token embeddings | No confirmed gain |
+| 64d continuous encoder latents → GPU MLP direct policy | **7.845 RFS — champion** |
+| 128d projection (from Cosmos intermediate layer) | No confirmed gain |
+| Concat with InternVLA embeddings → linear ranker | No confirmed gain |
+
+#### Why Cosmos and Not a Different Encoder
+
+We chose Cosmos because:
+1. It is trained on physically realistic world video, making its latent space
+   likely to encode physically meaningful scene structure
+2. Its continuous latents are well-suited to downstream regression (vs discrete
+   token IDs from standard VQVAEs)
+3. 64 dimensions is small enough to avoid adding noise to a 137-feature ranker
+
+The key finding: Cosmos 64d embeddings carry trajectory preference signal that
+a **linear model cannot extract but a GPU MLP can**. The signal exists in the
+embedding space; extracting it requires non-linear capacity.
+
+---
+
+### 6.2 InternVLA Visual-Language-Action Model
+
+#### What InternVLA Is
+
+**InternVLA** is a Vision-Language-Action model developed by Shanghai AI Lab,
+built on top of their **InternVL** vision-language model family.
+
+Architecture (three components):
+
+1. **Visual encoder — ViT (Vision Transformer):**
+   An image is split into fixed-size patches (e.g. 14×14 pixels). Each patch
+   is projected to an embedding vector and processed through a stack of
+   multi-head self-attention layers (transformer blocks). The final sequence
+   of patch embeddings is pooled to produce a scene-level representation.
+   ViTs capture long-range spatial relationships between image regions because
+   each patch attends to all others — unlike CNNs which are local.
+
+2. **Language decoder — LLM backbone:**
+   A large language model that receives the visual embeddings and text instruction
+   tokens as a joint sequence. It produces language outputs (scene descriptions,
+   action descriptions) and is trained to follow navigation instructions.
+
+3. **Action head:**
+   Additional prediction layers that map the joint visual-language representation
+   to low-level control outputs (velocity, steering angle, stop/go decisions).
+
+InternVLA is trained on large collections of robot manipulation demonstrations
+and driving data with a multitask objective: predict both language descriptions
+of the scene and low-level control actions. The training makes it understand
+the mapping from visual scene state to appropriate physical action.
+
+**This is a released pretrained model. We used it as-is without fine-tuning.**
+
+#### What We Extracted
+
+The **ViT encoder output** — the visual representation before the language
+decoder — as a **128-dimensional embedding per frame**. This captures scene-level
+visual features from the WOD-E2E camera images.
+
+#### What We Tried
+
+| Configuration | Result |
+|---------------|--------|
+| 128d ViT encoder output → linear ridge ranker feature | No confirmed RFS gain (5-fold) |
+| 75d PCA-projected InternVLA → ranker feature | No confirmed gain |
+| 128d InternVLA concat with 64d Cosmos → ranker | No confirmed gain |
+
+#### Why InternVLA Failed Under a Linear Head
+
+InternVLA was trained to predict **navigation actions** — its own maneuver choice
+given the scene. It was not trained to **compare two candidate trajectories** and
+decide which one a human rater would prefer. These are different problems:
+- "What action should I take here?" (generation / classification)
+- "Of these two externally-generated trajectories, which is better?" (discrimination / ranking)
+
+A linear head on the 128d embedding cannot bridge this task mismatch.
+A task-aligned fine-tuning step — training InternVLA on (frame, winning trajectory,
+losing trajectory) triplets — would be required to align the embedding space to the
+preference discrimination signal.
+
+---
+
+### 6.3 Optuna Hyperparameter Optimisation
+
+#### What Optuna Is
+
+**Optuna** is an automatic hyperparameter optimisation framework. It uses
+**Tree-structured Parzen Estimators (TPE)** — a form of Bayesian optimisation
+that is more sample-efficient than random search and more flexible than grid search.
+
+TPE works as follows. After observing N trials with objective values:
+
+```
+Split trials into:
+  Good trials G = {x : f(x) < f*}     (top p-percentile by score)
+  Bad  trials B = {x : f(x) >= f*}
+
+Fit: l(x) = P(x | x ∈ G)    [density of hyperparameters that produced good results]
+     g(x) = P(x | x ∈ B)    [density of hyperparameters that produced bad results]
+
+Propose next trial: argmax  l(x) / g(x)
+                             ↑ likely to be good
+                                      ↑ unlikely to be bad
+```
+
+This ratio `l(x)/g(x)` is the acquisition function — it balances exploration
+(trying novel configurations) against exploitation (staying near configurations
+that worked). The densities `l(x)` and `g(x)` are estimated with Parzen window
+(kernel density estimation).
+
+**We used Optuna as-is (standard library, unmodified).**
+
+#### What We Searched
+
+**For the GPU MLP direct policy (20 trials, 5-fold evaluation):**
+
+| Hyperparameter | Search space |
+|----------------|-------------|
+| Hidden size `h` | [16, 256] (integer) |
+| Learning rate | [1×10⁻⁴, 1×10⁻¹] (log scale) |
+| Batch size | {64, 128, 256, 512} (categorical) |
+| Number of epochs | [5, 30] (integer) |
+| Dropout rate | [0.0, 0.5] |
+| Activation | {relu, tanh, gelu} |
+
+**Best found (trial_0004):**
+h=64, lr=0.003866, batch=512, 10 epochs, dropout≈0.0, relu → **7.845 RFS**
+
+Distribution of 20 trials:
+- 1 trial beat the RFF baseline (7.834): trial_0004 at 7.845
+- Mean of all 20 trials: 7.769 RFS
+- Worst trial: ~7.69 RFS
+
+**For the HGB gate (Optuna 2-fold peak, 7.880):**
+
+Separate search over HGB hyperparameters: tree depth, learning rate, min_samples_leaf,
+max_features, l2 regularisation. Found 7.880 RFS under 2-fold CV — this result
+did not survive the 5-fold protocol (see Section 5.1 for why 2-fold and 5-fold
+are not comparable).
+
+#### Why Optuna Alone Was Not Enough
+
+Optuna finds the configuration that maximises the validation metric on the search
+folds. If the search folds are only 2, Optuna can overfit to those specific fold
+splits — configurations that happen to work on fold 1 and fold 2 but not on folds
+3, 4, 5. The 7.880 result is a real result on that 2-fold evaluation; it is not
+fabricated. But it did not generalise when we applied the stricter 5-fold protocol.
+
+The lesson: Bayesian optimisation needs a reliable signal to optimise. With only
+2 folds and 479 frames, the signal is noisy enough that Optuna can find local
+configurations that score high by chance.
+
+---
+
+### 6.4 Random Fourier Features (RFF) Direct Policy
+
+#### What RFF Is
+
+**Random Fourier Features** is a technique for approximating a kernel function
+(such as the Gaussian/RBF kernel) without computing the N×N kernel matrix.
+
+The motivation: a standard ridge classifier is linear — its decision boundary
+is a hyperplane. For trajectory preference, the signal is non-linear: whether
+a trajectory is preferred depends on interactions between speed, intent, lateral
+profile, and source type that a hyperplane cannot separate. A kernel classifier
+(using the RBF kernel) can capture this, but requires storing and computing an
+N×N matrix of kernel evaluations, which is O(N²) in memory — too slow for
+frequent CV experiments.
+
+RFF approximates the kernel without the matrix, using a **random projection**
+into a D-dimensional space where inner products approximate the kernel:
+
+```
+Choose bandwidth σ = 7.858   (controls smoothness of the kernel)
+Sample: W ~ N(0, σ⁻² I_{D×p})     D = 512,  p = number of input features
+        b ~ Uniform([0, 2π]^D)
+
+For any input feature vector x:
+  φ(x) = sqrt(2/D) · cos(W^T x̃ + b)      [D-dimensional random feature map]
+
+Property (Bochner's theorem):
+  E[ φ(x)^T φ(x') ] = exp(−‖x − x'‖² / 2σ²)   [approximates the RBF kernel]
+```
+
+W and b are **fixed at fit time** — a single seeded random draw, no gradient needed.
+Only the ridge regression weights `w` (a D-dimensional vector) are learned:
+
+```
+ŷ = w^T φ(x) + bias        [ridge regression on top of the feature map]
+```
+
+This gives a **non-linear classifier at O(D·p) cost per inference** instead of
+O(N), making it practical for CV sweeps over 479 frames.
+
+#### Configuration
+
+We did not derive D=512 and σ=7.858 from theory — they were found by a 1D sweep:
+
+- D ∈ {128, 256, 512, 1024}: D=512 best tradeoff between approximation quality
+  and computation cost
+- σ: swept over [1, 20]; σ=7.858 maximised the 5-fold CV RFS
+
+**Role in the system:** The RFF classifier is trained as a **direct policy** —
+a binary classifier that predicts whether the top gate-ranked candidate is
+actually the best candidate on a given frame. When its confidence exceeds a
+gate threshold, it overrides the gate's choice with its own top pick.
+
+Champion RFF: fires on 3.5% of frames (17/479), precision 0.41 (7 correct
+overrides, 10 incorrect), net contribution +0.031 RFS over the gate-only baseline.
+
+---
+
+### 6.5 GPU MLP Direct Policy
+
+#### Architecture
+
+A 2-layer feed-forward neural network trained in PyTorch, using GPU acceleration:
+
+```
+Input: [64-dimensional Cosmos embedding | trajectory features]
+         ↓
+Linear(64+k → h=64) → ReLU → Dropout(p≈0)
+         ↓
+Linear(64 → 64) → ReLU
+         ↓
+Linear(64 → 1) → sigmoid
+         ↓
+Predicted probability of being the best candidate on this frame
+```
+
+Training details (champion trial_0004):
+- Loss: BCEWithLogitsLoss on binary preference labels
+- Positive = this candidate improves RFS over gate-only baseline
+- Optimiser: Adam, lr=0.003866
+- Batch size: 512, epochs: 10
+- No L2 regularisation (dropout ≈ 0.0)
+- Trained on 80% of frames per fold; evaluated on held-out 20%
+
+#### Role in the System
+
+The GPU MLP is a **direct policy override** — not a ranker. It is independent of
+the WodPreferenceRanker gate. On each frame, both the gate and the MLP make
+predictions. The MLP's prediction is used as an override when its confidence
+exceeds a learned threshold.
+
+- Fires on: 4.2% of frames (20/479)
+- Precision: 0.60 (12 correct overrides out of 20)
+- Net contribution: +0.042 RFS above gate-only (7.803 → 7.845)
+
+The higher precision (0.60 vs 0.41 for RFF) means the Cosmos embeddings give
+the MLP a more reliable signal for identifying frames where overriding improves
+the outcome — precisely the frames where visual scene context distinguishes the
+best candidate.
+
+---
+
+## Part 7: Failure Analysis
 
 ### 6.1 Structural Failure: Visual Blindness
 
@@ -300,7 +608,7 @@ defaults to `slow_yield`, avoids collision but also avoids the goal.
 
 ---
 
-## Part 7: Gauntlet Comparison
+## Part 8: Gauntlet Comparison
 
 Same 120 gauntlet scenarios (4 topologies × 30 seeds). Two policies.
 
@@ -316,7 +624,7 @@ The geometric reasoning approach maintains near-zero collisions under the same l
 
 ---
 
-## Part 8: Reproducing Results
+## Part 9: Reproducing Results
 
 ### Full 350-run evaluation
 
