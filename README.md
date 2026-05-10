@@ -85,9 +85,10 @@ calibration, and a live leaderboard submission.
 
 ## Documentation
 
-- [`docs/writeup.md`](docs/writeup.md) — full submission write-up with all GIFs
-- [`docs/architecture-deep-dive.md`](docs/architecture-deep-dive.md) — Spotlight
-  Reflex architecture, WOD-E2E harness, and detailed what-worked / what-didn't
+- [`docs/writeup.md`](docs/writeup.md) — 2-page submission write-up
+- [`docs/presentation.md`](docs/presentation.md) — slide deck with full narrative arc
+- [`docs/architecture-deep-dive.md`](docs/architecture-deep-dive.md) — complete
+  architecture, what worked, what didn't, and how to reproduce every result
 - [`docs/minor-commission.md`](docs/minor-commission.md) — simulation environment:
   abstract simulator and AlpaSim adapter
 - [`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md) —
