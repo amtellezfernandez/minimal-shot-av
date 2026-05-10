@@ -71,7 +71,7 @@ ACTOR_COL = {
 
 SCALE     = 7        # px per meter
 MARGIN    = 16       # px margin around scene
-HUD_H     = 72       # px HUD strip height
+HUD_H     = 88       # px HUD strip height
 EGO_R     = 5        # ego radius px
 TRAIL_LEN = 30       # max trail steps to draw
 GIF_FPS   = 12       # frames per second
@@ -212,39 +212,65 @@ def _draw_frame(
     mcol = MANEUVER_COL.get(maneuver, (150, 150, 150))
 
     try:
-        font_sm = ImageFont.load_default()
-        font_lg = ImageFont.load_default()
+        font_sm = ImageFont.load_default(size=14)
+        font_lg = ImageFont.load_default(size=16)
     except Exception:
-        font_sm = font_lg = None
+        try:
+            font_sm = ImageFont.load_default()
+            font_lg = ImageFont.load_default()
+        except Exception:
+            font_sm = font_lg = None
 
-    # maneuver badge
-    bw = 160
-    draw.rectangle([8, hud_y+8, 8+bw, hud_y+HUD_H-8], fill=mcol)
-    draw.text((12, hud_y+12), maneuver.upper().replace("_", " "), fill=(255,255,255), font=font_lg)
-    draw.text((12, hud_y+30), f"score {score:.1f}", fill=(220,220,220), font=font_sm)
+    # ── Left column: maneuver badge ──────────────────────────────────
+    bw = 170
+    draw.rectangle([8, hud_y+6, 8+bw, hud_y+HUD_H-6], fill=mcol)
+    label_text = maneuver.upper().replace("_", " ")
+    draw.text((14, hud_y+12), label_text, fill=(255, 255, 255), font=font_lg)
+    draw.text((14, hud_y+38), f"score  {score:.1f}", fill=(230, 230, 230), font=font_sm)
 
-    # pressure bar
-    bar_x = 8 + bw + 12
-    _bar(draw, bar_x, hud_y+10, 100, 12, pressure, (220,53,69), "pressure", font_sm)
-    _bar(draw, bar_x, hud_y+32, 100, 12, blockage,  (255,193,7), "blockage", font_sm)
+    # ── Middle column: bars with short labels before, value after ────
+    bar_left = 8 + bw + 14          # = 192
+    lbl_w    = 52                    # pixels reserved for "PRESSURE" / "BLOCKAGE" labels
+    bar_w    = 120                   # bar width in px
+    bx       = bar_left + lbl_w     # bar starts here
 
-    # time + cluster
-    draw.text((bar_x + 120, hud_y+10), t_str, fill=HUD_TEXT, font=font_sm)
-    draw.text((bar_x + 120, hud_y+30), f"{cluster} #{seed}", fill=(150,180,200), font=font_sm)
+    # Pressure
+    draw.text((bar_left, hud_y+14), "PRESSURE", fill=(180, 180, 180), font=font_sm)
+    draw.rectangle([bx, hud_y+12, bx+bar_w, hud_y+26], outline=(80, 80, 90), fill=(50, 50, 60))
+    if pressure > 0:
+        draw.rectangle([bx, hud_y+12, bx+int(pressure*bar_w), hud_y+26], fill=(220, 53, 69))
+    draw.text((bx+bar_w+6, hud_y+14), f"{pressure:.2f}", fill=(210, 210, 210), font=font_sm)
 
-    # step counter
-    draw.text((img_w - 60, hud_y+28), f"{idx+1}/{len(steps)}", fill=(120,120,120), font=font_sm)
+    # Blockage
+    draw.text((bar_left, hud_y+42), "BLOCKAGE", fill=(180, 180, 180), font=font_sm)
+    draw.rectangle([bx, hud_y+40, bx+bar_w, hud_y+54], outline=(80, 80, 90), fill=(50, 50, 60))
+    if blockage > 0:
+        draw.rectangle([bx, hud_y+40, bx+int(blockage*bar_w), hud_y+54], fill=(255, 193, 7))
+    draw.text((bx+bar_w+6, hud_y+42), f"{blockage:.2f}", fill=(210, 210, 210), font=font_sm)
+
+    # ── Right column: anchored to right edge ─────────────────────────
+    rx = img_w - 6
+    def rtext(txt: str, y: int, col: tuple) -> None:
+        try:
+            tw = font_sm.getlength(txt) if font_sm else len(txt) * 7
+        except Exception:
+            tw = len(txt) * 7
+        draw.text((int(rx - tw), y), txt, fill=col, font=font_sm)
+
+    rtext(t_str,                 hud_y+12, HUD_TEXT)
+    rtext(f"{cluster} #{seed}", hud_y+32, (150, 180, 200))
+    rtext(f"{idx+1}/{len(steps)}", hud_y+54, (120, 120, 120))
 
     return img
 
 
 def _bar(draw: ImageDraw.ImageDraw, x: int, y: int, w: int, h: int,
          val: float, col: tuple, label: str, font: Any) -> None:
-    draw.rectangle([x, y, x+w, y+h], outline=(80,80,90), fill=(50,50,60))
+    draw.rectangle([x, y, x+w, y+h], outline=(80, 80, 90), fill=(50, 50, 60))
     filled = int(val * w)
     if filled > 0:
         draw.rectangle([x, y, x+filled, y+h], fill=col)
-    draw.text((x+w+4, y), f"{label} {val:.2f}", fill=(180,180,180), font=font)
+    draw.text((x+w+6, y), f"{val:.2f}", fill=(180, 180, 180), font=font)
 
 
 # ── GIF builder ───────────────────────────────────────────────────────────────

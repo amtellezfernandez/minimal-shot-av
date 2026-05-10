@@ -89,8 +89,9 @@ the candidate pool. HGB Optuna peak: 7.880 (2-fold). Official Waymo baseline: 7.
 - **Visual embeddings didn't transfer** — InternVLA and Cosmos tokenizer embeddings
   attached as ranker features produced no confirmed RFS gain. Fine-tuning on
   preference labels is required to align the embedding space to this signal.
-- **Turn calibration gap** — GO_LEFT: 6.782 RFS selected vs 8.535 oracle (regret 1.753).
-  The training distribution is dominated by straight-ahead frames.
+- **Turn calibration gap** — GO_RIGHT: 6.574 selected / 8.638 oracle (regret 2.063).
+  GO_LEFT: 7.107 / 8.721 (regret 1.614). 89% of frames are GO_STRAIGHT; the ranker
+  is under-trained on turn slices.
 
 ## Next Steps
 
