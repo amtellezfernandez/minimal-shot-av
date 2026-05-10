@@ -37,8 +37,8 @@ Declared as development analysis, not strict zero-shot deployment.
 ## Submission Contents
 
 - GitHub repo: this codebase, with `README.md` and `models/DECLARATION.md`
-- Architecture write-up: `docs/architecture-deep-dive.md`
-- Slide deck: `docs/presentation.md`
+- Slide deck: `docs/presentation.tex` (LaTeX Beamer, compile with `pdflatex docs/presentation.tex`)
+- Simulation reference: `docs/simulation.md`
 - WOD-E2E pipeline and failure analysis: `docs/wod-e2e-system-walkthrough.md`
 - Analysis notebook: `notebooks/wod_e2e_analysis.ipynb`
 
