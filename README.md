@@ -94,6 +94,15 @@ cannot identify it without visual scene information.
 
 ---
 
+## Scope and Limitations
+
+- **Development analysis, not zero-shot.** The WOD-E2E selector is trained on the same validation preference labels it is evaluated on — under segment-grouped cross-validation to prevent data leakage, but still the validation set. Moving training to the Waymo train split would make this a true test-set generalisation claim.
+- **No camera perception.** The WOD-E2E model sees only ego velocity history, speed, acceleration, and route intent — not the camera images. This is the identified bottleneck; a preference-aligned visual encoder is the next step.
+- **2D abstract simulation.** The simulator is 2D with structured obstacles, not a physics engine. AlpaSim integration runs the same policy in a sensor-realistic environment but at the trajectory-plugin level.
+- **Test set not evaluated.** The submission packaging pipeline is complete. The test TFRecords (Waymo Google Drive, sign-in gated) are the only missing piece for a test-set submission.
+
+---
+
 ## Documentation
 
 Two primary references — each focused on one track with no repeated content:
@@ -109,11 +118,8 @@ Two primary references — each focused on one track with no repeated content:
   (Cosmos architecture, InternVLA architecture, Optuna TPE algorithm, RFF derivation,
   GPU MLP architecture).
 
-Additional docs (competition submission format):
-- [`docs/grand-submission.md`](docs/grand-submission.md) — formal submission claim
-- [`docs/writeup.md`](docs/writeup.md) — 2-page submission write-up
-- [`docs/presentation.md`](docs/presentation.md) — full slide deck with narrative arc
-- [`docs/architecture-deep-dive.md`](docs/architecture-deep-dive.md) — complete technical reference
+- **[`docs/presentation.tex`](docs/presentation.tex)** — LaTeX Beamer slide deck
+  (`pdflatex docs/presentation.tex` or paste into Overleaf).
 
 ---
 
