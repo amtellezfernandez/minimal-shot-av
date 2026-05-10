@@ -362,7 +362,7 @@ uv run --no-sync python scripts/evaluate_wod_e2e.py \
   --output artifacts/eval_hgb_champion.json
 ```
 
-Expected: 7.880 RFS on 479 validation frames
+Expected: ~7.880 RFS on 479 validation frames (2-fold evaluation; 5-fold champion is GPU MLP + Cosmos 64d at 7.845)
 
 ### Single demo rollout
 

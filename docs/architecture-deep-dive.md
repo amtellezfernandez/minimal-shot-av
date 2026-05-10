@@ -515,7 +515,7 @@ uv run --no-sync python scripts/evaluate_scenarios.py \
 Archived result: `artifacts/score_baseline_gauntlet_20260425/scenario_eval.json`.  
 Baseline: 0/120 pass, 55 collisions. Spotlight Reflex: 72/120 pass, 1 collision.
 
-### WOD-E2E 7.880 RFS (HGB stability-selected ranker)
+### WOD-E2E Reproducibility: HGB Pipeline (2-fold evaluation, 7.880 RFS)
 
 The full pipeline runs in five steps. Requires WOD-E2E validation TFRecords under
 `waymo_open_dataset_end_to_end_camera_v_1_0_0/val/`.
