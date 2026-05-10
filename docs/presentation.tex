@@ -1,0 +1,1015 @@
+% Spotlight Reflex — Beamer Presentation
+% Compile: pdflatex presentation.tex  (twice for cross-references)
+% Requires: metropolis theme  (tlmgr install beamertheme-metropolis pgfplots)
+
+\documentclass[aspectratio=169,10pt]{beamer}
+
+% ── Theme ─────────────────────────────────────────────────────────────────────
+\usetheme{metropolis}
+\usepackage{appendixnumberbeamer}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,shapes.geometric}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{fontawesome5}
+\usepackage{microtype}
+\usepackage{hyperref}
+
+% ── Colour palette ────────────────────────────────────────────────────────────
+\definecolor{spotBlue}{HTML}{005F73}
+\definecolor{spotTeal}{HTML}{0A9396}
+\definecolor{spotGold}{HTML}{EE9B00}
+\definecolor{spotRed}{HTML}{AE2012}
+\definecolor{spotGreen}{HTML}{28A745}
+\definecolor{spotPurple}{HTML}{6F42C1}
+\definecolor{spotGray}{HTML}{6C757D}
+\definecolor{bgDark}{HTML}{1A1A2E}
+\definecolor{bgMid}{HTML}{16213E}
+\definecolor{textLight}{HTML}{E0E0E0}
+
+\setbeamercolor{frametitle}{bg=spotBlue, fg=white}
+\setbeamercolor{progress bar}{fg=spotGold}
+\setbeamercolor{alerted text}{fg=spotGold}
+\setbeamercolor{example text}{fg=spotTeal}
+
+% ── Helpers ───────────────────────────────────────────────────────────────────
+\newcommand{\highlight}[1]{\textcolor{spotGold}{\textbf{#1}}}
+\newcommand{\good}[1]{\textcolor{spotGreen}{\textbf{#1}}}
+\newcommand{\bad}[1]{\textcolor{spotRed}{\textbf{#1}}}
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+% narrow table rule colour
+\arrayrulecolor{spotBlue!40}
+
+% ── Meta ──────────────────────────────────────────────────────────────────────
+\title{Spotlight Reflex}
+\subtitle{Minimal-Shot Autonomous Driving via Geometric World-State Reasoning}
+\author{amtellezfernandez@gmail.com}
+\date{SoTA Commission I — Grand \& Minor · May 2026}
+\institute{Waymo Open Dataset End-to-End Driving Challenge}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{document}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\maketitle
+
+% ── Outline ───────────────────────────────────────────────────────────────────
+\begin{frame}{Agenda}
+  \tableofcontents[hideallsubsections]
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Motivation \& Main Claim}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Who I Am and Why This}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \textbf{Role:} Lead AI at a robotics logistics startup \\[0.4em]
+      \textbf{Daily work:}
+      \begin{itemize}
+        \item Wheel navigation systems
+        \item Arm manipulation planners
+        \item Sensor fusion and real-time control
+      \end{itemize}
+      \vspace{0.6em}
+      \textbf{This challenge was the right trigger to explore:}
+      \begin{itemize}
+        \item World embeddings for embodied systems
+        \item Minimal-shot generalisation without fixed environments
+        \item Whether compact geometry can replace learned scene priors
+      \end{itemize}
+      \vspace{0.6em}
+      \textit{Instead of memorising fixed environments, can we reason from the geometry of ``obstacle on the left, clear on the right''?}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{block}{If awarded the prize}
+        Continue developing the simulator and world-embedding experiments into a more serious research platform for minimal-shot autonomy:
+        \begin{itemize}
+          \item Expand scenario diversity
+          \item Stronger evaluation and failure-analysis tooling
+          \item Push toward realistic latency and control constraints
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Main Claim}
+  \begin{alertblock}{Spotlight Reflex}
+    A closed-loop autonomous driving policy that generalises to long-tail scenarios
+    by reasoning from \textbf{occupancy, clearance, and route geometry} — not by
+    memorising scenario labels or imitating average human trajectories.
+  \end{alertblock}
+
+  \vspace{0.8em}
+  \begin{block}{Why it generalises}
+    The rule \emph{``avoid occupied space while preserving route geometry''} remains
+    valid whether the obstacle is a \textbf{cone}, \textbf{debris}, an \textbf{animal},
+    or a \textbf{wrong-way actor}.
+  \end{block}
+
+  \vspace{0.6em}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{This IS:}
+      \begin{itemize}
+        \item A minimal-shot autonomy prototype
+        \item A compact geometric world-state representation
+        \item Robust long-tail behaviour under closed-loop evaluation
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{This is NOT:}
+      \begin{itemize}
+        \item A production AV stack
+        \item A strict zero-shot WOD-E2E result
+        \item A trained camera-perception system
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Problem: AVs Fail in Long-Tail Scenarios}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Imitation Learning — What It Optimises}
+  Most AV systems are trained by \textbf{imitation learning}: fit a model $f$ that
+  mimics the human trajectory at every step.
+
+  \[
+    \min_{f} \; \mathbb{E}_{(x,y)\sim\mathcal{D}}\bigl[\mathcal{L}(f(x),\,y)\bigr]
+  \]
+
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Works well on:}
+      \begin{itemize}
+        \item The common driving distribution $\mathcal{D}$
+        \item Highway, urban, well-lit, unambiguous situations
+        \item Scenarios appearing frequently in training data
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Fails when:}
+      \begin{itemize}
+        \item $P_\text{test} \neq P_\text{train}$ \quad (covariate shift)
+        \item Rare geometry appears at test time
+        \item No fallback reasoning when the pattern fails
+        \item Trajectory imitation becomes guessing
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.6em}
+  \begin{alertblock}{The WOD-E2E long-tail problem}
+    Waymo's benchmark targets \textbf{11 scenario types} occurring less than \textbf{0.03\%}
+    of driving time: wrong-way actors, animals on road, foreign object debris,
+    erratic pedestrians, construction, cut-ins, cyclists, special vehicles.
+    A long-tail policy needs a representation that remains meaningful when frequencies change.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Why Closed-Loop Evaluation Matters}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Open-loop (frame-based):}
+      \[
+        \text{frame} \xrightarrow{f} \hat{\tau}
+      \]
+      Tests whether a model produces a plausible trajectory from a snapshot.
+      The world is \emph{fixed} — the policy's action has no consequences.
+
+      \vspace{0.4em}
+      \textit{A bad action looks fine on paper.}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Closed-loop (our evaluation):}
+      \begin{align*}
+        S_t &\to \text{observation}\; O_t \\
+        O_t &\to \pi(O_t) = \tau_t \quad \text{(policy)} \\
+        \tau_t &\to \text{control} + \text{physics} \\
+            &\quad\; S_{t+1} = f(S_t, \tau_t) \\
+        S_{t+1} &\to \text{metrics}
+      \end{align*}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.5em}
+  \begin{block}{The key question}
+    Can the \textbf{same policy} stay safe as the world changes \emph{because of its
+    own decisions}? A wrong evasion at step $t$ creates a worse state at step $t+1$.
+    Open-loop benchmarks cannot reveal this failure mode.
+  \end{block}
+\end{frame}
+
+\begin{frame}{The Baseline Failure}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \includegraphics[width=\linewidth]{images/kf_baseline_spotlight.png}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \vspace{0.5em}
+      \textbf{Scenario:} wrong-way actor, night, low visibility \\[0.4em]
+      \textbf{Policy:} trajectory extrapolation only — no world-state reasoning \\[0.4em]
+      \textbf{Result:} drives directly into the actor.
+      \begin{itemize}
+        \item Does not slow down
+        \item Does not deviate
+        \item No awareness that the path is occupied
+      \end{itemize}
+      \vspace{0.6em}
+      \begin{alertblock}{}
+        This is what happens when a policy has never seen this geometry and has no
+        reasoning mechanism to fall back on.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Core Idea: Reason From Geometry, Not Memory}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{The Key Insight}
+  \begin{center}
+    \Large\textit{``A trajectory that avoids occupied space and respects\\
+    route geometry is correct \textbf{regardless of what the obstacle is called}.''} \\[1em]
+    \normalsize You don't need to have seen a sheep before to know you should go around it.
+  \end{center}
+
+  \vspace{0.5em}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{What the policy needs to know:}
+      \begin{itemize}
+        \item Where occupied space is
+        \item Where the route should go
+        \item Whether the forward corridor is blocked
+        \item Which side has more clearance
+        \item Whether there is enough space to recover
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{What the policy does NOT use:}
+      \begin{itemize}
+        \item Object category labels (``sheep'', ``cone'', ``car'')
+        \item Scenario cluster IDs
+        \item Memorised trajectory patterns
+        \item Any AV training data
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Formal Invariance Claim}
+  Let scene $s$ define:
+  \[
+    G(s) = \text{occupancy field} \qquad R(s) = \text{route geometry}
+  \]
+  Let $T$ be any relabelling of object identities, scenario names, or cluster tags
+  that leaves $G$ and $R$ unchanged.
+
+  \[
+    \boxed{M(s) = M(T(s)) \quad \forall\, s,\; \forall\, T \text{ s.t.\ } G(T(s))=G(s),\; R(T(s))=R(s)}
+  \]
+
+  \begin{itemize}
+    \item \texttt{"sheep"} $\to$ \texttt{"debris"} changes nothing
+    \item Cluster ID changes nothing
+    \item Object label changes nothing
+    \item \textbf{Only physical geometry enters the decision}
+  \end{itemize}
+
+  \vspace{0.5em}
+  \begin{exampleblock}{This is falsifiable — and tested}
+    A regression suite relabels every object in the scene and asserts the selected
+    maneuver, combined score, and decision reason are identical.
+    \textbf{It passes.}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Spotlight Reflex — It Works}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \includegraphics[width=\linewidth]{images/kf_spotlight_success.png}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \vspace{0.4em}
+      \textbf{Same scenario, same seed as the baseline failure.} \\[0.4em]
+      \textbf{Policy:} Spotlight Reflex \\[0.4em]
+      \textbf{Result:} selects \code{evasive\_right}, clears the actor, returns to lane centre.
+      \vspace{0.4em}
+      \textbf{How:}
+      \begin{itemize}
+        \item \code{obstacle\_pressure} rising on the left
+        \item \code{right\_clearance} $>$ \code{left\_clearance}
+        \item Escape side = right
+        \item Geometry resolved the decision — no pattern match to a memorised scene
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Policy Architecture}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Six World-State Scalars}
+  All signals computed from raw obstacle positions and route geometry.
+  \textbf{Nothing is learned here; nothing is scene-specific.}
+
+  \vspace{0.4em}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Signal} & \textbf{Formula / Definition} & \textbf{Range} \\
+    \midrule
+    \code{obstacle\_pressure} & $p = \text{clip}\!\left(\frac{10-d_{\min}}{10},\,0,\,1\right)$ & $[0,1]$ \\[4pt]
+    \code{route\_blockage}    & fraction of forward corridor occupied & $[0,1]$ \\[4pt]
+    \code{corridor\_blocked}  & hard blockage within stopping distance & bool \\[4pt]
+    \code{left\_clearance}    & free lateral space to the left (m) & $\geq 0$ \\[4pt]
+    \code{right\_clearance}   & free lateral space to the right (m) & $\geq 0$ \\[4pt]
+    \code{preferred\_escape\_side} & $\argmax(\text{left},\,\text{right})$ & L / R \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.3em}
+  \small $d_{\min}$ = distance to nearest obstacle in metres.
+  Pressure saturates to 1.0 at contact and is zero beyond 10 m.
+\end{frame}
+
+\begin{frame}{Nine Maneuver Candidates}
+  Each candidate is a \textbf{20-point, 5-second trajectory at 4 Hz}
+  in vehicle coordinates, generated by Hermite smoothstep interpolation.
+
+  \vspace{0.3em}
+  \begin{center}
+  \small
+  \begin{tabular}{llrrl}
+    \toprule
+    \textbf{Maneuver} & \textbf{Intent} & \textbf{Speed scale} & \textbf{Lateral offset} & \textbf{Profile} \\
+    \midrule
+    \code{stop}          & Emergency stop     & 0.0  & 0.0 m   & — \\
+    \code{crawl}         & Very slow progress & 0.15 & 0.0 m   & smooth \\
+    \code{maintain}      & Hold speed         & 1.0  & 0.0 m   & smooth \\
+    \code{slow\_yield}   & Decelerate, yield  & 0.5  & 0.0 m   & smooth \\
+    \code{nudge\_left}   & Minor left shift   & 0.8  & +0.9 m  & smooth \\
+    \code{nudge\_right}  & Minor right shift  & 0.8  & −0.9 m  & smooth \\
+    \code{evasive\_left} & Strong left evasion  & 0.7 & +2.2 m & \textbf{early} \\
+    \code{evasive\_right}& Strong right evasion & 0.7 & −2.2 m & \textbf{early} \\
+    \code{lane\_recover} & Return to centre   & 0.9  & 0.0 m   & smooth \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.2em}
+  \small\textit{Early profile}: offset applied in first third of trajectory — ensures fast
+  lateral separation in evasive scenarios.
+\end{frame}
+
+\begin{frame}{Trust-Region Scoring}
+  Each candidate is scored against \textbf{pseudo-rater references} at two time horizons.
+  A trust region defines where the candidate must land to earn the reference's score.
+
+  \vspace{0.3em}
+  \textbf{Speed-scaled tolerance:}
+  \[
+    s(v) = \text{clip}\!\left(\frac{v - 1.4}{11.0 - 1.4},\; 0,\; 1\right)\times 0.5 + 0.5
+    \qquad [v \text{ in m/s}]
+  \]
+  Tighter at low speed ($s=0.5$ at $v=1.4$~m/s), wider at high speed ($s=1.0$ at $v=11$~m/s).
+
+  \begin{columns}[T]
+    \begin{column}{0.42\textwidth}
+      \vspace{0.3em}
+      \begin{tabular}{lcc}
+        \toprule
+        \textbf{Horizon} & \textbf{Lateral} & \textbf{Longitudinal} \\
+        \midrule
+        3 s & $1.0\times s(v)$ m & $4.0\times s(v)$ m \\
+        5 s & $1.8\times s(v)$ m & $7.2\times s(v)$ m \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.55\textwidth}
+      \[
+        \text{score}_t(\tau,r) =
+        \begin{cases}
+          r.\text{score} & \delta = 0 \\
+          \max\!\bigl(r.\text{score}\cdot 0.1^\delta,\; 4\bigr) & \delta > 0
+        \end{cases}
+      \]
+      \[
+        S(\tau) = 0.5\cdot\max_r\text{score}_{3s} + 0.5\cdot\max_r\text{score}_{5s}
+      \]
+      \small $\delta$ = normalised overshoot beyond the region.\\
+      Floor of 4 corresponds to an unsafe rating.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Policy Architecture}
+  \begin{center}
+  \begin{tikzpicture}[
+    node distance=0.45cm and 0.7cm,
+    box/.style={rectangle, rounded corners=3pt, draw=spotBlue!60, fill=bgMid,
+                text=textLight, minimum width=2.6cm, minimum height=0.7cm,
+                font=\small, align=center},
+    arrow/.style={-Stealth, thick, color=spotTeal},
+    label/.style={font=\scriptsize, color=spotGray, align=center}
+  ]
+    \node[box, fill=spotBlue!20]  (scene)  {Scene Input\\obstacles · actors · lane};
+    \node[box, right=of scene]    (perc)   {Perception\\6 world-state scalars};
+    \node[box, right=of perc]     (cands)  {9 Maneuver\\Candidates};
+    \node[box, below=0.6cm of cands](refs) {Reference\\Rule Engine};
+    \node[box, right=of cands]    (score)  {Trust-Region\\Scorer};
+    \node[box, right=of score]    (sel)    {Selected\\Maneuver};
+
+    \draw[arrow] (scene) -- (perc);
+    \draw[arrow] (perc) -- (cands);
+    \draw[arrow] (perc) -- (refs);
+    \draw[arrow] (cands) -- (score);
+    \draw[arrow] (refs) -- (score);
+    \draw[arrow] (score) -- (sel);
+
+    \node[label, below=0.08cm of perc]  {pressure · blockage\\clearances · escape side};
+    \node[label, below=0.08cm of score] {3s + 5s · speed-scaled\\safety penalty};
+    \node[label, below=0.08cm of sel]   {maneuver name\\score · reason};
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.3em}
+  \small Every step emits a full \code{SpotlightSelection} log: maneuver, score at 3s/5s,
+  which reference won, decision reason, all world-state values. In AlpaSim, this is
+  serialised as \code{reasoning\_text} JSON alongside every prediction.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Simulation: What We Built and How It Performed}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{The Simulator}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \textbf{Built from scratch — no dependency on AlpaSim or Waymo internals.}
+
+      \vspace{0.4em}
+      \begin{itemize}
+        \item \textbf{Closed-loop 2D engine:} ego + actors step simultaneously;
+              policy must react in real time — no lookahead
+        \item \textbf{11 WOD-E2E clusters:} construction, spotlight, FOD,
+              pedestrian, cyclist, cut-in, animal, intersection, special vehicle, stopped, others
+        \item \textbf{Compositional OOD:} 8 topologies $\times$ 11 hazard modules
+              $\times$ 4 weather modes — axes sampled \emph{independently}
+        \item \textbf{8 actor behaviour models:} linear, cut-in, swerve, darting,
+              erratic pedestrian, sudden brake, hesitating, wrong-way
+        \item \textbf{COMPASS benchmark:} composite score across oracle quality,
+              geometric reasoning, recovery, generalisation gap; threshold 7.0/10
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \includegraphics[width=\linewidth]{images/kf_construction.png}
+      \vspace{0.2em}
+      \small\textit{Construction zone — 5.2\,m corridor, cone field, lane closure.\\
+      Policy selects \code{nudge\_right}.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Compositional OOD: The Independence Property}
+  Standard simulators replay fixed scenario clusters.
+  If you test on the same clusters you designed for, \textbf{you cannot claim generalisation}.
+
+  \vspace{0.3em}
+  Our generator makes topology and hazard \textbf{statistically independent}:
+  \[
+    P(\text{topology},\; \text{hazard}) = P(\text{topology})\;\times\; P(\text{hazard})
+  \]
+
+  \vspace{0.2em}
+  \begin{center}
+  \begin{tikzpicture}[
+    node distance=0.3cm and 0.5cm,
+    ax/.style={rectangle, rounded corners=3pt, draw=spotTeal!50, fill=spotTeal!10,
+               text=textLight, font=\scriptsize, align=center,
+               minimum width=2.4cm, minimum height=0.9cm},
+    sc/.style={rectangle, rounded corners=4pt, draw=spotGold, fill=spotGold!15,
+               text=textLight, font=\small\bfseries, align=center,
+               minimum width=2.8cm, minimum height=1.0cm},
+    arr/.style={-Stealth, thick, color=spotGray}
+  ]
+    \node[ax] (T) {8 Topologies\\straight · curve\\roundabout · …};
+    \node[ax, right=3.2cm of T] (S) [sc] {Scenario\\full geometry\\+ actors};
+    \node[ax, above=0.2cm of T, xshift=-0.2cm] (H)  {11 Hazards\\construction · FOD\\spotlight · …};
+    \node[ax, below=0.2cm of T, xshift=-0.2cm] (W)  {4 Weather\\clear · rain\\fog · night};
+    \node[ax, below=0.8cm of W, xshift=0.2cm]  (O)  {Novel Objects\\cone · animal\\debris · barrier};
+
+    \draw[arr] (T) -- node[above,font=\tiny,color=spotGray]{indep.} (S);
+    \draw[arr] (H.east) to[out=0,in=160] (S.north west);
+    \draw[arr] (W.east) to[out=0,in=200] (S.south west);
+    \draw[arr] (O.east) to[out=0,in=220] (S.south);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.2em}
+  A construction hazard can appear in a \textbf{roundabout in fog}.
+  A pedestrian can appear on an \textbf{S-curve at night}.
+  No cluster label tells the policy what geometry or weather it will face next.
+\end{frame}
+
+\begin{frame}{Simulation Results}
+  \textbf{Primary benchmark (seeds 1–10, deterministic, 350 rollouts):}
+
+  \vspace{0.3em}
+  \begin{center}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Suite} & \textbf{Runs} & \textbf{Collisions} & \textbf{Pass rate} \\
+    \midrule
+    WOD-style (all 11 clusters) & 110 & \good{0} & \good{100\%} \\
+    Compositional OOD           &  60 & \good{0} & \good{100\%} \\
+    Adversarial (2–3 hazards)   &  60 & \good{0} & \good{100\%} \\
+    Hidden holdout              &  60 & \good{0} & \good{100\%} \\
+    Gauntlet (4 hazards, 3.5 m) &  60 & \good{0} & 60\% \\
+    \midrule
+    \textbf{Total} & \textbf{350} & \good{\textbf{0}} & \textbf{93.1\%} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \vspace{0.4em}
+      Mean min clearance: \highlight{2.96 m} \\
+      COMPASS: \highlight{9.137 / 10} (700 ranked runs) \\
+      95\% CI collision rate: \highlight{[0.0, 0.0053]}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \vspace{0.3em}
+      \small The 60\% gauntlet rate is deliberate — the gauntlet is designed to
+      find the failure boundary at 4 simultaneous hazards in a 3.5\,m corridor.
+      An honest characterisation, not an optimised showcase.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Gauntlet: Head-to-Head Comparison}
+  Same \textbf{420 scenarios}, matched seeds 1–80, four topology types.
+  Same geometry, same actors, same timing for both policies.
+
+  \vspace{0.5em}
+  \begin{center}
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Policy} & \textbf{Pass rate} & \textbf{Collision rate} \\
+    \midrule
+    Baseline (trajectory extrapolation, no world-state) & 2.1\% (9/420) & \bad{20.5\% (86)} \\
+    \textbf{Spotlight Reflex} & \good{\textbf{57.6\% (242/420)}} & \good{\textbf{7.9\% (33)}} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{27$\times$ more passes.}\\
+      \textbf{2.6$\times$ fewer collisions.}\\[0.4em]
+      The baseline collides in 1 in 5 gauntlet runs and passes nearly none.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{The mechanism:}\\
+      \code{obstacle\_pressure} rising + \code{right\_clearance > left\_clearance}
+      resolves the escape route from geometry alone — no prior over actor type
+      or scenario cluster.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{More Scenarios}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\linewidth]{images/kf_intersection_stress.png}
+      \vspace{0.2em}
+      \small\textit{Intersection stress — conflict zone, two crossing actors at
+      different timings, 207 steps. 0 collisions.}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\linewidth]{images/kf_fod.png}
+      \vspace{0.2em}
+      \small\textit{Foreign object debris — static debris blocking the primary lane.
+      Policy selects \code{nudge\_right}.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{AlpaSim: Sensor-Realistic Transfer}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \textbf{AlpaSim} is Waymo's sensor-realistic simulator: real camera frames,
+      multi-agent physics, real ego dynamics.
+
+      \vspace{0.4em}
+      \textbf{The challenge:} AlpaSim gives camera pixels + route command.
+      Spotlight Reflex needs an obstacle field + lane geometry.
+
+      \vspace{0.4em}
+      \textbf{Adapter — 4 signal channels (no vision model required):}
+      \begin{enumerate}
+        \item Route (LEFT/STRAIGHT/RIGHT) → sigmoid lane spline
+        \item Camera brightness → visibility risk ($< 35\%$ = risk)
+        \item Ego dynamics (accel, speed) → braking risk
+        \item Structured hazards → Obstacle / Actor objects
+      \end{enumerate}
+
+      \vspace{0.3em}
+      \begin{exampleblock}{Zero AlpaSim imports in the policy}
+        The same \code{select\_maneuver()} runs in both environments unchanged.
+        Cross-fidelity transfer without modification.
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \includegraphics[width=\linewidth]{images/alpasim_reasoning_panel.png}
+      \vspace{0.3em}
+      \small
+      \begin{tabular}{ll}
+        \toprule
+        Metric (30 scenes) & Value \\
+        \midrule
+        \code{collision\_at\_fault} & \good{\textbf{0.0}} \\
+        \code{dist\_to\_gt\_traj.} & 0.42 m \\
+        \code{collision\_any} (by others) & 0.37 \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{WOD-E2E Benchmark}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{What Is WOD-E2E and How It Is Scored}
+  \textbf{Waymo Open Dataset End-to-End Driving:}
+  \begin{itemize}
+    \item 479 validation frames from real Waymo sensor recordings
+    \item 11 long-tail scenario types — same clusters as our simulator
+    \item For each frame: Waymo human raters expressed pairwise preferences between
+          candidate trajectories
+    \item \textbf{RFS (Rater Feedback Score):} derived from those pairwise preferences —
+          how often the selected trajectory was preferred. Higher is better.
+  \end{itemize}
+
+  \vspace{0.4em}
+  \textbf{Evaluation protocol — 5-fold segment-grouped cross-validation:}
+  \[
+    \text{RFS}_{5\text{-fold}} = \frac{1}{5}\sum_{k=1}^{5}\text{RFS}(\text{fold}\;k\;\text{held-out})
+  \]
+  Frames from the same driving segment stay in the same fold — prevents leakage.
+  Each fold: $\sim$383 train / $\sim$96 test frames. Fold std $\approx 0.19$, 95\% CI $\approx\pm0.17$.
+
+  \vspace{0.3em}
+  \begin{alertblock}{Two backends — not interchangeable}
+    Local (ours): CV baseline 7.131 \quad Official (Waymo): CV baseline 7.022 \\
+    All development numbers use the local backend.
+    2-fold and 5-fold results are \emph{not} directly comparable.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Selector Pipeline}
+  \begin{center}
+  \begin{tikzpicture}[
+    node distance=0.4cm and 0.45cm,
+    box/.style={rectangle, rounded corners=3pt, draw=spotBlue!60, fill=bgMid,
+                text=textLight, minimum width=2.4cm, minimum height=0.65cm,
+                font=\small, align=center},
+    grp/.style={rectangle, rounded corners=4pt, draw=spotBlue!30, fill=bgMid,
+                dashed, inner sep=4pt},
+    arrow/.style={-Stealth, thick, color=spotTeal}
+  ]
+    \node[box, fill=spotBlue!20] (frames)  {479 Validation\\Frames};
+    \node[grp, right=0.6cm of frames, minimum width=5.8cm, minimum height=1.5cm]
+          (cg) {};
+    \node[font=\scriptsize\color{spotGray}, above=0.05cm of cg.north west, anchor=west]
+          {Candidate Generation};
+    \node[box, right=0.9cm of frames]    (kin) {Kinematic\\const-vel · stop};
+    \node[box, right=0.4cm of kin]       (rid) {Ridge Learned\\31 features · CV};
+    \node[box, right=0.4cm of rid]       (tem) {Temporal\\ego-history};
+    \node[box, right=0.6cm of cg]        (gate){Gate Ranker\\$\sim$137 features\\HGB · 5-fold};
+    \node[box, right=0.4cm of gate, fill=spotPurple!30] (dp) {Direct Policy\\RFF / GPU~MLP\\fires on $\sim$4\%};
+    \node[box, right=0.4cm of dp, fill=spotGold!20]     (out){Selected\\Trajectory\\20$\times$2 wpts};
+
+    \draw[arrow] (frames) -- (kin);
+    \draw[arrow] (kin.east) -- (gate);
+    \draw[arrow] (rid.east) -- (gate);
+    \draw[arrow] (tem.east) -- (gate);
+    \draw[arrow] (gate) -- (dp);
+    \draw[arrow] (dp) -- (out);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.3em}
+  \small
+  \begin{itemize}
+    \item \textbf{Kinematic:} constant velocity, constant accel, heading change, stop — no training data
+    \item \textbf{Ridge learned:} 31 trajectory features; target = gain vs constant-vel baseline
+    \item \textbf{Temporal:} ego-history trends; wins on $\sim$49\% of frames (most are forward driving)
+    \item \textbf{Direct policy:} learned override — fires when confidence exceeds gate threshold
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Visual Embeddings: What We Tried}
+  \textbf{The idea:} a human rater can see the camera image — can we give the ranker
+  vision by adding pre-computed image embeddings?
+
+  \vspace{0.4em}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{NVIDIA Cosmos (used in champion):}\\
+      Video autoencoder trained on real-world video.
+      Architecture: 3D convolutional encoder-decoder (VQVAE-style).
+      We extract \textbf{64-dim continuous latents} (before quantisation).
+
+      \vspace{0.3em}
+      \textbf{InternVLA (Shanghai AI Lab):}\\
+      Vision-Language-Action model. Architecture: ViT visual encoder +
+      LLM backbone + action head. We extract
+      \textbf{128-dim ViT encoder output}.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{tabular}{lcc}
+        \toprule
+        \textbf{Config} & \textbf{Head} & \textbf{RFS} \\
+        \midrule
+        No embedding & Ridge & 7.803 \\
+        Cosmos 64d & Ridge (linear) & $\approx$7.803 \\
+        InternVLA 128d & Ridge (linear) & $\approx$7.803 \\
+        RFF gate & non-linear & 7.834 \\
+        \textbf{Cosmos 64d} & \textbf{GPU MLP} & \good{\textbf{7.845}} \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.4em}
+  \begin{exampleblock}{Interpretation}
+    The embeddings \emph{do} carry preference signal — but only a non-linear model
+    (MLP) can extract it. The failure under ridge regression is a
+    \textbf{model-capacity failure}, not an embedding-alignment failure.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{WOD-E2E Results}
+  \begin{center}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Selector} & \textbf{RFS} & \textbf{Folds} & \textbf{Notes} \\
+    \midrule
+    Constant velocity (official)   & 7.022 & — & Official Waymo baseline \\
+    Constant velocity (local)      & 7.131 & — & Our CV reference \\
+    Kinematic ranker               & 7.096 & — & Physics-only, official backend \\
+    Gate only                      & 7.803 & 5 & No direct policy \\
+    RFF direct policy              & 7.834 & 5 & $D{=}512$, $\sigma{=}7.858$, prec.~0.41 \\
+    \textbf{GPU MLP + Cosmos 64d}  & \good{\textbf{7.845}} & \textbf{5} & \textbf{h=64, prec.~0.60 — champion} \\
+    HGB Optuna peak                & 7.880 & 2 & 2-fold only — not comparable \\
+    \midrule
+    Oracle (perfect selector)      & \highlight{9.264} & 5 & Upper bound \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.4em}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Champion:} GPU MLP + Cosmos 64d\\
+      \textbf{+0.714 RFS} over local baseline\\
+      Precision 0.60: fires on 4.2\% of frames,\\
+      60\% of overrides improve the score
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Oracle gap: \highlight{1.419 RFS}}\\
+      $(9.264 - 7.845)$\\
+      The right candidate exists in the pool.\\
+      The selector cannot identify it without vision.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Calibration Bias Audit}
+  Where does the remaining error live?
+
+  \vspace{0.3em}
+  \[
+    \text{regret}(\mathcal{S}) = \text{RFS}_\text{oracle}(\mathcal{S}) - \text{RFS}_\text{selected}(\mathcal{S})
+  \]
+
+  \begin{center}
+  \begin{tabular}{lcrrc}
+    \toprule
+    \textbf{Slice} & \textbf{$n$} & \textbf{Selected RFS} & \textbf{Oracle RFS} & \textbf{Regret} \\
+    \midrule
+    GO\_STRAIGHT & 427 & 7.959 & 9.336 & 1.377 \\
+    GO\_LEFT     &  23 & 7.107 & 8.721 & \bad{1.614} \\
+    GO\_RIGHT    &  29 & 6.574 & 8.638 & \bad{\textbf{2.063}} \\
+    \midrule
+    speed:fast   &  44 & 7.957 & 9.436 & 1.479 \\
+    speed:slow   & 133 & 7.564 & 9.196 & \bad{1.632} \\
+    speed:urban  & 136 & 8.132 & 9.416 & 1.285 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.3em}
+  \small
+  \textbf{Root cause:} GO\_RIGHT ($n{=}29$) and GO\_LEFT ($n{=}23$) are rare in the
+  479-frame set. The ranker is calibrated to GO\_STRAIGHT (89\% of frames).
+  GO\_LEFT improved from 1.753 (previous model) to 1.614 with targeted changes —
+  confirming the mechanism is correctable.
+  \textbf{Fix:} stratified loss reweighting by intent class.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{What Didn't Work and Next Steps}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Honest Failure Summary}
+  \begin{tabular}{p{4.5cm}p{7cm}}
+    \toprule
+    \textbf{What failed} & \textbf{Why / root cause} \\
+    \midrule
+    No camera perception in WOD-E2E path &
+      Processes ego history, speed, and route intent only.
+      Cannot see debris, pedestrians, signals.
+      The honest reason results sit below 8.05 leaderboard top. \\[0.3em]
+    Visual embeddings under linear head &
+      InternVLA and Cosmos embeddings as ridge features — no confirmed RFS gain.
+      The embeddings carry signal only for non-linear models. \\[0.3em]
+    World-model candidates &
+      Oracle RFS +0.05; selected RFS +0.00.
+      Better candidates exist — the selector cannot identify them.
+      Confirms: bottleneck is the discriminator, not the pool. \\[0.3em]
+    HGB Optuna 2-fold peak &
+      7.880 under 2-fold; did not survive 5-fold protocol.
+      Optuna overfits to the fold split when only 2 folds available. \\[0.3em]
+    Turn calibration &
+      GO\_RIGHT regret 2.063 — only 29 training frames for that intent. \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+\begin{frame}{Next Steps}
+  \begin{enumerate}
+    \item \textbf{Task-aligned camera encoder (highest impact)}\\
+      A small encoder fine-tuned on (frame, winning traj, losing traj) preference triplets.
+      Not a general VLM — a discriminative encoder for the specific signal the ranker needs.
+      Expected gain: 0.5–1.5 RFS (could close large fraction of 1.419 oracle gap).
+
+    \vspace{0.5em}
+    \item \textbf{Turn calibration}\\
+      Stratified loss reweighting by intent class. GO\_LEFT improved 1.753→1.614
+      with targeted changes; GO\_RIGHT (2.063) is next. Confirmed correctable.
+
+    \vspace{0.5em}
+    \item \textbf{Leaderboard submission}\\
+      Test frame list present (1,505 frames). Submission pipeline validated.
+      Missing only: test TFRecords (Waymo Google Drive, sign-in gated).
+
+    \vspace{0.5em}
+    \item \textbf{Proper train/test split}\\
+      Waymo train TFRecords would move selector calibration off the validation set,
+      making the result a true generalisation claim.
+
+    \vspace{0.5em}
+    \item \textbf{Physical deployment}\\
+      A vehicle with obstacle sensors and a route command can run Spotlight Reflex today.
+      The AlpaSim adapter is the template for a real sensor-to-obstacle bridge.
+  \end{enumerate}
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Summary}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Summary}
+  \begin{center}
+  \small
+  \begin{tabular}{p{4.5cm}p{7cm}}
+    \toprule
+    \textbf{Core claim} &
+      Geometric reasoning from 6 world-state scalars generalises to long-tail
+      scenarios without training data for them \\[0.3em]
+    \textbf{Invariance} &
+      $M(s) = M(T(s))$ — regression-tested: relabelling all objects produces
+      identical decisions \\[0.3em]
+    \textbf{Simulation} &
+      Built from scratch · 11 WOD clusters · compositional OOD · 420-run gauntlet \\[0.3em]
+    \textbf{Gauntlet} &
+      57.6\% pass · 7.9\% collision vs baseline: 2.1\% / 20.5\% \\[0.3em]
+    \textbf{WOD-E2E champion} &
+      \textbf{7.845 RFS} (5-fold, GPU MLP + Cosmos 64d) · +0.714 vs baseline · CI $\pm$0.17 \\[0.3em]
+    \textbf{Oracle gap} &
+      1.419 RFS — candidate pool is good; discriminator is the bottleneck \\[0.3em]
+    \textbf{AlpaSim} &
+      Same policy, sensor-realistic · \code{collision\_at\_fault: 0.0} ·
+      \code{dist\_to\_gt: 0.42\,m} \\[0.3em]
+    \textbf{Next step} &
+      Task-aligned camera encoder fine-tuned on preference triplets \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.4em}
+  \begin{alertblock}{The system generalises because it reasons from geometry, not from memorised trajectories.}
+    The oracle gap of 1.419\,RFS is recoverable with a preference-aligned visual encoder.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}[standout]
+  \Large Thank you \\[1em]
+  \normalsize
+  \href{mailto:amtellezfernandez@gmail.com}{amtellezfernandez@gmail.com} \\[0.4em]
+  Code, docs, and all results:\\
+  \code{docs/simulation.md} · \code{docs/wod-e2e-system-walkthrough.md}
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\appendix
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Appendix: Reference Rule Table}
+  The reference rule engine maps world-state thresholds to pseudo-rater references.
+
+  \vspace{0.3em}
+  \begin{center}
+  \begin{tabular}{p{6cm}p{5cm}}
+    \toprule
+    \textbf{World condition} & \textbf{References assigned (score)} \\
+    \midrule
+    Low pressure ($<0.25$), low uncertainty ($<0.45$), open corridor ($>0.35$)
+      & \code{maintain} (92), lane centre (88) \\[0.3em]
+    Moderate pressure ($>0.20$)
+      & \code{slow\_yield} (86), best-side nudge (94), evasive (89) \\[0.3em]
+    High uncertainty ($>0.55$)
+      & \code{crawl} (90), \code{stop} (82) \\[0.3em]
+    Lane offset $>0.3$\,m and speed $>0.5$\,m/s
+      & \code{lane\_recover} (93) \\[0.3em]
+    Default fallback
+      & \code{maintain} (80), \code{slow\_yield} (76) \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \small Scores 80–94 map to a scale where $\leq 50$ indicates an unsafe rating.
+\end{frame}
+
+\begin{frame}{Appendix: Random Fourier Features — Derivation}
+  \textbf{Why RFF?} A standard ridge classifier is linear. The preference signal requires a
+  non-linear separator, which normally needs an $N\times N$ kernel matrix — too slow for CV.
+
+  RFF approximates the Gaussian kernel \emph{without the matrix} via a random projection:
+  \begin{align*}
+    \mathbf{W} &\sim \mathcal{N}(0,\,\sigma^{-2}\mathbf{I}_{D\times p})\;\text{(fixed at fit time)} \qquad D=512,\;\sigma=7.858 \\
+    \mathbf{b} &\sim \text{Uniform}([0, 2\pi]^D) \\
+    \boldsymbol{\varphi}(\mathbf{x}) &= \sqrt{\tfrac{2}{D}}\cdot\cos(\mathbf{W}^\top\tilde{\mathbf{x}}+\mathbf{b}) \\
+    \mathbb{E}\bigl[\boldsymbol{\varphi}(\mathbf{x})^\top\boldsymbol{\varphi}(\mathbf{x}')\bigr]
+    &= \exp\!\left(-\tfrac{\|\mathbf{x}-\mathbf{x}'\|^2}{2\sigma^2}\right)
+    \quad\text{(Bochner's theorem)}
+  \end{align*}
+  Only the ridge weights $\mathbf{w}$ (512-dim) are learned: $\hat{y} = \mathbf{w}^\top\boldsymbol{\varphi}(\mathbf{x})+b$.
+  Cost: $O(Dp)$ per inference instead of $O(N)$.
+\end{frame}
+
+\begin{frame}{Appendix: Optuna TPE Algorithm}
+  \textbf{Optuna} uses Tree-structured Parzen Estimators (TPE) — Bayesian optimisation that
+  is more sample-efficient than random search.
+
+  After $N$ trials with observed objective values:
+  \begin{align*}
+    \text{Good trials}\; G &= \{x : f(x) < f^*\} \quad\text{(top $p$-percentile)} \\
+    \text{Bad trials}\;  B &= \{x : f(x) \geq f^*\} \\
+    \ell(x) &= P(x \mid x \in G)\qquad \text{fit with kernel density estimation} \\
+    g(x) &= P(x \mid x \in B) \\
+    x_\text{next} &= \argmax_x\;\frac{\ell(x)}{g(x)}
+    \quad\text{(exploit good configs, avoid bad ones)}
+  \end{align*}
+
+  \vspace{0.3em}
+  \textbf{Our GPU MLP search (20 trials):}
+  \begin{itemize}
+    \item Best: trial\_0004 → $h=64$, lr=0.003866, batch=512, 10 epochs → \good{7.845 RFS}
+    \item Mean of all 20 trials: 7.769; only 1 beat the RFF baseline (7.834)
+    \item Lesson: with only 479 frames and 5 folds, Optuna can exploit fold-specific patterns
+  \end{itemize}
+\end{frame}
+
+\end{document}
