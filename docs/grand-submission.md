@@ -8,11 +8,11 @@ fine-tuning on any AV dataset, without route memorisation, and without
 leaderboard-specific supervised training.
 
 The WOD-E2E benchmark harness is supporting infrastructure: a preference-calibrated
-trajectory selector reaching **7.834 RFS** (5-fold CV, local backend · +0.703 over
-local baseline 7.131 · +0.812 over official baseline 7.022) on 479 validation frames
-under segment-grouped cross-validation. Optuna 2-fold peak: 7.880 (not directly
-comparable to 5-fold). It is declared as development analysis, not strict zero-shot
-deployment.
+trajectory selector reaching **7.845 RFS** (5-fold CV, local backend · +0.714 over
+local baseline 7.131 · GPU MLP + 64d Cosmos embeddings, precision 0.60) on 479
+validation frames under segment-grouped cross-validation. RFF champion: 7.834.
+Optuna 2-fold peak: 7.880 (not directly comparable to 5-fold). Declared as
+development analysis, not strict zero-shot deployment.
 
 ## Submission Contents
 
@@ -56,9 +56,10 @@ uv run --no-sync python scripts/run_demo.py \
 | Gauntlet pass rate | 36 / 60 (60%) | Same |
 | WOD-E2E constant-velocity baseline | 7.022 RFS | 479-frame validation CV |
 | WOD-E2E local baseline (const-vel) | 7.131 RFS | 479-frame val, local backend |
-| WOD-E2E champion (RFF direct policy) | **7.834 RFS** | 5-fold CV, local backend — commit `25dcdfa` |
+| WOD-E2E champion (GPU MLP + Cosmos 64d) | **7.845 RFS** | 5-fold CV, local backend — commit `6f1232b` |
+| WOD-E2E RFF direct policy | 7.834 RFS | 5-fold CV, local backend |
 | WOD-E2E Optuna peak (HGB, 2-fold) | 7.880 RFS | 2-fold only — not comparable to 5-fold |
-| WOD-E2E oracle (best candidate per frame) | **9.264 RFS** | 5-fold, local backend · oracle gap 1.430 |
+| WOD-E2E oracle (best candidate per frame) | **9.264 RFS** | 5-fold, local backend · oracle gap 1.419 |
 | AlpaSim collision at fault | 0.0 | `benchmarks/current/spotlight_reflex_alpasim_front_camera_30scene_merged.json` |
 
 Packaged submission archives for validation-set candidates are in

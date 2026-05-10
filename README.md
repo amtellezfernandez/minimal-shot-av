@@ -74,10 +74,10 @@ COMPASS composite score: **9.137 / 10** across 700 ranked runs (threshold 7.0).
 | Baseline (no world-state reasoning) | 0 / 120 | **55** |
 | Spotlight Reflex | 72 / 120 | **1** |
 
-**WOD-E2E: 7.834 RFS** (5-fold CV, local backend; local CV baseline 7.131) on the
-479-frame preference contract. Gate-only selector: 7.803. Direct policy adds +0.031.
-Oracle: 9.264. Oracle gap: **1.430 RFS** — the discriminator is the bottleneck, not
-the candidate pool. HGB Optuna peak: 7.880 (2-fold). Official Waymo baseline: 7.022.
+**WOD-E2E: 7.845 RFS** (5-fold CV, local backend; local CV baseline 7.131) on the
+479-frame preference contract. GPU MLP + 64d Cosmos embeddings, h=64, precision 0.60.
+Gate-only selector: 7.803. RFF champion: 7.834. Oracle: 9.264. Oracle gap: **1.419 RFS**.
+HGB Optuna peak: 7.880 (2-fold, not comparable). Official Waymo baseline: 7.022.
 
 **AlpaSim**: same policy, sensor-realistic, `collision_at_fault: 0.0`, `dist_to_gt: 0.42 m`.
 

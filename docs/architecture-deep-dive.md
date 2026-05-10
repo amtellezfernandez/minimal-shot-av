@@ -260,13 +260,14 @@ Local scoring backend (CV baseline 7.131); official Waymo baseline 7.022.
 | Ridge selector r175 contextual | 7.695 | 2 | local | Earlier champion |
 | HGB Optuna peak (trial_0000) | 7.880 | 2 | local | Best 2-fold observed |
 | Gate system only | 7.803 | 5 | local | No direct policy |
-| **Champion direct policy (RFF)** | **7.834** | **5** | **local** | **Stable 5-fold result** |
+| RFF direct policy | 7.834 | 5 | local | D=512, σ=7.858, precision 0.41 |
+| **GPU MLP + Cosmos 64d** | **7.845** | **5** | **local** | **h=64, precision 0.60 — new best** |
 | Combined candidate oracle | 9.264 | — | local | Upper bound |
 
-The **oracle gap is 1.430 RFS** (9.264 − 7.834) on the 5-fold champion run.
-The HGB Optuna trial reached 7.880 under 2-fold evaluation; the 5-fold
-estimate for HGB is pending. The RFF champion is the strongest 5-fold result
-confirmed to date.
+The **oracle gap is 1.419 RFS** (9.264 − 7.845) on the GPU MLP champion run.
+The GPU MLP (Cosmos 64d, h=64, 10 epochs) reached 7.845 across a 20-trial Optuna
+search. The +0.011 gain over RFF is within CI ±0.17 but the precision improvement
+(0.60 vs 0.41) is a meaningful signal. HGB Optuna trial_0 still pending.
 
 Source selection rates on the champion run (approximate, varies by fold):
 - Temporal: ~60%

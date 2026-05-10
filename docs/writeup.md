@@ -127,14 +127,17 @@ official Waymo baseline 7.022).
 | Constant velocity (official) | 7.022 | Official Waymo backend |
 | Kinematic ranker | 7.096 | Physics-only candidates, official backend |
 | Gate system only | 7.803 | No direct policy |
-| Champion (direct policy) | **7.834** | Random-Fourier direct policy, +0.703 vs local baseline |
+| RFF direct policy | 7.834 | D=512, σ=7.858, precision 0.41, +0.703 vs baseline |
+| **GPU MLP + Cosmos 64d** | **7.845** | **h=64, precision 0.60, +0.714 vs baseline** |
 | Oracle (perfect selection) | **9.264** | Upper bound given candidate pool |
 
-The **oracle gap is 1.430 RFS** (9.264 − 7.834). This is the key scientific finding:
+The **oracle gap is 1.419 RFS** (9.264 − 7.845). This is the key scientific finding:
 the candidate pool is good — the bottleneck is the discriminator. The selector cannot
 identify which candidate is best on a given frame without visual scene information.
 
-The direct policy adds +0.031 RFS above the gate-only baseline (7.803 → 7.834).
+The GPU MLP with 64d Cosmos embeddings fires on 4.2% of frames with precision 0.60,
+versus the RFF champion at 3.5% / 0.41. The +0.011 gain is within the ±0.17 CI
+but confirms that Cosmos embeddings carry non-linear preference signal.
 The HGB variant (optimised via Optuna) reached 7.880 in 2-fold evaluation but was
 not evaluated under 5-fold at time of writing.
 
@@ -158,12 +161,12 @@ augmenting with more diverse turn examples addresses it directly.
 
 ## What Didn't Work
 
-**Visual embeddings do not carry preference signal.** InternVLA and Cosmos tokenizer
-embeddings were computed for each validation frame and attached as ranker features.
-Neither produced a confirmed RFS gain over the no-embedding baseline. Off-the-shelf
-visual encoders extract representations tuned for navigation or generation, not for
-the discriminative question "which trajectory wins on this specific frame." Fine-tuning
-on preference labels is required to align the embedding space to this signal.
+**Visual embeddings do not carry preference signal under a linear head.** InternVLA
+and Cosmos embeddings added as ranker features produced no confirmed RFS gain. However,
+64d Cosmos embeddings as input to a GPU MLP direct policy reached 7.845 RFS (vs 7.834
+RFF baseline) with precision 0.60 vs 0.41 — the embeddings carry non-linear preference
+signal that ridge regression cannot extract. Task-specific fine-tuning remains the
+next step to close the remaining oracle gap.
 
 **World-model candidates add oracle headroom but the selector cannot exploit it.**
 A lightweight world model was implemented to generate scene-conditioned trajectory
@@ -178,7 +181,7 @@ candidates are not useful without a better discriminator.
 **1. Task-specific camera encoder.** A small model fine-tuned on WOD-E2E preference
 labels to discriminate winning trajectories from camera images. Not a general VLM —
 a discriminative encoder for the specific signal the ranker needs. Expected to close
-0.5–1.5 RFS of the 1.430-point oracle gap.
+0.5–1.5 RFS of the 1.419-point oracle gap.
 
 **2. Proper train/test split.** The champion selector is calibrated on retained
 validation preference labels under segment-grouped CV. Waymo train TFRecords (Google

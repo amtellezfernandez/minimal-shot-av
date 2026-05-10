@@ -190,10 +190,11 @@ All RFS results use local scoring backend (CV baseline 7.131; official Waymo bas
 | Ridge r175 contextual router | 7.695 | 2 | Intermediate, local backend |
 | HGB (Optuna 2-fold best) | 7.880 | 2 | Optuna-found peak — commit `69b4efb` |
 | Gate only (5-fold) | 7.803 | 5 | No direct policy |
-| **Champion direct policy (5-fold)** | **7.834** | **5** | **Random-Fourier direct policy** |
+| RFF direct policy | 7.834 | 5 | D=512, σ=7.858, precision 0.41 |
+| **GPU MLP + Cosmos 64d** | **7.845** | **5** | **h=64, precision 0.60 — current best** |
 | Oracle (perfect selector) | **9.264** | — | Upper bound, local backend |
 
-Champion gap: **1.430 RFS** (9.264 − 7.834). The candidate pool is good.
+Champion gap: **1.419 RFS** (9.264 − 7.845). The candidate pool is good.
 The discriminator is the bottleneck. HGB variant reached 7.880 under 2-fold evaluation
 but is not confirmed at 5-fold.
 
@@ -251,7 +252,7 @@ GO_LEFT: selected 6.782, regret 1.753 · GO_RIGHT: selected 6.088, regret 1.586 
 
 ### 6.3 Global Oracle Gap
 
-The **1.430 RFS oracle gap** (9.264 − 7.834) is frames where the right candidate
+The **1.419 RFS oracle gap** (9.264 − 7.845) is frames where the right candidate
 exists in the pool but the selector doesn't pick it. Root cause: trajectory statistics
 cannot discriminate "good for this specific scene" without visual scene features.
 
