@@ -25,13 +25,14 @@ class ReferenceRuleConfig:
     clear_uncertainty_max: float = 0.45
     clear_corridor_ratio_min: float = 0.35
     obstacle_pressure_min: float = 0.20
+    high_pressure_evasive_min: float = 0.35  # above this, prefer evasive over nudge
     high_uncertainty_min: float = 0.55
     low_corridor_ratio_max: float = 0.25
     clear_maintain_score: float = 92.0
     clear_center_score: float = 88.0
     obstacle_slow_yield_score: float = 86.0
-    obstacle_nudge_score: float = 94.0
-    obstacle_evasive_score: float = 89.0
+    obstacle_nudge_score: float = 91.0   # preferred at moderate pressure only
+    obstacle_evasive_score: float = 94.0  # preferred at high pressure
     uncertainty_crawl_score: float = 90.0
     uncertainty_stop_score: float = 82.0
     lane_recover_score: float = 93.0
@@ -219,13 +220,19 @@ def generate_pseudo_references(
     corridor_ratio = perception.corridor_margin / max(scenario.lane_half_width, 1e-6)
     uncertainty = max(world_state.uncertainty, perception.uncertainty)
 
+    def _ref(name: str, token: str, score: float) -> TrajectoryReference | None:
+        c = candidates.get(token)
+        return TrajectoryReference(name, c.trajectory, score) if c is not None else None
+
     references: list[TrajectoryReference] = []
     if (
         obstacle_pressure < rules.clear_obstacle_pressure_max
         and uncertainty < rules.clear_uncertainty_max
         and corridor_ratio > rules.clear_corridor_ratio_min
     ):
-        references.append(TrajectoryReference("clear_corridor_maintain", candidates["maintain"].trajectory, rules.clear_maintain_score))
+        r = _ref("clear_corridor_maintain", "maintain", rules.clear_maintain_score)
+        if r:
+            references.append(r)
         references.append(
             TrajectoryReference(
                 "clear_corridor_center_progress",
@@ -236,15 +243,32 @@ def generate_pseudo_references(
 
     if obstacle_pressure >= rules.obstacle_pressure_min:
         side = _avoidance_side(position, perception, candidates, scenario, config)
-        references.append(TrajectoryReference("obstacle_pressure_slow_yield", candidates["slow_yield"].trajectory, rules.obstacle_slow_yield_score))
-        references.append(TrajectoryReference(f"obstacle_pressure_nudge_{side}", candidates[f"nudge_{side}"].trajectory, rules.obstacle_nudge_score))
-        references.append(
-            TrajectoryReference(f"obstacle_pressure_evasive_{side}", candidates[f"evasive_{side}"].trajectory, rules.obstacle_evasive_score)
-        )
+        r = _ref("obstacle_pressure_slow_yield", "slow_yield", rules.obstacle_slow_yield_score)
+        if r:
+            references.append(r)
+        if obstacle_pressure >= rules.high_pressure_evasive_min:
+            # High pressure: prefer evasive (large lateral displacement); skip nudge reference
+            # so nudge does not win over evasive via score alone
+            r = _ref(f"obstacle_pressure_evasive_{side}", f"evasive_{side}", rules.obstacle_evasive_score)
+            if r:
+                references.append(r)
+        else:
+            # Moderate pressure: nudge is preferred (small correction), evasive as backup
+            r = _ref(f"obstacle_pressure_nudge_{side}", f"nudge_{side}", rules.obstacle_nudge_score)
+            if r:
+                references.append(r)
+            r = _ref(f"obstacle_pressure_evasive_{side}", f"evasive_{side}", rules.obstacle_evasive_score)
+            if r:
+                references.append(r)
 
     if uncertainty >= rules.high_uncertainty_min:
-        references.append(TrajectoryReference("high_uncertainty_crawl", candidates["crawl"].trajectory, rules.uncertainty_crawl_score))
-        references.append(TrajectoryReference("high_uncertainty_stop", candidates["stop"].trajectory, rules.uncertainty_stop_score))
+        for token, rname, score in [
+            ("crawl", "high_uncertainty_crawl", rules.uncertainty_crawl_score),
+            ("stop", "high_uncertainty_stop", rules.uncertainty_stop_score),
+        ]:
+            r = _ref(rname, token, score)
+            if r:
+                references.append(r)
 
     if corridor_ratio < rules.low_corridor_ratio_max:
         references.append(
@@ -256,8 +280,14 @@ def generate_pseudo_references(
         )
 
     if not references:
-        references.append(TrajectoryReference("default_maintain", candidates["maintain"].trajectory, rules.default_maintain_score))
-        references.append(TrajectoryReference("default_slow_yield", candidates["slow_yield"].trajectory, rules.default_slow_yield_score))
+        for token, rname, score in [
+            ("maintain", "default_maintain", rules.default_maintain_score),
+            ("slow_yield", "default_slow_yield", rules.default_slow_yield_score),
+            ("stop", "default_stop", rules.uncertainty_stop_score),
+        ]:
+            r = _ref(rname, token, score)
+            if r:
+                references.append(r)
 
     return references
 
@@ -711,14 +741,17 @@ def _avoidance_side(
 ) -> str:
     config = config or DEFAULT_SPOTLIGHT_CONFIG
     scoring = config.scoring
-    left_clearance = max(
-        _min_obstacle_clearance_with_config(candidates["nudge_left"].trajectory, scenario, config),
-        _min_obstacle_clearance_with_config(candidates["evasive_left"].trajectory, scenario, config),
-    )
-    right_clearance = max(
-        _min_obstacle_clearance_with_config(candidates["nudge_right"].trajectory, scenario, config),
-        _min_obstacle_clearance_with_config(candidates["evasive_right"].trajectory, scenario, config),
-    )
+
+    def _side_clearance(side: str) -> float:
+        vals = [
+            _min_obstacle_clearance_with_config(c.trajectory, scenario, config)
+            for name in (f"nudge_{side}", f"evasive_{side}")
+            if (c := candidates.get(name)) is not None
+        ]
+        return max(vals) if vals else 0.0
+
+    left_clearance = _side_clearance("left")
+    right_clearance = _side_clearance("right")
     if abs(left_clearance - right_clearance) > scoring.avoidance_side_clearance_delta_m:
         return "left" if left_clearance > right_clearance else "right"
 
