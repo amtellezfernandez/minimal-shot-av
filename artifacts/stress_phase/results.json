@@ -1,0 +1,542 @@
+{
+  "corridor_levels": [
+    {
+      "name": "wide",
+      "half_width_cap": [
+        4.6,
+        6.2
+      ]
+    },
+    {
+      "name": "medium",
+      "half_width_cap": [
+        3.0,
+        4.0
+      ]
+    },
+    {
+      "name": "narrow",
+      "half_width_cap": [
+        1.8,
+        2.5
+      ]
+    },
+    {
+      "name": "extreme",
+      "half_width_cap": [
+        1.1,
+        1.8
+      ]
+    }
+  ],
+  "pressure_levels": [
+    {
+      "name": "1.0\u00d7",
+      "mult": 1.0
+    },
+    {
+      "name": "1.5\u00d7",
+      "mult": 1.5
+    },
+    {
+      "name": "2.0\u00d7",
+      "mult": 2.0
+    }
+  ],
+  "n_seeds": 120,
+  "n_gauntlet_cases": 6,
+  "cells": [
+    {
+      "corridor": "wide",
+      "half_width_cap": [
+        4.6,
+        6.2
+      ],
+      "pressure": "1.0\u00d7",
+      "pressure_mult": 1.0,
+      "n": 720,
+      "continuous_bc": {
+        "passes": 555,
+        "collisions": 31,
+        "pass_rate": 77.1,
+        "collision_rate": 4.3,
+        "coll_ci95": [
+          3.0,
+          6.0
+        ]
+      },
+      "token_bc": {
+        "passes": 555,
+        "collisions": 28,
+        "pass_rate": 77.1,
+        "collision_rate": 3.9,
+        "coll_ci95": [
+          2.7,
+          5.6
+        ]
+      },
+      "spotlight": {
+        "passes": 682,
+        "collisions": 0,
+        "pass_rate": 94.7,
+        "collision_rate": 0.0,
+        "coll_ci95": [
+          0.0,
+          0.5
+        ]
+      },
+      "delta_tok_bc_minus_spotlight_pp": 3.89
+    },
+    {
+      "corridor": "wide",
+      "half_width_cap": [
+        4.6,
+        6.2
+      ],
+      "pressure": "1.5\u00d7",
+      "pressure_mult": 1.5,
+      "n": 720,
+      "continuous_bc": {
+        "passes": 597,
+        "collisions": 27,
+        "pass_rate": 82.9,
+        "collision_rate": 3.8,
+        "coll_ci95": [
+          2.6,
+          5.4
+        ]
+      },
+      "token_bc": {
+        "passes": 602,
+        "collisions": 23,
+        "pass_rate": 83.6,
+        "collision_rate": 3.2,
+        "coll_ci95": [
+          2.1,
+          4.7
+        ]
+      },
+      "spotlight": {
+        "passes": 699,
+        "collisions": 3,
+        "pass_rate": 97.1,
+        "collision_rate": 0.4,
+        "coll_ci95": [
+          0.1,
+          1.2
+        ]
+      },
+      "delta_tok_bc_minus_spotlight_pp": 2.78
+    },
+    {
+      "corridor": "wide",
+      "half_width_cap": [
+        4.6,
+        6.2
+      ],
+      "pressure": "2.0\u00d7",
+      "pressure_mult": 2.0,
+      "n": 720,
+      "continuous_bc": {
+        "passes": 618,
+        "collisions": 20,
+        "pass_rate": 85.8,
+        "collision_rate": 2.8,
+        "coll_ci95": [
+          1.8,
+          4.3
+        ]
+      },
+      "token_bc": {
+        "passes": 616,
+        "collisions": 16,
+        "pass_rate": 85.6,
+        "collision_rate": 2.2,
+        "coll_ci95": [
+          1.4,
+          3.6
+        ]
+      },
+      "spotlight": {
+        "passes": 703,
+        "collisions": 0,
+        "pass_rate": 97.6,
+        "collision_rate": 0.0,
+        "coll_ci95": [
+          0.0,
+          0.5
+        ]
+      },
+      "delta_tok_bc_minus_spotlight_pp": 2.22
+    },
+    {
+      "corridor": "medium",
+      "half_width_cap": [
+        3.0,
+        4.0
+      ],
+      "pressure": "1.0\u00d7",
+      "pressure_mult": 1.0,
+      "n": 720,
+      "continuous_bc": {
+        "passes": 580,
+        "collisions": 30,
+        "pass_rate": 80.6,
+        "collision_rate": 4.2,
+        "coll_ci95": [
+          2.9,
+          5.9
+        ]
+      },
+      "token_bc": {
+        "passes": 581,
+        "collisions": 26,
+        "pass_rate": 80.7,
+        "collision_rate": 3.6,
+        "coll_ci95": [
+          2.5,
+          5.2
+        ]
+      },
+      "spotlight": {
+        "passes": 711,
+        "collisions": 1,
+        "pass_rate": 98.8,
+        "collision_rate": 0.1,
+        "coll_ci95": [
+          0.0,
+          0.8
+        ]
+      },
+      "delta_tok_bc_minus_spotlight_pp": 3.47
+    },
+    {
+      "corridor": "medium",
+      "half_width_cap": [
+        3.0,
+        4.0
+      ],
+      "pressure": "1.5\u00d7",
+      "pressure_mult": 1.5,
+      "n": 720,
+      "continuous_bc": {
+        "passes": 609,
+        "collisions": 20,
+        "pass_rate": 84.6,
+        "collision_rate": 2.8,
+        "coll_ci95": [
+          1.8,
+          4.3
+        ]
+      },
+      "token_bc": {
+        "passes": 610,
+        "collisions": 26,
+        "pass_rate": 84.7,
+        "collision_rate": 3.6,
+        "coll_ci95": [
+          2.5,
+          5.2
+        ]
+      },
+      "spotlight": {
+        "passes": 708,
+        "collisions": 1,
+        "pass_rate": 98.3,
+        "collision_rate": 0.1,
+        "coll_ci95": [
+          0.0,
+          0.8
+        ]
+      },
+      "delta_tok_bc_minus_spotlight_pp": 3.47
+    },
+    {
+      "corridor": "medium",
+      "half_width_cap": [
+        3.0,
+        4.0
+      ],
+      "pressure": "2.0\u00d7",
+      "pressure_mult": 2.0,
+      "n": 720,
+      "continuous_bc": {
+        "passes": 632,
+        "collisions": 20,
+        "pass_rate": 87.8,
+        "collision_rate": 2.8,
+        "coll_ci95": [
+          1.8,
+          4.3
+        ]
+      },
+      "token_bc": {
+        "passes": 626,
+        "collisions": 20,
+        "pass_rate": 86.9,
+        "collision_rate": 2.8,
+        "coll_ci95": [
+          1.8,
+          4.3
+        ]
+      },
+      "spotlight": {
+        "passes": 711,
+        "collisions": 0,
+        "pass_rate": 98.8,
+        "collision_rate": 0.0,
+        "coll_ci95": [
+          0.0,
+          0.5
+        ]
+      },
+      "delta_tok_bc_minus_spotlight_pp": 2.78
+    },
+    {
+      "corridor": "narrow",
+      "half_width_cap": [
+        1.8,
+        2.5
+      ],
+      "pressure": "1.0\u00d7",
+      "pressure_mult": 1.0,
+      "n": 720,
+      "continuous_bc": {
+        "passes": 608,
+        "collisions": 40,
+        "pass_rate": 84.4,
+        "collision_rate": 5.6,
+        "coll_ci95": [
+          4.1,
+          7.5
+        ]
+      },
+      "token_bc": {
+        "passes": 598,
+        "collisions": 47,
+        "pass_rate": 83.1,
+        "collision_rate": 6.5,
+        "coll_ci95": [
+          4.9,
+          8.6
+        ]
+      },
+      "spotlight": {
+        "passes": 717,
+        "collisions": 1,
+        "pass_rate": 99.6,
+        "collision_rate": 0.1,
+        "coll_ci95": [
+          0.0,
+          0.8
+        ]
+      },
+      "delta_tok_bc_minus_spotlight_pp": 6.39
+    },
+    {
+      "corridor": "narrow",
+      "half_width_cap": [
+        1.8,
+        2.5
+      ],
+      "pressure": "1.5\u00d7",
+      "pressure_mult": 1.5,
+      "n": 720,
+      "continuous_bc": {
+        "passes": 599,
+        "collisions": 37,
+        "pass_rate": 83.2,
+        "collision_rate": 5.1,
+        "coll_ci95": [
+          3.8,
+          7.0
+        ]
+      },
+      "token_bc": {
+        "passes": 598,
+        "collisions": 41,
+        "pass_rate": 83.1,
+        "collision_rate": 5.7,
+        "coll_ci95": [
+          4.2,
+          7.6
+        ]
+      },
+      "spotlight": {
+        "passes": 707,
+        "collisions": 2,
+        "pass_rate": 98.2,
+        "collision_rate": 0.3,
+        "coll_ci95": [
+          0.1,
+          1.0
+        ]
+      },
+      "delta_tok_bc_minus_spotlight_pp": 5.42
+    },
+    {
+      "corridor": "narrow",
+      "half_width_cap": [
+        1.8,
+        2.5
+      ],
+      "pressure": "2.0\u00d7",
+      "pressure_mult": 2.0,
+      "n": 720,
+      "continuous_bc": {
+        "passes": 604,
+        "collisions": 24,
+        "pass_rate": 83.9,
+        "collision_rate": 3.3,
+        "coll_ci95": [
+          2.3,
+          4.9
+        ]
+      },
+      "token_bc": {
+        "passes": 601,
+        "collisions": 35,
+        "pass_rate": 83.5,
+        "collision_rate": 4.9,
+        "coll_ci95": [
+          3.5,
+          6.7
+        ]
+      },
+      "spotlight": {
+        "passes": 706,
+        "collisions": 0,
+        "pass_rate": 98.1,
+        "collision_rate": 0.0,
+        "coll_ci95": [
+          0.0,
+          0.5
+        ]
+      },
+      "delta_tok_bc_minus_spotlight_pp": 4.86
+    },
+    {
+      "corridor": "extreme",
+      "half_width_cap": [
+        1.1,
+        1.8
+      ],
+      "pressure": "1.0\u00d7",
+      "pressure_mult": 1.0,
+      "n": 720,
+      "continuous_bc": {
+        "passes": 587,
+        "collisions": 32,
+        "pass_rate": 81.5,
+        "collision_rate": 4.4,
+        "coll_ci95": [
+          3.2,
+          6.2
+        ]
+      },
+      "token_bc": {
+        "passes": 578,
+        "collisions": 44,
+        "pass_rate": 80.3,
+        "collision_rate": 6.1,
+        "coll_ci95": [
+          4.6,
+          8.1
+        ]
+      },
+      "spotlight": {
+        "passes": 706,
+        "collisions": 2,
+        "pass_rate": 98.1,
+        "collision_rate": 0.3,
+        "coll_ci95": [
+          0.1,
+          1.0
+        ]
+      },
+      "delta_tok_bc_minus_spotlight_pp": 5.83
+    },
+    {
+      "corridor": "extreme",
+      "half_width_cap": [
+        1.1,
+        1.8
+      ],
+      "pressure": "1.5\u00d7",
+      "pressure_mult": 1.5,
+      "n": 720,
+      "continuous_bc": {
+        "passes": 557,
+        "collisions": 32,
+        "pass_rate": 77.4,
+        "collision_rate": 4.4,
+        "coll_ci95": [
+          3.2,
+          6.2
+        ]
+      },
+      "token_bc": {
+        "passes": 563,
+        "collisions": 46,
+        "pass_rate": 78.2,
+        "collision_rate": 6.4,
+        "coll_ci95": [
+          4.8,
+          8.4
+        ]
+      },
+      "spotlight": {
+        "passes": 709,
+        "collisions": 0,
+        "pass_rate": 98.5,
+        "collision_rate": 0.0,
+        "coll_ci95": [
+          0.0,
+          0.5
+        ]
+      },
+      "delta_tok_bc_minus_spotlight_pp": 6.39
+    },
+    {
+      "corridor": "extreme",
+      "half_width_cap": [
+        1.1,
+        1.8
+      ],
+      "pressure": "2.0\u00d7",
+      "pressure_mult": 2.0,
+      "n": 720,
+      "continuous_bc": {
+        "passes": 576,
+        "collisions": 27,
+        "pass_rate": 80.0,
+        "collision_rate": 3.8,
+        "coll_ci95": [
+          2.6,
+          5.4
+        ]
+      },
+      "token_bc": {
+        "passes": 558,
+        "collisions": 40,
+        "pass_rate": 77.5,
+        "collision_rate": 5.6,
+        "coll_ci95": [
+          4.1,
+          7.5
+        ]
+      },
+      "spotlight": {
+        "passes": 709,
+        "collisions": 0,
+        "pass_rate": 98.5,
+        "collision_rate": 0.0,
+        "coll_ci95": [
+          0.0,
+          0.5
+        ]
+      },
+      "delta_tok_bc_minus_spotlight_pp": 5.56
+    }
+  ]
+}

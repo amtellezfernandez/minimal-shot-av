@@ -1,0 +1,106 @@
+{
+  "compositional": {
+    "n": 400,
+    "n_cases": 5,
+    "baseline": {
+      "passes": 338,
+      "collisions": 1,
+      "pass_rate": 84.5,
+      "collision_rate": 0.2,
+      "pass_ci95": [
+        80.6,
+        87.7
+      ]
+    },
+    "spotlight_9token": {
+      "passes": 369,
+      "collisions": 0,
+      "pass_rate": 92.2,
+      "collision_rate": 0.0,
+      "pass_ci95": [
+        89.2,
+        94.5
+      ]
+    },
+    "improvement_ratio": 1.09,
+    "discordant_base_fail_sr_pass": 35
+  },
+  "adversarial": {
+    "n": 160,
+    "n_cases": 2,
+    "baseline": {
+      "passes": 136,
+      "collisions": 0,
+      "pass_rate": 85.0,
+      "collision_rate": 0.0,
+      "pass_ci95": [
+        78.7,
+        89.7
+      ]
+    },
+    "spotlight_9token": {
+      "passes": 147,
+      "collisions": 0,
+      "pass_rate": 91.9,
+      "collision_rate": 0.0,
+      "pass_ci95": [
+        86.6,
+        95.2
+      ]
+    },
+    "improvement_ratio": 1.08,
+    "discordant_base_fail_sr_pass": 22
+  },
+  "gauntlet": {
+    "n": 480,
+    "n_cases": 6,
+    "baseline": {
+      "passes": 428,
+      "collisions": 11,
+      "pass_rate": 89.2,
+      "collision_rate": 2.3,
+      "pass_ci95": [
+        86.1,
+        91.6
+      ]
+    },
+    "spotlight_9token": {
+      "passes": 452,
+      "collisions": 0,
+      "pass_rate": 94.2,
+      "collision_rate": 0.0,
+      "pass_ci95": [
+        91.7,
+        95.9
+      ]
+    },
+    "improvement_ratio": 1.06,
+    "discordant_base_fail_sr_pass": 46
+  },
+  "hidden": {
+    "n": 80,
+    "n_cases": 1,
+    "baseline": {
+      "passes": 70,
+      "collisions": 0,
+      "pass_rate": 87.5,
+      "collision_rate": 0.0,
+      "pass_ci95": [
+        78.5,
+        93.1
+      ]
+    },
+    "spotlight_9token": {
+      "passes": 73,
+      "collisions": 0,
+      "pass_rate": 91.2,
+      "collision_rate": 0.0,
+      "pass_ci95": [
+        83.0,
+        95.7
+      ]
+    },
+    "improvement_ratio": 1.04,
+    "discordant_base_fail_sr_pass": 5
+  }
+}

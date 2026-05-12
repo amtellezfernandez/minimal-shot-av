@@ -20,6 +20,13 @@ artifacts/*
 !artifacts/sota_submission_bundles/**
 !artifacts/wod_fastkin_gate_ridge175_rate020_fallback_cv_official.json
 !artifacts/wod_fastkin_gate_ridge175_rate020_fallback_breakthrough_audit.json
+!artifacts/bc_vs_spotlight.json
+!artifacts/stress_phase/
+!artifacts/stress_phase/results.json
+!artifacts/ablation_token_count/
+!artifacts/ablation_token_count/results.json
+!artifacts/ablation_token_count/results_multisuite.json
+!artifacts/eval_all_suites.json
 artifact/external/*
 !artifact/external/README.md
 outputs/

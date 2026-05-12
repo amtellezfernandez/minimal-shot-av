@@ -1,0 +1,89 @@
+{
+  "ablation": [
+    {
+      "label": "4-token (stop+maintain+evasive\u00d72)",
+      "n_tokens": 4,
+      "token_names": [
+        "stop",
+        "maintain",
+        "evasive_left",
+        "evasive_right"
+      ],
+      "total": 480,
+      "passes": 431,
+      "collisions": 3,
+      "pass_rate": 89.8,
+      "collision_rate": 0.6,
+      "pass_ci95_lo": 86.8,
+      "pass_ci95_hi": 92.2,
+      "coll_ci95_lo": 0.2,
+      "coll_ci95_hi": 1.8
+    },
+    {
+      "label": "5-token (+slow_yield)",
+      "n_tokens": 5,
+      "token_names": [
+        "stop",
+        "maintain",
+        "slow_yield",
+        "evasive_left",
+        "evasive_right"
+      ],
+      "total": 480,
+      "passes": 454,
+      "collisions": 0,
+      "pass_rate": 94.6,
+      "collision_rate": 0.0,
+      "pass_ci95_lo": 92.2,
+      "pass_ci95_hi": 96.3,
+      "coll_ci95_lo": 0.0,
+      "coll_ci95_hi": 0.8
+    },
+    {
+      "label": "7-token (+crawl+lane_recover)",
+      "n_tokens": 7,
+      "token_names": [
+        "stop",
+        "crawl",
+        "maintain",
+        "slow_yield",
+        "evasive_left",
+        "evasive_right",
+        "lane_recover"
+      ],
+      "total": 480,
+      "passes": 451,
+      "collisions": 0,
+      "pass_rate": 94.0,
+      "collision_rate": 0.0,
+      "pass_ci95_lo": 91.5,
+      "pass_ci95_hi": 95.8,
+      "coll_ci95_lo": 0.0,
+      "coll_ci95_hi": 0.8
+    },
+    {
+      "label": "9-token (full Spotlight Reflex)",
+      "n_tokens": 9,
+      "token_names": [
+        "stop",
+        "crawl",
+        "maintain",
+        "slow_yield",
+        "nudge_left",
+        "nudge_right",
+        "evasive_left",
+        "evasive_right",
+        "lane_recover"
+      ],
+      "total": 480,
+      "passes": 452,
+      "collisions": 0,
+      "pass_rate": 94.2,
+      "collision_rate": 0.0,
+      "pass_ci95_lo": 91.7,
+      "pass_ci95_hi": 95.9,
+      "coll_ci95_lo": 0.0,
+      "coll_ci95_hi": 0.8
+    }
+  ]
+}

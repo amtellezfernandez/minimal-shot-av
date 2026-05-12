@@ -552,12 +552,44 @@ The 4-token set (stop, maintain, evasive$\times$2) produces 0.6\% collision on G
 and Adversarial---confirming that slow\_yield and lane\_recover are load-bearing for
 safety-critical multi-hazard scenarios.
 
-\paragraph{Stress-test operating envelope.}
-To identify the \emph{operating boundary} of geometric reflex vs.\ learned policy, we are
-running a corridor-tightness $\times$ pressure phase diagram (4 corridor levels
-$\times$ 3 pressure levels $\times$ 720 rollouts/cell $\times$ 3 agents). Results will
-quantify the exact scenario parameters where BC collision rates significantly exceed those
-of Spotlight Reflex, establishing when the geometric inductive bias is necessary.
+\paragraph{Stress-test operating envelope (empirical).}
+To quantify the \emph{operating boundary} of geometric reflex vs.\ learned policy, we
+swept corridor tightness (wide 9--12~m / medium 6--8~m / narrow 3.6--5~m / extreme
+2.2--3.6~m) $\times$ obstacle-actor pressure (1.0$\times$ / 1.5$\times$ / 2.0$\times$
+of the Gauntlet baseline), 720 rollouts per cell per agent (25,920 total).
+Table~\ref{tab:phase} summarises the collision rates.
+
+\begin{table}[h]
+\centering
+\caption{Phase diagram: worst-case collision rate per corridor level (max over 3 pressure
+settings, 720 rollouts each). Spotlight Reflex $\le$0.4\% across all 12 conditions;
+BC peaks at 6.5\% in narrow/extreme corridors. Full 12-cell results in the artifact.}
+\label{tab:phase}
+\footnotesize
+\begin{tabular}{l|rr|rr}
+\toprule
+Corridor & ContBC & TokBC & \textbf{Spotlight} & $\Delta$Tok--SR \\
+\midrule
+Wide (9--12~m)       & 4.3\% & 3.9\% & \textbf{0.4\%} & $+$3.9~pp \\
+Medium (6--8~m)      & 4.2\% & 3.6\% & \textbf{0.1\%} & $+$3.5~pp \\
+Narrow (3.6--5~m)    & 5.6\% & 6.5\% & \textbf{0.3\%} & $+$6.4~pp \\
+Extreme (2.2--3.6~m) & 4.4\% & 6.4\% & \textbf{0.3\%} & $+$6.4~pp \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Spotlight Reflex holds $\le$0.4\% collision in all 12 cells. BC agents degrade as corridors
+narrow: the Token-BC delta grows from $+$2.2~pp (wide, 2.0$\times$) to $+$6.4~pp
+(narrow/extreme, 1.0$\times$/1.5$\times$). BC agents were trained on compositional and
+adversarial suites with default wide-lane topologies (6--9~m half-widths); the narrow
+and extreme cells push \scalar{left\_clearance} and \scalar{right\_clearance} outside the
+training distribution, and the learned boundary degrades. Spotlight Reflex recomputes
+escape analytically from the current clearance values and is therefore distribution-shift
+invariant by construction.
+
+Notably, Token-BC \emph{exceeds} Continuous-BC at extreme OOD (4.4\% vs 6.1--6.4\%):
+discrete commitment to a wrong token under distribution shift is more harmful than a
+continuous output that partially blends between safe regions.
 
 \paragraph{Temporal scalar history.}
 The world-state encoding is stateless (no temporal memory). The failure mode in
