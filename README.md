@@ -126,8 +126,9 @@ Two primary references — each focused on one track with no repeated content:
 ## Quickstart
 
 ```bash
-# Known repo bootstrap: creates .venv with the AlpaSim extra via uv.
-./scripts/bootstrap_alpasim_env.sh
+# Full reproducible AlpaSim bootstrap: clone pinned upstream checkout if missing,
+# create .venv via uv, and apply this repo's tracked overrides.
+./scripts/bootstrap_alpasim_checkout.sh
 
 # Single demo rollout — wrong-way actor scenario
 uv run --no-sync python scripts/run_demo.py \
@@ -155,7 +156,7 @@ For AlpaSim specifically, keep the checkout path explicit:
 
 ```bash
 export ALPASIM_ROOT=/abs/path/to/alpasim
-./scripts/bootstrap_alpasim_env.sh
+./scripts/bootstrap_alpasim_checkout.sh
 ./.venv/bin/python scripts/run_alpasim_local_external.py \
   --mode print \
   --model token_dagger_iter2_hybrid_clamped \

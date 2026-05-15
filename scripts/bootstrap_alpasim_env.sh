@@ -24,6 +24,8 @@ if [[ -d "$ALPASIM_ROOT/src/driver" && -x "$ALPASIM_ROOT/.venv/bin/python" ]]; t
   ALPASIM_ROOT="$ALPASIM_ROOT" "$ROOT/.venv/bin/python" "$ROOT/scripts/setup_alpasim_local_plugin.py"
 else
   echo "Repo .venv is ready at $ROOT/.venv"
-  echo "Set ALPASIM_ROOT to an AlpaSim checkout, then run:"
+  echo "If you do not already have an AlpaSim checkout, run:"
+  echo "  ./scripts/bootstrap_alpasim_checkout.sh"
+  echo "If you already have one, set ALPASIM_ROOT and run:"
   echo "  ALPASIM_ROOT=<path> ./.venv/bin/python scripts/setup_alpasim_local_plugin.py"
 fi

@@ -24,16 +24,24 @@ candidate trajectories. It avoids modifying AlpaSim internals.
 
 ## Install Into An AlpaSim Environment
 
-Use the repo bootstrap first. It standardizes on `uv`, creates `./.venv`,
-installs the `alpasim` extra, and, if `ALPASIM_ROOT` points at a real AlpaSim
-checkout, installs this repo into the AlpaSim driver environment too:
+Use the full bootstrap first. It clones the pinned upstream AlpaSim checkout if
+missing, standardizes on `uv`, creates `./.venv`, installs the `alpasim`
+extra, and, if `ALPASIM_ROOT` points at a real AlpaSim checkout, installs this
+repo into the AlpaSim driver environment too:
 
 ```bash
 export ALPASIM_ROOT=/abs/path/to/alpasim
+./scripts/bootstrap_alpasim_checkout.sh
+```
+
+If the repo env already exists and you only need the repo-side env without
+cloning/fetching AlpaSim, use:
+
+```bash
 ./scripts/bootstrap_alpasim_env.sh
 ```
 
-If the repo env already exists and you only need the plugin registration step:
+If you only need the plugin registration step:
 
 ```bash
 ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/setup_alpasim_local_plugin.py
@@ -65,6 +73,11 @@ needs two local override files that are now stored directly in this repo:
 The important behavior change is in `docker_compose.py`: it prevents the runtime
 service from requesting `count: all` GPUs when the selected topology does not
 assign GPUs to simulation containers.
+
+The pinned external source version is:
+
+- upstream repo: `https://github.com/NVlabs/alpasim.git`
+- upstream ref: `v2026.4`
 
 You can rerun the check without reinstalling:
 
