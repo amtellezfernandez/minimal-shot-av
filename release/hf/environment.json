@@ -1,0 +1,8 @@
+{
+  "python": "3.12.3 (main, Mar 23 2026, 19:04:32) [GCC 13.3.0]",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "torch": "2.11.0+cu129",
+  "cuda_available": true,
+  "cuda_version": "12.9",
+  "git_commit": "0a57ba77c679b79144fc1f34fd565ec58e5da894"
+}

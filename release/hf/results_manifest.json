@@ -1,0 +1,70 @@
+{
+  "repo_commit": "0a57ba77c679b79144fc1f34fd565ec58e5da894",
+  "results": [
+    {
+      "hf_path": "results/bc_vs_spotlight.json",
+      "local_path": "artifacts/bc_vs_spotlight.json",
+      "description": "Main internal benchmark comparison between BC-family baselines and Spotlight Reflex."
+    },
+    {
+      "hf_path": "results/stress_phase_results.json",
+      "local_path": "artifacts/stress_phase/results.json",
+      "description": "Stress-phase matched-suite evaluation outputs used in the paper tables and narrative."
+    },
+    {
+      "hf_path": "results/dagger_representation_audit.json",
+      "local_path": "artifacts/dagger_representation_audit.json",
+      "description": "Representation and calibration audit diagnosing late-pool aggregation pressure."
+    },
+    {
+      "hf_path": "results/heldout_latin_hypercube/results_mid.json",
+      "local_path": "artifacts/heldout_latin_hypercube/results_mid.json",
+      "description": "Held-out Latin-hypercube sweep for the main learned baseline set."
+    },
+    {
+      "hf_path": "results/heldout_latin_hypercube/results_dagger_iter2_mid.json",
+      "local_path": "artifacts/heldout_latin_hypercube/results_dagger_iter2_mid.json",
+      "description": "Held-out Latin-hypercube sweep for the 2-step DAgger frontier."
+    },
+    {
+      "hf_path": "results/heldout_latin_hypercube/results_dagger_iter3_srcdecay_mid.json",
+      "local_path": "artifacts/heldout_latin_hypercube/results_dagger_iter3_srcdecay_mid.json",
+      "description": "Held-out Latin-hypercube sweep for the 3-step source-decayed DAgger ablation."
+    },
+    {
+      "hf_path": "results/heldout_latin_hypercube/results_iter2_transformer_mid.json",
+      "local_path": "artifacts/heldout_latin_hypercube/results_iter2_transformer_mid.json",
+      "description": "Held-out Latin-hypercube sweep for the 2-step transformer DAgger baseline."
+    },
+    {
+      "hf_path": "results/heldout_latin_hypercube/results_iter3_srcdecay_transformer_mid.json",
+      "local_path": "artifacts/heldout_latin_hypercube/results_iter3_srcdecay_transformer_mid.json",
+      "description": "Held-out Latin-hypercube sweep for the 3-step source-decayed transformer DAgger baseline."
+    },
+    {
+      "hf_path": "results/score_vs_spotlight_merged_mid.json",
+      "local_path": "artifacts/score_vs_spotlight_merged_mid.json",
+      "description": "Mid-sized scorer-versus-Spotlight evaluation for the merged geometric trajectory scorer."
+    },
+    {
+      "hf_path": "results/score_vs_spotlight_interaction_merged_mid.json",
+      "local_path": "artifacts/score_vs_spotlight_interaction_merged_mid.json",
+      "description": "Mid-sized scorer-versus-Spotlight evaluation for the merged interaction-aware trajectory scorer."
+    },
+    {
+      "hf_path": "scene_presets/fresh_3scene.yaml",
+      "local_path": "src/minimal_shot_av/simulator/alpasim_scene_presets/fresh_3scene.yaml",
+      "description": "3-scene AlpaSim smoke preset tracked in the main repo."
+    },
+    {
+      "hf_path": "scene_presets/front_camera_10scene_smoke.yaml",
+      "local_path": "src/minimal_shot_av/simulator/alpasim_scene_presets/front_camera_10scene_smoke.yaml",
+      "description": "10-scene front-camera AlpaSim smoke preset tracked in the main repo."
+    },
+    {
+      "hf_path": "scene_presets/front_camera_30scene_merged.yaml",
+      "local_path": "src/minimal_shot_av/simulator/alpasim_scene_presets/front_camera_30scene_merged.yaml",
+      "description": "30-scene front-camera AlpaSim merged preset tracked in the main repo."
+    }
+  ]
+}
