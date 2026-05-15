@@ -126,6 +126,9 @@ Two primary references — each focused on one track with no repeated content:
 ## Quickstart
 
 ```bash
+# Known repo bootstrap: creates .venv with the AlpaSim extra via uv.
+./scripts/bootstrap_alpasim_env.sh
+
 # Single demo rollout — wrong-way actor scenario
 uv run --no-sync python scripts/run_demo.py \
   --policy spotlight-reflex \
@@ -147,3 +150,14 @@ uv run --no-sync python scripts/run_tests.py --quick
 
 Available clusters: `construction` · `intersection` · `pedestrian` · `cyclist`
 · `cut-in` · `foreign object debris` · `special vehicle` · `spotlight` · `others`
+
+For AlpaSim specifically, keep the checkout path explicit:
+
+```bash
+export ALPASIM_ROOT=/abs/path/to/alpasim
+./scripts/bootstrap_alpasim_env.sh
+./.venv/bin/python scripts/run_alpasim_local_external.py \
+  --mode print \
+  --model token_dagger_iter2_hybrid_clamped \
+  --scene-preset fresh_3scene
+```

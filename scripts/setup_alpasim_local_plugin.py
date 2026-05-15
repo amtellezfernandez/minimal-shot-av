@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
+from shutil import which
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,7 +17,12 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Install this repo into the local AlpaSim driver env and verify plugin discovery."
     )
-    parser.add_argument("--alpasim-root", type=Path, default=DEFAULT_ALPASIM_ROOT)
+    parser.add_argument(
+        "--alpasim-root",
+        type=Path,
+        default=None,
+        help="AlpaSim checkout root. Defaults to $ALPASIM_ROOT or ./alpasim.",
+    )
     parser.add_argument(
         "--check-only",
         action="store_true",
@@ -26,7 +33,8 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = _parse_args()
-    alpasim_root = args.alpasim_root.resolve()
+    uv_bin = _require_uv()
+    alpasim_root = _resolve_alpasim_root(args.alpasim_root)
     driver_project = alpasim_root / "src" / "driver"
     venv_python = alpasim_root / ".venv" / "bin" / "python"
 
@@ -38,18 +46,21 @@ def main() -> None:
     if not args.check_only:
         _run(
             [
-                "uv",
+                uv_bin,
                 "pip",
                 "install",
+                "--cache-dir",
+                str(ROOT / ".uv-cache"),
                 "--python",
                 str(venv_python),
                 "-e",
                 str(ROOT),
+                "PyYAML>=6",
             ],
             cwd=ROOT,
         )
 
-    plugin_names = _plugin_names(driver_project)
+    plugin_names = _plugin_names(driver_project, uv_bin=uv_bin)
     missing = [name for name in REQUIRED_MODELS if name not in plugin_names]
     if missing:
         raise SystemExit(
@@ -62,22 +73,47 @@ def main() -> None:
     print()
     print("Next:")
     print(
-        "  ./.venv/bin/python scripts/run_alpasim_local_external.py "
-        "--mode print --model token_dagger_iter2 --scene-preset fresh_3scene"
+        "  ALPASIM_ROOT="
+        + shlex_quote(str(alpasim_root))
+        + " ./.venv/bin/python scripts/run_alpasim_local_external.py "
+        "--mode print --model token_dagger_iter2_hybrid_clamped --scene-preset fresh_3scene"
     )
 
 
-def _plugin_names(driver_project: Path) -> list[str]:
+def _resolve_alpasim_root(cli_value: Path | None) -> Path:
+    if cli_value is not None:
+        return cli_value.resolve()
+    env_value = os.getenv("ALPASIM_ROOT", "").strip()
+    if env_value:
+        return Path(env_value).expanduser().resolve()
+    return DEFAULT_ALPASIM_ROOT.resolve()
+
+
+def _require_uv() -> str:
+    uv_bin = which("uv")
+    if uv_bin:
+        return uv_bin
+    raise SystemExit(
+        "uv is required for AlpaSim setup. Install it first, e.g. "
+        "`python3 -m pip install --user uv`, then rerun this script."
+    )
+
+
+def _plugin_names(driver_project: Path, *, uv_bin: str) -> list[str]:
     script = (
         "from importlib.metadata import entry_points; "
         "print('\\n'.join(sorted(ep.name for ep in entry_points(group='alpasim.models'))))"
     )
     result = _run(
-        ["uv", "run", "--project", str(driver_project), "python", "-c", script],
+        [uv_bin, "run", "--project", str(driver_project), "python", "-c", script],
         cwd=ROOT,
         capture_output=True,
     )
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+def shlex_quote(text: str) -> str:
+    return "'" + text.replace("'", "'\"'\"'") + "'"
 
 
 def _run(

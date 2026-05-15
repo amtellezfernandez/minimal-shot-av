@@ -24,15 +24,23 @@ candidate trajectories. It avoids modifying AlpaSim internals.
 
 ## Install Into An AlpaSim Environment
 
-From this repo, install the local plugin package into the AlpaSim driver
-environment:
+Use the repo bootstrap first. It standardizes on `uv`, creates `./.venv`,
+installs the `alpasim` extra, and, if `ALPASIM_ROOT` points at a real AlpaSim
+checkout, installs this repo into the AlpaSim driver environment too:
 
 ```bash
-./.venv/bin/python scripts/setup_alpasim_local_plugin.py
+export ALPASIM_ROOT=/abs/path/to/alpasim
+./scripts/bootstrap_alpasim_env.sh
 ```
 
-This installs `minimal-shot-av` into `alpasim/.venv` and checks the AlpaSim
-entry-point registry. The required models are:
+If the repo env already exists and you only need the plugin registration step:
+
+```bash
+ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/setup_alpasim_local_plugin.py
+```
+
+This installs `minimal-shot-av` into `$ALPASIM_ROOT/.venv` and checks the
+AlpaSim entry-point registry. The required models are:
 
 - `spotlight_reflex`
 - `token_dagger_bc`
@@ -40,7 +48,7 @@ entry-point registry. The required models are:
 You can rerun the check without reinstalling:
 
 ```bash
-./.venv/bin/python scripts/setup_alpasim_local_plugin.py --check-only
+ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/setup_alpasim_local_plugin.py --check-only
 ```
 
 The plugin list should include:
@@ -53,9 +61,9 @@ For repeatable external-driver launches, use the repo-local launcher instead of
 hand-editing Hydra overrides:
 
 ```bash
-./.venv/bin/python scripts/run_alpasim_local_external.py \
+ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/run_alpasim_local_external.py \
   --mode print \
-  --model token_dagger_iter2 \
+  --model token_dagger_iter2_hybrid_clamped \
   --scene-preset fresh_3scene
 ```
 
@@ -74,18 +82,18 @@ The preferred path is the repo-local launcher, which writes a concrete
 edge cases:
 
 ```bash
-./.venv/bin/python scripts/run_alpasim_local_external.py \
+ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/run_alpasim_local_external.py \
   --mode print \
-  --model token_dagger_iter2 \
+  --model token_dagger_iter2_hybrid_clamped \
   --scene-preset fresh_3scene
 ```
 
 If you want a real run immediately:
 
 ```bash
-./.venv/bin/python scripts/run_alpasim_local_external.py \
+ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/run_alpasim_local_external.py \
   --mode both \
-  --model token_dagger_iter2 \
+  --model token_dagger_iter2_hybrid_clamped \
   --scene-preset fresh_3scene
 ```
 
@@ -141,6 +149,7 @@ Supported scene presets:
 Notes:
 
 - The learned presets force `model.device=cuda` in the external driver command.
+- `ALPASIM_ROOT` is the canonical way to point the repo at an AlpaSim checkout.
 - The launcher defaults to `topology=1gpu`; override with `--topology` if you
   want a larger AlpaSim layout.
 - `token_dagger_iter2` and `token_dagger_srcdecay` currently share the same

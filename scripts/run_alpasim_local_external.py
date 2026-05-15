@@ -204,8 +204,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--alpasim-root",
         type=Path,
-        default=DEFAULT_ALPASIM_ROOT,
-        help="Path to local AlpaSim checkout with .venv and src/{driver,wizard}.",
+        default=None,
+        help="Path to local AlpaSim checkout with .venv and src/{driver,wizard}. Defaults to $ALPASIM_ROOT or ./alpasim.",
     )
     parser.add_argument(
         "--port",
@@ -251,7 +251,7 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = _parse_args()
-    alpasim_root = args.alpasim_root.resolve()
+    alpasim_root = _resolve_alpasim_root(args.alpasim_root)
     driver_project = alpasim_root / "src" / "driver"
     wizard_project = alpasim_root / "src" / "wizard"
 
@@ -371,6 +371,15 @@ def _scene_ids(scene_preset: str, explicit_scene_ids: list[str]) -> list[str]:
     if not scene_ids:
         raise SystemExit(f"No scene_ids found in {preset_path}")
     return [str(scene_id) for scene_id in scene_ids]
+
+
+def _resolve_alpasim_root(cli_value: Path | None) -> Path:
+    if cli_value is not None:
+        return cli_value.resolve()
+    env_value = os.getenv("ALPASIM_ROOT", "").strip()
+    if env_value:
+        return Path(env_value).expanduser().resolve()
+    return DEFAULT_ALPASIM_ROOT.resolve()
 
 
 def _resolve_run_dir(args: argparse.Namespace) -> Path:

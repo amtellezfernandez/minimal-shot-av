@@ -12,7 +12,7 @@ dependencies = ["numpy>=1.26"]
 
 [project.optional-dependencies]
 sim-viz = ["Pillow>=10"]
-alpasim = ["numpy", "torch"]
+alpasim = ["numpy", "torch", "PyYAML>=6"]
 tuning = ["optuna>=3.6"]
 
 [project.entry-points."alpasim.models"]
