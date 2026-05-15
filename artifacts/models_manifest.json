@@ -1,0 +1,54 @@
+{
+  "repo_id": "amtellezfernandez/minimal-shot-av-corl2027-checkpoints",
+  "revision": "main",
+  "models": [
+    {
+      "name": "token_dagger_iter2",
+      "description": "Primary 2-step DAgger token policy used by the AlpaSim launcher and main internal frontier.",
+      "hf_path": "bc_models_iter2/token_dagger_bc.pt",
+      "local_path": "artifacts/bc_models_iter2/token_dagger_bc.pt",
+      "sha256": "55e917a60194221c48b0b3f54739dec094213192119802a18ceae07af9b7f0dd",
+      "size_bytes": 415621
+    },
+    {
+      "name": "token_dagger_iter3_srcdecay",
+      "description": "3-step source-decayed DAgger token policy used for the late-pool aggregation pressure ablation.",
+      "hf_path": "bc_models_iter3_srcdecay/token_dagger_bc.pt",
+      "local_path": "artifacts/bc_models_iter3_srcdecay/token_dagger_bc.pt",
+      "sha256": "833be55ad01a795d82cb55aa937cda4dcf1763326437cf8de41e21155b360704",
+      "size_bytes": 415877
+    },
+    {
+      "name": "token_transformer_dagger_iter2",
+      "description": "Transformer DAgger policy at the 2-step frontier used for the offline-vs-closed-loop falsification probe.",
+      "hf_path": "bc_models_iter2_transformer/token_transformer_dagger_bc.pt",
+      "local_path": "artifacts/bc_models_iter2_transformer/token_transformer_dagger_bc.pt",
+      "sha256": "91c1040ef05513d18cd704334a0647c3ce23c07c0a8b0e3a6b7d139f6487b59c",
+      "size_bytes": 2562094
+    },
+    {
+      "name": "token_transformer_dagger_iter3_srcdecay",
+      "description": "Transformer DAgger policy with source decay for the late-pool aggregation probe.",
+      "hf_path": "bc_models_iter3_srcdecay_transformer/token_transformer_dagger_bc.pt",
+      "local_path": "artifacts/bc_models_iter3_srcdecay_transformer/token_transformer_dagger_bc.pt",
+      "sha256": "a322a24fe799c9945285b9465ab13cf556ad4f91911cd55eb22d9116a72c3f76",
+      "size_bytes": 2562286
+    },
+    {
+      "name": "trajectory_scorer_merged",
+      "description": "Merged geometric trajectory scorer over candidate token futures.",
+      "hf_path": "score_models_merged/trajectory_scorer.pt",
+      "local_path": "artifacts/score_models_merged/trajectory_scorer.pt",
+      "sha256": "55cc9c85a006fa1606a07ee0452c822159af662ea5045e8548c9518c2aa33725",
+      "size_bytes": 153160
+    },
+    {
+      "name": "trajectory_scorer_interaction_merged",
+      "description": "Interaction-aware trajectory scorer with dynamic candidate-interaction features.",
+      "hf_path": "score_models_interaction_merged/trajectory_scorer.pt",
+      "local_path": "artifacts/score_models_interaction_merged/trajectory_scorer.pt",
+      "sha256": "09a8817f97bc561afab0a95f10bc0a305a2a5c4878e88d075ba8c039f35d97e6",
+      "size_bytes": 185778
+    }
+  ]
+}

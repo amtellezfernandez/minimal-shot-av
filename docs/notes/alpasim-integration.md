@@ -32,6 +32,7 @@ repo into the AlpaSim driver environment too:
 ```bash
 export ALPASIM_ROOT=/abs/path/to/alpasim
 ./scripts/bootstrap_alpasim_checkout.sh
+./.venv/bin/python scripts/fetch_checkpoints.py
 ```
 
 If the repo env already exists and you only need the repo-side env without
@@ -54,6 +55,11 @@ registry. The required models are:
 
 - `spotlight_reflex`
 - `token_dagger_bc`
+
+The learned-model checkpoints are published separately in the public Hugging Face repo
+`amtellezfernandez/minimal-shot-av-corl2027-checkpoints`. Use
+`./.venv/bin/python scripts/fetch_checkpoints.py` to populate the expected local
+`artifacts/...` paths from the tracked manifest.
 
 ## Upstream Delta
 
