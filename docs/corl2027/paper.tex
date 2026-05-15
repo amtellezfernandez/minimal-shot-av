@@ -17,8 +17,8 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{proposition}{Proposition}
 
-\title{Discrete Maneuver Tokens and On-Policy Correction\\
-       for Long-Tail Autonomous Navigation}
+\title{When Internal Imitation Calibration Fails to Transfer\\
+       A Diagnostic Study of Discrete Maneuver Tokens}
 
 \author{
   Alba Maria Tellez Fernandez\\
@@ -31,26 +31,27 @@
 \maketitle
 
 \begin{abstract}
-We investigate when discrete maneuver-class selection is a structural safety prior, and
-when learned policies can recover that prior through on-policy correction. The core
-geometric claim is topological: when safe actions form disconnected maneuver classes
-separated by an unsafe set, continuous interpolation between classes must cross unsafe
-trajectories, whereas selection among margin-separated tokens does not. We formalize this
-as a non-interpolation safety theorem and instantiate it in Spotlight Reflex, a
-geometry-driven policy that scores nine ManeuverTokens against scalar world-state features.
-Plain imitation does not recover the mechanism: on a 1080-rollout held-out Latin-hypercube
-generator sweep, Continuous-BC, Token-BC, and Token-RNN-BC reach only 77--78\% pass rate
-with 3.0--4.3\% Proximity Violations. However, two iterations of DAgger-style on-policy
-relabeling nearly closes the frontier, reaching 94.54\% pass and 0.19\% PV versus
-Spotlight Reflex at 94.44\% pass and 0.65\% PV. A third DAgger iteration regresses
-(92.50\% pass, 0.46\% PV), and trajectory-scorer variants over the same token library
-remain below the DAgger frontier. The result changes the paper's conclusion: the token
-vocabulary alone is insufficient, geometric rules are an interpretable safety prior and
-data generator, and the strongest learned baseline is a two-step on-policy token policy.
+We study a failure mode that is easy to miss in closed-loop imitation learning:
+policies can be well calibrated inside their training simulator while selecting
+geometrically invalid actions after transfer through a different observation and dynamics
+interface. The controlled setting is a discrete autonomous-driving token library with a
+geometry-driven expert, Spotlight Reflex. Internally, plain imitation does not recover the
+expert mechanism: on a 1080-rollout held-out Latin-hypercube generator sweep,
+Continuous-BC, Token-BC, and Token-RNN-BC reach only 77--78\% pass rate with
+3.0--4.3\% Proximity Violations. Two iterations of DAgger-style on-policy relabeling
+nearly closes this internal frontier, reaching 94.54\% pass and 0.19\% PV versus
+Spotlight Reflex at 94.44\% pass and 0.65\% PV. But the same learned policy does not
+transfer cleanly to Waymo AlpaSim through a front-camera proxy adapter: clamping lateral
+magnitude removes some failures but leaves low progress, and a hard geometric suppression
+layer vetoes the DAgger argmax on 395/398 frames (99.25\%), collapsing the hybrid policy
+almost entirely back to Spotlight-style selection. The result is not a new winning method;
+it is a diagnostic conclusion: offline accuracy and internal closed-loop success can be
+misleading proxies for external robustness when learned token calibration is coupled to the
+training simulator's geometry and state reconstruction.
 \end{abstract}
 
-\keywords{autonomous driving, discrete action space, DAgger, topological safety,
-long-tail robustness, geometric world-state, ManeuverToken, trust-region scoring}
+\keywords{autonomous driving, imitation learning, DAgger, simulator transfer,
+discrete action space, calibration, ManeuverToken, geometric world-state}
 
 % =====================================================================
 \section{Introduction}
@@ -110,7 +111,7 @@ No learning occurs inside the policy; the adapter is the only sensor-specific co
 \label{fig:pipeline}
 \end{figure}
 
-We make three contributions (Fig.~\ref{fig:pipeline}):
+We make four contributions (Fig.~\ref{fig:pipeline}):
 
 \begin{enumerate}
   \item \textbf{Non-interpolation theorem (Sec.~\ref{sec:method:topology}).}
@@ -132,6 +133,13 @@ We make three contributions (Fig.~\ref{fig:pipeline}):
     two-step DAgger matches Spotlight Reflex on pass rate and improves PV rate, while
     one-step DAgger is weaker, three-step DAgger regresses, and trajectory scorers over
     token candidates do not close the stress-suite gap.
+
+  \item \textbf{External transfer falsification in AlpaSim
+    (Sec.~\ref{sec:exp:alpasim}).}
+    The internally strong DAgger policy fails to preserve its calibration through a
+    sensor-realistic proxy-state adapter. Hard geometric suppression vetoes nearly every
+    DAgger argmax, showing that the learned token selector and the external geometry
+    interface occupy incompatible decision spaces.
 \end{enumerate}
 
 % =====================================================================
@@ -169,9 +177,9 @@ are sufficient for the trust-region scorer and cheap to compute from any sensing
 
 \paragraph{Simulator transfer and validation scope.}
 \citet{khurana2022differentiable} and \citet{shi2024motiondiffuser} study trajectory
-prediction in sensor-realistic environments. Our AlpaSim adapter is a small feasibility
-check that decouples policy logic from sensor processing; it is not a substitute for
-physics simulation or real-vehicle validation.
+prediction in sensor-realistic environments. Our AlpaSim adapter is a transfer diagnostic
+that decouples policy logic from sensor processing; it is not a substitute for physics
+simulation or real-vehicle validation.
 
 % =====================================================================
 \section{Method}
@@ -349,11 +357,11 @@ Key rules: \scalar{pressure}~$< 0.25$ and open corridor $\to$ \token{maintain}~(
 \scalar{blocked}~$= 1 \to$ \token{stop}~(82). Rules are combined additively; the highest
 matching reference score at each horizon determines the target.
 
-\subsection{AlpaSim Adapter: Feasibility Check}
+\subsection{AlpaSim Proxy-State Adapter}
 \label{sec:method:alpasim}
 
 Waymo's AlpaSim provides sensor-realistic front-camera input, route command, and ego
-dynamics. As an engineering feasibility check, we bridge these observations to the same
+dynamics. We bridge these observations to the same
 geometric scalar interface via four channels:
 
 \begin{enumerate}
@@ -569,7 +577,7 @@ This suggests that additional aggregation changes the selector in a harmful way,
 yet \emph{why}. We therefore run targeted counter-ablations to distinguish token-frequency
 bias from late-pool aggregation pressure.
 
-\subsection{AlpaSim Adapter Smoke Test}
+\subsection{AlpaSim External Diagnostic}
 \label{sec:exp:alpasim}
 
 \begin{figure}[t]
@@ -582,19 +590,49 @@ processing occurs inside the policy binary.}
 \label{fig:alpasim}
 \end{figure}
 
-We also run a 30-scene AlpaSim smoke test. The 4-channel adapter
-(Sec.~\ref{sec:method:alpasim}) translates available observations to geometric scalars;
-AlpaSim-specific code is confined to the adapter (Fig.~\ref{fig:alpasim}).
+We use AlpaSim as an external diagnostic, not as a statistically powered safety benchmark.
+The purpose is to ask whether the internally strong learned selector remains calibrated
+when its 10-dimensional simulator state is reconstructed from a front-camera, route
+command, ego dynamics, and sparse hazard primitives. We evaluate two matched WOD-E2E
+clips for which all variants completed the same AlpaSim launch path.
 
-Results: \texttt{collision\_at\_fault}: \textbf{0.0}; distance-to-ground-truth
-trajectory: \textbf{0.42~m}; \texttt{collision\_any} (by other agents): 0.37.
+\begin{table}[t]
+\centering
+\caption{AlpaSim external diagnostic on two matched WOD-E2E clips. ``Veto'' is the
+fraction of frames where geometric suppression rejects the DAgger argmax. The hard-veto
+hybrid recovers distance but becomes almost entirely Spotlight-selected, revealing that
+the learned DAgger token prior is not geometrically valid under the AlpaSim proxy state.}
+\label{tab:alpasim_diag}
+\footnotesize
+\begin{tabular}{lrrrrr}
+\toprule
+Policy & Veto & Collision & Offroad & Distance (m) & Progress \\
+\midrule
+Spotlight Reflex & -- & 1.00 & 0.00 & 143.25 & 0.64 \\
+Token-DAgger (2-step) & -- & 0.50 & 0.00 & 31.58 & 0.13 \\
+Token-DAgger (clamped lateral) & -- & 0.00 & 0.00 & 47.55 & 0.20 \\
+Token-DAgger + clamped soft hybrid & 0.00 & 0.00 & 0.00 & 50.69 & 0.21 \\
+Token-DAgger + hard veto & 0.9925 & 0.50 & 0.50 & 88.29 & 0.49 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-This is not primary evidence for the paper's safety claim: with 0 failures in 30 scenes,
-the Wilson 95\% upper bound on the at-fault collision rate is 11.4\%. We report it only as
-evidence that the scalar interface can be connected to a sensor-realistic stack. The
-0.42~m distance-to-GT is a trajectory-level metric; it reflects that conservative evasive
-choices may deviate from the ground-truth trajectory. The collision\_any rate is dominated
-by other agents and is outside the policy's direct control.
+The result is a falsification of the stronger methods claim. The initial soft hybrid
+between DAgger and Spotlight does not implement suppression: its selection log has
+0 vetoes in 398 frames. Lateral clamping removes one transfer failure mode---the learned
+policy's lateral offsets can be too aggressive for the reconstructed road geometry---but
+the clamped policies still travel only 47--51~m on average and make little progress.
+When hard suppression is enabled, the mechanism becomes real: in the same 398-frame run,
+the DAgger argmax is vetoed on 395 frames, the hybrid matches Spotlight on 393 frames,
+and DAgger wins only 3 frames. The median geometric gap on vetoed frames is 77.41 score
+points.
+
+This is not evidence that the hard-veto hybrid is a better policy. It collides or goes
+off-road on at least one of the two clips. Instead, the selection log exposes the transfer
+failure directly: the internally calibrated DAgger classifier is selecting tokens that the
+external geometric scorer rejects almost always. The learned policy's calibration is
+therefore coupled to the internal simulator's state geometry and does not survive the
+AlpaSim proxy reconstruction gap.
 
 % =====================================================================
 \section{Analysis}
@@ -808,9 +846,12 @@ the obstacle is; all require knowledge of \emph{where} it is.
 
 \paragraph{2D abstract simulation.}
 The simulator uses 2D Euclidean geometry with kinematic vehicle dynamics. The AlpaSim
-smoke test (Sec.~\ref{sec:exp:alpasim}) checks adapter feasibility, not transfer validity.
-A full physics simulation (e.g., CARLA, nuPlan with dynamics) or real-vehicle evaluation is
-needed before making vehicle-dynamics claims.
+diagnostic (Sec.~\ref{sec:exp:alpasim}) shows that internal simulator success is not a
+transfer guarantee: the learned selector's calibration can fail when the same token
+vocabulary is driven by reconstructed external geometry. The two-clip AlpaSim result is
+mechanistic evidence from selection logs, not a population estimate. A full physics
+simulation (e.g., CARLA, nuPlan with dynamics) or real-vehicle evaluation is needed before
+making broad vehicle-dynamics claims.
 
 \paragraph{Token-count optimality is not established.}
 Table~\ref{tab:ablation} is a nested removal study, not a search over all token libraries.
@@ -876,27 +917,42 @@ that blindly adding recovery-state data can distort the training distribution. F
 should study aggregation schedules, loss weighting by rollout source, validation splits by
 closed-loop profile, and safety-constrained selection among DAgger checkpoints.
 
+\paragraph{External calibration is not solved.}
+The AlpaSim hard-veto experiment shows that a learned selector can be internally strong and
+externally invalid: 99.25\% of DAgger argmax decisions are rejected by the geometric
+suppression layer. This is not a threshold-tuning problem; it indicates that proxy-state
+reconstruction changes the decision geometry. Future work should validate token policies
+under multiple independent simulators, log per-frame disagreement with geometric
+constraints, and treat high veto rates as a failure signal rather than as a hyperparameter
+to tune away.
+
 % =====================================================================
 \section{Conclusion}
 % =====================================================================
 
-We have argued that discretizing the driving action space into margin-separated maneuver
-classes can be a structural robustness prior when safe trajectory sets are disconnected.
-The non-interpolation theorem formalizes the condition: token selection avoids unsafe
-intermediate trajectories that continuous interpolation must traverse. The empirical result
-is more nuanced than the initial fixed-suite comparison. Plain BC fails even with the same
-tokens and geometric features, and recurrent BC remains weak under held-out generator
-shift. But two-step DAgger nearly closes the frontier, matching Spotlight Reflex overall
-and reducing PV rate on the held-out Latin-hypercube sweep.
+We have argued that discrete maneuver tokens are useful, but not sufficient. Internally,
+tokens remove unsafe interpolation paths, geometric rules provide an interpretable expert,
+and two-step DAgger can learn most of that expert's closed-loop boundary on a held-out
+Latin-hypercube generator sweep. That internal result alone would support a conventional
+methods story: on-policy correction repairs plain BC and nearly matches the geometric
+policy.
 
-The broader implication is that action-space structure, data distribution, and selector
-training must be studied together. Tokens remove unsafe interpolation paths, geometric
-rules provide an interpretable safety prior and expert relabeler, and on-policy correction
-can learn most of that rule. The remaining open problem is not whether tokens can be
-learned at all; it is how to train token selectors that retain the two-step DAgger safety
-frontier without brittle aggregation or simulator-specific tuning. The present evidence is
-simulator-bound; proving the principle as a general property of safe navigation requires
-physics simulation, real-vehicle validation, and broader scenario generation.
+The AlpaSim diagnostic changes the conclusion. When the learned selector is driven by a
+front-camera proxy adapter, its token calibration no longer matches the external geometry.
+Lateral clamping repairs action magnitude but not decision validity; hard suppression
+recovers some progress but vetoes 99.25\% of learned argmax decisions and collapses the
+hybrid almost entirely back to Spotlight-style selection. The useful finding is therefore
+not that DAgger plus a veto layer is a winning method. It is that offline accuracy and
+internal closed-loop performance can be structurally misleading proxies for external
+robustness when the state reconstruction interface changes the geometry of the decision
+problem.
+
+The practical implication is that token policies should be audited at the decision level,
+not only by aggregate rollout metrics. A learned policy that passes an internal simulator
+may still be selecting tokens that an external geometric scorer rejects almost every frame.
+For safety-critical imitation learning, per-frame constraint disagreement and external
+proxy-state validation should be treated as first-class diagnostics alongside pass rate,
+collision rate, and offline validation accuracy.
 
 \acknowledgments{Developed independently as a research prototype for the Waymo Open Dataset
 E2E Challenge. We thank the Waymo team for the AlpaSim evaluation environment.}

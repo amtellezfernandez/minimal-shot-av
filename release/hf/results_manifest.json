@@ -52,6 +52,11 @@
       "description": "Mid-sized scorer-versus-Spotlight evaluation for the merged interaction-aware trajectory scorer."
     },
     {
+      "hf_path": "results/alpasim_hardveto_diagnostic.json",
+      "local_path": "artifacts/alpasim_hardveto_diagnostic.json",
+      "description": "Two-scene AlpaSim hard-veto diagnostic showing that geometric suppression rejects nearly all DAgger argmax decisions under proxy-state reconstruction."
+    },
+    {
       "hf_path": "scene_presets/fresh_3scene.yaml",
       "local_path": "src/minimal_shot_av/simulator/alpasim_scene_presets/fresh_3scene.yaml",
       "description": "3-scene AlpaSim smoke preset tracked in the main repo."

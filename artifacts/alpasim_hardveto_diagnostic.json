@@ -1,0 +1,72 @@
+{
+  "description": "AlpaSim external diagnostic on two matched WOD-E2E clips, used to support the proxy-state transfer failure analysis in docs/corl2027/paper.tex.",
+  "clip_ids": [
+    "clipgt-7b3070bd-8d4d-4394-bced-f89b0467a107",
+    "clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75"
+  ],
+  "runs": {
+    "spotlight_reflex": {
+      "run_dir": "runs/alpasim_spotlight_reflex_fresh_3scene_20260515_195145",
+      "n_clips": 2,
+      "collision_any": 1.0,
+      "collision_at_fault": 0.5,
+      "offroad": 0.0,
+      "dist_traveled_m": 143.25,
+      "progress": 0.64
+    },
+    "token_dagger_iter2": {
+      "run_dir": "runs/alpasim_token_dagger_iter2_fresh_3scene_20260515_210322",
+      "n_clips": 2,
+      "collision_any": 0.5,
+      "collision_at_fault": 0.5,
+      "offroad": 0.0,
+      "dist_traveled_m": 31.58,
+      "progress": 0.13
+    },
+    "token_dagger_iter2_clamped_lateral": {
+      "run_dir": "runs/alpasim_token_dagger_iter2_clamped_2scene_retry2",
+      "n_clips": 2,
+      "collision_any": 0.0,
+      "collision_at_fault": 0.0,
+      "offroad": 0.0,
+      "dist_traveled_m": 47.55,
+      "progress": 0.2
+    },
+    "token_dagger_iter2_clamped_soft_hybrid": {
+      "run_dir": "runs/alpasim_token_dagger_iter2_hybrid_clamped_2scene_retry1",
+      "n_clips": 2,
+      "collision_any": 0.0,
+      "collision_at_fault": 0.0,
+      "offroad": 0.0,
+      "dist_traveled_m": 50.69,
+      "progress": 0.21,
+      "selection_log_frames": 398,
+      "veto_count": 0,
+      "fallback_count": 0
+    },
+    "token_dagger_iter2_hard_veto": {
+      "run_dir": "runs/alpasim_token_dagger_iter2_hardveto_2scene_current_run",
+      "n_clips": 2,
+      "collision_any": 0.5,
+      "collision_at_fault": 0.5,
+      "offroad": 0.5,
+      "dist_traveled_m": 88.29,
+      "progress": 0.49,
+      "selection_log_frames": 398,
+      "veto_count": 395,
+      "veto_rate": 0.992462311557789,
+      "fallback_count": 2,
+      "fallback_rate": 0.005025125628140704,
+      "dagger_wins": 3,
+      "dagger_win_rate": 0.007537688442211055,
+      "spotlight_wins": 393,
+      "spotlight_win_rate": 0.9874371859296482,
+      "median_veto_geo_gap": 77.41,
+      "veto_reasons": {
+        "geometric_gap": 362,
+        "geometric_rank": 33
+      }
+    }
+  },
+  "interpretation": "The hard-veto policy is not a positive hybrid result. Its 99.25% veto rate shows that the internally calibrated DAgger argmax is almost always rejected by the external geometric scorer under AlpaSim proxy-state reconstruction."
+}
