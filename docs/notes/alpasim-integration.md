@@ -45,6 +45,27 @@ AlpaSim entry-point registry. The required models are:
 - `spotlight_reflex`
 - `token_dagger_bc`
 
+## Upstream Delta
+
+The AlpaSim checkout used on this laptop is an external repo at:
+
+```text
+/home/amdev/sota/minimal-shot-av/alpasim
+```
+
+It is based on upstream `NVlabs/alpasim` `v2026.4` (`049f70f`) and currently
+needs two local override files that are now stored directly in this repo:
+
+- `third_party/alpasim_overrides/src/wizard/alpasim_wizard/deployment/docker_compose.py`
+- `third_party/alpasim_overrides/Dockerfile.amd64`
+
+`scripts/setup_alpasim_local_plugin.py` now copies these overrides into
+`$ALPASIM_ROOT` automatically unless `--skip-overrides` is passed.
+
+The important behavior change is in `docker_compose.py`: it prevents the runtime
+service from requesting `count: all` GPUs when the selected topology does not
+assign GPUs to simulation containers.
+
 You can rerun the check without reinstalling:
 
 ```bash

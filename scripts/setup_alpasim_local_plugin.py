@@ -6,10 +6,12 @@ import subprocess
 import sys
 from pathlib import Path
 from shutil import which
+import shutil
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ALPASIM_ROOT = ROOT / "alpasim"
+ALPASIM_OVERRIDE_ROOT = ROOT / "third_party" / "alpasim_overrides"
 REQUIRED_MODELS = ("spotlight_reflex", "token_dagger_bc")
 
 
@@ -28,6 +30,11 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="Skip installation and only verify the current AlpaSim driver registry.",
     )
+    parser.add_argument(
+        "--skip-overrides",
+        action="store_true",
+        help="Do not copy repo-tracked AlpaSim override files into ALPASIM_ROOT before checking.",
+    )
     return parser.parse_args()
 
 
@@ -42,6 +49,8 @@ def main() -> None:
         raise SystemExit(f"AlpaSim driver project not found: {driver_project}")
     if not venv_python.is_file():
         raise SystemExit(f"AlpaSim virtualenv python not found: {venv_python}")
+    if not args.skip_overrides:
+        _apply_local_alpasim_overrides(alpasim_root)
 
     if not args.check_only:
         _run(
@@ -97,6 +106,24 @@ def _require_uv() -> str:
         "uv is required for AlpaSim setup. Install it first, e.g. "
         "`python3 -m pip install --user uv`, then rerun this script."
     )
+
+
+def _apply_local_alpasim_overrides(alpasim_root: Path) -> None:
+    if not ALPASIM_OVERRIDE_ROOT.is_dir():
+        return
+    copied: list[str] = []
+    for source in ALPASIM_OVERRIDE_ROOT.rglob("*"):
+        if not source.is_file():
+            continue
+        relative = source.relative_to(ALPASIM_OVERRIDE_ROOT)
+        target = alpasim_root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+        copied.append(str(relative))
+    if copied:
+        print("Applied repo-tracked AlpaSim overrides:")
+        for relative in copied:
+            print(f"  {relative}")
 
 
 def _plugin_names(driver_project: Path, *, uv_bin: str) -> list[str]:
