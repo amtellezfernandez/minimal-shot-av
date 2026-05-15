@@ -164,6 +164,13 @@ class CandidateScoreExplanation:
         }
 
 
+@dataclass(frozen=True)
+class SpotlightCandidateEvaluation:
+    candidate: TrajectoryCandidate
+    score: TrajectorySelectorScore
+    explanation: CandidateScoreExplanation
+
+
 def generate_maneuver_candidates(
     position: tuple[float, float],
     heading: tuple[float, float],
@@ -301,15 +308,57 @@ def select_maneuver(
     config: SpotlightReflexConfig | None = None,
 ) -> SpotlightSelection:
     config = config or DEFAULT_SPOTLIGHT_CONFIG
+    evaluations, reference_count = evaluate_maneuver_candidates(
+        scenario,
+        position,
+        world_state,
+        perception,
+        speed_mps,
+        config,
+    )
+    best_evaluation = evaluations[0]
+    for evaluation in evaluations[1:]:
+        if (
+            evaluation.explanation.effective_score,
+            evaluation.candidate.confidence,
+        ) > (
+            best_evaluation.explanation.effective_score,
+            best_evaluation.candidate.confidence,
+        ):
+            best_evaluation = evaluation
+
+    top_candidate_summaries = tuple(
+        evaluation.explanation.to_summary()
+        for evaluation in sorted(evaluations, key=lambda item: item.explanation.effective_score, reverse=True)[:3]
+    )
+    return SpotlightSelection(
+        best_evaluation.candidate,
+        best_evaluation.score,
+        len(evaluations),
+        reference_count,
+        best_evaluation.explanation.effective_score,
+        best_evaluation.explanation.reasons,
+        top_candidate_summaries,
+    )
+
+
+def evaluate_maneuver_candidates(
+    scenario: Scenario,
+    position: tuple[float, float],
+    world_state: WorldState,
+    perception: ScenePerception,
+    speed_mps: float,
+    config: SpotlightReflexConfig | None = None,
+) -> tuple[list[SpotlightCandidateEvaluation], int]:
+    config = config or DEFAULT_SPOTLIGHT_CONFIG
     heading = _planning_heading(position, world_state, perception, scenario, config)
     candidates = generate_maneuver_candidates(position, heading, speed_mps, config)
     references = generate_pseudo_references(scenario, position, world_state, perception, speed_mps, heading, config)
-
-    scored_candidates: list[tuple[float, TrajectoryCandidate, TrajectorySelectorScore, CandidateScoreExplanation]] = []
     moving_candidate_is_safe = any(
         candidate.name != "stop" and _action_clearance(candidate.trajectory, scenario, config) >= config.scoring.min_action_clearance_m
         for candidate in candidates
     )
+    evaluations: list[SpotlightCandidateEvaluation] = []
     for candidate in candidates:
         candidate_score = score_candidate(candidate, references, speed_mps, config.selector)
         explanation = _explain_simulator_backed_score(
@@ -321,29 +370,14 @@ def select_maneuver(
             moving_candidate_is_safe,
             config,
         )
-        scored_candidates.append((explanation.effective_score, candidate, candidate_score, explanation))
-
-    best_effective_score, best_candidate, best_score, best_explanation = scored_candidates[0]
-    for effective_score, candidate, candidate_score, explanation in scored_candidates[1:]:
-        if (effective_score, candidate.confidence) > (best_effective_score, best_candidate.confidence):
-            best_candidate = candidate
-            best_score = candidate_score
-            best_effective_score = effective_score
-            best_explanation = explanation
-
-    top_candidate_summaries = tuple(
-        explanation.to_summary()
-        for _, _, _, explanation in sorted(scored_candidates, key=lambda item: item[0], reverse=True)[:3]
-    )
-    return SpotlightSelection(
-        best_candidate,
-        best_score,
-        len(candidates),
-        len(references),
-        best_effective_score,
-        best_explanation.reasons,
-        top_candidate_summaries,
-    )
+        evaluations.append(
+            SpotlightCandidateEvaluation(
+                candidate=candidate,
+                score=candidate_score,
+                explanation=explanation,
+            )
+        )
+    return evaluations, len(references)
 
 
 def plan_spotlight_reflex_action(

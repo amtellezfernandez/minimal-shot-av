@@ -6,8 +6,9 @@ while Spotlight Reflex holds at 0% collision:
   X: corridor tightness — gauntlet_lane_half_width_cap shrinks from wide→extreme
   Y: obstacle pressure  — suite_pressure["gauntlet"] scales from baseline→2×
 
-Each cell runs 3 agents (Continuous-BC, Token-BC, Spotlight) on 6 gauntlet cases
-× N_SEEDS seeds = 6·N_SEEDS rollouts per agent per cell.
+Each cell runs 5 agents (Continuous-BC, Token-BC, Token-RNN-BC,
+Token-DAgger-BC, Spotlight) on 6 gauntlet cases × N_SEEDS seeds =
+6·N_SEEDS rollouts per agent per cell.
 
 Output: artifacts/stress_phase/results.json
 """
@@ -72,6 +73,10 @@ class StressResult:
     continuous_collision: bool
     token_passed: bool
     token_collision: bool
+    token_rnn_passed: bool | None
+    token_rnn_collision: bool | None
+    token_dagger_passed: bool | None
+    token_dagger_collision: bool | None
     spotlight_passed: bool
     spotlight_collision: bool
 
@@ -106,6 +111,35 @@ def _init_worker(model_dir_str: str) -> None:
         def forward(self, x: torch.Tensor) -> torch.Tensor:
             return self.net(x)
 
+    class GeomGRUTokenBC(nn.Module):
+        def __init__(
+            self,
+            n_features: int = 10,
+            n_tokens: int = 9,
+            hidden: int = 160,
+        ) -> None:
+            super().__init__()
+            self.norm = nn.LayerNorm(n_features)
+            self.gru = nn.GRU(
+                input_size=n_features,
+                hidden_size=hidden,
+                num_layers=1,
+                batch_first=True,
+                dropout=0.0,
+            )
+            self.head = nn.Sequential(
+                nn.LayerNorm(hidden),
+                nn.Linear(hidden, hidden),
+                nn.GELU(),
+                nn.Dropout(0.15),
+                nn.Linear(hidden, n_tokens),
+            )
+
+        def forward(self, x: torch.Tensor) -> torch.Tensor:
+            x = self.norm(x)
+            _, h = self.gru(x)
+            return self.head(h[-1])
+
     tok_ckpt  = torch.load(model_dir / "token_bc.pt",      map_location="cpu", weights_only=False)
     cont_ckpt = torch.load(model_dir / "continuous_bc.pt", map_location="cpu", weights_only=False)
 
@@ -122,6 +156,35 @@ def _init_worker(model_dir_str: str) -> None:
     _WORKER["cont_mean"]       = np.array(cont_ckpt["cont_mean"], dtype=np.float32)
     _WORKER["cont_std"]        = np.array(cont_ckpt["cont_std"],  dtype=np.float32)
 
+    rnn_path = model_dir / "token_rnn_bc.pt"
+    if rnn_path.is_file():
+        rnn_ckpt = torch.load(rnn_path, map_location="cpu", weights_only=False)
+        rnn_model = GeomGRUTokenBC(
+            n_features=int(rnn_ckpt.get("n_features", 10)),
+            n_tokens=int(rnn_ckpt.get("n_tokens", 9)),
+            hidden=int(rnn_ckpt.get("rnn_hidden", 160)),
+        )
+        rnn_model.load_state_dict(rnn_ckpt["state_dict"])
+        rnn_model.eval()
+        _WORKER["rnn_model"] = rnn_model
+        _WORKER["rnn_feat_mean"] = np.array(rnn_ckpt["feat_mean"], dtype=np.float32)
+        _WORKER["rnn_feat_std"] = np.array(rnn_ckpt["feat_std"], dtype=np.float32)
+        _WORKER["rnn_history_len"] = int(rnn_ckpt.get("history_len", 8))
+    else:
+        _WORKER["rnn_model"] = None
+
+    dagger_path = model_dir / "token_dagger_bc.pt"
+    if dagger_path.is_file():
+        dagger_ckpt = torch.load(dagger_path, map_location="cpu", weights_only=False)
+        dagger_model = GeomMLP(9)
+        dagger_model.load_state_dict(dagger_ckpt["state_dict"])
+        dagger_model.eval()
+        _WORKER["dagger_model"] = dagger_model
+        _WORKER["dagger_feat_mean"] = np.array(dagger_ckpt["feat_mean"], dtype=np.float32)
+        _WORKER["dagger_feat_std"] = np.array(dagger_ckpt["feat_std"], dtype=np.float32)
+    else:
+        _WORKER["dagger_model"] = None
+
 
 def _run_triple(task: StressTask) -> StressResult:
     import sys, math
@@ -136,12 +199,19 @@ def _run_triple(task: StressTask) -> StressResult:
     torch          = _WORKER["torch"]
     tok_model      = _WORKER["tok_model"]
     cont_model     = _WORKER["cont_model"]
+    rnn_model      = _WORKER["rnn_model"]
+    dagger_model   = _WORKER["dagger_model"]
     tok_feat_mean  = _WORKER["tok_feat_mean"]
     tok_feat_std   = _WORKER["tok_feat_std"]
     cont_feat_mean = _WORKER["cont_feat_mean"]
     cont_feat_std  = _WORKER["cont_feat_std"]
     cont_mean      = _WORKER["cont_mean"]
     cont_std       = _WORKER["cont_std"]
+    rnn_feat_mean  = _WORKER.get("rnn_feat_mean")
+    rnn_feat_std   = _WORKER.get("rnn_feat_std")
+    rnn_history_len = int(_WORKER.get("rnn_history_len", 8))
+    dagger_feat_mean = _WORKER.get("dagger_feat_mean")
+    dagger_feat_std = _WORKER.get("dagger_feat_std")
 
     from minimal_shot_av.simulator.compositional_scenarios import (
         generate_compositional_scenario,
@@ -223,6 +293,25 @@ def _run_triple(task: StressTask) -> StressResult:
         "nudge_left", "nudge_right", "evasive_left", "evasive_right", "lane_recover",
     ]
 
+    def token_candidate_action(
+        active_scenario,
+        position,
+        world_state,
+        perception,
+        speed_mps,
+        chosen_name: str,
+        mode_prefix: str,
+    ):
+        cfg = DEFAULT_SPOTLIGHT_CONFIG
+        heading = _planning_heading(position, world_state, perception, active_scenario, cfg)
+        candidates = {c.name: c for c in generate_maneuver_candidates(position, heading, speed_mps, cfg)}
+        candidate = candidates.get(chosen_name, candidates.get("maintain"))
+        next_pt = candidate.trajectory[cfg.trajectory.action_index]
+        vec = (next_pt[0] - position[0], next_pt[1] - position[1])
+        dist = math.hypot(*vec)
+        norm = (vec[0] / dist, vec[1] / dist) if dist > 1e-8 else (1.0, 0.0)
+        return PlannedAction(direction=norm, speed=dist, mode=f"{mode_prefix}:{chosen_name}", score=0.0), {}
+
     def token_bc_planner(active_scenario, position, world_state, perception, speed_mps, config):
         d = {
             "obstacle_pressure":    world_state.obstacle_pressure,
@@ -244,16 +333,88 @@ def _run_triple(task: StressTask) -> StressResult:
         with torch.no_grad():
             chosen_idx = int(tok_model(x).argmax(1).item())
         chosen_name = TOKEN_ORDER_LOCAL[chosen_idx]
+        return token_candidate_action(
+            active_scenario,
+            position,
+            world_state,
+            perception,
+            speed_mps,
+            chosen_name,
+            "token_bc",
+        )
 
-        cfg = DEFAULT_SPOTLIGHT_CONFIG
-        heading = _planning_heading(position, world_state, perception, active_scenario, cfg)
-        candidates = {c.name: c for c in generate_maneuver_candidates(position, heading, speed_mps, cfg)}
-        candidate = candidates.get(chosen_name, candidates.get("maintain"))
-        next_pt = candidate.trajectory[cfg.trajectory.action_index]
-        vec = (next_pt[0] - position[0], next_pt[1] - position[1])
-        dist = math.hypot(*vec)
-        norm = (vec[0] / dist, vec[1] / dist) if dist > 1e-8 else (1.0, 0.0)
-        return PlannedAction(direction=norm, speed=dist, mode=f"token_bc:{chosen_name}", score=0.0), {}
+    def dagger_bc_planner(active_scenario, position, world_state, perception, speed_mps, config):
+        if dagger_model is None or dagger_feat_mean is None or dagger_feat_std is None:
+            raise RuntimeError("Token-DAgger-BC model is not loaded")
+        d = {
+            "obstacle_pressure":    world_state.obstacle_pressure,
+            "route_blockage":       world_state.route_blockage,
+            "corridor_blocked":     world_state.corridor_blocked,
+            "left_clearance":       getattr(world_state, "left_clearance", 20.0),
+            "right_clearance":      getattr(world_state, "right_clearance", 20.0),
+            "preferred_escape_side": getattr(world_state, "preferred_escape_side", "balanced"),
+            "speed":                speed_mps,
+            "lane_error":           perception.lane_error,
+            "uncertainty":          max(world_state.uncertainty, perception.uncertainty),
+            "min_obstacle_distance": min(
+                (getattr(o, "signed_distance", 20.0) for o in perception.visible_obstacles),
+                default=20.0,
+            ),
+        }
+        feats = extract_features(d)
+        x = torch.from_numpy((feats - dagger_feat_mean) / dagger_feat_std).unsqueeze(0)
+        with torch.no_grad():
+            chosen_idx = int(dagger_model(x).argmax(1).item())
+        chosen_name = TOKEN_ORDER_LOCAL[chosen_idx]
+        return token_candidate_action(
+            active_scenario,
+            position,
+            world_state,
+            perception,
+            speed_mps,
+            chosen_name,
+            "token_dagger_bc",
+        )
+
+    rnn_history: list[np.ndarray] = []
+
+    def token_rnn_bc_planner(active_scenario, position, world_state, perception, speed_mps, config):
+        if rnn_model is None or rnn_feat_mean is None or rnn_feat_std is None:
+            raise RuntimeError("Token-RNN-BC model is not loaded")
+        d = {
+            "obstacle_pressure":    world_state.obstacle_pressure,
+            "route_blockage":       world_state.route_blockage,
+            "corridor_blocked":     world_state.corridor_blocked,
+            "left_clearance":       getattr(world_state, "left_clearance", 20.0),
+            "right_clearance":      getattr(world_state, "right_clearance", 20.0),
+            "preferred_escape_side": getattr(world_state, "preferred_escape_side", "balanced"),
+            "speed":                speed_mps,
+            "lane_error":           perception.lane_error,
+            "uncertainty":          max(world_state.uncertainty, perception.uncertainty),
+            "min_obstacle_distance": min(
+                (getattr(o, "signed_distance", 20.0) for o in perception.visible_obstacles),
+                default=20.0,
+            ),
+        }
+        feats = extract_features(d)
+        norm_feats = ((feats - rnn_feat_mean) / rnn_feat_std).astype(np.float32)
+        rnn_history.append(norm_feats)
+        history = rnn_history[-rnn_history_len:]
+        if len(history) < rnn_history_len:
+            history = [history[0]] * (rnn_history_len - len(history)) + history
+        x = torch.from_numpy(np.stack(history, axis=0)).unsqueeze(0)
+        with torch.no_grad():
+            chosen_idx = int(rnn_model(x).argmax(1).item())
+        chosen_name = TOKEN_ORDER_LOCAL[chosen_idx]
+        return token_candidate_action(
+            active_scenario,
+            position,
+            world_state,
+            perception,
+            speed_mps,
+            chosen_name,
+            "token_rnn_bc",
+        )
 
     def continuous_bc_planner(active_scenario, position, world_state, perception, speed_mps, config):
         d = {
@@ -305,12 +466,18 @@ def _run_triple(task: StressTask) -> StressResult:
 
     rb = run_with_planner(scenario, token_bc_planner)
     ra = run_with_planner(scenario, continuous_bc_planner)
+    rrnn = run_with_planner(scenario, token_rnn_bc_planner) if rnn_model is not None else None
+    rdagger = run_with_planner(scenario, dagger_bc_planner) if dagger_model is not None else None
 
     return StressResult(
         corridor_idx=task.corridor_idx,
         pressure_idx=task.pressure_idx,
         continuous_passed=ra.success,   continuous_collision=is_collision(ra),
         token_passed=rb.success,        token_collision=is_collision(rb),
+        token_rnn_passed=rrnn.success if rrnn is not None else None,
+        token_rnn_collision=is_collision(rrnn) if rrnn is not None else None,
+        token_dagger_passed=rdagger.success if rdagger is not None else None,
+        token_dagger_collision=is_collision(rdagger) if rdagger is not None else None,
         spotlight_passed=rs.success,    spotlight_collision=is_collision(rs),
     )
 
@@ -334,8 +501,9 @@ def main() -> None:
     ]
     n_cells = len(CORRIDOR_LEVELS) * len(PRESSURE_LEVELS)
     n_per_cell = N_GAUNTLET_CASES * N_SEEDS
-    print(f"Stress-test phase diagram: {n_cells} cells × {n_per_cell} rollouts × 3 agents")
-    print(f"Total: {len(tasks) * 3:,} rollouts ({N_WORKERS} workers)…\n")
+    n_agents = 5
+    print(f"Stress-test phase diagram: {n_cells} cells × {n_per_cell} rollouts × {n_agents} agents")
+    print(f"Total: {len(tasks) * n_agents:,} rollouts ({N_WORKERS} workers)…\n")
 
     with multiprocessing.Pool(
         N_WORKERS,
@@ -346,9 +514,9 @@ def main() -> None:
 
     output: dict[str, Any] = {}
     hdr = f"{'Corridor':<10} {'Pressure':<7}  {'N':>4}"
-    hdr += f"  {'ContBC coll%':>12}  {'TokBC coll%':>11}  {'SR coll%':>9}  {'ΔTok-SR':>8}"
+    hdr += f"  {'ContBC':>11}  {'TokBC':>11}  {'TokRNN':>11}  {'TokDag':>11}  {'SR':>9}"
     print(hdr)
-    print("─" * 80)
+    print("─" * len(hdr))
 
     phase: list[dict] = []
     for ci, (cname, cap) in enumerate(CORRIDOR_LEVELS):
@@ -357,13 +525,19 @@ def main() -> None:
             n = len(sr)
             cont_coll = sum(r.continuous_collision for r in sr)
             tok_coll  = sum(r.token_collision     for r in sr)
+            rnn_coll  = sum(bool(r.token_rnn_collision) for r in sr if r.token_rnn_collision is not None)
+            dagger_coll = sum(bool(r.token_dagger_collision) for r in sr if r.token_dagger_collision is not None)
             spot_coll = sum(r.spotlight_collision  for r in sr)
             cont_pass = sum(r.continuous_passed    for r in sr)
             tok_pass  = sum(r.token_passed         for r in sr)
+            rnn_pass  = sum(bool(r.token_rnn_passed) for r in sr if r.token_rnn_passed is not None)
+            dagger_pass = sum(bool(r.token_dagger_passed) for r in sr if r.token_dagger_passed is not None)
             spot_pass = sum(r.spotlight_passed     for r in sr)
 
             cont_c_lo, cont_c_hi = wilson_ci(cont_coll, n)
             tok_c_lo,  tok_c_hi  = wilson_ci(tok_coll,  n)
+            rnn_c_lo,  rnn_c_hi  = wilson_ci(rnn_coll,  n)
+            dagger_c_lo, dagger_c_hi = wilson_ci(dagger_coll, n)
             spot_c_lo, spot_c_hi = wilson_ci(spot_coll, n)
 
             delta_tok = tok_coll/n - spot_coll/n  # positive = BC worse
@@ -372,8 +546,9 @@ def main() -> None:
                 f"  {cname:<9} {pname:<7}  {n:>4}"
                 f"  {cont_coll/n*100:>5.1f}% [{cont_c_lo*100:.1f},{cont_c_hi*100:.1f}]"
                 f"  {tok_coll/n*100:>5.1f}% [{tok_c_lo*100:.1f},{tok_c_hi*100:.1f}]"
+                f"  {rnn_coll/n*100:>5.1f}% [{rnn_c_lo*100:.1f},{rnn_c_hi*100:.1f}]"
+                f"  {dagger_coll/n*100:>5.1f}% [{dagger_c_lo*100:.1f},{dagger_c_hi*100:.1f}]"
                 f"  {spot_coll/n*100:>5.1f}% [{spot_c_lo*100:.1f},{spot_c_hi*100:.1f}]"
-                f"  Δ={delta_tok*100:+.1f}pp"
             )
             phase.append({
                 "corridor": cname, "half_width_cap": list(cap),
@@ -391,6 +566,18 @@ def main() -> None:
                     "collision_rate": round(tok_coll/n*100, 1),
                     "coll_ci95": [round(tok_c_lo*100, 1), round(tok_c_hi*100, 1)],
                 },
+                "token_rnn_bc": {
+                    "passes": rnn_pass, "collisions": rnn_coll,
+                    "pass_rate": round(rnn_pass/n*100, 1),
+                    "collision_rate": round(rnn_coll/n*100, 1),
+                    "coll_ci95": [round(rnn_c_lo*100, 1), round(rnn_c_hi*100, 1)],
+                },
+                "token_dagger_bc": {
+                    "passes": dagger_pass, "collisions": dagger_coll,
+                    "pass_rate": round(dagger_pass/n*100, 1),
+                    "collision_rate": round(dagger_coll/n*100, 1),
+                    "coll_ci95": [round(dagger_c_lo*100, 1), round(dagger_c_hi*100, 1)],
+                },
                 "spotlight": {
                     "passes": spot_pass, "collisions": spot_coll,
                     "pass_rate": round(spot_pass/n*100, 1),
@@ -398,6 +585,8 @@ def main() -> None:
                     "coll_ci95": [round(spot_c_lo*100, 1), round(spot_c_hi*100, 1)],
                 },
                 "delta_tok_bc_minus_spotlight_pp": round(delta_tok*100, 2),
+                "delta_token_rnn_bc_minus_spotlight_pp": round((rnn_coll/n - spot_coll/n) * 100, 2),
+                "delta_token_dagger_bc_minus_spotlight_pp": round((dagger_coll/n - spot_coll/n) * 100, 2),
             })
 
     output = {

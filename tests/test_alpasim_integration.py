@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from pathlib import Path
@@ -7,6 +8,7 @@ import sys
 import unittest
 
 import numpy as np
+import torch
 
 from tests.pyproject_helpers import load_string_tables
 
@@ -18,6 +20,7 @@ if str(SRC) not in sys.path:
 from minimal_shot_av.neutral.alpasim_metrics import build_alpasim_evidence, load_alpasim_metrics
 from minimal_shot_av.simulator.alpasim_signal import extract_alpasim_signal, scenario_from_command
 from minimal_shot_av.simulator.alpasim_spotlight import DriveCommand, SpotlightReflexAlpaSimModel
+from minimal_shot_av.simulator.alpasim_token_bc import TOKEN_ORDER, TokenBCAlpaSimModel, _GeomMLP
 
 
 class AlpaSimIntegrationTests(unittest.TestCase):
@@ -26,6 +29,10 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertEqual(
             pyproject['project.entry-points."alpasim.models"']["spotlight_reflex"],
             "minimal_shot_av.simulator.alpasim_spotlight:SpotlightReflexAlpaSimModel",
+        )
+        self.assertEqual(
+            pyproject['project.entry-points."alpasim.models"']["token_dagger_bc"],
+            "minimal_shot_av.simulator.alpasim_token_bc:TokenBCAlpaSimModel",
         )
         self.assertEqual(
             pyproject['project.entry-points."alpasim.configs"']["spotlight_reflex"],
@@ -37,6 +44,21 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         config = config_path.read_text()
         self.assertIn("model_type: spotlight_reflex", config)
         self.assertIn("output_frequency_hz: 4", config)
+
+    def test_alpasim_token_dagger_configs_exist_and_default_to_cuda(self) -> None:
+        for name in (
+            "token_dagger_bc.yaml",
+            "token_dagger_srcdecay.yaml",
+            "token_dagger_bc_clamped.yaml",
+            "token_dagger_srcdecay_clamped.yaml",
+        ):
+            config_path = Path("src/minimal_shot_av/simulator/alpasim_configs/driver") / name
+            config = config_path.read_text()
+            self.assertIn("model_type: token_dagger_bc", config)
+            self.assertIn('device: "cuda"', config)
+            if name.endswith("_clamped.yaml"):
+                self.assertNotIn("trajectory_mode:", config)
+                self.assertNotIn("max_lateral_offset_m:", config)
 
     def test_alpasim_signal_uses_structured_hazards(self) -> None:
         prediction_input = SimpleNamespace(
@@ -306,6 +328,285 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertIn('"route_blockage"', reasoning)
         self.assertIn('"preferred_escape_side"', reasoning)
         self.assertIn('"obstacle_pressure"', reasoning)
+
+    def test_token_bc_alpasim_adapter_loads_checkpoint_and_predicts(self) -> None:
+        with TemporaryDirectory() as tmp:
+            checkpoint_path = Path(tmp) / "token_dagger_bc.pt"
+            model = _GeomMLP(len(TOKEN_ORDER))
+            for parameter in model.parameters():
+                parameter.data.zero_()
+            last_linear = [module for module in model.modules() if isinstance(module, torch.nn.Linear)][-1]
+            last_linear.bias.data[TOKEN_ORDER.index("maintain")] = 5.0
+            torch.save(
+                {
+                    "state_dict": model.state_dict(),
+                    "feat_mean": np.zeros(10, dtype=np.float32),
+                    "feat_std": np.ones(10, dtype=np.float32),
+                    "token_names": list(TOKEN_ORDER),
+                },
+                checkpoint_path,
+            )
+
+            adapter = TokenBCAlpaSimModel(
+                checkpoint_path=checkpoint_path,
+                device="cpu",
+                camera_ids=["front"],
+                context_length=1,
+                output_frequency_hz=4,
+            )
+            prediction_input = SimpleNamespace(
+                camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                command=DriveCommand.STRAIGHT,
+                speed=6.0,
+                acceleration=0.0,
+                ego_pose_history=[],
+            )
+            prediction = adapter.predict(prediction_input)
+
+        self.assertEqual((20, 2), prediction.trajectory_xy.shape)
+        self.assertEqual((20,), prediction.headings.shape)
+        self.assertIsNotNone(prediction.reasoning_text)
+        assert prediction.reasoning_text is not None
+        self.assertIn('"selected_maneuver": "maintain"', prediction.reasoning_text)
+
+    def test_token_bc_alpasim_adapter_can_clamp_lateral_token_geometry(self) -> None:
+        with TemporaryDirectory() as tmp:
+            checkpoint_path = Path(tmp) / "token_dagger_bc.pt"
+            model = _GeomMLP(len(TOKEN_ORDER))
+            for parameter in model.parameters():
+                parameter.data.zero_()
+            last_linear = [module for module in model.modules() if isinstance(module, torch.nn.Linear)][-1]
+            last_linear.bias.data[TOKEN_ORDER.index("evasive_left")] = 5.0
+            torch.save(
+                {
+                    "state_dict": model.state_dict(),
+                    "feat_mean": np.zeros(10, dtype=np.float32),
+                    "feat_std": np.ones(10, dtype=np.float32),
+                    "token_names": list(TOKEN_ORDER),
+                },
+                checkpoint_path,
+            )
+            prediction_input = SimpleNamespace(
+                camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                command=DriveCommand.STRAIGHT,
+                speed=10.0,
+                acceleration=0.0,
+                ego_pose_history=[],
+            )
+            raw_adapter = TokenBCAlpaSimModel(
+                checkpoint_path=checkpoint_path,
+                device="cpu",
+                camera_ids=["front"],
+                context_length=1,
+                output_frequency_hz=4,
+                trajectory_mode="token",
+            )
+            clamped_adapter = TokenBCAlpaSimModel(
+                checkpoint_path=checkpoint_path,
+                device="cpu",
+                camera_ids=["front"],
+                context_length=1,
+                output_frequency_hz=4,
+                trajectory_mode="clamped_lateral",
+                max_lateral_offset_m=2.0,
+            )
+
+            raw_prediction = raw_adapter.predict(prediction_input)
+            clamped_prediction = clamped_adapter.predict(prediction_input)
+
+        self.assertGreater(float(raw_prediction.trajectory_xy[:, 1].max()), 6.0)
+        self.assertLessEqual(float(clamped_prediction.trajectory_xy[:, 1].max()), 2.05)
+        self.assertIn('"trajectory_mode": "clamped_lateral"', clamped_prediction.reasoning_text or "")
+
+    def test_token_bc_alpasim_adapter_hybrid_logs_selection_trace(self) -> None:
+        with TemporaryDirectory() as tmp:
+            checkpoint_path = Path(tmp) / "token_dagger_bc.pt"
+            selection_log_path = Path(tmp) / "selection-log.jsonl"
+            model = _GeomMLP(len(TOKEN_ORDER))
+            for parameter in model.parameters():
+                parameter.data.zero_()
+            last_linear = [module for module in model.modules() if isinstance(module, torch.nn.Linear)][-1]
+            last_linear.bias.data[TOKEN_ORDER.index("evasive_left")] = 5.0
+            last_linear.bias.data[TOKEN_ORDER.index("maintain")] = 4.95
+            torch.save(
+                {
+                    "state_dict": model.state_dict(),
+                    "feat_mean": np.zeros(10, dtype=np.float32),
+                    "feat_std": np.ones(10, dtype=np.float32),
+                    "token_names": list(TOKEN_ORDER),
+                },
+                checkpoint_path,
+            )
+
+            adapter = TokenBCAlpaSimModel(
+                checkpoint_path=checkpoint_path,
+                device="cpu",
+                camera_ids=["front"],
+                context_length=1,
+                output_frequency_hz=4,
+                selection_mode="hybrid_veto",
+                hybrid_top_k=2,
+                hybrid_geometric_weight=20.0,
+                selection_log_path=selection_log_path,
+            )
+            prediction_input = SimpleNamespace(
+                camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                command=DriveCommand.STRAIGHT,
+                speed=6.0,
+                acceleration=0.0,
+                ego_pose_history=[],
+                scene_id="clipgt-test-scene",
+            )
+
+            prediction = adapter.predict(prediction_input)
+            reasoning_payload = json.loads(prediction.reasoning_text or "{}")
+            trace = reasoning_payload["selection_trace"]
+            self.assertEqual("hybrid_veto", reasoning_payload["selection_mode"])
+            self.assertEqual("evasive_left", trace["dagger_argmax_token"])
+            self.assertEqual("maintain", trace["hybrid_token"])
+            self.assertEqual("maintain", trace["spotlight_token"])
+            self.assertTrue(selection_log_path.is_file())
+            records = [json.loads(line) for line in selection_log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+            self.assertEqual(1, len(records))
+            self.assertEqual("clipgt-test-scene", records[0]["scene_id"])
+            self.assertEqual("evasive_left", records[0]["dagger_argmax_token"])
+            self.assertEqual("maintain", records[0]["hybrid_token"])
+            self.assertEqual("spotlight_wins", records[0]["decision_type"])
+
+    def test_token_bc_alpasim_adapter_hard_veto_suppresses_bad_argmax(self) -> None:
+        with TemporaryDirectory() as tmp:
+            checkpoint_path = Path(tmp) / "token_dagger_bc.pt"
+            selection_log_path = Path(tmp) / "selection-log.jsonl"
+            model = _GeomMLP(len(TOKEN_ORDER))
+            for parameter in model.parameters():
+                parameter.data.zero_()
+            last_linear = [module for module in model.modules() if isinstance(module, torch.nn.Linear)][-1]
+            last_linear.bias.data[TOKEN_ORDER.index("evasive_left")] = 5.0
+            last_linear.bias.data[TOKEN_ORDER.index("maintain")] = 4.95
+            torch.save(
+                {
+                    "state_dict": model.state_dict(),
+                    "feat_mean": np.zeros(10, dtype=np.float32),
+                    "feat_std": np.ones(10, dtype=np.float32),
+                    "token_names": list(TOKEN_ORDER),
+                },
+                checkpoint_path,
+            )
+
+            adapter = TokenBCAlpaSimModel(
+                checkpoint_path=checkpoint_path,
+                device="cpu",
+                camera_ids=["front"],
+                context_length=1,
+                output_frequency_hz=4,
+                selection_mode="hybrid_veto",
+                hybrid_top_k=2,
+                hybrid_geometric_weight=0.0,
+                hybrid_veto_margin=0.0,
+                hybrid_max_geometric_rank=1,
+                selection_log_path=selection_log_path,
+            )
+            prediction_input = SimpleNamespace(
+                camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                command=DriveCommand.STRAIGHT,
+                speed=6.0,
+                acceleration=0.0,
+                ego_pose_history=[],
+                scene_id="clipgt-hard-veto",
+            )
+
+            prediction = adapter.predict(prediction_input)
+            trace = json.loads(prediction.reasoning_text or "{}")["selection_trace"]
+            records = [
+                json.loads(line)
+                for line in selection_log_path.read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
+
+        self.assertEqual("evasive_left", trace["dagger_argmax_token"])
+        self.assertEqual("maintain", trace["hybrid_token"])
+        self.assertTrue(trace["dagger_argmax_vetoed"])
+        self.assertFalse(trace["used_fallback_geometric"])
+        self.assertIn(trace["veto_reason"], {"geometric_gap", "geometric_rank"})
+        self.assertEqual(1, trace["max_geometric_rank"])
+        self.assertEqual(0.0, trace["veto_margin"])
+        self.assertNotIn("evasive_left", trace["safe_topk_tokens"])
+        self.assertIn("maintain", trace["safe_topk_tokens"])
+        self.assertTrue(any(row["token"] == "evasive_left" for row in trace["vetoed_tokens"]))
+        self.assertEqual(1, len(records))
+        self.assertEqual("clipgt-hard-veto", records[0]["scene_id"])
+        self.assertTrue(records[0]["dagger_argmax_vetoed"])
+        self.assertIn(records[0]["veto_reason"], {"geometric_gap", "geometric_rank"})
+
+    def test_token_bc_alpasim_adapter_hard_veto_logs_geometric_fallback(self) -> None:
+        with TemporaryDirectory() as tmp:
+            checkpoint_path = Path(tmp) / "token_dagger_bc.pt"
+            model = _GeomMLP(len(TOKEN_ORDER))
+            for parameter in model.parameters():
+                parameter.data.zero_()
+            last_linear = [module for module in model.modules() if isinstance(module, torch.nn.Linear)][-1]
+            last_linear.bias.data[TOKEN_ORDER.index("evasive_left")] = 5.0
+            torch.save(
+                {
+                    "state_dict": model.state_dict(),
+                    "feat_mean": np.zeros(10, dtype=np.float32),
+                    "feat_std": np.ones(10, dtype=np.float32),
+                    "token_names": list(TOKEN_ORDER),
+                },
+                checkpoint_path,
+            )
+            adapter = TokenBCAlpaSimModel(
+                checkpoint_path=checkpoint_path,
+                device="cpu",
+                camera_ids=["front"],
+                context_length=1,
+                output_frequency_hz=4,
+                selection_mode="hybrid_veto",
+                hybrid_top_k=1,
+                hybrid_veto_margin=0.0,
+                hybrid_max_geometric_rank=1,
+            )
+            prediction_input = SimpleNamespace(
+                camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                command=DriveCommand.STRAIGHT,
+                speed=6.0,
+                acceleration=0.0,
+                ego_pose_history=[],
+            )
+
+            prediction = adapter.predict(prediction_input)
+            trace = json.loads(prediction.reasoning_text or "{}")["selection_trace"]
+
+        self.assertEqual("evasive_left", trace["dagger_argmax_token"])
+        self.assertEqual("maintain", trace["hybrid_token"])
+        self.assertTrue(trace["dagger_argmax_vetoed"])
+        self.assertTrue(trace["used_fallback_geometric"])
+        self.assertEqual("fallback_geometric", trace["decision_type"])
+
+    def test_token_bc_alpasim_adapter_rejects_unknown_checkpoint_tokens(self) -> None:
+        with TemporaryDirectory() as tmp:
+            checkpoint_path = Path(tmp) / "bad_token_dagger_bc.pt"
+            model = _GeomMLP(len(TOKEN_ORDER))
+            bad_tokens = list(TOKEN_ORDER)
+            bad_tokens[TOKEN_ORDER.index("maintain")] = "unknown_token"
+            torch.save(
+                {
+                    "state_dict": model.state_dict(),
+                    "feat_mean": np.zeros(10, dtype=np.float32),
+                    "feat_std": np.ones(10, dtype=np.float32),
+                    "token_names": bad_tokens,
+                },
+                checkpoint_path,
+            )
+
+            with self.assertRaisesRegex(ValueError, "token_names do not match"):
+                TokenBCAlpaSimModel(
+                    checkpoint_path=checkpoint_path,
+                    device="cpu",
+                    camera_ids=["front"],
+                    context_length=1,
+                    output_frequency_hz=4,
+                )
 
     def test_imports_alpasim_aggregate_text_metrics(self) -> None:
         with TemporaryDirectory() as tmp:
