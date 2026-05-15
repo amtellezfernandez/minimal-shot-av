@@ -207,9 +207,22 @@ def _bootstrap_alpasim_venv(alpasim_root: Path, *, uv_bin: str) -> None:
 
 
 def _plugin_names(venv_python: Path) -> list[str]:
-    script = (
-        "from importlib.metadata import entry_points; "
-        "print('\\n'.join(sorted(ep.name for ep in entry_points(group='alpasim.models'))))"
+    script = "\n".join(
+        [
+            "from importlib.metadata import entry_points",
+            "import sys",
+            "names = []",
+            "failures = []",
+            "for ep in sorted(entry_points(group='alpasim.models'), key=lambda item: item.name):",
+            "    try:",
+            "        ep.load()",
+            "        names.append(ep.name)",
+            "    except Exception as exc:",
+            "        failures.append(f'{ep.name}: {exc}')",
+            "if failures:",
+            "    sys.stderr.write('Skipped unloadable model entry points:\\n' + '\\n'.join(failures) + '\\n')",
+            "print('\\n'.join(names))",
+        ]
     )
     result = _run([str(venv_python), "-c", script], cwd=ROOT, capture_output=True)
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
