@@ -18,6 +18,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ALPASIM_ROOT = ROOT / "alpasim"
 DEFAULT_RUNS_ROOT = ROOT / "runs"
+SCENE_PRESET_ROOT = ROOT / "src" / "minimal_shot_av" / "simulator" / "alpasim_scene_presets"
 
 MODEL_PRESETS = {
     "spotlight_reflex": {
@@ -143,15 +144,9 @@ MODEL_PRESETS = {
 }
 
 SCENE_PRESETS = {
-    "fresh_3scene": ROOT / "runs" / "spotlight_reflex_fresh_3scene" / "wizard-config.yaml",
-    "front_camera_10scene_smoke": ROOT
-    / "runs"
-    / "spotlight_reflex_front_camera_10scene_smoke"
-    / "wizard-config.yaml",
-    "front_camera_30scene_merged": ROOT
-    / "runs"
-    / "spotlight_reflex_front_camera_30scene_merged_serial"
-    / "wizard-config.yaml",
+    "fresh_3scene": SCENE_PRESET_ROOT / "fresh_3scene.yaml",
+    "front_camera_10scene_smoke": SCENE_PRESET_ROOT / "front_camera_10scene_smoke.yaml",
+    "front_camera_30scene_merged": SCENE_PRESET_ROOT / "front_camera_30scene_merged.yaml",
 }
 
 

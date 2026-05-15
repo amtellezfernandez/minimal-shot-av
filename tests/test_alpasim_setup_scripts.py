@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from scripts.run_alpasim_local_external import _resolve_alpasim_root as resolve_run_root
 from scripts.run_alpasim_local_external import _driver_command, _wizard_command
+from scripts.run_alpasim_local_external import _scene_ids
 from scripts.setup_alpasim_local_plugin import (
     _apply_local_alpasim_overrides,
     _bootstrap_alpasim_venv,
@@ -135,3 +136,7 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
         )
         self.assertEqual("/tmp/alpasim/.venv/bin/alpasim_wizard", cmd[0])
         self.assertIn("deploy=local_external_driver", cmd)
+
+    def test_repo_tracked_scene_preset_is_loadable(self) -> None:
+        scene_ids = _scene_ids("fresh_3scene", [])
+        self.assertEqual(3, len(scene_ids))
