@@ -56,23 +56,43 @@
       "pressure_mult": 1.0,
       "n": 720,
       "continuous_bc": {
-        "passes": 555,
-        "collisions": 31,
-        "pass_rate": 77.1,
-        "collision_rate": 4.3,
+        "passes": 553,
+        "collisions": 36,
+        "pass_rate": 76.8,
+        "collision_rate": 5.0,
         "coll_ci95": [
-          3.0,
-          6.0
+          3.6,
+          6.8
         ]
       },
       "token_bc": {
-        "passes": 555,
+        "passes": 553,
         "collisions": 28,
-        "pass_rate": 77.1,
+        "pass_rate": 76.8,
         "collision_rate": 3.9,
         "coll_ci95": [
           2.7,
           5.6
+        ]
+      },
+      "token_rnn_bc": {
+        "passes": 571,
+        "collisions": 22,
+        "pass_rate": 79.3,
+        "collision_rate": 3.1,
+        "coll_ci95": [
+          2.0,
+          4.6
+        ]
+      },
+      "token_dagger_bc": {
+        "passes": 705,
+        "collisions": 1,
+        "pass_rate": 97.9,
+        "collision_rate": 0.1,
+        "coll_ci95": [
+          0.0,
+          0.8
         ]
       },
       "spotlight": {
@@ -85,7 +105,9 @@
           0.5
         ]
       },
-      "delta_tok_bc_minus_spotlight_pp": 3.89
+      "delta_tok_bc_minus_spotlight_pp": 3.89,
+      "delta_token_rnn_bc_minus_spotlight_pp": 3.06,
+      "delta_token_dagger_bc_minus_spotlight_pp": 0.14
     },
     {
       "corridor": "wide",
@@ -97,9 +119,9 @@
       "pressure_mult": 1.5,
       "n": 720,
       "continuous_bc": {
-        "passes": 597,
+        "passes": 594,
         "collisions": 27,
-        "pass_rate": 82.9,
+        "pass_rate": 82.5,
         "collision_rate": 3.8,
         "coll_ci95": [
           2.6,
@@ -107,13 +129,33 @@
         ]
       },
       "token_bc": {
-        "passes": 602,
+        "passes": 596,
+        "collisions": 24,
+        "pass_rate": 82.8,
+        "collision_rate": 3.3,
+        "coll_ci95": [
+          2.3,
+          4.9
+        ]
+      },
+      "token_rnn_bc": {
+        "passes": 609,
         "collisions": 23,
-        "pass_rate": 83.6,
+        "pass_rate": 84.6,
         "collision_rate": 3.2,
         "coll_ci95": [
           2.1,
           4.7
+        ]
+      },
+      "token_dagger_bc": {
+        "passes": 698,
+        "collisions": 4,
+        "pass_rate": 96.9,
+        "collision_rate": 0.6,
+        "coll_ci95": [
+          0.2,
+          1.4
         ]
       },
       "spotlight": {
@@ -126,7 +168,9 @@
           1.2
         ]
       },
-      "delta_tok_bc_minus_spotlight_pp": 2.78
+      "delta_tok_bc_minus_spotlight_pp": 2.92,
+      "delta_token_rnn_bc_minus_spotlight_pp": 2.78,
+      "delta_token_dagger_bc_minus_spotlight_pp": 0.14
     },
     {
       "corridor": "wide",
@@ -138,23 +182,43 @@
       "pressure_mult": 2.0,
       "n": 720,
       "continuous_bc": {
-        "passes": 618,
-        "collisions": 20,
-        "pass_rate": 85.8,
-        "collision_rate": 2.8,
+        "passes": 619,
+        "collisions": 17,
+        "pass_rate": 86.0,
+        "collision_rate": 2.4,
         "coll_ci95": [
-          1.8,
-          4.3
+          1.5,
+          3.7
         ]
       },
       "token_bc": {
-        "passes": 616,
-        "collisions": 16,
-        "pass_rate": 85.6,
-        "collision_rate": 2.2,
+        "passes": 613,
+        "collisions": 17,
+        "pass_rate": 85.1,
+        "collision_rate": 2.4,
         "coll_ci95": [
-          1.4,
-          3.6
+          1.5,
+          3.7
+        ]
+      },
+      "token_rnn_bc": {
+        "passes": 626,
+        "collisions": 13,
+        "pass_rate": 86.9,
+        "collision_rate": 1.8,
+        "coll_ci95": [
+          1.1,
+          3.1
+        ]
+      },
+      "token_dagger_bc": {
+        "passes": 704,
+        "collisions": 2,
+        "pass_rate": 97.8,
+        "collision_rate": 0.3,
+        "coll_ci95": [
+          0.1,
+          1.0
         ]
       },
       "spotlight": {
@@ -167,7 +231,9 @@
           0.5
         ]
       },
-      "delta_tok_bc_minus_spotlight_pp": 2.22
+      "delta_tok_bc_minus_spotlight_pp": 2.36,
+      "delta_token_rnn_bc_minus_spotlight_pp": 1.81,
+      "delta_token_dagger_bc_minus_spotlight_pp": 0.28
     },
     {
       "corridor": "medium",
@@ -179,23 +245,43 @@
       "pressure_mult": 1.0,
       "n": 720,
       "continuous_bc": {
-        "passes": 580,
-        "collisions": 30,
-        "pass_rate": 80.6,
-        "collision_rate": 4.2,
+        "passes": 584,
+        "collisions": 39,
+        "pass_rate": 81.1,
+        "collision_rate": 5.4,
         "coll_ci95": [
-          2.9,
-          5.9
+          4.0,
+          7.3
         ]
       },
       "token_bc": {
-        "passes": 581,
-        "collisions": 26,
-        "pass_rate": 80.7,
-        "collision_rate": 3.6,
+        "passes": 580,
+        "collisions": 22,
+        "pass_rate": 80.6,
+        "collision_rate": 3.1,
         "coll_ci95": [
-          2.5,
-          5.2
+          2.0,
+          4.6
+        ]
+      },
+      "token_rnn_bc": {
+        "passes": 591,
+        "collisions": 16,
+        "pass_rate": 82.1,
+        "collision_rate": 2.2,
+        "coll_ci95": [
+          1.4,
+          3.6
+        ]
+      },
+      "token_dagger_bc": {
+        "passes": 707,
+        "collisions": 4,
+        "pass_rate": 98.2,
+        "collision_rate": 0.6,
+        "coll_ci95": [
+          0.2,
+          1.4
         ]
       },
       "spotlight": {
@@ -208,7 +294,9 @@
           0.8
         ]
       },
-      "delta_tok_bc_minus_spotlight_pp": 3.47
+      "delta_tok_bc_minus_spotlight_pp": 2.92,
+      "delta_token_rnn_bc_minus_spotlight_pp": 2.08,
+      "delta_token_dagger_bc_minus_spotlight_pp": 0.42
     },
     {
       "corridor": "medium",
@@ -220,23 +308,43 @@
       "pressure_mult": 1.5,
       "n": 720,
       "continuous_bc": {
-        "passes": 609,
-        "collisions": 20,
-        "pass_rate": 84.6,
-        "collision_rate": 2.8,
+        "passes": 612,
+        "collisions": 27,
+        "pass_rate": 85.0,
+        "collision_rate": 3.8,
         "coll_ci95": [
-          1.8,
-          4.3
+          2.6,
+          5.4
         ]
       },
       "token_bc": {
-        "passes": 610,
-        "collisions": 26,
-        "pass_rate": 84.7,
-        "collision_rate": 3.6,
+        "passes": 615,
+        "collisions": 24,
+        "pass_rate": 85.4,
+        "collision_rate": 3.3,
         "coll_ci95": [
-          2.5,
-          5.2
+          2.3,
+          4.9
+        ]
+      },
+      "token_rnn_bc": {
+        "passes": 611,
+        "collisions": 22,
+        "pass_rate": 84.9,
+        "collision_rate": 3.1,
+        "coll_ci95": [
+          2.0,
+          4.6
+        ]
+      },
+      "token_dagger_bc": {
+        "passes": 688,
+        "collisions": 4,
+        "pass_rate": 95.6,
+        "collision_rate": 0.6,
+        "coll_ci95": [
+          0.2,
+          1.4
         ]
       },
       "spotlight": {
@@ -249,7 +357,9 @@
           0.8
         ]
       },
-      "delta_tok_bc_minus_spotlight_pp": 3.47
+      "delta_tok_bc_minus_spotlight_pp": 3.19,
+      "delta_token_rnn_bc_minus_spotlight_pp": 2.92,
+      "delta_token_dagger_bc_minus_spotlight_pp": 0.42
     },
     {
       "corridor": "medium",
@@ -261,23 +371,43 @@
       "pressure_mult": 2.0,
       "n": 720,
       "continuous_bc": {
-        "passes": 632,
+        "passes": 622,
+        "collisions": 19,
+        "pass_rate": 86.4,
+        "collision_rate": 2.6,
+        "coll_ci95": [
+          1.7,
+          4.1
+        ]
+      },
+      "token_bc": {
+        "passes": 622,
         "collisions": 20,
-        "pass_rate": 87.8,
+        "pass_rate": 86.4,
         "collision_rate": 2.8,
         "coll_ci95": [
           1.8,
           4.3
         ]
       },
-      "token_bc": {
-        "passes": 626,
-        "collisions": 20,
-        "pass_rate": 86.9,
-        "collision_rate": 2.8,
+      "token_rnn_bc": {
+        "passes": 629,
+        "collisions": 15,
+        "pass_rate": 87.4,
+        "collision_rate": 2.1,
         "coll_ci95": [
-          1.8,
-          4.3
+          1.3,
+          3.4
+        ]
+      },
+      "token_dagger_bc": {
+        "passes": 700,
+        "collisions": 4,
+        "pass_rate": 97.2,
+        "collision_rate": 0.6,
+        "coll_ci95": [
+          0.2,
+          1.4
         ]
       },
       "spotlight": {
@@ -290,7 +420,9 @@
           0.5
         ]
       },
-      "delta_tok_bc_minus_spotlight_pp": 2.78
+      "delta_tok_bc_minus_spotlight_pp": 2.78,
+      "delta_token_rnn_bc_minus_spotlight_pp": 2.08,
+      "delta_token_dagger_bc_minus_spotlight_pp": 0.56
     },
     {
       "corridor": "narrow",
@@ -302,23 +434,43 @@
       "pressure_mult": 1.0,
       "n": 720,
       "continuous_bc": {
-        "passes": 608,
-        "collisions": 40,
-        "pass_rate": 84.4,
-        "collision_rate": 5.6,
+        "passes": 611,
+        "collisions": 35,
+        "pass_rate": 84.9,
+        "collision_rate": 4.9,
         "coll_ci95": [
-          4.1,
-          7.5
+          3.5,
+          6.7
         ]
       },
       "token_bc": {
-        "passes": 598,
-        "collisions": 47,
-        "pass_rate": 83.1,
-        "collision_rate": 6.5,
+        "passes": 601,
+        "collisions": 48,
+        "pass_rate": 83.5,
+        "collision_rate": 6.7,
         "coll_ci95": [
-          4.9,
-          8.6
+          5.1,
+          8.7
+        ]
+      },
+      "token_rnn_bc": {
+        "passes": 596,
+        "collisions": 33,
+        "pass_rate": 82.8,
+        "collision_rate": 4.6,
+        "coll_ci95": [
+          3.3,
+          6.4
+        ]
+      },
+      "token_dagger_bc": {
+        "passes": 712,
+        "collisions": 2,
+        "pass_rate": 98.9,
+        "collision_rate": 0.3,
+        "coll_ci95": [
+          0.1,
+          1.0
         ]
       },
       "spotlight": {
@@ -331,7 +483,9 @@
           0.8
         ]
       },
-      "delta_tok_bc_minus_spotlight_pp": 6.39
+      "delta_tok_bc_minus_spotlight_pp": 6.53,
+      "delta_token_rnn_bc_minus_spotlight_pp": 4.44,
+      "delta_token_dagger_bc_minus_spotlight_pp": 0.14
     },
     {
       "corridor": "narrow",
@@ -343,23 +497,43 @@
       "pressure_mult": 1.5,
       "n": 720,
       "continuous_bc": {
-        "passes": 599,
-        "collisions": 37,
-        "pass_rate": 83.2,
-        "collision_rate": 5.1,
+        "passes": 592,
+        "collisions": 36,
+        "pass_rate": 82.2,
+        "collision_rate": 5.0,
         "coll_ci95": [
-          3.8,
-          7.0
+          3.6,
+          6.8
         ]
       },
       "token_bc": {
-        "passes": 598,
-        "collisions": 41,
-        "pass_rate": 83.1,
-        "collision_rate": 5.7,
+        "passes": 599,
+        "collisions": 43,
+        "pass_rate": 83.2,
+        "collision_rate": 6.0,
         "coll_ci95": [
-          4.2,
-          7.6
+          4.5,
+          7.9
+        ]
+      },
+      "token_rnn_bc": {
+        "passes": 612,
+        "collisions": 34,
+        "pass_rate": 85.0,
+        "collision_rate": 4.7,
+        "coll_ci95": [
+          3.4,
+          6.5
+        ]
+      },
+      "token_dagger_bc": {
+        "passes": 699,
+        "collisions": 2,
+        "pass_rate": 97.1,
+        "collision_rate": 0.3,
+        "coll_ci95": [
+          0.1,
+          1.0
         ]
       },
       "spotlight": {
@@ -372,7 +546,9 @@
           1.0
         ]
       },
-      "delta_tok_bc_minus_spotlight_pp": 5.42
+      "delta_tok_bc_minus_spotlight_pp": 5.69,
+      "delta_token_rnn_bc_minus_spotlight_pp": 4.44,
+      "delta_token_dagger_bc_minus_spotlight_pp": 0.0
     },
     {
       "corridor": "narrow",
@@ -384,23 +560,43 @@
       "pressure_mult": 2.0,
       "n": 720,
       "continuous_bc": {
-        "passes": 604,
-        "collisions": 24,
-        "pass_rate": 83.9,
-        "collision_rate": 3.3,
+        "passes": 597,
+        "collisions": 30,
+        "pass_rate": 82.9,
+        "collision_rate": 4.2,
         "coll_ci95": [
-          2.3,
-          4.9
+          2.9,
+          5.9
         ]
       },
       "token_bc": {
-        "passes": 601,
-        "collisions": 35,
-        "pass_rate": 83.5,
-        "collision_rate": 4.9,
+        "passes": 606,
+        "collisions": 27,
+        "pass_rate": 84.2,
+        "collision_rate": 3.8,
         "coll_ci95": [
-          3.5,
-          6.7
+          2.6,
+          5.4
+        ]
+      },
+      "token_rnn_bc": {
+        "passes": 614,
+        "collisions": 29,
+        "pass_rate": 85.3,
+        "collision_rate": 4.0,
+        "coll_ci95": [
+          2.8,
+          5.7
+        ]
+      },
+      "token_dagger_bc": {
+        "passes": 707,
+        "collisions": 5,
+        "pass_rate": 98.2,
+        "collision_rate": 0.7,
+        "coll_ci95": [
+          0.3,
+          1.6
         ]
       },
       "spotlight": {
@@ -413,7 +609,9 @@
           0.5
         ]
       },
-      "delta_tok_bc_minus_spotlight_pp": 4.86
+      "delta_tok_bc_minus_spotlight_pp": 3.75,
+      "delta_token_rnn_bc_minus_spotlight_pp": 4.03,
+      "delta_token_dagger_bc_minus_spotlight_pp": 0.69
     },
     {
       "corridor": "extreme",
@@ -425,23 +623,43 @@
       "pressure_mult": 1.0,
       "n": 720,
       "continuous_bc": {
-        "passes": 587,
-        "collisions": 32,
-        "pass_rate": 81.5,
-        "collision_rate": 4.4,
+        "passes": 602,
+        "collisions": 28,
+        "pass_rate": 83.6,
+        "collision_rate": 3.9,
         "coll_ci95": [
-          3.2,
-          6.2
+          2.7,
+          5.6
         ]
       },
       "token_bc": {
-        "passes": 578,
-        "collisions": 44,
-        "pass_rate": 80.3,
-        "collision_rate": 6.1,
+        "passes": 584,
+        "collisions": 43,
+        "pass_rate": 81.1,
+        "collision_rate": 6.0,
         "coll_ci95": [
-          4.6,
-          8.1
+          4.5,
+          7.9
+        ]
+      },
+      "token_rnn_bc": {
+        "passes": 579,
+        "collisions": 50,
+        "pass_rate": 80.4,
+        "collision_rate": 6.9,
+        "coll_ci95": [
+          5.3,
+          9.0
+        ]
+      },
+      "token_dagger_bc": {
+        "passes": 713,
+        "collisions": 1,
+        "pass_rate": 99.0,
+        "collision_rate": 0.1,
+        "coll_ci95": [
+          0.0,
+          0.8
         ]
       },
       "spotlight": {
@@ -454,7 +672,9 @@
           1.0
         ]
       },
-      "delta_tok_bc_minus_spotlight_pp": 5.83
+      "delta_tok_bc_minus_spotlight_pp": 5.69,
+      "delta_token_rnn_bc_minus_spotlight_pp": 6.67,
+      "delta_token_dagger_bc_minus_spotlight_pp": -0.14
     },
     {
       "corridor": "extreme",
@@ -466,23 +686,43 @@
       "pressure_mult": 1.5,
       "n": 720,
       "continuous_bc": {
-        "passes": 557,
-        "collisions": 32,
-        "pass_rate": 77.4,
-        "collision_rate": 4.4,
+        "passes": 561,
+        "collisions": 40,
+        "pass_rate": 77.9,
+        "collision_rate": 5.6,
         "coll_ci95": [
-          3.2,
-          6.2
+          4.1,
+          7.5
         ]
       },
       "token_bc": {
-        "passes": 563,
-        "collisions": 46,
-        "pass_rate": 78.2,
-        "collision_rate": 6.4,
+        "passes": 556,
+        "collisions": 47,
+        "pass_rate": 77.2,
+        "collision_rate": 6.5,
         "coll_ci95": [
-          4.8,
-          8.4
+          4.9,
+          8.6
+        ]
+      },
+      "token_rnn_bc": {
+        "passes": 572,
+        "collisions": 47,
+        "pass_rate": 79.4,
+        "collision_rate": 6.5,
+        "coll_ci95": [
+          4.9,
+          8.6
+        ]
+      },
+      "token_dagger_bc": {
+        "passes": 698,
+        "collisions": 2,
+        "pass_rate": 96.9,
+        "collision_rate": 0.3,
+        "coll_ci95": [
+          0.1,
+          1.0
         ]
       },
       "spotlight": {
@@ -495,7 +735,9 @@
           0.5
         ]
       },
-      "delta_tok_bc_minus_spotlight_pp": 6.39
+      "delta_tok_bc_minus_spotlight_pp": 6.53,
+      "delta_token_rnn_bc_minus_spotlight_pp": 6.53,
+      "delta_token_dagger_bc_minus_spotlight_pp": 0.28
     },
     {
       "corridor": "extreme",
@@ -507,23 +749,43 @@
       "pressure_mult": 2.0,
       "n": 720,
       "continuous_bc": {
-        "passes": 576,
-        "collisions": 27,
-        "pass_rate": 80.0,
-        "collision_rate": 3.8,
+        "passes": 577,
+        "collisions": 39,
+        "pass_rate": 80.1,
+        "collision_rate": 5.4,
         "coll_ci95": [
-          2.6,
-          5.4
+          4.0,
+          7.3
         ]
       },
       "token_bc": {
-        "passes": 558,
+        "passes": 556,
         "collisions": 40,
-        "pass_rate": 77.5,
+        "pass_rate": 77.2,
         "collision_rate": 5.6,
         "coll_ci95": [
           4.1,
           7.5
+        ]
+      },
+      "token_rnn_bc": {
+        "passes": 575,
+        "collisions": 47,
+        "pass_rate": 79.9,
+        "collision_rate": 6.5,
+        "coll_ci95": [
+          4.9,
+          8.6
+        ]
+      },
+      "token_dagger_bc": {
+        "passes": 708,
+        "collisions": 2,
+        "pass_rate": 98.3,
+        "collision_rate": 0.3,
+        "coll_ci95": [
+          0.1,
+          1.0
         ]
       },
       "spotlight": {
@@ -536,7 +798,9 @@
           0.5
         ]
       },
-      "delta_tok_bc_minus_spotlight_pp": 5.56
+      "delta_tok_bc_minus_spotlight_pp": 5.56,
+      "delta_token_rnn_bc_minus_spotlight_pp": 6.53,
+      "delta_token_dagger_bc_minus_spotlight_pp": 0.28
     }
   ]
 }

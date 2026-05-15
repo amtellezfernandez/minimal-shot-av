@@ -1,36 +1,66 @@
 {
   "gauntlet": {
     "Continuous-BC (A)": {
-      "passes": 373,
-      "collisions": 21,
+      "passes": 372,
+      "collisions": 22,
       "total": 480,
-      "pass_rate": 77.7,
-      "collision_rate": 4.4,
+      "pass_rate": 77.5,
+      "collision_rate": 4.6,
       "pass_ci95": [
-        73.8,
-        81.2
+        73.6,
+        81.0
       ],
       "coll_ci95": [
-        2.9,
-        6.6
+        3.0,
+        6.8
       ]
     },
     "Token-BC (B)": {
-      "passes": 373,
-      "collisions": 18,
+      "passes": 376,
+      "collisions": 20,
       "total": 480,
-      "pass_rate": 77.7,
-      "collision_rate": 3.8,
+      "pass_rate": 78.3,
+      "collision_rate": 4.2,
       "pass_ci95": [
-        73.8,
-        81.2
+        74.4,
+        81.8
       ],
       "coll_ci95": [
-        2.4,
-        5.8
+        2.7,
+        6.3
       ]
     },
-    "Spotlight Reflex (C)": {
+    "Token-RNN-BC (C)": {
+      "passes": 386,
+      "collisions": 17,
+      "total": 480,
+      "pass_rate": 80.4,
+      "collision_rate": 3.5,
+      "pass_ci95": [
+        76.6,
+        83.7
+      ],
+      "coll_ci95": [
+        2.2,
+        5.6
+      ]
+    },
+    "Token-DAgger-BC (D)": {
+      "passes": 473,
+      "collisions": 1,
+      "total": 480,
+      "pass_rate": 98.5,
+      "collision_rate": 0.2,
+      "pass_ci95": [
+        97.0,
+        99.3
+      ],
+      "coll_ci95": [
+        0.0,
+        1.2
+      ]
+    },
+    "Spotlight Reflex (E)": {
       "passes": 452,
       "collisions": 0,
       "total": 480,
@@ -48,14 +78,14 @@
   },
   "adversarial": {
     "Continuous-BC (A)": {
-      "passes": 122,
+      "passes": 121,
       "collisions": 6,
       "total": 160,
-      "pass_rate": 76.2,
+      "pass_rate": 75.6,
       "collision_rate": 3.8,
       "pass_ci95": [
-        69.1,
-        82.2
+        68.4,
+        81.6
       ],
       "coll_ci95": [
         1.7,
@@ -77,7 +107,37 @@
         7.1
       ]
     },
-    "Spotlight Reflex (C)": {
+    "Token-RNN-BC (C)": {
+      "passes": 127,
+      "collisions": 5,
+      "total": 160,
+      "pass_rate": 79.4,
+      "collision_rate": 3.1,
+      "pass_ci95": [
+        72.5,
+        84.9
+      ],
+      "coll_ci95": [
+        1.3,
+        7.1
+      ]
+    },
+    "Token-DAgger-BC (D)": {
+      "passes": 143,
+      "collisions": 0,
+      "total": 160,
+      "pass_rate": 89.4,
+      "collision_rate": 0.0,
+      "pass_ci95": [
+        83.6,
+        93.3
+      ],
+      "coll_ci95": [
+        0.0,
+        2.3
+      ]
+    },
+    "Spotlight Reflex (E)": {
       "passes": 147,
       "collisions": 0,
       "total": 160,
@@ -95,14 +155,14 @@
   },
   "compositional": {
     "Continuous-BC (A)": {
-      "passes": 350,
+      "passes": 349,
       "collisions": 5,
       "total": 400,
-      "pass_rate": 87.5,
+      "pass_rate": 87.2,
       "collision_rate": 1.2,
       "pass_ci95": [
-        83.9,
-        90.4
+        83.6,
+        90.2
       ],
       "coll_ci95": [
         0.5,
@@ -124,7 +184,37 @@
         2.5
       ]
     },
-    "Spotlight Reflex (C)": {
+    "Token-RNN-BC (C)": {
+      "passes": 342,
+      "collisions": 3,
+      "total": 400,
+      "pass_rate": 85.5,
+      "collision_rate": 0.8,
+      "pass_ci95": [
+        81.7,
+        88.6
+      ],
+      "coll_ci95": [
+        0.3,
+        2.2
+      ]
+    },
+    "Token-DAgger-BC (D)": {
+      "passes": 387,
+      "collisions": 1,
+      "total": 400,
+      "pass_rate": 96.8,
+      "collision_rate": 0.2,
+      "pass_ci95": [
+        94.5,
+        98.1
+      ],
+      "coll_ci95": [
+        0.0,
+        1.4
+      ]
+    },
+    "Spotlight Reflex (E)": {
       "passes": 369,
       "collisions": 0,
       "total": 400,

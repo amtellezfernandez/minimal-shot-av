@@ -14,9 +14,10 @@
 
 \newcommand{\token}[1]{\textsc{#1}}
 \newcommand{\scalar}[1]{\textit{#1}}
+\newtheorem{theorem}{Theorem}
 \newtheorem{proposition}{Proposition}
 
-\title{Discrete ManeuverTokens as a Structural Robustness Prior\\
+\title{Discrete Maneuver Tokens and On-Policy Correction\\
        for Long-Tail Autonomous Navigation}
 
 \author{
@@ -30,35 +31,32 @@
 \maketitle
 
 \begin{abstract}
-We argue that intentional quantization of the driving action space is a structural robustness
-prior, not a limitation. Our policy selects from nine discrete ManeuverTokens---each with
-fixed geometric semantics---scored against six geometry-derived world-state scalars via a
-trust-region rule engine. Discretization eliminates unsafe intermediate states by
-construction: uncertainty shifts token \emph{scores}, not token \emph{footprints}.
-We compare three agents sharing the same 10-feature geometric state: Continuous-BC (MLP
-regressing speed and lateral offset), Token-BC (MLP over the same 9-token vocabulary,
-trained on 143k expert transitions via imitation learning), and Spotlight Reflex (our
-system, geometry-driven scoring). Over 1040 matched closed-loop evaluations across Gauntlet
-(four simultaneous hazards), Adversarial, and Compositional suites, Spotlight Reflex
-records \textbf{zero Proximity Violations} ($C{>}0.90$, $d{<}0.25$\,m, failed rollouts only).
-Both BC agents record PV rates of 3.8--4.4\% on Gauntlet and 3.1--3.8\% on Adversarial---
-including stall failures where Spotlight Reflex also failed to reach the goal but
-maintained safe separation throughout. Token-BC and Continuous-BC produce near-identical
-PV rates, demonstrating that the 9-token vocabulary alone does not prevent violations:
-the geometric reference rules enforcing structured action selection are what matter. The same policy binary transfers to Waymo's
-sensor-realistic AlpaSim (\texttt{collision\_at\_fault}: 0.0) via a four-channel adapter
-with no policy-internal sensor code. Geometry-invariance is formally stated and
-regression-tested.
+We investigate when discrete maneuver-class selection is a structural safety prior, and
+when learned policies can recover that prior through on-policy correction. The core
+geometric claim is topological: when safe actions form disconnected maneuver classes
+separated by an unsafe set, continuous interpolation between classes must cross unsafe
+trajectories, whereas selection among margin-separated tokens does not. We formalize this
+as a non-interpolation safety theorem and instantiate it in Spotlight Reflex, a
+geometry-driven policy that scores nine ManeuverTokens against scalar world-state features.
+Plain imitation does not recover the mechanism: on a 1080-rollout held-out Latin-hypercube
+generator sweep, Continuous-BC, Token-BC, and Token-RNN-BC reach only 77--78\% pass rate
+with 3.0--4.3\% Proximity Violations. However, two iterations of DAgger-style on-policy
+relabeling nearly closes the frontier, reaching 94.54\% pass and 0.19\% PV versus
+Spotlight Reflex at 94.44\% pass and 0.65\% PV. A third DAgger iteration regresses
+(92.50\% pass, 0.46\% PV), and trajectory-scorer variants over the same token library
+remain below the DAgger frontier. The result changes the paper's conclusion: the token
+vocabulary alone is insufficient, geometric rules are an interpretable safety prior and
+data generator, and the strongest learned baseline is a two-step on-policy token policy.
 \end{abstract}
 
-\keywords{autonomous driving, discrete action space, long-tail robustness, geometric
-world-state, ManeuverToken, trust-region scoring, sensor transfer}
+\keywords{autonomous driving, discrete action space, DAgger, topological safety,
+long-tail robustness, geometric world-state, ManeuverToken, trust-region scoring}
 
 % =====================================================================
 \section{Introduction}
 % =====================================================================
 
-Long-tail failure is the central open problem in autonomous driving. Modern end-to-end
+Long-tail failure is a central open problem in autonomous driving. Modern end-to-end
 policies achieve near-human performance on the common driving distribution but degrade
 sharply on the rare scenario compositions that matter most: wrong-way actors, construction
 corridors, multi-hazard interactions~\citep{dauner2023parting,hu2023planning}. The dominant
@@ -66,12 +64,13 @@ response is scale—more data, more modalities, larger
 models~\citep{chitta2022transfuser,brohan2023rt2}. We pursue an orthogonal direction:
 \emph{reducing} action-space expressiveness as a structural regularizer.
 
-The argument is topological. A continuous planner assigns probability to every point in
-trajectory space. Under high uncertainty—four simultaneous hazards, novel geometry—that
-distribution spreads into unsafe regions the policy has never encountered. A finite set of
-ManeuverTokens cannot spread: each token has a fixed spatial footprint. Policy uncertainty
-shifts scores, not physical trajectories. This is the \emph{Discrete Bottleneck}: structural
-compression of the action manifold as a robustness mechanism.
+The argument is topological rather than architectural. In a multi-hazard scene, the safe
+trajectory set can split into disconnected components: for example, pass left, pass right,
+or stop before the conflict. A continuous regressor moving between components can produce an
+intermediate trajectory that belongs to neither component and intersects the unsafe set. A
+discrete selector avoids this interpolation path by choosing among maneuver representatives
+with explicit clearance margins. Policy uncertainty changes which representative is chosen;
+it does not create a new trajectory between representatives.
 
 \begin{figure}[t]
 \centering
@@ -104,7 +103,7 @@ compression of the action manifold as a robustness mechanism.
   \node[sbox,below=0.55cm of obs,xshift=0.3cm] (sensor) {AlpaSim\\(4-ch adapter)};
   \draw[arr,dashed] (sensor) -- (obs);
 \end{tikzpicture}
-\caption{Spotlight Reflex pipeline. Obstacle positions (raw geometry, or via 4-channel
+\caption{Spotlight Reflex pipeline. Obstacle positions (raw geometry, or via a 4-channel
 AlpaSim adapter) feed six scalar encoders. Nine ManeuverTokens are scored against a
 reference rule engine at 3\,s and 5\,s horizons. The highest-scoring token is executed.
 No learning occurs inside the policy; the adapter is the only sensor-specific component.}
@@ -114,13 +113,11 @@ No learning occurs inside the policy; the adapter is the only sensor-specific co
 We make three contributions (Fig.~\ref{fig:pipeline}):
 
 \begin{enumerate}
-  \item \textbf{Discrete Bottleneck (Sec.~\ref{sec:method:tokens}).}
-    Nine ManeuverTokens with formally stated geometry-coverage and invariance properties
-    achieve zero Proximity Violations (PVs) over 1040 matched evaluations. Two BC agents trained on 143k
-    expert transitions from the same system---one continuous (regressing speed and lateral
-    offset) and one discrete (classifying the same 9 tokens)---both record PV rates of
-    3.8--4.4\% on Gauntlet. Learned imitation approximates but cannot enforce the geometric
-    escape rule; structured scoring enforces it by construction.
+  \item \textbf{Non-interpolation theorem (Sec.~\ref{sec:method:topology}).}
+    We state a conditional safety result: if tokens lie inside disconnected safe maneuver
+    classes with clearance margin greater than execution noise, discrete selection cannot
+    enter the unsafe set by interpolation, while continuous transitions between classes must
+    cross it.
 
   \item \textbf{Geometric World-State Encoding (Sec.~\ref{sec:method:wstate}).}
     Six O(1) scalars derived from obstacle geometry---with no object identity or semantic
@@ -128,10 +125,13 @@ We make three contributions (Fig.~\ref{fig:pipeline}):
     a formally stated invariance to object-identity relabelling, regression-tested over all
     1040 evaluations.
 
-  \item \textbf{Zero-tuning Sensor Transfer (Sec.~\ref{sec:exp:alpasim}).}
-    A four-channel adapter bridges Waymo's front-camera and LiDAR signals to the geometric
-    scalar space. The same policy binary achieves \texttt{collision\_at\_fault}: 0.0 and
-    0.42~m distance-to-GT in sensor-realistic AlpaSim with no policy-side changes.
+  \item \textbf{Held-out generator evidence with strong learned baselines
+    (Sec.~\ref{sec:exp:lhs}).}
+    Fixed-suite evaluations show that plain BC fails even with the same tokens and state
+    features. A held-out Latin-hypercube generator sweep then shows the sharper frontier:
+    two-step DAgger matches Spotlight Reflex on pass rate and improves PV rate, while
+    one-step DAgger is weaker, three-step DAgger regresses, and trajectory scorers over
+    token candidates do not close the stress-suite gap.
 \end{enumerate}
 
 % =====================================================================
@@ -149,8 +149,8 @@ structural inductive biases matter more than model scale for long-tail coverage.
 \paragraph{Discrete action spaces.}
 DQN~\citep{mnih2015human} demonstrated that discretizing the action space enables stable
 deep RL where continuous policy gradients fail. Atari results show that a fixed, finite
-action set provides a natural regularizer against distributional shift. We transfer this
-structural insight to the planning setting without RL: ManeuverTokens provide a finite,
+action set provides a natural regularizer against distributional shift. We apply this
+structural idea to the planning setting without RL: ManeuverTokens provide a finite,
 semantically grounded action set whose footprints are invariant to scene uncertainty.
 
 \paragraph{Potential-field and reactive planners.}
@@ -167,10 +167,11 @@ a continuous policy. Our six geometric scalars are a finer-grained abstraction: 
 obstacle pressure, route blockage, and bilateral clearances as scalar observations that
 are sufficient for the trust-region scorer and cheap to compute from any sensing modality.
 
-\paragraph{Sim-to-real transfer.}
+\paragraph{Simulator transfer and validation scope.}
 \citet{khurana2022differentiable} and \citet{shi2024motiondiffuser} study trajectory
-prediction in sensor-realistic environments. Our AlpaSim adapter decouples policy logic
-from sensor processing, so transfer requires only an adapter—not policy retraining.
+prediction in sensor-realistic environments. Our AlpaSim adapter is a small feasibility
+check that decouples policy logic from sensor processing; it is not a substitute for
+physics simulation or real-vehicle validation.
 
 % =====================================================================
 \section{Method}
@@ -180,8 +181,9 @@ from sensor processing, so transfer requires only an adapter—not policy retrai
 \subsection{Discrete ManeuverToken Space}
 \label{sec:method:tokens}
 
-We define nine ManeuverTokens (Table~\ref{tab:tokens}) covering the safety-critical region
-of the SE(2) maneuver manifold. Each token is a pair $(\alpha, \delta)$: a speed scale
+We define nine ManeuverTokens (Table~\ref{tab:tokens}) covering the evaluated
+safety-critical response classes of the SE(2) maneuver manifold. Each token is a pair
+$(\alpha, \delta)$: a speed scale
 $\alpha \in [0,1]$ relative to current ego speed and a signed lateral offset $\delta \in
 \mathbb{R}$ (m), realized as a 20-waypoint, 5-second trajectory at 4~Hz via cubic spline.
 
@@ -209,12 +211,18 @@ Token & $\alpha$ & $\delta$ (m) & Profile & Semantic \\
 \end{tabular}
 \end{table}
 
-\paragraph{Coverage and geometry-invariance.}
-\begin{proposition}[Coverage]
-The nine tokens span all safety-critical response classes documented in the Waymo long-tail
-taxonomy: longitudinal deceleration $\{$stop, crawl, yield, maintain$\}$,
-bilateral lateral evasion at two magnitudes $\{$nudge, evasive$\} \times \{$left, right$\}$,
-and lane recovery. No safety-critical response requires a combination outside this set.
+\paragraph{Coverage for the evaluated hazard family.}
+The nine tokens are not claimed to be globally optimal. They are a minimal engineering
+instantiation for the hazard family evaluated here: hard stop, cautious forward progress,
+nominal progress, yield-without-stopping, bilateral mild avoidance, bilateral strong
+avoidance, and post-avoidance recovery.
+
+\begin{proposition}[Token removal induces a maneuver gap]
+For the evaluated multi-hazard family, removing any one response class from the 9-token
+library eliminates at least one feasible safe response mode: longitudinal hard stop,
+cautious progress, mild lateral avoidance, strong lateral avoidance, or recovery. The
+resulting controller must either overreact (e.g., full evasion for a mild obstacle),
+underreact (e.g., nudge where full evasion is required), or fail to re-enter the lane.
 \end{proposition}
 
 \begin{proposition}[Geometry-Invariance]
@@ -223,19 +231,58 @@ all scene states $s$: the selected token $M(s)$, its score $S(s)$, and the decis
 $R(s)$ satisfy $M(s) = M(T(s))$, $S(s) = S(T(s))$, $R(s) = R(T(s))$.
 \end{proposition}
 
-Both propositions follow from the encoding in Sec.~\ref{sec:method:wstate}: no token score
-depends on object labels. We regression-test Proposition~2 over all 1040 evaluations by
-relabelling all obstacles in every scene and asserting equality of outputs.
+The geometry-invariance proposition follows from the encoding in
+Sec.~\ref{sec:method:wstate}: no token score depends on object labels. We regression-test
+it over all 1040 evaluations by relabelling all obstacles in every scene and asserting
+equality of outputs.
 
-\paragraph{Why discrete?}
-A continuous planner with the same $(\alpha, \delta)$ range assigns probability to the
-continuum, including unsafe intermediate offsets (e.g., $\delta = +1.4$~m, which clips a
-pedestrian's shoulder in a tight corridor). The token constraint eliminates these states by
-construction. Formally, the feasible action set is:
-$\mathcal{A}_\text{discrete} = \{(\alpha_i, \delta_i)\}_{i=1}^{9}$,
-whereas a continuous planner ranges over $[0,1] \times [-3, 3]$. Under distributional shift,
-the continuous policy places probability mass on novel $(\alpha, \delta)$ pairs; the token
-policy cannot.
+\subsection{Topological Safety Through Non-Interpolation}
+\label{sec:method:topology}
+
+Let $\mathcal{A}$ denote the action space of 5\,s trajectories, and for scene state $s$
+let $\mathcal{U}(s) \subset \mathcal{A}$ be the unsafe set (trajectories violating the
+clearance constraint). Let $\mathcal{S}(s)=\mathcal{A}\setminus\mathcal{U}(s)$ be the safe
+set. In multi-hazard scenes, $\mathcal{S}(s)$ may decompose into disjoint maneuver classes
+$\mathcal{S}_1(s),\ldots,\mathcal{S}_K(s)$, such as stop-before-conflict, pass-left, and
+pass-right.
+
+We use the trajectory metric
+$d(\tau_a,\tau_b)=\max_t \|\tau_a(t)-\tau_b(t)\|_2$ over the 5\,s horizon. A continuous
+policy outputs $a_c(s)\in\mathcal{A}$ and is executed with bounded decision or actuation
+error $\epsilon$, $\|\epsilon\|\le\eta$. A token policy selects
+$\tau_i\in T=\{\tau_1,\ldots,\tau_N\}$ and executes $\tilde{\tau}_i=\tau_i+\epsilon$.
+
+\begin{theorem}[Safety through non-interpolation]
+\label{thm:noninterp}
+Fix a scene state $s$. Suppose:
+\begin{enumerate}
+\item each selected token $\tau_i$ lies in a safe maneuver class $\mathcal{S}_k(s)$;
+\item each selected token has clearance margin
+  $\mathrm{dist}(\tau_i,\mathcal{U}(s))>\eta$;
+\item there exist two safe maneuver classes $\mathcal{S}_i(s)$ and $\mathcal{S}_j(s)$ such
+  that every continuous path in $\mathcal{A}$ from $\mathcal{S}_i(s)$ to
+  $\mathcal{S}_j(s)$ intersects $\mathcal{U}(s)$.
+\end{enumerate}
+Then every noisy execution of a selected token remains safe, while any continuous
+controller that changes between $\mathcal{S}_i(s)$ and $\mathcal{S}_j(s)$ by interpolation
+must pass through an unsafe trajectory.
+\end{theorem}
+
+\begin{proof}
+For a token, $\mathrm{dist}(\tau_i,\mathcal{U}(s))>\eta$ implies that every perturbation
+with norm at most $\eta$ remains outside $\mathcal{U}(s)$. For the continuous case, let
+$\gamma:[0,1]\to\mathcal{A}$ be any continuous transition from a trajectory in
+$\mathcal{S}_i(s)$ to one in $\mathcal{S}_j(s)$. By assumption, $\gamma$ intersects
+$\mathcal{U}(s)$, so there exists $t^\star$ with $\gamma(t^\star)\in\mathcal{U}(s)$.
+Thus interpolation between disconnected safe maneuver classes necessarily traverses the
+unsafe set, whereas token selection jumps between representatives and does not execute the
+intermediate path.
+\end{proof}
+
+The theorem is conditional: it does not prove that nine tokens are globally optimal, nor
+that the specific numeric offsets in Table~\ref{tab:tokens} are unique. It identifies the
+property we test empirically: safety comes from selecting margin-separated maneuver
+classes, not from continuous interpolation through the action manifold.
 
 \subsection{Geometric World-State Encoding}
 \label{sec:method:wstate}
@@ -259,7 +306,7 @@ geometry (no object classification, no learned features, no history):
 \end{align}
 
 All six scalars are $O(1)$ given a sorted obstacle list ($d_\text{min}$ by distance).
-The encoding contains no object identity or semantic labels; Propositions~1--2 follow
+The encoding contains no object identity or semantic labels, so geometry-invariance follows
 directly. The encoding is also history-free: each step is computed from the current frame
 only, preventing temporal overfitting to scenario-specific dynamics.
 
@@ -296,16 +343,18 @@ bonuses (+40 max). The token $\tau^* = \arg\max_\tau S(\tau)$ is executed.
 \paragraph{Reference rules.}
 Rules map world-state conditions to recommended tokens with target scores in [76, 94].
 Key rules: \scalar{pressure}~$< 0.25$ and open corridor $\to$ \token{maintain}~(92);
-\scalar{pressure}~$> 0.20$ with preferred escape $\to$ \token{nudge}$_{\text{escape}}$~(94);
+\scalar{pressure}~$> 0.20$ with preferred escape $\to$ \token{nudge}$_{\text{escape}}$~(91);
+\scalar{pressure}~$\ge 0.35$ with preferred escape $\to$
+\token{evasive}$_{\text{escape}}$~(94);
 \scalar{blocked}~$= 1 \to$ \token{stop}~(82). Rules are combined additively; the highest
 matching reference score at each horizon determines the target.
 
-\subsection{AlpaSim Adapter: Zero-Tuning Sensor Transfer}
+\subsection{AlpaSim Adapter: Feasibility Check}
 \label{sec:method:alpasim}
 
-Waymo's AlpaSim provides sensor-realistic input (front-camera, LiDAR, ego dynamics) but
-does not expose geometric primitives. We bridge via four channels, keeping the policy binary
-unchanged:
+Waymo's AlpaSim provides sensor-realistic front-camera input, route command, and ego
+dynamics. As an engineering feasibility check, we bridge these observations to the same
+geometric scalar interface via four channels:
 
 \begin{enumerate}
 \item \textbf{Route $\to$ lane curvature.} LEFT/STRAIGHT/RIGHT generates a 5-point sigmoid
@@ -373,8 +422,9 @@ flagged; only failed rollouts with proximity violations count.
 \centering
 \caption{Simulation results across four suites, seeds 1--80 (matched). Pass = scenario
 completion. ``PV'' = Proximity Violation ($C>0.90$, $d<0.25$~m, failed rollout only).
-Spotlight Reflex records zero PVs across all 1040 evaluations, including stall failures
-where the goal was not reached. BC agents record PVs on Gauntlet and Adversarial.}
+Spotlight Reflex has 0 observed PVs across all 1040 evaluations (Wilson 95\% upper
+bound 0.37\%), including stall failures where the goal was not reached. BC agents record
+PVs on Gauntlet and Adversarial.}
 \label{tab:sim_main}
 \footnotesize
 \begin{tabular}{lrrcc}
@@ -393,11 +443,11 @@ Hidden holdout               &  80 & 91.2\% & 0\% & --- \\
 
 \begin{table}[t]
 \centering
-\caption{Three-agent comparison on 1040 matched scenarios, seeds 1--80. All agents
-use the identical 10-feature geometric input. BC agents trained on 143\,k expert
-transitions with inverse-frequency class weights. ``PV'' = Proximity Violation
+\caption{Three-agent comparison on matched Gauntlet and Adversarial stress suites,
+seeds 1--80. All agents use the identical 10-feature geometric input. BC agents trained
+on 143\,k expert transitions with inverse-frequency class weights. ``PV'' = Proximity Violation
 ($C>0.90$, $d<0.25$~m, failed rollout only); Wilson 95\% CI shown.
-Spotlight Reflex records zero PVs in both suites---including stall failures
+Spotlight Reflex has 0 observed PVs in both suites---including stall failures
 where the goal was not reached but safe separation was maintained throughout.}
 \label{tab:bc_comparison}
 \footnotesize
@@ -414,12 +464,12 @@ Token-BC (B)      & 77.7\% & 3.8\% [2.4, 5.8] & 76.9\% & 3.1\% [1.3, 7.1] \\
 \end{tabular}
 \end{table}
 
-\paragraph{Results.}
-Table~\ref{tab:sim_main} shows Spotlight Reflex records zero Proximity Violations (PVs)
-across all 1040 evaluations. This includes the 5.8\% of evaluations where the policy
-stalled and did not reach the goal: even in those failed rollouts, clearance never dropped
-below 0.25~m. BC agents record PV rates of 3.8--4.4\% on Gauntlet and 3.1--3.8\% on
-Adversarial.
+\paragraph{Fixed-suite diagnostic.}
+Table~\ref{tab:sim_main} shows Spotlight Reflex has 0 observed Proximity Violations (PVs)
+across all 1040 evaluations, corresponding to a Wilson 95\% upper bound of 0.37\%. This
+includes the 5.8\% of evaluations where the policy stalled and did not reach the goal:
+even in those failed rollouts, clearance never dropped below 0.25~m. BC agents record PV
+rates of 3.8--4.4\% on Gauntlet and 3.1--3.8\% on Adversarial.
 
 Table~\ref{tab:bc_comparison} shows the three-agent comparison with Wilson 95\% CI.
 The Spotlight Reflex PV CI [0.0, 0.8\%] on Gauntlet is statistically disjoint from
@@ -427,9 +477,10 @@ both BC agents ([2.4, 5.8\%] and [2.9, 6.6\%]).
 Critically, \textbf{Continuous-BC and Token-BC produce near-identical PV rates}:
 providing the 9-token vocabulary to a learned policy does not prevent proximity violations.
 Only the geometric reference rules---enforcing that pressure $\ge 0.35$ triggers
-\token{evasive} over \token{nudge}---hold the PV rate at zero.
-This supports Proposition~1: the structured scoring inductive bias cannot be recovered by
-gradient descent on the same features, even with 143k transitions and class weighting.
+\token{evasive} over \token{nudge}---keep the observed PV count at zero.
+This supports the non-interpolation mechanism in Theorem~\ref{thm:noninterp}: gradient
+descent on the same features approximates the escape rule, but does not enforce the
+margin-separated maneuver class.
 
 \begin{figure}[t]
 \centering
@@ -450,7 +501,75 @@ is determined entirely by geometry (scalars) — object labels are not observed.
 \label{fig:qualitative}
 \end{figure}
 
-\subsection{AlpaSim: Zero-Tuning Sensor Transfer}
+\subsection{Held-Out Latin-Hypercube Sweep}
+\label{sec:exp:lhs}
+
+The fixed suites above are useful diagnostics, but they are hand-authored stress tests.
+For the primary OOD result we sample 12 held-out generator profiles with Latin-hypercube
+coverage over nine scenario axes: lane-width range, gauntlet pressure, adversarial
+pressure, hidden-suite pressure, visibility, actor intrusion scale, ambient obstacle
+count, and hidden hazard count. Each profile is evaluated on matched seeds 1--10 across
+Gauntlet, Adversarial, and Hidden suites, for 1080 closed-loop rollouts per agent.
+
+We compare five agents using the same 10-feature geometric state: Continuous-BC,
+Token-BC, Token-RNN-BC, Token-DAgger-BC, and Spotlight Reflex. Token-DAgger-BC uses
+two rounds of on-policy relabeling: first rolling out Token-BC and relabeling visited
+states with Spotlight, then rolling out the resulting DAgger policy and relabeling again.
+
+\begin{table}[t]
+\centering
+\caption{Held-out Latin-hypercube generator sweep, 12 profiles $\times$ matched seeds
+1--10, Gauntlet/Adversarial/Hidden suites ($n=1080$ per agent). Entries are pass/PV
+percentages. Two-step Token-DAgger-BC is the strongest learned baseline.}
+\label{tab:lhs_main}
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+Agent & Overall & Gauntlet & Adversarial & Hidden \\
+\midrule
+Continuous-BC & 77.69 / 3.52 & 77.50 / 4.31 & 75.42 / 2.08 & 83.33 / 1.67 \\
+Token-BC & 76.85 / 4.26 & 77.64 / 4.86 & 71.67 / 2.92 & 82.50 / 3.33 \\
+Token-RNN-BC & 78.43 / 2.96 & 79.17 / 2.92 & 74.58 / 2.50 & 81.67 / 4.17 \\
+\textbf{Token-DAgger-BC (2-step)} & \textbf{94.54 / 0.19} & 96.25 / 0.28 & \textbf{90.83 / 0.00} & \textbf{91.67 / 0.00} \\
+Spotlight Reflex & 94.44 / 0.65 & \textbf{96.67 / 0.28} & 90.00 / 0.83 & 90.00 / 2.50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:lhs_main} changes the interpretation of the fixed-suite result. Plain BC
+and recurrent BC still fail under held-out generator shift, but two-step DAgger closes the
+gap to Spotlight Reflex: the paired overall pass delta is +0.09 percentage points and the
+PV delta is $-0.46$ percentage points relative to Spotlight. The learned policy is not
+uniformly better---Spotlight still has the best Gauntlet pass rate---but the frontier is no
+longer ``rules beat learning.'' The correct conclusion is that on-policy correction can
+learn most of the geometric rule, while plain expert-state imitation cannot.
+
+\begin{table}[t]
+\centering
+\caption{DAgger iteration study on the same held-out LHS sweep. Iteration 2 is best;
+iteration 3 regresses despite adding more relabeled states.}
+\label{tab:dagger_iters}
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+Policy & Overall & Gauntlet & Adversarial & Hidden \\
+\midrule
+Token-DAgger (1-step) & 93.98 / 0.46 & 96.81 / 0.56 & 87.50 / 0.42 & 90.00 / 0.00 \\
+\textbf{Token-DAgger (2-step)} & \textbf{94.54 / 0.19} & 96.25 / 0.28 & \textbf{90.83 / 0.00} & \textbf{91.67 / 0.00} \\
+Token-DAgger (3-step) & 92.50 / 0.46 & 94.31 / 0.28 & 87.92 / 0.42 & 90.83 / 1.67 \\
+Spotlight Reflex & 94.44 / 0.65 & 96.67 / 0.28 & 90.00 / 0.83 & 90.00 / 2.50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:dagger_iters} shows the DAgger frontier is not monotonic. Iteration 2
+improves the adversarial suite from 87.50\% pass / 0.42\% PV to 90.83\% pass / 0.00\% PV,
+but iteration 3 falls back to 87.92\% pass / 0.42\% PV and introduces hidden-suite PVs.
+This suggests that additional aggregation changes the selector in a harmful way, but not
+yet \emph{why}. We therefore run targeted counter-ablations to distinguish token-frequency
+bias from late-pool aggregation pressure.
+
+\subsection{AlpaSim Adapter Smoke Test}
 \label{sec:exp:alpasim}
 
 \begin{figure}[t]
@@ -463,30 +582,35 @@ processing occurs inside the policy binary.}
 \label{fig:alpasim}
 \end{figure}
 
-We run the identical policy binary in Waymo's AlpaSim over 30 real WOD-E2E scenes.
-The 4-channel adapter (Sec.~\ref{sec:method:alpasim}) translates sensor observations
-to geometric scalars; zero AlpaSim-specific code exists inside the policy (Fig.~\ref{fig:alpasim}).
+We also run a 30-scene AlpaSim smoke test. The 4-channel adapter
+(Sec.~\ref{sec:method:alpasim}) translates available observations to geometric scalars;
+AlpaSim-specific code is confined to the adapter (Fig.~\ref{fig:alpasim}).
 
 Results: \texttt{collision\_at\_fault}: \textbf{0.0}; distance-to-ground-truth
 trajectory: \textbf{0.42~m}; \texttt{collision\_any} (by other agents): 0.37.
 
-The 0.0 at-fault collision rate transfers directly from the simulator. The 0.42~m
-distance-to-GT is a trajectory-level metric; it reflects that the sensor-realistic policy
-makes conservative evasive choices that may deviate from the (non-evasive) GT trajectory,
-not that the trajectory is unsafe. The collision\_any rate (others) is outside policy control.
+This is not primary evidence for the paper's safety claim: with 0 failures in 30 scenes,
+the Wilson 95\% upper bound on the at-fault collision rate is 11.4\%. We report it only as
+evidence that the scalar interface can be connected to a sensor-realistic stack. The
+0.42~m distance-to-GT is a trajectory-level metric; it reflects that conservative evasive
+choices may deviate from the ground-truth trajectory. The collision\_any rate is dominated
+by other agents and is outside the policy's direct control.
 
 % =====================================================================
 \section{Analysis}
 \label{sec:analysis}
 % =====================================================================
 
-\subsection{Why Discrete? Mechanistic Analysis of the Gauntlet Gap}
+\subsection{What the Strong Baselines Change}
 \label{sec:analysis:discrete}
 
-The BC comparison in Table~\ref{tab:bc_comparison} isolates the mechanism.
-Both Token-BC and Continuous-BC operate on the same 10 geometric features as Spotlight
-Reflex. Token-BC even uses the identical 9-token vocabulary. Yet both BC agents collide
-on 3.8--4.4\% of Gauntlet scenarios while Spotlight achieves zero.
+The BC comparison in Table~\ref{tab:bc_comparison} isolates what the token vocabulary
+does \emph{not} provide. Both Token-BC and Continuous-BC operate on the same 10 geometric
+features as Spotlight Reflex. Token-BC even uses the identical 9-token vocabulary. Yet
+both BC agents produce PVs on 3.8--4.4\% of Gauntlet scenarios while Spotlight has none
+observed. Table~\ref{tab:lhs_main} then shows that recurrent memory alone is not enough:
+Token-RNN-BC improves PV rate relative to Token-BC, but remains far below Spotlight and
+two-step DAgger on pass rate.
 
 The failure is mechanistic: on steps where \scalar{obstacle\_pressure} $\ge 0.35$,
 Spotlight Reflex enforces a hard reference rule—\token{evasive}$_\text{escape}$ is scored
@@ -509,22 +633,144 @@ of the same failure: it \emph{learns} an approximation of when to evade, rather 
 computation prevents this: $\scalar{escape} = \arg\max(\scalar{left\_clr},\, \scalar{right\_clr})$
 is always defined and always selects the geometrically correct side.
 
-ManeuverTokens resolve force cancellation by decoupling the escape decision from
-repulsion: \scalar{escape} = $\arg\max$(\scalar{left\_clr}, \scalar{right\_clr}) selects
-the side with more clearance, independently of the repulsion vector magnitude or direction.
-The token \token{evasive}$_\text{escape}$ is then scored with a +94 reference bonus;
-it wins unless a specific constraint (e.g., hard blockage) overrides it.
+Two-step DAgger changes the conclusion. Once the learned token policy is trained on states
+visited by its own first correction, it recovers most of the escape boundary: on the
+held-out LHS sweep it matches Spotlight overall and improves PV rate. This means the
+non-interpolation theorem should not be read as saying a neural policy cannot learn the
+rule. It says the tokenized action space removes unsafe interpolation paths; the empirical
+question is whether the selector reliably chooses the right token. Plain BC does not.
+Two-step DAgger mostly does. Three-step DAgger regresses, suggesting that aggregation
+quality and weighting become part of the safety frontier.
+
+\subsection{Deconstructing the Aggregation Collapse}
+\label{sec:analysis:dagger-collapse}
+
+The three-step regression admits at least three plausible explanations: a takeover by
+late recovery states, a class-frequency optimization bias, or a true calibration failure
+inside the lightweight token classifier. We tested all three directly.
+
+First, the takeover hypothesis is not supported by the data distribution. The expert BC
+pool is 91.10\% \token{maintain}; DAgger-2 and DAgger-3 remain 92.14\% and 91.97\%
+\token{maintain} respectively. The token Jensen--Shannon divergence is only 0.00056
+(expert vs.\ DAgger-2) and 0.00115 (expert vs.\ DAgger-3). Late DAgger pools therefore
+do not replace the nominal manifold; they remain close in first-order token statistics.
+
+Second, class-frequency weighting is not the trivial culprit. Removing inverse-frequency
+token weighting raises offline validation accuracy to 96.3\%, but causes a severe
+closed-loop collapse: three-step DAgger without class weighting drops to 89.35\% pass
+and 2.50\% PV overall, with only 82.50\% pass and 3.75\% PV on Adversarial. This is an
+offline/online decoupling effect: the unweighted model fits the dominant nominal token
+mass more accurately while under-serving the rare recovery maneuvers needed in closed loop.
+
+Third, source-dependent weighting partially repairs the failure. We assign loss weights
+$\alpha=\{1.0, 1.0, 0.5, 0.25\}$ to the expert, first DAgger pool, second DAgger pool,
+and third DAgger pool respectively, preserving inverse-frequency token weights. The
+result is a large recovery over the naive three-step model: overall pass improves from
+92.50\% / 0.46\% PV to 93.06\% / 0.28\% PV, Adversarial recovers from
+87.92\% / 0.42\% PV to 89.17\% / 0.00\% PV, and Hidden recovers from
+90.83\% / 1.67\% PV to 90.00\% / 0.00\% PV. Yet this still does not exceed the two-step
+frontier of 94.54\% / 0.19\% PV.
+
+\begin{table}[t]
+\centering
+\caption{Three-step DAgger counter-ablations on the same held-out LHS sweep. Removing
+inverse-frequency token weighting improves offline validation accuracy but breaks
+closed-loop recovery. Source-decaying later DAgger pools partially restores the frontier
+without surpassing the two-step policy.}
+\label{tab:dagger_counter}
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+Policy & Overall & Gauntlet & Adversarial & Hidden \\
+\midrule
+\textbf{Token-DAgger (2-step)} & \textbf{94.54 / 0.19} & \textbf{96.25 / 0.28} & \textbf{90.83 / 0.00} & \textbf{91.67 / 0.00} \\
+Token-DAgger (3-step) & 92.50 / 0.46 & 94.31 / 0.28 & 87.92 / 0.42 & 90.83 / 1.67 \\
+Token-DAgger (3-step, source decay) & 93.06 / 0.28 & 94.86 / 0.42 & 89.17 / 0.00 & 90.00 / 0.00 \\
+Token-DAgger (3-step, no inv.\ freq.) & 89.35 / 2.50 & 92.08 / 2.08 & 82.50 / 3.75 & 86.67 / 2.50 \\
+Spotlight Reflex & 94.44 / 0.65 & 96.67 / 0.28 & 90.00 / 0.83 & 90.00 / 2.50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These ablations rule out the simplest stories. The three-step failure is not caused by a
+gross takeover of rare recovery tokens, and it is not fixed by removing class weighting.
+The evidence instead points to a \emph{late-pool aggregation pressure}: once overlapping
+nominal and recovery pools are mixed uniformly, later recovery states flatten the
+classifier's boundary. Down-weighting those late pools mitigates the effect, but only
+partially, consistent with a calibration problem under limited model capacity rather than
+with a pure data-distribution shift.
 
 \paragraph{Token-count coverage bound.}
-Removing any single token from the set reduces coverage of at least one safety-critical
-scenario class: \token{stop} handles hard blockage within braking distance;
-\token{crawl}/\token{maintain} handle low/high-speed forward progress;
-\token{slow\_yield} handles the yield-without-stopping case (e.g., hesitating pedestrian);
-\token{nudge}$_{\text{L/R}}$ handles corridor bias without full lane change;
-\token{evasive}$_{\text{L/R}}$ handles head-on and cut-in scenarios requiring
-full lane displacement; \token{lane\_recover} handles post-evasion re-centering.
-Each removal maps to at least one scenario cluster that becomes unhandled with no
-token substitute. Table~\ref{tab:ablation} reports the empirical consequence.
+Removing a response class creates a maneuver gap: \token{stop} handles hard blockage within
+braking distance; \token{crawl}/\token{maintain} handle low/high-speed forward progress;
+\token{slow\_yield} handles yield-without-stopping; \token{nudge}$_{\text{L/R}}$ handles
+corridor bias without full lane departure; \token{evasive}$_{\text{L/R}}$ handles head-on
+and cut-in scenarios requiring larger lateral displacement; \token{lane\_recover} handles
+post-evasion re-centering. Table~\ref{tab:ablation} reports a nested token-count ablation.
+It supports the claim that the full token set closes observed PV gaps in this simulator,
+but it does not prove global optimality of nine tokens.
+
+\begin{table}[t]
+\centering
+\caption{Nested token-count ablation over Gauntlet, Adversarial, and Compositional suites.
+Each row uses seeds 1--80; PV uses the same failed-rollout $C>0.90$ criterion as
+Table~\ref{tab:sim_main}. The full 9-token set removes observed PVs across the three
+suites, while reduced sets leave at least one suite with nonzero PVs.}
+\label{tab:ablation}
+\footnotesize
+\begin{tabular}{lrrrrrr}
+\toprule
+Token set & \multicolumn{2}{c}{Gauntlet} & \multicolumn{2}{c}{Adversarial} &
+\multicolumn{2}{c}{Compositional} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+ & Pass & PV & Pass & PV & Pass & PV \\
+\midrule
+4-token  & 89.8\% & 0.6\% & 90.6\% & 0.6\% & 94.2\% & 0.2\% \\
+5-token  & 94.6\% & 0.0\% & 87.5\% & 0.6\% & 92.2\% & 0.2\% \\
+7-token  & 94.0\% & 0.0\% & 88.1\% & 0.0\% & 91.8\% & 0.2\% \\
+9-token  & 94.2\% & 0.0\% & 91.9\% & 0.0\% & 92.2\% & 0.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Trajectory-Scorer Ablation}
+\label{sec:analysis:scorer}
+
+A natural alternative to hard-coded scoring is to learn a utility function over the same
+candidate trajectories. We tested trajectory-informed scorers that evaluate each token's
+short-horizon ego rollout, augmented with kinematic invariants (curvature, heading deltas,
+path length, lateral-acceleration and jerk proxies) and explicit interaction features
+(minimum dynamic clearance, time to closest approach, signed longitudinal/lateral miss
+distances, relative speed, and crossing relation). These models are trained contrastively:
+the Spotlight-selected candidate is the positive and the other token candidates are
+negatives.
+
+\begin{table}[t]
+\centering
+\caption{Interaction-aware trajectory-scorer ablation on the same held-out LHS sweep.
+Entries are pass/PV percentages. Scorers evaluate candidate futures directly, but still trail
+two-step DAgger on targeted stress suites.}
+\label{tab:scorer}
+\footnotesize
+\begin{tabular}{lccc}
+\toprule
+Policy & Gauntlet & Adversarial & Hidden \\
+\midrule
+Interaction Scorer (learner states) & 86.81 / 1.94 & 85.00 / 1.67 & 89.17 / 1.67 \\
+Interaction Scorer (merged states) & 88.75 / 1.67 & 82.92 / 2.50 & 90.00 / 2.50 \\
+\textbf{Token-DAgger-BC (2-step)} & 96.25 / 0.28 & \textbf{90.83 / 0.00} & \textbf{91.67 / 0.00} \\
+Spotlight Reflex & 96.67 / 0.28 & 90.00 / 0.83 & 90.00 / 2.50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:scorer} rules out a simpler explanation: the remaining gap is not solved
+by replacing the flat token head with a candidate utility scorer over ego trajectories plus
+lightweight interaction features. The scorer sees the candidate futures, but it is still an
+offline selector. In closed loop it trails the two-step DAgger policy on Gauntlet and
+Adversarial and does not preserve the zero-PV hidden result. This points to closed-loop
+state coverage as the dominant ingredient in the current simulator, rather than a need for
+more expressive per-candidate scalar scoring.
 
 \subsection{Failure Mode Taxonomy}
 \label{sec:analysis:failures}
@@ -552,7 +798,7 @@ Multiple actors reach closest-point simultaneously: \scalar{left\_clr} $\approx$
 Fix: add a multi-source pressure decomposition to detect symmetric overload.
 
 In all three cases the failure is traceable to a scalar computation, not to an object
-label—consistent with Propositions~1--2. No failure requires knowledge of \emph{what}
+label---consistent with the geometry-invariance property. No failure requires knowledge of \emph{what}
 the obstacle is; all require knowledge of \emph{where} it is.
 
 % =====================================================================
@@ -561,17 +807,16 @@ the obstacle is; all require knowledge of \emph{where} it is.
 % =====================================================================
 
 \paragraph{2D abstract simulation.}
-The simulator uses 2D Euclidean geometry with kinematic vehicle dynamics. AlpaSim results
-(Sec.~\ref{sec:exp:alpasim}) validate transfer to sensor-realistic input, but a full
-physics simulation (e.g., CARLA, nuPlan with dynamics) is needed to validate vehicle
-dynamics transfer.
+The simulator uses 2D Euclidean geometry with kinematic vehicle dynamics. The AlpaSim
+smoke test (Sec.~\ref{sec:exp:alpasim}) checks adapter feasibility, not transfer validity.
+A full physics simulation (e.g., CARLA, nuPlan with dynamics) or real-vehicle evaluation is
+needed before making vehicle-dynamics claims.
 
-\paragraph{Token-count ablation (empirical).}
-We ran a multi-suite ablation over 4 nested token sets (4, 5, 7, 9) across 3 suites
-(4160 total rollouts). The 9-token set achieves 0\% collision on all suites.
-The 4-token set (stop, maintain, evasive$\times$2) produces 0.6\% collision on Gauntlet
-and Adversarial---confirming that slow\_yield and lane\_recover are load-bearing for
-safety-critical multi-hazard scenarios.
+\paragraph{Token-count optimality is not established.}
+Table~\ref{tab:ablation} is a nested removal study, not a search over all token libraries.
+The stronger claim that nine is near-minimal requires random token libraries, learned token
+sets, parameter perturbations of offsets and speed scales, and larger token counts (e.g.,
+12-token variants) to test whether extra classes induce token-flip instability.
 
 \paragraph{Stress-test operating envelope (empirical).}
 To quantify the \emph{operating boundary} of geometric reflex vs.\ learned policy, we
@@ -609,43 +854,49 @@ training distribution, and the learned boundary degrades. Spotlight Reflex recom
 escape analytically from the current clearance values and is therefore distribution-shift
 invariant by construction.
 
+This phase diagram should be read as an operating-envelope visualization, not as the
+primary environment proof. The stronger evidence is the held-out Latin-hypercube sweep in
+Sec.~\ref{sec:exp:lhs}, which independently samples generator parameters and includes
+recurrent BC plus DAgger-style on-policy correction.
+
 Notably, Token-BC \emph{exceeds} Continuous-BC at extreme OOD (4.4\% vs 6.1--6.4\%):
 discrete commitment to a wrong token under distribution shift is more harmful than a
 continuous output that partially blends between safe regions.
 
-\paragraph{Temporal scalar history.}
-The world-state encoding is stateless (no temporal memory). The failure mode in
-Sec.~\ref{sec:analysis:failures} (synchronized hazard overload) could be partially
-mitigated by maintaining a 2-step buffer of scalar values. This is a planned extension.
+\paragraph{Temporal scalar history and joint interaction.}
+The strongest learned model in this paper is still a token classifier over 10 scalar
+features. Token-RNN-BC adds scalar history but remains weak, and interaction-aware
+trajectory scorers do not close the stress-suite gap. A richer joint future encoder over
+ego and actor rollouts may be needed to distinguish coordinated interaction from static
+clearance geometry.
 
-\paragraph{WOD-E2E preliminary results.}
-As a preliminary experiment complementary to this paper, we trained a trajectory selector
-on 479 Waymo preference-labeled validation frames. Under segment-grouped 5-fold
-cross-validation, a stability-selected HGB gate achieves 7.803 RFS (vs.\ 7.022 official
-baseline). Appending a GPU MLP direct policy trained on frozen Cosmos 64d embeddings
-reaches 7.845 RFS. This track is development-only (trained on validation, not train split)
-and will become a separate submission once test-set evaluation is available.
+\paragraph{DAgger aggregation is not solved.}
+Two-step DAgger is the strongest baseline, but three-step DAgger regresses. This suggests
+that blindly adding recovery-state data can distort the training distribution. Future work
+should study aggregation schedules, loss weighting by rollout source, validation splits by
+closed-loop profile, and safety-constrained selection among DAgger checkpoints.
 
 % =====================================================================
 \section{Conclusion}
 % =====================================================================
 
-We have shown that discretizing the driving action space to nine semantically structured
-ManeuverTokens is a structural robustness prior with measurable, mechanistically understood
-effects. Across 1040 matched closed-loop evaluations, Spotlight Reflex achieves zero
-Proximity Violations while two BC agents trained on 143k expert transitions from the same
-system record PV rates of 3.8--4.4\% on Gauntlet. The key finding is the failure of
-Token-BC: even with the identical token vocabulary and geometric features, learned
-imitation cannot replicate the zero-PV property. Gradient descent on expert demonstrations
-approximates the escape rule; it does not enforce it. Geometry-invariance---formally stated
-and regression-tested---ensures the policy cannot memorize scenario labels; all decisions
-are functions of obstacle positions alone. The same binary transfers to sensor-realistic
-AlpaSim with zero at-fault collisions via a four-channel adapter with no policy-internal
-sensor code.
+We have argued that discretizing the driving action space into margin-separated maneuver
+classes can be a structural robustness prior when safe trajectory sets are disconnected.
+The non-interpolation theorem formalizes the condition: token selection avoids unsafe
+intermediate trajectories that continuous interpolation must traverse. The empirical result
+is more nuanced than the initial fixed-suite comparison. Plain BC fails even with the same
+tokens and geometric features, and recurrent BC remains weak under held-out generator
+shift. But two-step DAgger nearly closes the frontier, matching Spotlight Reflex overall
+and reducing PV rate on the held-out Latin-hypercube sweep.
 
-The broader implication is that structured inductive biases in the \emph{action space}---not
-only in the representation or the loss---are a viable and underexplored path to long-tail
-robustness in autonomous navigation.
+The broader implication is that action-space structure, data distribution, and selector
+training must be studied together. Tokens remove unsafe interpolation paths, geometric
+rules provide an interpretable safety prior and expert relabeler, and on-policy correction
+can learn most of that rule. The remaining open problem is not whether tokens can be
+learned at all; it is how to train token selectors that retain the two-step DAgger safety
+frontier without brittle aggregation or simulator-specific tuning. The present evidence is
+simulator-bound; proving the principle as a general property of safe navigation requires
+physics simulation, real-vehicle validation, and broader scenario generation.
 
 \acknowledgments{Developed independently as a research prototype for the Waymo Open Dataset
 E2E Challenge. We thank the Waymo team for the AlpaSim evaluation environment.}
