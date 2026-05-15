@@ -254,11 +254,17 @@ def main() -> None:
     alpasim_root = _resolve_alpasim_root(args.alpasim_root)
     driver_project = alpasim_root / "src" / "driver"
     wizard_project = alpasim_root / "src" / "wizard"
+    alpasim_python = alpasim_root / ".venv" / "bin" / "python"
+    alpasim_wizard = alpasim_root / ".venv" / "bin" / "alpasim_wizard"
 
     if not driver_project.is_dir():
         raise SystemExit(f"AlpaSim driver project not found: {driver_project}")
     if not wizard_project.is_dir():
         raise SystemExit(f"AlpaSim wizard project not found: {wizard_project}")
+    if not alpasim_python.is_file():
+        raise SystemExit(f"AlpaSim virtualenv python not found: {alpasim_python}")
+    if not alpasim_wizard.is_file():
+        raise SystemExit(f"AlpaSim wizard binary not found: {alpasim_wizard}")
 
     scene_ids = _scene_ids(args.scene_preset, args.scene_id)
     run_dir = _resolve_run_dir(args)
@@ -285,12 +291,12 @@ def main() -> None:
     )
 
     driver_cmd = _driver_command(
-        driver_project=driver_project,
+        alpasim_python=alpasim_python,
         driver_config_path=driver_config_path,
     )
     driver_env = _driver_env(model_preset.get("driver_env", {}), run_dir=run_dir)
     wizard_cmd = _wizard_command(
-        wizard_project=wizard_project,
+        alpasim_wizard=alpasim_wizard,
         wizard_driver=model_preset["wizard_driver"],
         run_dir=run_dir,
         scene_ids=scene_ids,
@@ -399,15 +405,11 @@ def _prepare_run_dir(run_dir: Path, *, allow_existing: bool) -> None:
 
 def _driver_command(
     *,
-    driver_project: Path,
+    alpasim_python: Path,
     driver_config_path: Path,
 ) -> list[str]:
     return [
-        "uv",
-        "run",
-        "--project",
-        str(driver_project),
-        "python",
+        str(alpasim_python),
         "-m",
         "alpasim_driver.main",
         f"--config-path={driver_config_path.parent}",
@@ -441,7 +443,7 @@ def _write_driver_config(
 
 def _wizard_command(
     *,
-    wizard_project: Path,
+    alpasim_wizard: Path,
     wizard_driver: str,
     run_dir: Path,
     scene_ids: list[str],
@@ -452,11 +454,7 @@ def _wizard_command(
     dry_run: bool,
 ) -> list[str]:
     cmd = [
-        "uv",
-        "run",
-        "--project",
-        str(wizard_project),
-        "alpasim_wizard",
+        str(alpasim_wizard),
         "deploy=local_external_driver",
         f"topology={topology}",
         f"driver={wizard_driver}",

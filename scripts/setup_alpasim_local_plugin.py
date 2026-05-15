@@ -13,6 +13,44 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ALPASIM_ROOT = ROOT / "alpasim"
 ALPASIM_OVERRIDE_ROOT = ROOT / "third_party" / "alpasim_overrides"
 REQUIRED_MODELS = ("spotlight_reflex", "token_dagger_bc")
+ALPASIM_CORE_DEPENDENCIES = (
+    "PyYAML>=6",
+    "GitPython",
+    "boto3",
+    "click",
+    "dataclasses-json>=0.6.7",
+    "filelock",
+    "grpcio",
+    "grpcio-tools",
+    "huggingface_hub",
+    "hydra-core",
+    "matplotlib",
+    "numpy",
+    "omegaconf",
+    "opencv-python-headless",
+    "pandas",
+    "pandas-stubs",
+    "pillow",
+    "polars>=1.0.0",
+    "protobuf>=4.0.0,<5.0.0",
+    "pyarrow",
+    "pygame>=2.5.0",
+    "pytest",
+    "pytest-asyncio",
+    "rich",
+    "setuptools<82",
+    "torch",
+    "tqdm",
+    "types-PyYAML",
+    "typing-extensions",
+)
+ALPASIM_EDITABLE_PACKAGES = (
+    "src/plugins",
+    "src/grpc",
+    "src/utils",
+    "src/driver",
+    "src/wizard",
+)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -47,10 +85,11 @@ def main() -> None:
 
     if not driver_project.is_dir():
         raise SystemExit(f"AlpaSim driver project not found: {driver_project}")
-    if not venv_python.is_file():
-        raise SystemExit(f"AlpaSim virtualenv python not found: {venv_python}")
     if not args.skip_overrides:
         _apply_local_alpasim_overrides(alpasim_root)
+    _bootstrap_alpasim_venv(alpasim_root, uv_bin=uv_bin)
+    if not venv_python.is_file():
+        raise SystemExit(f"AlpaSim virtualenv python not found after bootstrap: {venv_python}")
 
     if not args.check_only:
         _run(
@@ -69,7 +108,7 @@ def main() -> None:
             cwd=ROOT,
         )
 
-    plugin_names = _plugin_names(driver_project, uv_bin=uv_bin)
+    plugin_names = _plugin_names(venv_python)
     missing = [name for name in REQUIRED_MODELS if name not in plugin_names]
     if missing:
         raise SystemExit(
@@ -126,16 +165,53 @@ def _apply_local_alpasim_overrides(alpasim_root: Path) -> None:
             print(f"  {relative}")
 
 
-def _plugin_names(driver_project: Path, *, uv_bin: str) -> list[str]:
+def _bootstrap_alpasim_venv(alpasim_root: Path, *, uv_bin: str) -> None:
+    venv_root = alpasim_root / ".venv"
+    venv_python = venv_root / "bin" / "python"
+    if not venv_python.is_file():
+        _run([uv_bin, "venv", str(venv_root)], cwd=alpasim_root)
+
+    _run(
+        [
+            uv_bin,
+            "pip",
+            "install",
+            "--cache-dir",
+            str(ROOT / ".uv-cache"),
+            "--python",
+            str(venv_python),
+            *ALPASIM_CORE_DEPENDENCIES,
+        ],
+        cwd=alpasim_root,
+    )
+
+    for relative in ALPASIM_EDITABLE_PACKAGES:
+        package_path = alpasim_root / relative
+        if not package_path.is_dir():
+            raise SystemExit(f"Expected AlpaSim package path missing: {package_path}")
+        _run(
+            [
+                uv_bin,
+                "pip",
+                "install",
+                "--cache-dir",
+                str(ROOT / ".uv-cache"),
+                "--python",
+                str(venv_python),
+                "--no-deps",
+                "-e",
+                str(package_path),
+            ],
+            cwd=alpasim_root,
+        )
+
+
+def _plugin_names(venv_python: Path) -> list[str]:
     script = (
         "from importlib.metadata import entry_points; "
         "print('\\n'.join(sorted(ep.name for ep in entry_points(group='alpasim.models'))))"
     )
-    result = _run(
-        [uv_bin, "run", "--project", str(driver_project), "python", "-c", script],
-        cwd=ROOT,
-        capture_output=True,
-    )
+    result = _run([str(venv_python), "-c", script], cwd=ROOT, capture_output=True)
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 

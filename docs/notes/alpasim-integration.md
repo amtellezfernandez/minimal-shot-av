@@ -47,8 +47,10 @@ If you only need the plugin registration step:
 ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/setup_alpasim_local_plugin.py
 ```
 
-This installs `minimal-shot-av` into `$ALPASIM_ROOT/.venv` and checks the
-AlpaSim entry-point registry. The required models are:
+This bootstraps a minimal `$ALPASIM_ROOT/.venv` with `uv`, installs the
+AlpaSim driver and wizard components needed for local external-driver runs,
+installs `minimal-shot-av` into that env, and checks the AlpaSim entry-point
+registry. The required models are:
 
 - `spotlight_reflex`
 - `token_dagger_bc`
@@ -66,6 +68,7 @@ needs two local override files that are now stored directly in this repo:
 
 - `third_party/alpasim_overrides/src/wizard/alpasim_wizard/deployment/docker_compose.py`
 - `third_party/alpasim_overrides/Dockerfile.amd64`
+- `third_party/alpasim_overrides/src/driver/src/alpasim_driver/models/__init__.py`
 
 `scripts/setup_alpasim_local_plugin.py` now copies these overrides into
 `$ALPASIM_ROOT` automatically unless `--skip-overrides` is passed.

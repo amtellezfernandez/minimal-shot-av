@@ -161,4 +161,9 @@ export ALPASIM_ROOT=/abs/path/to/alpasim
   --mode print \
   --model token_dagger_iter2_hybrid_clamped \
   --scene-preset fresh_3scene
+
+`bootstrap_alpasim_checkout.sh` clones the pinned upstream AlpaSim checkout and
+builds a minimal `$ALPASIM_ROOT/.venv` with `uv`. The launcher then invokes
+`$ALPASIM_ROOT/.venv/bin/python` and `$ALPASIM_ROOT/.venv/bin/alpasim_wizard`
+directly, so it does not depend on AlpaSim's full workspace lockfile.
 ```
