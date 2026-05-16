@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#1d4ed8"/>
+    </marker>
+    <style>
+      .title{font:700 34px Helvetica,Arial,sans-serif;fill:#102033}
+      .sub{font:400 16px Helvetica,Arial,sans-serif;fill:#526070}
+      .box{fill:#ffffff;stroke:#b7c5d6;stroke-width:2}
+      .blue{fill:#eaf2ff;stroke:#2d6cdf}
+      .green{fill:#e9f8ef;stroke:#1f8a4c}
+      .orange{fill:#fff3df;stroke:#d9822b}
+      .red{fill:#fff0f0;stroke:#ce3b3b}
+      .label{font:700 18px Helvetica,Arial,sans-serif;fill:#132438}
+      .txt{font:400 14px Helvetica,Arial,sans-serif;fill:#24364a}
+      .small{font:400 12px Helvetica,Arial,sans-serif;fill:#566579}
+      .arrow{stroke:#1d4ed8;stroke-width:3;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#7c8da3;stroke-width:2;fill:none;stroke-dasharray:6 5}
+    </style>
+  </defs>
+  <rect width="1280" height="720" fill="#f6f8fb"/>
+  <text x="50" y="58" class="title">Minimal-Shot AV: One Repo, Two Claims</text>
+  <text x="52" y="86" class="sub">SOTA submission is the packaged system. CoRL paper is the transfer diagnostic built on the same infrastructure.</text>
+
+  <rect x="55" y="135" width="245" height="145" rx="16" class="green"/>
+  <text x="80" y="168" class="label">SOTA Runtime</text>
+  <text x="80" y="198" class="txt">Spotlight Reflex</text>
+  <text x="80" y="220" class="txt">6 world-state scalars</text>
+  <text x="80" y="242" class="txt">9 ManeuverTokens</text>
+  <text x="80" y="264" class="small">Episode-free, no production claim</text>
+
+  <rect x="365" y="115" width="255" height="185" rx="16" class="blue"/>
+  <text x="390" y="148" class="label">Custom Simulator</text>
+  <text x="390" y="178" class="txt">WOD-style generators</text>
+  <text x="390" y="200" class="txt">adversarial / hidden / gauntlet</text>
+  <text x="390" y="222" class="txt">closed-loop actors</text>
+  <text x="390" y="244" class="txt">COMPASS + safety metrics</text>
+  <text x="390" y="274" class="small">Controlled causal lab</text>
+
+  <rect x="690" y="115" width="255" height="185" rx="16" class="orange"/>
+  <text x="715" y="148" class="label">Learning Probes</text>
+  <text x="715" y="178" class="txt">BC / RNN / DAgger</text>
+  <text x="715" y="200" class="txt">trajectory scorer</text>
+  <text x="715" y="222" class="txt">source decay</text>
+  <text x="715" y="244" class="txt">hard veto / clamping</text>
+  <text x="715" y="274" class="small">What breaks under shift?</text>
+
+  <rect x="1010" y="115" width="220" height="185" rx="16" class="red"/>
+  <text x="1035" y="148" class="label">AlpaSim</text>
+  <text x="1035" y="178" class="txt">front-camera frames</text>
+  <text x="1035" y="200" class="txt">route + ego dynamics</text>
+  <text x="1035" y="222" class="txt">adapter to scalars</text>
+  <text x="1035" y="244" class="txt">external axes</text>
+  <text x="1035" y="274" class="small">Transfer diagnostic</text>
+
+  <rect x="690" y="405" width="255" height="155" rx="16" class="blue"/>
+  <text x="715" y="438" class="label">WOD-E2E Harness</text>
+  <text x="715" y="468" class="txt">candidate selection</text>
+  <text x="715" y="490" class="txt">Cosmos / InternVLA ablation</text>
+  <text x="715" y="512" class="txt">479 validation frames</text>
+  <text x="715" y="540" class="small">Auxiliary validation-CV only</text>
+
+  <rect x="55" y="405" width="565" height="155" rx="16" class="box"/>
+  <text x="82" y="438" class="label">Claim Boundary</text>
+  <text x="82" y="470" class="txt">SOTA: auditable minimal-shot system package, not production deployment.</text>
+  <text x="82" y="498" class="txt">CoRL: internal success hides multi-axis simulator-transfer failure.</text>
+  <text x="82" y="526" class="txt">WOD: grounding signal is validation-CV, not hidden-test generalization.</text>
+
+  <path d="M300 208 C330 208 335 208 365 208" class="arrow"/>
+  <path d="M620 208 C655 208 660 208 690 208" class="arrow"/>
+  <path d="M945 208 C975 208 980 208 1010 208" class="arrow"/>
+  <path d="M492 300 C500 355 620 405 690 482" class="dash"/>
+  <path d="M818 300 C820 340 820 365 818 405" class="dash"/>
+
+  <text x="52" y="650" class="small">Read left to right: runtime and simulator first, learning probes second, AlpaSim transfer third. WOD grounding is auxiliary evidence for grounded selection.</text>
+</svg>

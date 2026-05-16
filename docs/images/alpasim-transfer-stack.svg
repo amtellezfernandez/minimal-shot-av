@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#b45309"/>
+    </marker>
+    <style>
+      .title{font:700 34px Helvetica,Arial,sans-serif;fill:#102033}
+      .sub{font:400 16px Helvetica,Arial,sans-serif;fill:#526070}
+      .input{fill:#eff6ff;stroke:#2563eb;stroke-width:2}
+      .adapter{fill:#fff7ed;stroke:#d97706;stroke-width:2}
+      .policy{fill:#f0fdf4;stroke:#16a34a;stroke-width:2}
+      .eval{fill:#fef2f2;stroke:#dc2626;stroke-width:2}
+      .label{font:700 18px Helvetica,Arial,sans-serif;fill:#132438}
+      .txt{font:400 14px Helvetica,Arial,sans-serif;fill:#26384d}
+      .small{font:400 12px Helvetica,Arial,sans-serif;fill:#5c6b7d}
+      .arrow{stroke:#b45309;stroke-width:3;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#64748b;stroke-width:2;fill:none;stroke-dasharray:7 6}
+    </style>
+  </defs>
+  <rect width="1280" height="720" fill="#f8fafc"/>
+  <text x="50" y="58" class="title">AlpaSim Transfer Stack</text>
+  <text x="52" y="86" class="sub">The policy is held fixed. Transfer happens through the observation adapter and execution interface.</text>
+
+  <rect x="60" y="150" width="230" height="360" rx="18" class="input"/>
+  <text x="88" y="188" class="label">AlpaSim Inputs</text>
+  <text x="88" y="225" class="txt">front-camera frames</text>
+  <text x="88" y="255" class="txt">route command</text>
+  <text x="88" y="285" class="txt">ego speed / accel</text>
+  <text x="88" y="315" class="txt">pose history</text>
+  <text x="88" y="345" class="txt">sparse hazards</text>
+  <text x="88" y="400" class="small">Real WOD-E2E clips</text>
+
+  <rect x="360" y="130" width="260" height="400" rx="18" class="adapter"/>
+  <text x="388" y="168" class="label">Adapter</text>
+  <text x="388" y="205" class="txt">brightness -> visibility risk</text>
+  <text x="388" y="235" class="txt">route -> lane spline</text>
+  <text x="388" y="265" class="txt">hazards -> actors/obstacles</text>
+  <text x="388" y="295" class="txt">ego -> speed/lane error</text>
+  <text x="388" y="345" class="txt">outputs 10 scalar features</text>
+  <text x="388" y="375" class="txt">or six Spotlight scalars</text>
+  <text x="388" y="455" class="small">This is the proxy-state reconstruction gap.</text>
+
+  <rect x="690" y="150" width="230" height="360" rx="18" class="policy"/>
+  <text x="718" y="188" class="label">Same Policy API</text>
+  <text x="718" y="225" class="txt">learned DAgger argmax</text>
+  <text x="718" y="255" class="txt">clamped lateral tokens</text>
+  <text x="718" y="285" class="txt">hard geometric veto</text>
+  <text x="718" y="315" class="txt">source-decay checkpoint</text>
+  <text x="718" y="365" class="txt">outputs ManeuverToken</text>
+  <text x="718" y="400" class="small">No camera model inside policy.</text>
+
+  <rect x="990" y="150" width="230" height="360" rx="18" class="eval"/>
+  <text x="1018" y="188" class="label">External Axes</text>
+  <text x="1018" y="225" class="txt">collision</text>
+  <text x="1018" y="255" class="txt">offroad</text>
+  <text x="1018" y="285" class="txt">wrong lane</text>
+  <text x="1018" y="315" class="txt">progress</text>
+  <text x="1018" y="345" class="txt">distance to GT</text>
+  <text x="1018" y="400" class="small">Not a single aggregate score.</text>
+
+  <path d="M290 330 L360 330" class="arrow"/>
+  <path d="M620 330 L690 330" class="arrow"/>
+  <path d="M920 330 L990 330" class="arrow"/>
+
+  <path d="M805 510 C820 610 460 610 490 530" class="dash"/>
+  <text x="515" y="620" class="small">Selection failures feed back through execution, not through offline accuracy.</text>
+</svg>

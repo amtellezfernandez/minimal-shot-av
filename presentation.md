@@ -4,7 +4,7 @@ theme: default
 paginate: true
 size: 16:9
 title: Minimal-Shot AV Evidence Deck
-description: SOTA submission and CoRL 2027 research presentation for the minimal-shot AV repository
+description: Architecture-first SOTA submission and CoRL 2027 research presentation
 ---
 
 <!--
@@ -14,58 +14,165 @@ Render HTML:
 Render PDF:
   npx @marp-team/marp-cli presentation.md --pdf --allow-local-files -o presentation.pdf
 PDF export requires Chrome, Chromium, Edge, or Firefox on the host.
-Primary evidence files:
-- docs/corl2027/paper.tex
-- artifacts/corl_evidence_strength_audit.md
-- artifacts/internal_proxy_transfer_medium.md
-- artifacts/alpasim_matrix10_analysis.md
-- artifacts/wod_grounding_ablation_table.md
 -->
 
 # Minimal-Shot AV Evidence Deck
 
-## SOTA Submission Results + CoRL Transfer Diagnostics
+## Architecture, SOTA Submission Results, and CoRL Transfer Diagnostics
 
 Alba Maria Tellez Fernandez<br>
 Waymo Open Dataset E2E Challenge / SOTA + CoRL 2027 branch
 
 ---
 
-# Two Audiences, One Evidence Package
+# How to Read This Deck
 
-This deck supports two related but distinct uses.
+This is not only a CoRL paper presentation.
 
-| Audience | Emphasis | Boundary |
+It has two audiences:
+
+| Audience | What they need | Claim boundary |
 | --- | --- | --- |
-| SOTA audit | working system, bundles, WOD validation-CV | not production |
-| CoRL paper | transfer failure diagnosis | not method dominance |
+| SOTA auditors | architecture, reproducibility, packaged evidence | submission candidate, not production |
+| CoRL reviewers | mechanistic transfer diagnosis | diagnostic paper, not method dominance |
 
-Do not collapse them into one claim.
-
-The SOTA submission is a system/evidence package. The CoRL story is a mechanistic diagnosis built on that infrastructure.
+The architecture is the bridge between both.
 
 ---
 
-# SOTA Submission Scope
+# The Whole System in One Graph
 
-Primary SOTA track:
+![width:1120](docs/images/system-map-sota-corl.svg)
 
-- episode-free Spotlight Reflex closed-loop runtime
-- randomized WOD-style long-tail scenarios
-- explicit minimal-shot integrity audit
-- no public-road deployment or legal certification claim
+Read left to right: runtime and simulator first, learning probes second, AlpaSim transfer third.
 
-Auxiliary benchmark track:
-
-- WOD-E2E candidate-selection harness
-- segment-grouped validation-CV only
-- frozen Cosmos / InternVLA grounding ablations
-
-Source: `artifacts/sota_judging_criteria_audit.json`, `artifacts/final_submission_readiness_audit.json`.
+WOD grounding is auxiliary evidence for grounded candidate selection.
 
 ---
 
-# SOTA Readiness Gates
+# What We Actually Built
+
+| Component | Role | Why it matters |
+| --- | --- | --- |
+| Spotlight Reflex runtime | geometry-driven token selector | auditable minimal-shot policy |
+| Custom simulator | closed-loop long-tail stress lab | controlled causal experiments |
+| DAgger / scorer probes | learned baselines | tests what imitation learns |
+| AlpaSim adapter | external transfer interface | exposes proxy-state mismatch |
+| WOD-E2E harness | real-data selector benchmark | tests frozen grounding priors |
+
+The repo is valuable because these pieces connect into one reproducible evidence chain.
+
+---
+
+# Runtime Architecture: Spotlight Reflex
+
+![bg right:52% width:96%](docs/images/grand-pipeline.svg)
+
+Runtime path:
+
+- obstacle and route geometry become scalar world-state
+- 9 ManeuverTokens are generated
+- reference rules score token futures
+- selected token is executed by the controller
+
+No object identity lookup. No episode lookup. No language prompt at runtime.
+
+---
+
+# Token Interface
+
+The same token interface is used across the SOTA runtime, learned policies, and AlpaSim variants.
+
+| Token family | Examples | Function |
+| --- | --- | --- |
+| stop / crawl / slow-yield | stop, crawl, slow_yield | longitudinal safety |
+| nominal progress | maintain | forward route completion |
+| mild lateral evasion | nudge_left, nudge_right | local clearance |
+| strong lateral evasion | evasive_left, evasive_right | emergency separation |
+| recovery | lane_recover | return to lane center |
+
+This shared interface is why we can isolate selection failure from candidate-set failure.
+
+---
+
+# Simulator Architecture
+
+![width:1120](docs/images/simulator-evaluation-loop.svg)
+
+The simulator is not the realism claim.
+
+It is the controlled lab where we can hold dynamics fixed and perturb only policy-visible state.
+
+---
+
+# What the Simulator Lets Us Test
+
+| Variable | Controlled how |
+| --- | --- |
+| scenario difficulty | WOD-style clusters, gauntlet, adversarial, hidden |
+| distribution shift | Latin-hypercube sampled generator profiles |
+| policy class | Spotlight, BC, RNN, DAgger, scorer, veto |
+| proxy mismatch | heading bias, actor latency, route offset, lane scale, noise |
+| outcome axis | collision, PV, lane, offroad, progress, distance-to-GT |
+
+This is why the simulator results are useful for CoRL: they isolate mechanism before external validation.
+
+---
+
+# Visual Intuition
+
+| Baseline failure | Geometry-grounded success |
+| --- | --- |
+| ![width:430](docs/images/baseline_spotlight.gif) | ![width:430](docs/images/spotlight_success.gif) |
+
+Same scenario family: wrong-way actor under low visibility.
+
+The baseline extrapolates into the hazard. Spotlight chooses an evasive token from geometry.
+
+---
+
+# AlpaSim Transfer Architecture
+
+![width:1120](docs/images/alpasim-transfer-stack.svg)
+
+The policy binary stays fixed.
+
+The transfer problem enters through the adapter:
+
+- front-camera frames
+- route commands
+- ego dynamics
+- sparse hazards
+
+These are reconstructed into the scalar/token interface.
+
+---
+
+# AlpaSim Adapter View
+
+![bg right:50% width:96%](docs/images/alpasim_reasoning_panel.png)
+
+What this slide is showing:
+
+- real WOD-E2E front-camera frames
+- adapter reconstruction of route and hazard signals
+- same downstream scalar policy API
+
+This is the proxy-state reconstruction gap made visible.
+
+---
+
+# Experiment Dependency Graph
+
+![width:1120](docs/images/experiment-dependency-graph.svg)
+
+The main paper result is not one table.
+
+It is a chain: expert data -> DAgger/scorer probes -> internal LHS -> proxy perturbation -> AlpaSim transfer.
+
+---
+
+# SOTA Submission Status
 
 | Gate | Status |
 | --- | --- |
@@ -78,13 +185,13 @@ Source: `artifacts/sota_judging_criteria_audit.json`, `artifacts/final_submissio
 
 No blockers are reported in `artifacts/final_submission_readiness_audit.json`.
 
-The submission boundary is explicit: `submission_candidate_not_hidden_test_not_production`.
+Boundary: `submission_candidate_not_hidden_test_not_production`.
 
 ---
 
-# SOTA Primary Simulation Result
+# SOTA Primary Result
 
-Closed-loop simulation headline from the existing SOTA evidence package:
+Closed-loop simulation headline from the SOTA evidence package:
 
 | Suite | Runs | Collisions | Pass |
 | --- | ---: | ---: | ---: |
@@ -110,13 +217,11 @@ Matched gauntlet comparison: same 420 scenarios, same seeds.
 | Baseline, no world-state reasoning | 2.1% | 20.5% |
 | Spotlight Reflex | **57.6%** | **7.9%** |
 
-Interpretation for SOTA:
+Interpretation:
 
-- the system contribution is not just a score
-- it is an auditable geometry-grounded runtime path
-- failures are analyzed rather than hidden behind an aggregate metric
-
-Source: `README.md`, `docs/presentation.tex`.
+- the SOTA contribution is an auditable runtime path
+- the policy is not selected by scenario ID
+- the failure boundary is measured, not hidden
 
 ---
 
@@ -135,107 +240,24 @@ Source: `README.md`, `docs/presentation.tex`.
 
 This is auxiliary evidence, not a hidden-test or zero-shot WOD claim.
 
-Source: `README.md`, `artifacts/wod_grounding_ablation_table.md`.
+---
+
+# CoRL Research Question
+
+Internal success looked strong.
+
+But did it transfer?
+
+The question became:
+
+> When a learned token policy succeeds inside the training simulator,
+> which parts of its behavior survive a different observation and execution interface?
+
+That is the CoRL paper: a diagnostic of transfer-axis disagreement.
 
 ---
 
-# CoRL Research Claim
-
-Internal closed-loop success is not a reliable transfer proxy.
-
-We find that simulator transfer failure decomposes into separate axes:
-
-- geometry: offroad and route reconstruction
-- safety: collision and proximity violation
-- progress: distance and route completion
-- lane adherence: wrong-lane or lane-violation behavior
-
-No evaluated intervention is co-monotone across all axes in AlpaSim.
-
----
-
-# Why This Matters Now
-
-Recent VLA work moves toward physically grounded latent reasoning.
-
-LaST-VLA argues that autonomous-driving VLA reasoning should use 3D geometric priors
-and world-model dynamics, not only text chain-of-thought.
-
-It reports NAVSIM v1/v2 gains through latent spatio-temporal reasoning.
-
-Our question is narrower and diagnostic:
-
-If a policy or selector is internally strong, which transfer axes actually survive when the observation and dynamics interface changes?
-
-Reference: [LaST-VLA, arXiv:2603.01928](https://arxiv.org/abs/2603.01928)
-
----
-
-# Evidence Stack
-
-| Layer | Purpose | Evidence |
-| --- | --- | --- |
-| SOTA runtime | Working minimal-shot AV system | Spotlight Reflex, COMPASS, submission bundles |
-| Custom simulator | Controlled long-tail AV stress lab | LHS generator, DAgger, proxy perturbations |
-| AlpaSim adapter | External sim-to-sim validation on WOD-E2E clips | 10 matched clips, partial 13-scene refresh |
-| WOD candidate-selection | Real-data grounding probe | 479 validation frames, segment-grouped CV |
-
-The tracks are deliberately separated.
-
-Simulator metrics are not used to tune WOD selector results, and WOD validation-CV is not used as a production claim.
-
----
-
-# What the Simulator Tests
-
-![bg right:44% width:95%](docs/images/simulator-architecture.svg)
-
-The internal simulator is a controlled micro-lab, not a realism claim.
-
-It lets us isolate:
-
-- discrete token action spaces
-- rule-based geometric selection
-- BC and DAgger imitation variants
-- proxy-state corruption with true-state evaluation
-- matched seeds across policies and perturbations
-
-The point is causal isolation before external validation.
-
----
-
-# Visual Failure and Success Cases
-
-| Baseline failure | Geometry-grounded success |
-| --- | --- |
-| ![width:430](docs/images/baseline_spotlight.gif) | ![width:430](docs/images/spotlight_success.gif) |
-
-Same scenario family: wrong-way actor under low visibility.
-
-The baseline extrapolates into the hazard. Spotlight selects an evasive token from geometry.
-
----
-
-# Policy Interface
-
-![bg right:46% width:90%](docs/images/grand-pipeline.svg)
-
-State:
-
-- 10 scalar geometric features for learned policies
-- six core world-state scalars for Spotlight
-
-Action:
-
-- 9 ManeuverTokens
-- stop, crawl, maintain, slow-yield
-- nudge left/right, evasive left/right, lane-recover
-
-The policy selects a token; the controller executes the corresponding short-horizon trajectory.
-
----
-
-# Internal Result: DAgger Closes the Local Frontier
+# Internal LHS Result
 
 Held-out Latin-hypercube sweep: 12 profiles, seeds 1-10, Gauntlet / Adversarial / Hidden.
 
@@ -249,48 +271,30 @@ Each agent: 1080 closed-loop rollouts.
 | Token-DAgger-BC, 2-step | **94.54 / 0.19** | 96.25 / 0.28 | **90.83 / 0.00** | **91.67 / 0.00** |
 | Spotlight Reflex | 94.44 / 0.65 | **96.67 / 0.28** | 90.00 / 0.83 | 90.00 / 2.50 |
 
-Source: `docs/corl2027/paper.tex`, Table 2.
+Internal conclusion: two-step DAgger nearly closes the simulator frontier.
 
 ---
 
-# Internal Result: More DAgger Is Not Monotonic
-
-| Policy | Overall pass / PV | Gauntlet | Adversarial | Hidden |
-| --- | ---: | ---: | ---: | ---: |
-| Token-DAgger, 1-step | 93.98 / 0.46 | 96.81 / 0.56 | 87.50 / 0.42 | 90.00 / 0.00 |
-| Token-DAgger, 2-step | **94.54 / 0.19** | **96.25 / 0.28** | **90.83 / 0.00** | **91.67 / 0.00** |
-| Token-DAgger, 3-step | 92.50 / 0.46 | 94.31 / 0.28 | 87.92 / 0.42 | 90.83 / 1.67 |
-| 3-step source decay | 93.06 / 0.28 | 94.86 / 0.42 | 89.17 / 0.00 | 90.00 / 0.00 |
-| 3-step no inverse frequency | 89.35 / 2.50 | 92.08 / 2.08 | 82.50 / 3.75 | 86.67 / 2.50 |
-
-Interpretation:
-
-Offline accuracy and closed-loop safety are structurally decoupled under aggregation.
-
-Source: `docs/corl2027/paper.tex`, Tables 3 and 6.
-
----
-
-# DAgger Aggregation Visual
+# DAgger Aggregation Is Non-Monotonic
 
 ![width:1050](docs/images/dagger_aggregation_ablation.svg)
 
-The plot is generated from the held-out Latin-hypercube sweep.
+Main pattern:
 
-It makes the main internal pattern visible immediately:
+- DAgger iter2 is the internal frontier
+- iter3 regresses
+- source decay partially repairs iter3
+- removing inverse-frequency weighting improves offline fit but breaks closed-loop safety
 
-- iteration 2 is the frontier
-- source decay partially rescues iteration 3
-- removing inverse-frequency weighting breaks closed-loop safety
+This is the first offline-vs-closed-loop decoupling result.
 
 ---
 
-# Negative Result: Scoring Ego Trajectories Was Not Enough
+# Why Trajectory Scoring Was Not Enough
 
-We trained trajectory-informed scorers over candidate futures with:
+We tested trajectory-informed scorers over candidate futures with:
 
-- curvature and heading deltas
-- path length, acceleration, jerk proxies
+- curvature, heading deltas, path length, jerk proxies
 - minimum dynamic clearance and time-to-closest-approach
 - signed lateral and longitudinal miss distances
 
@@ -300,43 +304,11 @@ We trained trajectory-informed scorers over candidate futures with:
 | Interaction scorer, merged states | 88.75 / 1.67 | 82.92 / 2.50 | 90.00 / 2.50 |
 | Token-DAgger-BC, 2-step | **96.25 / 0.28** | **90.83 / 0.00** | **91.67 / 0.00** |
 
-Conclusion: closed-loop state coverage mattered more than the tested offline trajectory scorer.
+Closed-loop state coverage mattered more than the tested offline scorer.
 
 ---
 
-# External Diagnostic: AlpaSim
-
-![bg right:49% width:96%](docs/images/alpasim_reasoning_panel.png)
-
-AlpaSim uses real WOD-E2E front-camera frames and an adapter that reconstructs:
-
-- brightness
-- route command
-- ego dynamics
-- sparse hazard primitives
-- geometric scalars consumed by the policy
-
-This is a transfer diagnostic, not a full safety benchmark.
-
----
-
-# AlpaSim Bridge
-
-![bg right:46% width:90%](docs/images/alpasim-bridge.svg)
-
-The external bridge keeps the policy binary fixed.
-
-What changes is the interface:
-
-- camera and route observations become proxy geometric scalars
-- sparse hazards become obstacle and actor primitives
-- token selection is evaluated under AlpaSim execution
-
-This is exactly where sim-to-sim mismatch is exposed.
-
----
-
-# AlpaSim Matrix: One Fix Does Not Repair All Axes
+# AlpaSim Result: Axes Separate
 
 10 matched WOD-E2E clips completed by all four variants.
 
@@ -347,85 +319,93 @@ This is exactly where sim-to-sim mismatch is exposed.
 | Hard veto hybrid | 0.800 | 0.200 | 0.700 | 0.837 | 166.06 | 22.71 |
 | Source decay | 0.600 | 0.900 | 0.400 | 0.175 | 62.92 | 27.16 |
 
-Each intervention improves at least one axis and fails or worsens another.
+One intervention repairs one axis and fails or worsens another.
 
 Source: `artifacts/alpasim_matrix10_analysis.md`.
 
 ---
 
-# What the AlpaSim Interventions Show
+# Interpreting the AlpaSim Matrix
 
 | Intervention | Repairs | Worsens or fails |
 | --- | --- | --- |
-| Clamped lateral | offroad, wrong-lane, progress, distance-to-GT | collision increases |
-| Hard veto hybrid | progress, offroad | collision increases, wrong-lane unchanged |
-| Source decay | wrong-lane, progress | offroad unchanged, distance-to-GT worsens |
+| clamping | offroad, wrong-lane, distance-to-GT | collision increases |
+| hard veto | progress, offroad | collision increases, wrong-lane unchanged |
+| source decay | wrong-lane, progress | offroad unchanged, distance-to-GT worsens |
 
-The hard veto is especially diagnostic:
+The hard-veto log is decisive:
 
-- vetoed 1987 / 1990 DAgger argmax decisions
-- selected mostly the geometric scorer path
-- recovered progress by collapsing toward Spotlight-style selection
+- 1987 / 1990 learned DAgger argmax decisions were vetoed
+- progress recovered mostly by collapsing toward geometric scoring
+- that is not a clean hybrid win
 
-This is not a clean hybrid win; it exposes decision-space mismatch.
+It exposes decision-space mismatch.
 
 ---
 
-# Controlled Proxy-State Perturbation
+# Controlled Proxy-State Test
 
-Internal simulator, true-state physics and evaluation fixed.
-
-Only the planner-visible proxy state is corrupted.
+The internal simulator reproduces the same effect when only the policy-visible proxy state is corrupted.
 
 | Perturbation | Raw p/c/l | Clamp | Hybrid | Oracle | Spot |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | clean | 0.917/0.083/0.312 | 0.938/0.062/0.167 | 0.958/0.042/0.167 | 0.938/0.062/0.167 | 0.938/0.062/0.167 |
-| heading bias | 0.896/0.104/0.562 | 0.938/0.062/0.396 | 0.938/0.062/0.375 | 0.896/0.104/0.292 | 0.938/0.062/0.312 |
 | actor latency | 0.604/0.396/0.875 | 0.604/0.396/0.521 | **0.854/0.146/0.208** | 0.833/0.167/0.271 | 0.583/0.417/0.250 |
 | route offset | 0.938/0.062/0.229 | 0.875/0.125/0.021 | 0.896/0.104/0.062 | 0.938/0.042/0.125 | 0.917/0.083/0.083 |
+| feature noise | 0.917/0.083/0.917 | 0.938/0.062/0.146 | 0.917/0.083/0.125 | 0.896/0.104/0.104 | 0.938/0.062/0.167 |
+
+`p/c/l` means pass / collision / lane-violation rate.
 
 Source: `artifacts/internal_proxy_transfer_medium.md`.
 
 ---
 
-# Why the Proxy Sweep Matters
+# The Mechanism
 
-AlpaSim alone leaves an adapter-confound objection.
+AlpaSim alone could be dismissed as an adapter artifact.
 
-The proxy sweep removes that escape hatch:
+The proxy test makes the mechanism harder to dismiss:
 
 - same simulator dynamics
 - same token library
 - same controller
-- matched scenarios
+- same matched seeds
 - only proxy state is corrupted
 
-The same multi-axis tradeoff appears internally under controlled corruption.
-
-That makes the external result mechanistic rather than anecdotal.
+The multi-axis tradeoff appears internally and externally.
 
 ---
 
-# The Proposition
+# The Paper Claim
 
 Let each candidate token have a metric vector:
 
 `m(a) = [collision risk, offroad risk, lane risk, progress loss, tracking error]`
 
-If a proxy-state perturbation changes the action ordering for one metric but not another,
+If a proxy-state perturbation changes action ordering for one metric but not another,
 a scalar intervention can improve one axis while worsening another.
 
-The empirical question is not whether this is possible.
+The empirical contribution is showing that this happens repeatedly in the AV transfer stack.
 
-The empirical question is whether it occurs repeatedly under realistic AV transfer interfaces.
+---
 
-Our answer: yes, in AlpaSim and in controlled proxy perturbations.
+# Grounding Context: LaST-VLA
+
+Recent VLA work argues for physically grounded latent reasoning.
+
+LaST-VLA uses 3D geometric priors and world-model dynamics to improve autonomous-driving VLA planning.
+
+Our result is complementary:
+
+- grounding signal exists
+- but grounding must be evaluated per transfer axis
+- aggregate planning scores can hide conflicting improvements
+
+Reference: [LaST-VLA, arXiv:2603.01928](https://arxiv.org/abs/2603.01928)
 
 ---
 
 # WOD Grounding Probe
-
-479 WOD-E2E validation frames, segment-grouped CV.
 
 | Ablation | RFS | Oracle | Regret | Oracle match | Grounding signal |
 | --- | ---: | ---: | ---: | ---: | --- |
@@ -436,13 +416,11 @@ Our answer: yes, in AlpaSim and in controlled proxy perturbations.
 
 Grounding helps only with the right head.
 
-This supports the LaST-VLA-aligned thesis, but it is not yet a hidden-test claim.
-
-Source: `artifacts/wod_grounding_ablation_table.md`.
+This supports the paper framing, but it is not a hidden-test claim.
 
 ---
 
-# CoRL Evidence Strength Audit
+# Evidence Strength Audit
 
 Current CoRL audit conclusion: `strong_diagnostic`.
 
@@ -455,13 +433,11 @@ Current CoRL audit conclusion: `strong_diagnostic`.
 | Grounding prior signal | +0.150 RFS | >0 | pass |
 | Hidden-test grounding claim | false | true | not yet |
 
-This is intentionally honest: the current CoRL claim is diagnostic, not “best method wins.”
-
-Source: `artifacts/corl_evidence_strength_audit.md`.
+This should be presented as strong diagnostic evidence, not best-method evidence.
 
 ---
 
-# SOTA vs CoRL Claim Boundary
+# Claim Boundary
 
 | Question | Answer |
 | --- | --- |
@@ -471,41 +447,11 @@ Source: `artifacts/corl_evidence_strength_audit.md`.
 | Is the CoRL method a uniform winner? | no, external dominance count is 0 |
 | Is the CoRL diagnosis supported? | yes, internal proxy + AlpaSim both show tradeoffs |
 
-This boundary should stay visible in the presentation.
-
-It protects the SOTA submission from overclaiming and keeps the CoRL paper scientifically defensible.
+This protects both submissions: SOTA stays auditable, CoRL stays scientifically defensible.
 
 ---
 
-# Media and Figures Included
-
-| Asset | Use |
-| --- | --- |
-| `docs/images/baseline_spotlight.gif` | baseline visual failure |
-| `docs/images/spotlight_success.gif` | geometry-grounded success |
-| `docs/images/construction_success.gif` | long-tail construction case |
-| `docs/images/intersection_stress.gif` | multi-actor stress case |
-| `docs/images/alpasim_reasoning_panel.png` | AlpaSim adapter reasoning |
-| `docs/images/dagger_aggregation_ablation.svg` | DAgger aggregation plot |
-| `docs/images/alpasim-bridge.svg` | external bridge diagram |
-
-GIFs are used as short videos in GitHub, Marp, and most slide renderers.
-
----
-
-# Additional Visual Cases
-
-| Construction | Intersection stress |
-| --- | --- |
-| ![width:430](docs/images/construction_success.gif) | ![width:430](docs/images/intersection_stress.gif) |
-
-These examples are not the proof.
-
-They show what the controlled simulator is stressing: narrow corridors, route blockage, multi-actor timing, and lateral escape geometry.
-
----
-
-# Reproducibility Path for Auditors
+# Reproducibility Path
 
 SOTA submission audits:
 
@@ -516,29 +462,12 @@ artifacts/minimal_shot_claim_audit.json
 artifacts/sota_submission_bundles/
 ```
 
-CoRL audit wrapper:
-
-```bash
-./scripts/run_corl2027_audit.sh
-```
-
-Core evidence files:
+CoRL paper and audit:
 
 ```text
 docs/corl2027/paper.tex
 docs/corl2027/AUDIT.md
-artifacts/corl_evidence_strength_audit.md
-artifacts/internal_proxy_transfer_medium.md
-artifacts/alpasim_matrix10_analysis.md
-artifacts/wod_grounding_ablation_table.md
-```
-
-AlpaSim setup and runtime are documented in `docs/notes/alpasim-integration.md`.
-
-Paper draft path on this branch:
-
-```text
-docs/corl2027/paper.tex
+./scripts/run_corl2027_audit.sh
 ```
 
 GitHub branch path:
@@ -549,40 +478,35 @@ https://github.com/amtellezfernandez/minimal-shot-av/tree/CoRL-2027/docs/corl202
 
 ---
 
-# Submission Framing
+# Presentation Framing
 
-For SOTA, frame this as:
+For SOTA:
 
-“A reproducible minimal-shot AV system with explicit claim boundaries, simulation evidence,
-WOD validation-CV auxiliary results, and packaged audit artifacts.”
+> A reproducible minimal-shot AV system with explicit claim boundaries,
+> simulation evidence, WOD validation-CV auxiliary results, and packaged audit artifacts.
 
-For CoRL, do not frame this as:
+For CoRL:
 
-“Our hybrid method dominates.”
+> Internal imitation-learning success can hide transfer-axis disagreement.
+> We reproduce the mechanism under controlled proxy corruption and external AlpaSim transfer.
+
+Do not pitch this as “the hybrid wins.”
 
 The data does not support that.
 
-Frame the CoRL result as:
-
-“Internal imitation-learning success can hide transfer-axis disagreement.
-
-We provide a controlled diagnostic, reproduce the effect externally in AlpaSim,
-and show that physical grounding must be evaluated per axis rather than as one aggregate
-planning score.”
-
-That is the defensible CoRL contribution.
-
 ---
 
-# Takeaway
+# Final Takeaway
 
-The surprising result is not that DAgger fails externally.
+The architecture work matters because it lets us localize failure:
 
-The result is where it fails:
+- Spotlight shows geometry-grounded token selection can work
+- DAgger learns the internal simulator boundary
+- AlpaSim exposes proxy-state decision mismatch
+- proxy perturbations reproduce the same failure internally
+- WOD grounding shows frozen priors help only with the right head
 
-- the internal simulator says the learned token policy is calibrated
-- AlpaSim shows the selected tokens are often externally incompatible
-- controlled proxy corruption reproduces the same axis conflicts
-- frozen world/VLA priors help only through head-sensitive grounded selection
+The best claim is architectural and diagnostic:
 
-Robust AV evaluation needs per-axis transfer diagnostics, not only offline accuracy or aggregate closed-loop pass rate.
+robust AV evaluation needs grounded, per-axis transfer diagnostics,
+not only offline accuracy or aggregate closed-loop pass rate.

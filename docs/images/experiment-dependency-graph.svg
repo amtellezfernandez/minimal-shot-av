@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#475569"/>
+    </marker>
+    <style>
+      .title{font:700 34px Helvetica,Arial,sans-serif;fill:#102033}
+      .sub{font:400 16px Helvetica,Arial,sans-serif;fill:#526070}
+      .box{fill:#fff;stroke:#b7c5d6;stroke-width:2}
+      .data{fill:#eef2ff;stroke:#4f46e5}
+      .train{fill:#ecfdf5;stroke:#059669}
+      .eval{fill:#fff7ed;stroke:#ea580c}
+      .diag{fill:#fef2f2;stroke:#dc2626}
+      .label{font:700 17px Helvetica,Arial,sans-serif;fill:#132438}
+      .txt{font:400 13px Helvetica,Arial,sans-serif;fill:#2d3d52}
+      .small{font:400 12px Helvetica,Arial,sans-serif;fill:#64748b}
+      .arrow{stroke:#475569;stroke-width:2.6;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1280" height="720" fill="#f8fafc"/>
+  <text x="50" y="58" class="title">Experiment Dependency Graph</text>
+  <text x="52" y="86" class="sub">The presentation should make clear which results depend on which artifacts.</text>
+
+  <rect x="70" y="130" width="235" height="115" rx="14" class="data"/>
+  <text x="95" y="162" class="label">Expert Data</text>
+  <text x="95" y="192" class="txt">Spotlight rollouts</text>
+  <text x="95" y="214" class="txt">10 scalar state, token label</text>
+
+  <rect x="70" y="305" width="235" height="115" rx="14" class="data"/>
+  <text x="95" y="337" class="label">DAgger Pools</text>
+  <text x="95" y="367" class="txt">iter1 / iter2 / iter3</text>
+  <text x="95" y="389" class="txt">on-policy relabeling</text>
+
+  <rect x="365" y="130" width="235" height="115" rx="14" class="train"/>
+  <text x="390" y="162" class="label">Policy Baselines</text>
+  <text x="390" y="192" class="txt">Continuous-BC</text>
+  <text x="390" y="214" class="txt">Token-BC, RNN, DAgger</text>
+
+  <rect x="365" y="305" width="235" height="115" rx="14" class="train"/>
+  <text x="390" y="337" class="label">Scorer Baselines</text>
+  <text x="390" y="367" class="txt">trajectory futures</text>
+  <text x="390" y="389" class="txt">interaction features</text>
+
+  <rect x="665" y="130" width="235" height="115" rx="14" class="eval"/>
+  <text x="690" y="162" class="label">Internal LHS</text>
+  <text x="690" y="192" class="txt">1080 rollouts/agent</text>
+  <text x="690" y="214" class="txt">pass + PV frontier</text>
+
+  <rect x="665" y="305" width="235" height="115" rx="14" class="eval"/>
+  <text x="690" y="337" class="label">Proxy Perturbation</text>
+  <text x="690" y="367" class="txt">288 matched cases</text>
+  <text x="690" y="389" class="txt">controlled causal check</text>
+
+  <rect x="965" y="130" width="235" height="115" rx="14" class="diag"/>
+  <text x="990" y="162" class="label">AlpaSim Matrix</text>
+  <text x="990" y="192" class="txt">10 matched clips</text>
+  <text x="990" y="214" class="txt">collision/offroad/lane/progress</text>
+
+  <rect x="965" y="305" width="235" height="115" rx="14" class="diag"/>
+  <text x="990" y="337" class="label">Paper Claim</text>
+  <text x="990" y="367" class="txt">multi-axis transfer failure</text>
+  <text x="990" y="389" class="txt">not one scalar robustness gap</text>
+
+  <rect x="365" y="500" width="535" height="100" rx="14" class="box"/>
+  <text x="390" y="532" class="label">Auxiliary WOD Grounding</text>
+  <text x="390" y="562" class="txt">Scalar-only vs InternVLA vs Cosmos fusion vs Cosmos nonlinear head</text>
+  <text x="390" y="584" class="small">Supports head-sensitive grounding; not hidden-test generalization.</text>
+
+  <path d="M305 188 L365 188" class="arrow"/>
+  <path d="M305 363 L365 188" class="arrow"/>
+  <path d="M305 363 L365 363" class="arrow"/>
+  <path d="M600 188 L665 188" class="arrow"/>
+  <path d="M600 363 L665 188" class="arrow"/>
+  <path d="M600 188 L665 363" class="arrow"/>
+  <path d="M900 188 L965 188" class="arrow"/>
+  <path d="M900 363 L965 188" class="arrow"/>
+  <path d="M900 363 L965 363" class="arrow"/>
+  <path d="M632 500 L632 420" class="arrow"/>
+</svg>
