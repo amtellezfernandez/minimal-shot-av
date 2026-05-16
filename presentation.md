@@ -535,6 +535,18 @@ artifacts/wod_grounding_ablation_table.md
 
 AlpaSim setup and runtime are documented in `docs/notes/alpasim-integration.md`.
 
+Paper draft path on this branch:
+
+```text
+docs/corl2027/paper.tex
+```
+
+GitHub branch path:
+
+```text
+https://github.com/amtellezfernandez/minimal-shot-av/tree/CoRL-2027/docs/corl2027
+```
+
 ---
 
 # Submission Framing
