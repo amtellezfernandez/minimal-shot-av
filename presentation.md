@@ -3,12 +3,12 @@ marp: true
 theme: default
 paginate: true
 size: 16:9
-title: Multi-Axis Failure Modes in Simulator Transfer
-description: CoRL 2027 submission presentation for the minimal-shot AV repository
+title: Minimal-Shot AV Evidence Deck
+description: SOTA submission and CoRL 2027 research presentation for the minimal-shot AV repository
 ---
 
 <!--
-CoRL 2027 presentation deck.
+SOTA + CoRL 2027 presentation deck.
 Render HTML:
   npx @marp-team/marp-cli presentation.md --html --allow-local-files -o presentation.html
 Render PDF:
@@ -22,16 +22,124 @@ Primary evidence files:
 - artifacts/wod_grounding_ablation_table.md
 -->
 
-# Multi-Axis Failure Modes in Simulator Transfer
+# Minimal-Shot AV Evidence Deck
 
-## Diagnostics from Discrete Maneuver Tokens and Grounded Selection
+## SOTA Submission Results + CoRL Transfer Diagnostics
 
 Alba Maria Tellez Fernandez<br>
-Waymo Open Dataset E2E Challenge / CoRL 2027 branch
+Waymo Open Dataset E2E Challenge / SOTA + CoRL 2027 branch
 
 ---
 
-# The Core Claim
+# Two Audiences, One Evidence Package
+
+This deck supports two related but distinct uses.
+
+| Audience | Emphasis | Boundary |
+| --- | --- | --- |
+| SOTA audit | working system, bundles, WOD validation-CV | not production |
+| CoRL paper | transfer failure diagnosis | not method dominance |
+
+Do not collapse them into one claim.
+
+The SOTA submission is a system/evidence package. The CoRL story is a mechanistic diagnosis built on that infrastructure.
+
+---
+
+# SOTA Submission Scope
+
+Primary SOTA track:
+
+- episode-free Spotlight Reflex closed-loop runtime
+- randomized WOD-style long-tail scenarios
+- explicit minimal-shot integrity audit
+- no public-road deployment or legal certification claim
+
+Auxiliary benchmark track:
+
+- WOD-E2E candidate-selection harness
+- segment-grouped validation-CV only
+- frozen Cosmos / InternVLA grounding ablations
+
+Source: `artifacts/sota_judging_criteria_audit.json`, `artifacts/final_submission_readiness_audit.json`.
+
+---
+
+# SOTA Readiness Gates
+
+| Gate | Status |
+| --- | --- |
+| Grand archive ready | pass |
+| Minor archive ready | pass |
+| Minimal-shot integrity | pass |
+| Judging-criteria evidence | pass |
+| Production no-go boundary declared | pass |
+| WOD symbolic-trust risk-control boundary | pass |
+
+No blockers are reported in `artifacts/final_submission_readiness_audit.json`.
+
+The submission boundary is explicit: `submission_candidate_not_hidden_test_not_production`.
+
+---
+
+# SOTA Primary Simulation Result
+
+Closed-loop simulation headline from the existing SOTA evidence package:
+
+| Suite | Runs | Collisions | Pass |
+| --- | ---: | ---: | ---: |
+| WOD-style, all 11 clusters | 110 | 0 | 100% |
+| Compositional OOD | 60 | 0 | 100% |
+| Adversarial | 60 | 0 | 100% |
+| Hidden holdout | 60 | 0 | 100% |
+| Gauntlet | 60 | 0 | 60% |
+| Total | 350 | 0 | 93.1% |
+
+COMPASS: **9.137 / 10** over 700 ranked runs.
+
+Source: `README.md`, `artifacts/compass_evidence_report.json`.
+
+---
+
+# SOTA Baseline Comparison
+
+Matched gauntlet comparison: same 420 scenarios, same seeds.
+
+| Policy | Pass rate | Collision rate |
+| --- | ---: | ---: |
+| Baseline, no world-state reasoning | 2.1% | 20.5% |
+| Spotlight Reflex | **57.6%** | **7.9%** |
+
+Interpretation for SOTA:
+
+- the system contribution is not just a score
+- it is an auditable geometry-grounded runtime path
+- failures are analyzed rather than hidden behind an aggregate metric
+
+Source: `README.md`, `docs/presentation.tex`.
+
+---
+
+# WOD-E2E Auxiliary Benchmark
+
+479 WOD-E2E validation frames, segment-grouped CV.
+
+| Selector | RFS | Folds | Role |
+| --- | ---: | ---: | --- |
+| Waymo baseline | 7.022 | - | reference |
+| Local baseline | 7.131 | - | reference |
+| Gate-only | 7.803 | 5 | selector baseline |
+| RFF direct policy | 7.834 | 5 | learned baseline |
+| GPU MLP + Cosmos 64d | **7.845** | 5 | champion validation-CV |
+| Oracle selector | 9.264 | 5 | upper bound |
+
+This is auxiliary evidence, not a hidden-test or zero-shot WOD claim.
+
+Source: `README.md`, `artifacts/wod_grounding_ablation_table.md`.
+
+---
+
+# CoRL Research Claim
 
 Internal closed-loop success is not a reliable transfer proxy.
 
@@ -63,17 +171,18 @@ Reference: [LaST-VLA, arXiv:2603.01928](https://arxiv.org/abs/2603.01928)
 
 ---
 
-# Experimental Stack
+# Evidence Stack
 
 | Layer | Purpose | Evidence |
 | --- | --- | --- |
-| Custom closed-loop simulator | Controlled long-tail AV stress lab | LHS generator, DAgger, proxy perturbations |
+| SOTA runtime | Working minimal-shot AV system | Spotlight Reflex, COMPASS, submission bundles |
+| Custom simulator | Controlled long-tail AV stress lab | LHS generator, DAgger, proxy perturbations |
 | AlpaSim adapter | External sim-to-sim validation on WOD-E2E clips | 10 matched clips, partial 13-scene refresh |
-| WOD candidate-selection track | Real-data grounding probe | 479 validation frames, segment-grouped CV |
+| WOD candidate-selection | Real-data grounding probe | 479 validation frames, segment-grouped CV |
 
 The tracks are deliberately separated.
 
-Simulator metrics are not used to tune WOD selector results.
+Simulator metrics are not used to tune WOD selector results, and WOD validation-CV is not used as a production claim.
 
 ---
 
@@ -333,9 +442,9 @@ Source: `artifacts/wod_grounding_ablation_table.md`.
 
 ---
 
-# Evidence Strength Audit
+# CoRL Evidence Strength Audit
 
-Current repo audit conclusion: `strong_diagnostic`.
+Current CoRL audit conclusion: `strong_diagnostic`.
 
 | Gate | Current | Target | Status |
 | --- | ---: | --- | --- |
@@ -346,9 +455,25 @@ Current repo audit conclusion: `strong_diagnostic`.
 | Grounding prior signal | +0.150 RFS | >0 | pass |
 | Hidden-test grounding claim | false | true | not yet |
 
-This is intentionally honest: the current claim is diagnostic, not “best method wins.”
+This is intentionally honest: the current CoRL claim is diagnostic, not “best method wins.”
 
 Source: `artifacts/corl_evidence_strength_audit.md`.
+
+---
+
+# SOTA vs CoRL Claim Boundary
+
+| Question | Answer |
+| --- | --- |
+| Is the SOTA submission packaged? | yes, readiness audit has no blockers |
+| Is this a production AV safety claim? | no, production audit is `no_go` |
+| Is WOD 7.845 a hidden-test claim? | no, validation-CV only |
+| Is the CoRL method a uniform winner? | no, external dominance count is 0 |
+| Is the CoRL diagnosis supported? | yes, internal proxy + AlpaSim both show tradeoffs |
+
+This boundary should stay visible in the presentation.
+
+It protects the SOTA submission from overclaiming and keeps the CoRL paper scientifically defensible.
 
 ---
 
@@ -382,7 +507,16 @@ They show what the controlled simulator is stressing: narrow corridors, route bl
 
 # Reproducibility Path for Auditors
 
-Start with the audit wrapper:
+SOTA submission audits:
+
+```text
+artifacts/final_submission_readiness_audit.json
+artifacts/sota_judging_criteria_audit.json
+artifacts/minimal_shot_claim_audit.json
+artifacts/sota_submission_bundles/
+```
+
+CoRL audit wrapper:
 
 ```bash
 ./scripts/run_corl2027_audit.sh
@@ -405,13 +539,18 @@ AlpaSim setup and runtime are documented in `docs/notes/alpasim-integration.md`.
 
 # Submission Framing
 
-Do not frame this as:
+For SOTA, frame this as:
+
+“A reproducible minimal-shot AV system with explicit claim boundaries, simulation evidence,
+WOD validation-CV auxiliary results, and packaged audit artifacts.”
+
+For CoRL, do not frame this as:
 
 “Our hybrid method dominates.”
 
 The data does not support that.
 
-Frame it as:
+Frame the CoRL result as:
 
 “Internal imitation-learning success can hide transfer-axis disagreement.
 
