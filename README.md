@@ -38,7 +38,37 @@ model selection.
 
 ---
 
-## More Scenarios
+## Architecture At A Glance
+
+![SOTA and CoRL system map](docs/images/system-map-sota-corl.svg)
+
+*Repository map — custom simulator, AlpaSim transfer harness, WOD-E2E selector, and
+the CoRL/SOTA evidence path are separate but auditable from the same branch.*
+
+![AlpaSim transfer stack](docs/images/alpasim-transfer-stack.svg)
+
+*AlpaSim stack — WOD-E2E scene assets feed the front-camera adapter; the same token
+policies are evaluated as raw DAgger, clamped DAgger, hybrid-veto, and source-decayed
+variants.*
+
+![Simulator evaluation loop](docs/images/simulator-evaluation-loop.svg)
+
+*Internal simulator loop — policy tokens are scored against continuous safety axes
+before being compared with external AlpaSim transfer behavior.*
+
+---
+
+## Scenario And Transfer Videos
+
+![AlpaSim transfer matrix clip](docs/images/alpasim_token_dagger_iter2_30scene.gif)
+
+*AlpaSim transfer matrix — WOD-E2E front-camera rollout with adapter map and metric
+overlay. This GIF is generated from the 30-scene learned-policy matrix artifacts;
+raw MP4 rollouts stay under ignored `runs/` directories.*
+
+![AlpaSim sensor input and reasoning output](docs/images/alpasim_reasoning_panel.png)
+
+*AlpaSim — real WOD-E2E front-camera frames alongside the adapter's reasoning output.*
 
 ![Construction zone](docs/images/construction_success.gif)
 
@@ -48,9 +78,10 @@ model selection.
 
 *Intersection stress — two crossing actors, different timings, 207 steps.*
 
-![AlpaSim sensor input and reasoning output](docs/images/alpasim_reasoning_panel.png)
+![Foreign object debris](docs/images/fod_success.gif)
 
-*AlpaSim — real WOD-E2E front-camera frames alongside the adapter's reasoning output.*
+*Foreign object debris — candidate selection avoids a static long-tail obstacle and
+returns to the lane reference.*
 
 ---
 
@@ -90,7 +121,19 @@ COMPASS: **9.137 / 10** (700 ranked runs) · 95% CI collision rate [0.0, 0.0053]
 Oracle gap: **1.419 RFS** — the right candidate exists in the pool but the selector
 cannot identify it without visual scene information.
 
-**AlpaSim:** same policy, sensor-realistic, `collision_at_fault: 0.0`, `dist_to_gt: 0.42 m`
+**AlpaSim transfer diagnostics — 10 shared WOD-E2E clips, paired by scene:**
+
+| Variant | Collision | Offroad | Wrong lane | Progress | Distance |
+|---------|----------:|--------:|-----------:|---------:|---------:|
+| Raw DAgger iter2 | 0.600 | 0.900 | 0.700 | 0.034 | 62.0 m |
+| Clamped DAgger iter2 | 0.700 | 0.500 | 0.200 | 0.384 | 59.9 m |
+| Hybrid clamped-veto | 0.800 | 0.200 | 0.700 | 0.837 | 166.1 m |
+| Source-decayed DAgger | 0.600 | 0.900 | 0.400 | 0.175 | 62.9 m |
+
+The external result is intentionally reported per axis, not as a single winner:
+clamping improves route geometry, hybrid veto improves progress/offroad behavior,
+and source decay improves wrong-lane rate. Full paired tests are in
+[`artifacts/alpasim_matrix10_analysis.md`](artifacts/alpasim_matrix10_analysis.md).
 
 ---
 
@@ -120,6 +163,12 @@ Two primary references — each focused on one track with no repeated content:
 
 - **[`docs/presentation.tex`](docs/presentation.tex)** — LaTeX Beamer slide deck
   (`pdflatex docs/presentation.tex` or paste into Overleaf).
+- **[`presentation.md`](presentation.md)** / **[`presentation.pdf`](presentation.pdf)** —
+  branch-level SOTA/CoRL presentation with architecture graphs, simulator results,
+  AlpaSim transfer diagnostics, WOD-E2E results, and submission/audit links.
+- **[`docs/corl2027/paper.tex`](docs/corl2027/paper.tex)** /
+  **[`docs/corl2027/paper.pdf`](docs/corl2027/paper.pdf)** — current CoRL 2027
+  draft on grounded token selection and proxy-state transfer failure.
 
 For the CoRL 2027 branch specifically, start here:
 
