@@ -32,6 +32,12 @@ artifact/external/*
 !artifact/external/README.md
 outputs/
 runs/
+.hf/
+.env.alpasim_hf
+data/
+docs/corl2027/*.aux
+docs/corl2027/*.log
+docs/corl2027/*.out
 waymo_open_dataset_end_to_end_camera_v_1_0_0/
 alpasim/
 waymo-open-dataset/

@@ -583,6 +583,50 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertTrue(trace["used_fallback_geometric"])
         self.assertEqual("fallback_geometric", trace["decision_type"])
 
+    def test_token_bc_alpasim_adapter_axis_constrained_preserves_safe_dagger_argmax(self) -> None:
+        with TemporaryDirectory() as tmp:
+            checkpoint_path = Path(tmp) / "token_dagger_bc.pt"
+            model = _GeomMLP(len(TOKEN_ORDER))
+            for parameter in model.parameters():
+                parameter.data.zero_()
+            last_linear = [module for module in model.modules() if isinstance(module, torch.nn.Linear)][-1]
+            last_linear.bias.data[TOKEN_ORDER.index("evasive_left")] = 5.0
+            last_linear.bias.data[TOKEN_ORDER.index("maintain")] = 4.95
+            torch.save(
+                {
+                    "state_dict": model.state_dict(),
+                    "feat_mean": np.zeros(10, dtype=np.float32),
+                    "feat_std": np.ones(10, dtype=np.float32),
+                    "token_names": list(TOKEN_ORDER),
+                },
+                checkpoint_path,
+            )
+            adapter = TokenBCAlpaSimModel(
+                checkpoint_path=checkpoint_path,
+                device="cpu",
+                camera_ids=["front"],
+                context_length=1,
+                output_frequency_hz=4,
+                trajectory_mode="clamped_lateral",
+                selection_mode="axis_constrained",
+                hybrid_top_k=2,
+            )
+            prediction_input = SimpleNamespace(
+                camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                command=DriveCommand.STRAIGHT,
+                speed=6.0,
+                acceleration=0.0,
+                ego_pose_history=[],
+            )
+
+            prediction = adapter.predict(prediction_input)
+            trace = json.loads(prediction.reasoning_text or "{}")["selection_trace"]
+
+        self.assertEqual("evasive_left", trace["dagger_argmax_token"])
+        self.assertEqual("evasive_left", trace["hybrid_token"])
+        self.assertFalse(trace["dagger_argmax_vetoed"])
+        self.assertEqual("dagger_wins", trace["decision_type"])
+
     def test_token_bc_alpasim_adapter_rejects_unknown_checkpoint_tokens(self) -> None:
         with TemporaryDirectory() as tmp:
             checkpoint_path = Path(tmp) / "bad_token_dagger_bc.pt"

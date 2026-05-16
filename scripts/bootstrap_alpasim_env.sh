@@ -20,7 +20,7 @@ env UV_CACHE_DIR="$ROOT/.uv-cache" "$UV_BIN" pip install \
   --python "$ROOT/.venv/bin/python" \
   -e "$ROOT[alpasim]"
 
-if [[ -d "$ALPASIM_ROOT/src/driver" && -x "$ALPASIM_ROOT/.venv/bin/python" ]]; then
+if [[ -d "$ALPASIM_ROOT/src/driver" ]]; then
   ALPASIM_ROOT="$ALPASIM_ROOT" "$ROOT/.venv/bin/python" "$ROOT/scripts/setup_alpasim_local_plugin.py"
 else
   echo "Repo .venv is ready at $ROOT/.venv"

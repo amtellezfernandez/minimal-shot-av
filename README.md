@@ -121,14 +121,24 @@ Two primary references — each focused on one track with no repeated content:
 - **[`docs/presentation.tex`](docs/presentation.tex)** — LaTeX Beamer slide deck
   (`pdflatex docs/presentation.tex` or paste into Overleaf).
 
+For the CoRL 2027 branch specifically, start here:
+
+- **[`docs/corl2027/AUDIT.md`](docs/corl2027/AUDIT.md)** — the shortest audit path:
+  branch assumptions, what is published on Hugging Face, what can be checked without
+  AlpaSim, and the exact commands for the full external matrix.
+- **`./scripts/run_corl2027_audit.sh`** — repo-local wrapper that runs the current
+  paper-evidence audits and, if a transfer-matrix directory already exists, refreshes
+  the paired AlpaSim analysis from disk.
+
 ---
 
 ## Quickstart
 
 ```bash
-# Full reproducible AlpaSim bootstrap: clone pinned upstream checkout if missing,
-# create .venv via uv, and apply this repo's tracked overrides.
-./scripts/bootstrap_alpasim_checkout.sh
+# Full reproducible AlpaSim runtime bootstrap: clone pinned upstream checkout if
+# missing, create .venv via uv, run readiness, and build runtime images only on
+# supported hosts.
+./scripts/bootstrap_alpasim_runtime.sh
 
 # Single demo rollout — wrong-way actor scenario
 uv run --no-sync python scripts/run_demo.py \
@@ -156,12 +166,13 @@ For AlpaSim specifically, keep the checkout path explicit:
 
 ```bash
 export ALPASIM_ROOT=/abs/path/to/alpasim
-./scripts/bootstrap_alpasim_checkout.sh
+./scripts/bootstrap_alpasim_runtime.sh
 ./.venv/bin/python scripts/fetch_checkpoints.py
 ./.venv/bin/python scripts/run_alpasim_local_external.py \
   --mode print \
   --model token_dagger_iter2_hybrid_clamped \
   --scene-preset fresh_3scene
+```
 
 `bootstrap_alpasim_checkout.sh` clones the pinned upstream AlpaSim checkout and
 builds a minimal `$ALPASIM_ROOT/.venv` with `uv`. The launcher then invokes
@@ -172,4 +183,81 @@ Published paper checkpoints live in the public Hugging Face repo
 `amtellezfernandez/minimal-shot-av-corl2027-checkpoints`. The tracked manifest at
 `artifacts/models_manifest.json` defines the exact files, checksums, and local target
 paths used by `scripts/fetch_checkpoints.py`.
+
+Important: `ALPASIM_ROOT` must point at a real nested AlpaSim git checkout, not a
+copied folder. If you copied `alpasim/` between machines and it lost its `.git`
+metadata, the wizard will resolve configs against the wrong repo root and fail.
+`./scripts/bootstrap_alpasim_checkout.sh` now detects that case, moves the invalid
+tree aside, and reclones the pinned upstream checkout automatically.
+
+Before any real launch, `./scripts/check_alpasim_readiness.py` verifies the four
+failure points that caused most of the Spark bring-up issues: checkout shape,
+Docker access, presence of the local `alpasim-base:0.66.0` image, and gated USDZ
+scene artifacts for the requested preset.
+
+For the CoRL evidence loop, the repo now exposes three explicit gates:
+
+```bash
+# Audit what the current artifacts can honestly claim.
+./.venv/bin/python scripts/audit_corl_evidence_strength.py
+
+# Check whether internal proxy perturbations predict external AlpaSim failures.
+./.venv/bin/python scripts/analyze_transfer_predictors.py
+
+# Plan the decisive 30-scene matrix, including the axis-constrained selector.
+./.venv/bin/python scripts/run_alpasim_transfer_matrix.py \
+  --mode print \
+  --scene-presets front_camera_30scene_merged \
+  --matrix-dir runs/alpasim_transfer_matrix_30scene_axis \
+  --allow-existing-matrix-dir
+```
+
+Switch `--mode print` to `--mode both --continue-on-error` on an x86_64 AlpaSim
+host after readiness passes. The Best-Paper-level blocker is explicit in
+`artifacts/corl_evidence_strength_audit.md`: the current local artifacts support a
+strong diagnostic paper, but not yet a positive external method claim.
+
+For a one-command repo audit on this branch, use:
+
+```bash
+./scripts/run_corl2027_audit.sh
+```
+
+That wrapper:
+
+1. checks the repo-local evidence-strength audit
+2. checks the internal-to-external transfer predictor analysis
+3. refreshes the paired AlpaSim matrix analysis if an external matrix is already present
+4. prints the exact markdown paths a reviewer should read first
+
+Current limitation: real AlpaSim rollouts are only supported on `x86_64` hosts.
+The NVIDIA NRE `sensorsim` image used by the wizard is amd64-only; on ARM hosts
+such as DGX Spark we observed emulated `sensorsim` hangs and crashes before the
+gRPC port became ready. The readiness check now fails fast on ARM unless
+`MSA_ALLOW_UNSUPPORTED_ALPASIM_ARM=1` is set explicitly.
+
+If the repo contains a folder-local Hugging Face token at `.env.alpasim_hf`,
+you can trigger direct gated AlpaSim downloads and the learned-policy matrix with:
+
+```bash
+./scripts/run_alpasim_transfer_matrix_repo.sh \
+  --mode both \
+  --models token_dagger_iter2,token_dagger_iter2_clamped,token_dagger_iter2_hybrid_clamped,token_dagger_srcdecay \
+  --scene-presets front_camera_10scene_smoke \
+  --matrix-dir runs/alpasim_transfer_matrix_run_10scene \
+  --allow-existing-matrix-dir \
+  --continue-on-error
+```
+
+That wrapper now does four repo-local setup steps automatically before the run:
+
+1. validates or repairs the nested AlpaSim checkout
+2. bootstraps the AlpaSim Python env and plugin registry
+3. runs a readiness preflight before any expensive Docker work
+4. builds the required local Docker image `alpasim-base:0.66.0` if it is missing
+
+For an explicit preflight without launching anything:
+
+```bash
+./scripts/check_alpasim_readiness.py --scene-preset front_camera_10scene_smoke
 ```

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import os
+import platform
 import shlex
 import signal
 import subprocess
@@ -85,6 +87,25 @@ MODEL_PRESETS = {
             "MSA_TOKENBC_HYBRID_POLICY_TEMPERATURE": "1.0",
             "MSA_TOKENBC_HYBRID_VETO_MARGIN": "8.0",
             "MSA_TOKENBC_HYBRID_MAX_GEOMETRIC_RANK": "2",
+            "MSA_TOKENBC_TRAJECTORY_MODE": "clamped_lateral",
+            "MSA_TOKENBC_MAX_LATERAL_OFFSET_M": "2.0",
+            "MSA_TOKENBC_SELECTION_LOG_PATH": "{run_dir}/driver/selection-log.jsonl",
+        },
+    },
+    "token_dagger_iter2_axis_constrained_clamped": {
+        "config_file": ROOT
+        / "src"
+        / "minimal_shot_av"
+        / "simulator"
+        / "alpasim_configs"
+        / "driver"
+        / "token_dagger_bc_clamped.yaml",
+        "wizard_driver": "spotlight_reflex",
+        "checkpoint": ROOT / "artifacts" / "bc_models_iter2" / "token_dagger_bc.pt",
+        "driver_env": {
+            "MSA_TOKENBC_SELECTION_MODE": "axis_constrained",
+            "MSA_TOKENBC_HYBRID_TOP_K": "3",
+            "MSA_TOKENBC_HYBRID_POLICY_TEMPERATURE": "1.0",
             "MSA_TOKENBC_TRAJECTORY_MODE": "clamped_lateral",
             "MSA_TOKENBC_MAX_LATERAL_OFFSET_M": "2.0",
             "MSA_TOKENBC_SELECTION_LOG_PATH": "{run_dir}/driver/selection-log.jsonl",
@@ -231,6 +252,12 @@ def _parse_args() -> argparse.Namespace:
         help="Pass wizard.dry_run=true for config validation without executing rollouts.",
     )
     parser.add_argument(
+        "--wizard-arg",
+        action="append",
+        default=[],
+        help="Extra raw Hydra override to append to the AlpaSim wizard command.",
+    )
+    parser.add_argument(
         "--driver-warmup-seconds",
         type=float,
         default=10.0,
@@ -247,6 +274,7 @@ def _parse_args() -> argparse.Namespace:
 def main() -> None:
     args = _parse_args()
     alpasim_root = _resolve_alpasim_root(args.alpasim_root)
+    _validate_alpasim_checkout(alpasim_root)
     driver_project = alpasim_root / "src" / "driver"
     wizard_project = alpasim_root / "src" / "wizard"
     alpasim_python = alpasim_root / ".venv" / "bin" / "python"
@@ -262,6 +290,10 @@ def main() -> None:
         raise SystemExit(f"AlpaSim wizard binary not found: {alpasim_wizard}")
 
     scene_ids = _scene_ids(args.scene_preset, args.scene_id)
+    _preflight_docker_access()
+    _preflight_alpasim_base_image()
+    _preflight_platform_compatibility()
+    _preflight_scene_artifacts(alpasim_root=alpasim_root, scene_ids=scene_ids)
     run_dir = _resolve_run_dir(args)
     _prepare_run_dir(run_dir, allow_existing=args.allow_existing_run_dir)
 
@@ -293,6 +325,7 @@ def main() -> None:
     wizard_cmd = _wizard_command(
         alpasim_wizard=alpasim_wizard,
         wizard_driver=model_preset["wizard_driver"],
+        deploy_target=_wizard_deploy_target(),
         run_dir=run_dir,
         scene_ids=scene_ids,
         baseport=args.baseport,
@@ -300,6 +333,7 @@ def main() -> None:
         timeout=args.timeout,
         topology=args.topology,
         dry_run=args.wizard_dry_run,
+        extra_args=args.wizard_arg,
     )
 
     metadata = {
@@ -311,9 +345,11 @@ def main() -> None:
         "timeout": args.timeout,
         "topology": args.topology,
         "wizard_dry_run": args.wizard_dry_run,
+        "wizard_args": args.wizard_arg,
         "driver_config_template": str(model_preset["config_file"]),
         "driver_config_path": str(driver_config_path),
         "wizard_driver": model_preset["wizard_driver"],
+        "wizard_deploy_target": _wizard_deploy_target(),
         "checkpoint": str(checkpoint) if checkpoint else None,
         "driver_env": driver_env,
         "driver_command": driver_cmd,
@@ -336,15 +372,15 @@ def main() -> None:
         return
 
     if args.mode == "driver":
-        raise SystemExit(_run(driver_cmd, cwd=ROOT, env=driver_env))
+        raise SystemExit(_run(driver_cmd, cwd=alpasim_root, env=driver_env))
     if args.mode == "wizard":
-        raise SystemExit(_run(wizard_cmd, cwd=ROOT))
+        raise SystemExit(_run(wizard_cmd, cwd=alpasim_root))
 
     driver_stdout = (run_dir / "driver.stdout.log").open("w")
     driver_stderr = (run_dir / "driver.stderr.log").open("w")
     process = subprocess.Popen(
         driver_cmd,
-        cwd=ROOT,
+        cwd=alpasim_root,
         env=_merged_env(driver_env),
         stdout=driver_stdout,
         stderr=driver_stderr,
@@ -353,7 +389,7 @@ def main() -> None:
     )
     try:
         time.sleep(args.driver_warmup_seconds)
-        wizard_code = _run(wizard_cmd, cwd=ROOT)
+        wizard_code = _run(wizard_cmd, cwd=alpasim_root)
     finally:
         _terminate_process_group(process)
         driver_stdout.close()
@@ -383,11 +419,141 @@ def _resolve_alpasim_root(cli_value: Path | None) -> Path:
     return DEFAULT_ALPASIM_ROOT.resolve()
 
 
+def _validate_alpasim_checkout(alpasim_root: Path) -> None:
+    required_dirs = (
+        alpasim_root / "src" / "driver",
+        alpasim_root / "src" / "wizard",
+    )
+    for required_dir in required_dirs:
+        if not required_dir.is_dir():
+            raise SystemExit(f"AlpaSim checkout missing required path: {required_dir}")
+
+    pyproject_file = alpasim_root / "pyproject.toml"
+    if not pyproject_file.is_file():
+        raise SystemExit(
+            "AlpaSim checkout is missing pyproject.toml at "
+            f"{pyproject_file}. Recreate it with ./scripts/bootstrap_alpasim_checkout.sh."
+        )
+
+    git_marker = alpasim_root / ".git"
+    if not git_marker.exists():
+        raise SystemExit(
+            "ALPASIM_ROOT points at a copied directory, not a real AlpaSim checkout: "
+            f"{alpasim_root}. The wizard resolves configs from the nearest git root and "
+            "will fail in this layout. Recreate the nested checkout with "
+            "./scripts/bootstrap_alpasim_checkout.sh."
+        )
+
+
 def _resolve_run_dir(args: argparse.Namespace) -> Path:
     if args.run_dir is not None:
         return args.run_dir.resolve()
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return (args.runs_root.resolve() / f"alpasim_{args.model}_{args.scene_preset}_{stamp}")
+
+
+def _preflight_scene_artifacts(*, alpasim_root: Path, scene_ids: list[str]) -> None:
+    scene_catalog = alpasim_root / "data" / "scenes" / "sim_scenes.csv"
+    if not scene_catalog.is_file():
+        return
+
+    scene_rows: dict[str, dict[str, str]] = {}
+    with scene_catalog.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            scene_id = str(row.get("scene_id", "")).strip()
+            if scene_id:
+                scene_rows[scene_id] = row
+
+    missing_catalog = [scene_id for scene_id in scene_ids if scene_id not in scene_rows]
+    if missing_catalog:
+        raise SystemExit(
+            "Scene IDs not found in AlpaSim scene catalog "
+            f"{scene_catalog}: {', '.join(missing_catalog)}"
+        )
+
+    if os.getenv("HF_TOKEN", "").strip():
+        return
+
+    all_usdzs_dir = alpasim_root / "data" / "nre-artifacts" / "all-usdzs"
+    missing_artifacts: list[str] = []
+    for scene_id in scene_ids:
+        row = scene_rows[scene_id]
+        repository = str(row.get("artifact_repository", "")).strip().lower()
+        artifact_uuid = str(row.get("uuid", "")).strip()
+        if repository != "huggingface" or not artifact_uuid:
+            continue
+        artifact_path = all_usdzs_dir / f"{artifact_uuid}.usdz"
+        if not artifact_path.is_file():
+            missing_artifacts.append(f"{scene_id}:{artifact_uuid}")
+
+    if missing_artifacts:
+        preview = ", ".join(missing_artifacts[:5])
+        remainder = len(missing_artifacts) - min(len(missing_artifacts), 5)
+        suffix = "" if remainder <= 0 else f", ... (+{remainder} more)"
+        raise SystemExit(
+            "Missing required local AlpaSim USDZ artifacts under "
+            f"{all_usdzs_dir} and HF_TOKEN is not set. "
+            f"First missing scene/artifact pairs: {preview}{suffix}. "
+            "Populate the local AlpaSim data cache or authenticate to the gated "
+            "Hugging Face dataset before launching external-driver runs."
+        )
+
+
+def _preflight_docker_access() -> None:
+    result = subprocess.run(
+        ["docker", "info"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return
+    stderr = (result.stderr or "").strip()
+    if "permission denied" in stderr.lower() and "docker.sock" in stderr.lower():
+        raise SystemExit(
+            "Docker daemon is not accessible for the current user. "
+            "Grant this user access to /var/run/docker.sock (for example via the "
+            "docker group) or run on a machine with working docker permissions "
+            "before launching AlpaSim external-driver runs."
+        )
+    raise SystemExit(
+        "Docker preflight failed before AlpaSim launch. "
+        f"`docker info` exited with code {result.returncode}. "
+        f"stderr: {stderr}"
+    )
+
+
+def _preflight_alpasim_base_image() -> None:
+    image_tag = os.getenv("ALPASIM_BASE_IMAGE_TAG", "alpasim-base:0.66.0")
+    result = subprocess.run(
+        ["docker", "image", "inspect", image_tag],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return
+    raise SystemExit(
+        f"Required local AlpaSim image is missing: {image_tag}. "
+        "Build it first with ./scripts/build_alpasim_base_image.sh."
+    )
+
+
+def _preflight_platform_compatibility() -> None:
+    machine = platform.machine().lower()
+    if machine not in {"aarch64", "arm64"}:
+        return
+    if os.getenv("MSA_ALLOW_UNSUPPORTED_ALPASIM_ARM", "").strip() == "1":
+        return
+    raise SystemExit(
+        "AlpaSim local external-driver rollouts are not currently supported on ARM hosts in this "
+        "repo because the required NRE sensorsim image is amd64-only. On DGX Spark / arm64 we "
+        "observed sensorsim either fail under emulation or stall before opening its gRPC port. "
+        "Run the AlpaSim matrix on an x86_64 host, or set MSA_ALLOW_UNSUPPORTED_ALPASIM_ARM=1 "
+        "to force the launch anyway."
+    )
 
 
 def _prepare_run_dir(run_dir: Path, *, allow_existing: bool) -> None:
@@ -440,6 +606,7 @@ def _wizard_command(
     *,
     alpasim_wizard: Path,
     wizard_driver: str,
+    deploy_target: str,
     run_dir: Path,
     scene_ids: list[str],
     baseport: int,
@@ -447,10 +614,11 @@ def _wizard_command(
     timeout: int,
     topology: str,
     dry_run: bool,
+    extra_args: list[str] | None = None,
 ) -> list[str]:
     cmd = [
         str(alpasim_wizard),
-        "deploy=local_external_driver",
+        f"deploy={deploy_target}",
         f"topology={topology}",
         f"driver={wizard_driver}",
         f"wizard.log_dir={run_dir}",
@@ -460,7 +628,19 @@ def _wizard_command(
         f"wizard.dry_run={'true' if dry_run else 'false'}",
         f"scenes.scene_ids={json.dumps(scene_ids)}",
     ]
+    if extra_args:
+        cmd.extend(extra_args)
     return cmd
+
+
+def _wizard_deploy_target() -> str:
+    override = os.getenv("MSA_ALPASIM_DEPLOY_TARGET", "").strip()
+    if override:
+        return override
+    machine = platform.machine().lower()
+    if machine in {"aarch64", "arm64"}:
+        return "local_arm_external_driver"
+    return "local_external_driver"
 
 
 def _shell_script(cmd: list[str], *, env: dict[str, str] | None = None) -> str:

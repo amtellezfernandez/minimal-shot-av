@@ -30,7 +30,7 @@ N_TOKENS = 9
 HIDDEN = 256
 DROPOUT = 0.15
 TRAJECTORY_MODES = ("token", "longitudinal_only", "clamped_lateral")
-SELECTION_MODES = ("argmax", "hybrid_veto")
+SELECTION_MODES = ("argmax", "hybrid_veto", "axis_constrained")
 TOKEN_ORDER = (
     "stop",
     "crawl",
@@ -520,6 +520,25 @@ def _select_token_with_mode(
     policy_log_probs = scaled_logits - _logsumexp(scaled_logits)
     sorted_indices = list(np.argsort(logits)[::-1])
     topk_indices = sorted_indices[: max(1, min(hybrid_top_k, len(sorted_indices)))]
+    if selection_mode == "axis_constrained":
+        return _select_axis_constrained(
+            token_order=token_order,
+            raw_idx=raw_idx,
+            topk_indices=topk_indices,
+            policy_log_probs=policy_log_probs,
+            evaluations=evaluations,
+            spotlight_eval_by_name=spotlight_eval_by_name,
+            geometric_scores={
+                evaluation.candidate.name: float(evaluation.explanation.effective_score)
+                for evaluation in evaluations
+            },
+            geometric_ranks=geometric_ranks,
+            best_geometric_score=best_geometric_score,
+            spotlight_token=spotlight_token,
+            veto_margin=hybrid_veto_margin,
+            max_geometric_rank=hybrid_max_geometric_rank,
+        )
+
     safe_topk_indices: list[int] = []
     vetoed_tokens: list[dict[str, Any]] = []
     raw_veto_reason = "none"
@@ -587,6 +606,98 @@ def _select_token_with_mode(
         veto_reason=raw_veto_reason,
         vetoed_tokens=vetoed_tokens,
     )
+
+
+def _select_axis_constrained(
+    *,
+    token_order: tuple[str, ...],
+    raw_idx: int,
+    topk_indices: list[int],
+    policy_log_probs: np.ndarray,
+    evaluations: list[Any],
+    spotlight_eval_by_name: dict[str, Any],
+    geometric_scores: dict[str, float],
+    geometric_ranks: dict[str, int],
+    best_geometric_score: float,
+    spotlight_token: str,
+    veto_margin: float,
+    max_geometric_rank: int,
+) -> dict[str, Any]:
+    safe_topk_indices: list[int] = []
+    vetoed_tokens: list[dict[str, Any]] = []
+    raw_veto_reason = "none"
+
+    for idx in topk_indices:
+        token = str(token_order[idx])
+        evaluation = spotlight_eval_by_name.get(token)
+        reason = _axis_constraint_violation(token, evaluation)
+        if reason is not None:
+            vetoed_tokens.append({"token": token, "reason": reason})
+            if idx == raw_idx:
+                raw_veto_reason = reason
+            continue
+        safe_topk_indices.append(idx)
+
+    used_fallback_geometric = False
+    dagger_argmax_vetoed = raw_idx not in safe_topk_indices
+    if safe_topk_indices:
+        # Preserve the learned policy whenever independent axis constraints pass.
+        chosen_idx = int(max(safe_topk_indices, key=lambda idx: float(policy_log_probs[idx])))
+    else:
+        feasible = [
+            evaluation
+            for evaluation in evaluations
+            if _axis_constraint_violation(evaluation.candidate.name, evaluation) is None
+        ]
+        fallback_pool = feasible if feasible else evaluations
+        fallback_eval = max(
+            fallback_pool,
+            key=lambda item: (
+                item.explanation.safety_penalty <= 0.0,
+                item.explanation.horizon_clearance_m,
+                item.explanation.action_clearance_m,
+                item.explanation.progress_bonus,
+                item.explanation.effective_score,
+            ),
+        )
+        chosen_idx = int(token_order.index(fallback_eval.candidate.name))
+        used_fallback_geometric = True
+
+    raw_token = str(token_order[raw_idx])
+    return _selection_record(
+        token_order=token_order,
+        raw_idx=raw_idx,
+        chosen_idx=chosen_idx,
+        spotlight_token=spotlight_token,
+        topk_indices=topk_indices,
+        safe_topk_indices=safe_topk_indices,
+        used_fallback_geometric=used_fallback_geometric,
+        dagger_argmax_vetoed=dagger_argmax_vetoed,
+        hybrid_policy_scores={str(token_order[idx]): round(float(policy_log_probs[idx]), 4) for idx in topk_indices},
+        hybrid_geometric_scores={
+            str(token_order[idx]): round(float(geometric_scores[str(token_order[idx])]), 4)
+            for idx in topk_indices
+        },
+        dagger_argmax_geo_gap=max(0.0, best_geometric_score - float(geometric_scores[raw_token])),
+        dagger_argmax_geo_rank=int(geometric_ranks.get(raw_token, len(evaluations) + 1)),
+        veto_margin=veto_margin,
+        max_geometric_rank=max_geometric_rank,
+        veto_reason=raw_veto_reason,
+        vetoed_tokens=vetoed_tokens,
+    )
+
+
+def _axis_constraint_violation(token: str, evaluation: Any | None) -> str | None:
+    if evaluation is None:
+        return "missing_evaluation"
+    explanation = evaluation.explanation
+    if explanation.safety_penalty > 0.0:
+        return "unsafe_action"
+    if explanation.horizon_clearance_penalty > 0.0:
+        return "horizon_clearance"
+    if token == "stop" and explanation.stop_penalty > 0.0:
+        return "unnecessary_stop"
+    return None
 
 
 def _selection_record(

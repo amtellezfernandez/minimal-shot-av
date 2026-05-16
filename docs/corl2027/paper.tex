@@ -1,24 +1,25 @@
 \documentclass{article}
+\usepackage{xcolor}
 \usepackage[final]{corl_2026}
 
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{microtype}
-\usepackage{xcolor}
 \usepackage{hyperref}
 \usepackage{multirow}
 \usepackage{subcaption}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds}
+\raggedbottom
 
 \newcommand{\token}[1]{\textsc{#1}}
 \newcommand{\scalar}[1]{\textit{#1}}
 \newtheorem{theorem}{Theorem}
 \newtheorem{proposition}{Proposition}
 
-\title{When Internal Imitation Calibration Fails to Transfer\\
-       A Diagnostic Study of Discrete Maneuver Tokens}
+\title{Multi-Axis Failure Modes in Simulator Transfer\\
+       Diagnostics from Discrete Maneuver Tokens and Grounded Selection}
 
 \author{
   Alba Maria Tellez Fernandez\\
@@ -31,23 +32,29 @@
 \maketitle
 
 \begin{abstract}
-We study a failure mode that is easy to miss in closed-loop imitation learning:
-policies can be well calibrated inside their training simulator while selecting
-geometrically invalid actions after transfer through a different observation and dynamics
-interface. The controlled setting is a discrete autonomous-driving token library with a
-geometry-driven expert, Spotlight Reflex. Internally, plain imitation does not recover the
-expert mechanism: on a 1080-rollout held-out Latin-hypercube generator sweep,
-Continuous-BC, Token-BC, and Token-RNN-BC reach only 77--78\% pass rate with
-3.0--4.3\% Proximity Violations. Two iterations of DAgger-style on-policy relabeling
-nearly closes this internal frontier, reaching 94.54\% pass and 0.19\% PV versus
-Spotlight Reflex at 94.44\% pass and 0.65\% PV. But the same learned policy does not
-transfer cleanly to Waymo AlpaSim through a front-camera proxy adapter: clamping lateral
-magnitude removes some failures but leaves low progress, and a hard geometric suppression
-layer vetoes the DAgger argmax on 395/398 frames (99.25\%), collapsing the hybrid policy
-almost entirely back to Spotlight-style selection. The result is not a new winning method;
-it is a diagnostic conclusion: offline accuracy and internal closed-loop success can be
-misleading proxies for external robustness when learned token calibration is coupled to the
-training simulator's geometry and state reconstruction.
+We study a transfer failure mode in closed-loop imitation learning: a policy can appear
+well calibrated inside its training simulator while selecting geometrically incompatible
+actions after transfer through a different observation and dynamics interface. The
+controlled setting is a discrete autonomous-driving token library with a geometry-driven
+expert, Spotlight Reflex. On a 1080-rollout held-out Latin-hypercube generator sweep,
+plain continuous, token, and recurrent BC reach only 77--78\% pass rate with 3.0--4.3\%
+Proximity Violations, while two iterations of DAgger-style relabeling nearly close the
+internal frontier at 94.54\% pass and 0.19\% PV. This internal success does not reduce to
+one transfer behavior. In a controlled proxy-perturbation sweep (288 matched
+scenario-perturbation cases, 1440 agent rollouts), grounded vetoing strongly repairs
+three-step actor latency (collision 0.396 to 0.146; lane violation 0.875 to 0.208), but
+under route-offset corruption it improves lane adherence while degrading pass/collision.
+Waymo AlpaSim validation shows the same multi-axis structure externally: clamping repairs
+offroad/wrong-lane behavior but increases collision, hard vetoing repairs progress/offroad
+but vetoes 1987/1990 DAgger argmax decisions and increases collision, and source decay
+helps wrong-lane behavior without repairing offroad or collision. These non-co-monotone
+interventions show that simulator transfer error decomposes into separate axes of
+geometry, safety, progress, and lane adherence rather than a single scalar robustness
+deficit. Frozen world/VLA priors on the Waymo E2E candidate-selection track are similarly
+head-sensitive: scalar-only selection reaches 7.695 RFS, while a nonlinear head over
+Cosmos 64d embeddings reaches 7.845 RFS. The combined evidence supports a grounded
+selection thesis: internal closed-loop success and offline accuracy are weak transfer
+proxies unless per-axis geometric disagreement is instrumented directly.
 \end{abstract}
 
 \keywords{autonomous driving, imitation learning, DAgger, simulator transfer,
@@ -111,7 +118,7 @@ No learning occurs inside the policy; the adapter is the only sensor-specific co
 \label{fig:pipeline}
 \end{figure}
 
-We make four contributions (Fig.~\ref{fig:pipeline}):
+We make six contributions (Fig.~\ref{fig:pipeline}):
 
 \begin{enumerate}
   \item \textbf{Non-interpolation theorem (Sec.~\ref{sec:method:topology}).}
@@ -134,12 +141,26 @@ We make four contributions (Fig.~\ref{fig:pipeline}):
     one-step DAgger is weaker, three-step DAgger regresses, and trajectory scorers over
     token candidates do not close the stress-suite gap.
 
-  \item \textbf{External transfer falsification in AlpaSim
+  \item \textbf{Multi-axis transfer failure in AlpaSim
     (Sec.~\ref{sec:exp:alpasim}).}
-    The internally strong DAgger policy fails to preserve its calibration through a
-    sensor-realistic proxy-state adapter. Hard geometric suppression vetoes nearly every
-    DAgger argmax, showing that the learned token selector and the external geometry
-    interface occupy incompatible decision spaces.
+    A 10-clip external transfer matrix shows that clamping, source decay, and hard
+    geometric vetoes repair different axes and damage others. Transfer failure is therefore
+    not a single scalar degradation: offroad, wrong-lane, collision, progress, and
+    distance-to-ground-truth expose distinct mechanisms.
+
+  \item \textbf{Controlled proxy-perturbation diagnostic
+    (Sec.~\ref{sec:exp:proxy}).}
+    Inside the internal simulator, we perturb only the planner-visible proxy state while
+    keeping dynamics fixed. A 288-case matched sweep (1440 agent rollouts) shows that
+    latency, heading-bias, route-offset, lane-scale, and feature-noise corruption induce
+    different intervention effects, reducing the concern that the AlpaSim result is
+    purely an adapter artifact.
+
+  \item \textbf{Grounded selection evidence from frozen visual/world priors.}
+    In the Waymo E2E candidate-selection track, scalar-only selectors plateau at 7.695
+    RFS, InternVLA-only grounding does not help, and linear fusion of InternVLA with
+    Cosmos remains weak. A nonlinear direct-policy head over frozen Cosmos 64d embeddings
+    reaches 7.845 RFS, showing that grounding signal exists but is task-head sensitive.
 \end{enumerate}
 
 % =====================================================================
@@ -174,6 +195,17 @@ Conditional imitation learning~\citep{codevilla2018end} uses a route command to 
 a continuous policy. Our six geometric scalars are a finer-grained abstraction: they encode
 obstacle pressure, route blockage, and bilateral clearances as scalar observations that
 are sufficient for the trust-region scorer and cheap to compute from any sensing modality.
+
+\paragraph{VLA grounding and latent world priors.}
+Recent autonomous-driving VLA work argues that direct trajectory generation and textual
+chain-of-thought are not enough: latent reasoning must be grounded in geometric and
+dynamic priors. LaST-VLA~\citep{luo2026lastvla}, for example, distills 3D geometric
+features and video-world-model dynamics into latent tokens and optimizes trajectory-level
+metrics with RL. Our study is complementary rather than competitive. We do not train a
+large VLA; instead, we use a small token policy and external AlpaSim adapter to expose how
+grounding failures appear at evaluation time. The WOD grounding ablation then asks a
+narrower question aligned with LaST-VLA's thesis: when frozen world/VLA priors are used
+only for candidate selection, do they improve the ranking head, and under which head class?
 
 \paragraph{Simulator transfer and validation scope.}
 \citet{khurana2022differentiable} and \citet{shi2024motiondiffuser} study trajectory
@@ -291,6 +323,44 @@ The theorem is conditional: it does not prove that nine tokens are globally opti
 that the specific numeric offsets in Table~\ref{tab:tokens} are unique. It identifies the
 property we test empirically: safety comes from selecting margin-separated maneuver
 classes, not from continuous interpolation through the action manifold.
+
+\subsection{Metric-Ordering Limits Under Transfer}
+\label{sec:method:ordering}
+
+The external diagnostic requires a second formal distinction. Let $z=\phi(x)$ be the
+internal simulator state representation and $z'=\phi'(x)$ be a transferred proxy
+representation of the same underlying driving scene. For a candidate token $\tau$, define
+axis-specific costs $c_j(z',\tau)$ for collision risk, offroad risk, wrong-lane risk,
+progress loss, and tracking error, with lower values preferred. A selector intervention is
+monotone across axes only if replacing token $\tau_a$ with token $\tau_b$ weakly decreases
+all costs $c_j$ under $z'$.
+
+\begin{proposition}[Non-co-monotone transfer axes]
+\label{prop:noncomonotone}
+If two transfer metrics induce conflicting orderings over the token library, i.e. there
+exist tokens $\tau_a,\tau_b$ and axes $p,q$ such that
+\[
+c_p(z',\tau_a) < c_p(z',\tau_b)
+\quad\text{and}\quad
+c_q(z',\tau_a) > c_q(z',\tau_b),
+\]
+then no intervention that switches from $\tau_b$ to $\tau_a$ can be interpreted as a
+uniform transfer improvement. It improves axis $p$ while worsening axis $q$.
+\end{proposition}
+
+\begin{proof}
+The first inequality states that $\tau_a$ is better than $\tau_b$ on axis $p$; the second
+states that $\tau_a$ is worse than $\tau_b$ on axis $q$. Therefore the switch has opposite
+sign on the two metrics. A scalar rollout score that reports only the improvement on
+$p$, or only an aggregate of $p$ and $q$, can hide this disagreement.
+\end{proof}
+
+Proposition~\ref{prop:noncomonotone} is deliberately modest. It does not claim that
+transfer failure is unsolvable. It states the condition under which a single intervention
+cannot be judged by one scalar success rate. The AlpaSim matrix in
+Table~\ref{tab:alpasim_diag} is an empirical instance: clamping, hard vetoes, and
+source-decayed DAgger each improve at least one transfer axis while worsening or failing to
+move another.
 
 \subsection{Geometric World-State Encoding}
 \label{sec:method:wstate}
@@ -593,51 +663,147 @@ processing occurs inside the policy binary.}
 We use AlpaSim as an external diagnostic, not as a statistically powered safety benchmark.
 The purpose is to ask whether the internally strong learned selector remains calibrated
 when its 10-dimensional simulator state is reconstructed from a front-camera, route
-command, ego dynamics, and sparse hazard primitives. We evaluate two matched WOD-E2E
-clips for which all variants completed the same AlpaSim launch path.
+command, ego dynamics, and sparse hazard primitives. We evaluate a matched 10-clip
+WOD-E2E matrix for which all four learned-policy variants completed the same AlpaSim
+launch path.
 
 \begin{table}[t]
 \centering
-\caption{AlpaSim external diagnostic on two matched WOD-E2E clips. ``Veto'' is the
-fraction of frames where geometric suppression rejects the DAgger argmax. The hard-veto
-hybrid recovers distance but becomes almost entirely Spotlight-selected, revealing that
-the learned DAgger token prior is not geometrically valid under the AlpaSim proxy state.}
+\caption{AlpaSim external diagnostic on 10 matched WOD-E2E clips. Rates are fractions of
+episodes; progress and distances are means. Each intervention repairs a different
+transfer axis and leaves or worsens another, exposing non-co-monotone simulator-transfer
+failure rather than a single scalar robustness gap.}
 \label{tab:alpasim_diag}
-\footnotesize
-\begin{tabular}{lrrrrr}
+\scriptsize
+\begin{tabular}{lrrrrrr}
 \toprule
-Policy & Veto & Collision & Offroad & Distance (m) & Progress \\
+Policy & Collision & Offroad & Wrong lane & Progress & Dist. (m) & Dist.-GT \\
 \midrule
-Spotlight Reflex & -- & 1.00 & 0.00 & 143.25 & 0.64 \\
-Token-DAgger (2-step) & -- & 0.50 & 0.00 & 31.58 & 0.13 \\
-Token-DAgger (clamped lateral) & -- & 0.00 & 0.00 & 47.55 & 0.20 \\
-Token-DAgger + clamped soft hybrid & 0.00 & 0.00 & 0.00 & 50.69 & 0.21 \\
-Token-DAgger + hard veto & 0.9925 & 0.50 & 0.50 & 88.29 & 0.49 \\
+Token-DAgger (2-step) & 0.600 & 0.900 & 0.700 & 0.034 & 61.98 & 13.86 \\
+Token-DAgger (clamped lateral) & 0.700 & 0.500 & 0.200 & 0.384 & 59.85 & 5.21 \\
+Token-DAgger + hard veto & 0.800 & 0.200 & 0.700 & 0.837 & 166.06 & 22.71 \\
+Token-DAgger (source decay) & 0.600 & 0.900 & 0.400 & 0.175 & 62.92 & 27.16 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The result is a falsification of the stronger methods claim. The initial soft hybrid
-between DAgger and Spotlight does not implement suppression: its selection log has
-0 vetoes in 398 frames. Lateral clamping removes one transfer failure mode---the learned
-policy's lateral offsets can be too aggressive for the reconstructed road geometry---but
-the clamped policies still travel only 47--51~m on average and make little progress.
-When hard suppression is enabled, the mechanism becomes real: in the same 398-frame run,
-the DAgger argmax is vetoed on 395 frames, the hybrid matches Spotlight on 393 frames,
-and DAgger wins only 3 frames. The median geometric gap on vetoed frames is 77.41 score
-points.
+The result falsifies the stronger methods claim that one inference-time patch can convert
+the internally strong DAgger policy into a robust external policy. Raw two-step DAgger
+fails on all major axes: 0.600 collision rate, 0.900 offroad rate, 0.700 wrong-lane rate,
+and only 0.034 mean progress. Lateral clamping directly repairs geometry, reducing offroad
+by 0.400 and wrong-lane by 0.500 while improving distance-to-ground-truth from 13.86~m to
+5.21~m. But the same clamp raises collision rate from 0.600 to 0.700, so it is not a
+uniform transfer improvement.
 
-This is not evidence that the hard-veto hybrid is a better policy. It collides or goes
-off-road on at least one of the two clips. Instead, the selection log exposes the transfer
-failure directly: the internally calibrated DAgger classifier is selecting tokens that the
-external geometric scorer rejects almost always. The learned policy's calibration is
-therefore coupled to the internal simulator's state geometry and does not survive the
-AlpaSim proxy reconstruction gap.
+The hard-veto hybrid repairs a different axis. It improves mean progress from 0.034 to
+0.837 and offroad rate from 0.900 to 0.200, but raises collision rate to 0.800, leaves
+wrong-lane rate unchanged at 0.700, and worsens distance-to-ground-truth to 22.71~m. Its
+selection log shows why this is not evidence for a successful hybrid policy: the veto
+fires on 1987/1990 frames (99.85\%, Wilson 95\% CI [99.56, 99.95]), with 1827 vetoes due
+to geometric score gap and 160 due to geometric rank. Spotlight-style selection wins 1965
+frames, DAgger wins only 2, and there are 16 compromise selections. The hard veto therefore
+recovers progress largely by collapsing back to the geometric scorer, not by combining two
+well-aligned policies.
+
+Source-decayed DAgger repairs yet another axis: wrong-lane rate improves from 0.700 to
+0.400 and progress improves from 0.034 to 0.175, but collision and offroad rates remain
+unchanged and distance-to-ground-truth worsens to 27.16~m. Together, these interventions
+instantiate Proposition~\ref{prop:noncomonotone}: under the AlpaSim proxy-state interface,
+geometry, safety, progress, and lane adherence are not co-monotone. External transfer
+failure must be diagnosed per axis; a single aggregate pass rate would hide the mechanism.
+
+\subsection{Controlled Proxy-State Perturbation}
+\label{sec:exp:proxy}
+
+The AlpaSim diagnostic is external and sensor-mediated. To isolate whether the same
+phenomenon exists without an adapter confound, we run a controlled proxy-transfer
+experiment inside the internal simulator: physics, scenario dynamics, and token library
+are held fixed, while only the planner-visible proxy state is perturbed. The safety stack
+also consumes this perturbed proxy stream, while dynamics and collision evaluation remain
+true-state. We evaluate lane-scale error, heading bias, actor latency, route offset, and
+feature noise. The result is a 288-case matched diagnostic (1440 agent rollouts) over
+adversarial and hidden suites, not a population-level simulator benchmark.
+
+\begin{table}[t]
+\centering
+\caption{Controlled internal proxy-state perturbation. Each entry is
+pass / collision / lane-violation rate. The hybrid is helpful under delayed actors, but
+route and lane proxy errors expose non-co-monotone tradeoffs.}
+\label{tab:proxy_transfer}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+Perturbation & Raw DAgger & Clamped & Hard veto hybrid & Oracle token & Spotlight \\
+\midrule
+Clean & 0.917 / 0.083 / 0.312 & 0.938 / 0.062 / 0.167 & 0.958 / 0.042 / 0.167 & 0.938 / 0.062 / 0.167 & 0.938 / 0.062 / 0.167 \\
+Heading bias & 0.896 / 0.104 / 0.562 & 0.938 / 0.062 / 0.396 & 0.938 / 0.062 / 0.375 & 0.896 / 0.104 / 0.292 & 0.938 / 0.062 / 0.312 \\
+Actor latency & 0.604 / 0.396 / 0.875 & 0.604 / 0.396 / 0.521 & 0.854 / 0.146 / 0.208 & 0.833 / 0.167 / 0.271 & 0.583 / 0.417 / 0.250 \\
+Route offset & 0.938 / 0.062 / 0.229 & 0.875 / 0.125 / 0.021 & 0.896 / 0.104 / 0.062 & 0.938 / 0.042 / 0.125 & 0.917 / 0.083 / 0.083 \\
+Lane-scale error & 0.938 / 0.042 / 0.208 & 0.875 / 0.125 / 0.021 & 0.958 / 0.042 / 0.083 & 0.938 / 0.062 / 0.062 & 0.958 / 0.042 / 0.104 \\
+Feature noise & 0.917 / 0.083 / 0.917 & 0.938 / 0.062 / 0.146 & 0.917 / 0.083 / 0.125 & 0.896 / 0.104 / 0.104 & 0.938 / 0.062 / 0.167 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+Two cases are especially diagnostic. Under a three-step actor-latency perturbation, raw
+two-step DAgger falls to 0.604 pass / 0.396 collision / 0.875 lane-violation rate, while
+the hard-veto hybrid recovers to 0.854 / 0.146 / 0.208 and Spotlight reaches
+0.583 / 0.417 / 0.250. This is the clean positive case for grounded suppression: the
+learned prior and geometric veto together outperform either raw DAgger or Spotlight under
+delayed actor updates. Route-offset corruption shows the opposite pattern. The same
+hybrid reduces lane violations from 0.229 to 0.062, but pass rate falls from 0.938 to
+0.896 and collision rises from 0.062 to 0.104. Lateral clamping under lane-scale error
+behaves similarly: lane violations drop from 0.208 to 0.021, while pass rate drops from
+0.938 to 0.875 and collision rises from 0.042 to 0.125.
+
+This control is intentionally limited: it is \emph{not} the full simulator oracle. It
+selects from the same clamped discrete maneuver library as the learned policies, but
+scores those candidates with privileged short-horizon future-actor forecasts. Its role is
+to separate token-library insufficiency from token-ordering failure. When oracle-token
+ordering repairs a perturbation that raw or hybrid selection does not, the candidate set
+was sufficient and the failure lay in selection under proxy error. The route-offset and
+lane-scale results provide controlled instances of Proposition~\ref{prop:noncomonotone}:
+an intervention can improve lane adherence while worsening pass or collision, so proxy
+transfer must be evaluated per axis.
 
 % =====================================================================
 \section{Analysis}
 \label{sec:analysis}
 % =====================================================================
+
+\subsection{The Multi-Axis Transfer Result}
+\label{sec:analysis:orthogonal}
+
+Table~\ref{tab:alpasim_diag} is the central external result. It should not be read as a
+leaderboard where the hard-veto variant is ``best'' because it has the highest progress,
+or where clamping is ``best'' because it has the lowest distance-to-ground-truth. Those
+readings collapse a multi-axis transfer problem into a single scalar. The interventions
+separate the axes:
+
+\begin{itemize}
+  \item \textbf{Geometry axis.} Lateral clamping reduces offroad and wrong-lane rates and
+    improves distance-to-ground-truth, showing that part of the transfer error is action
+    magnitude mismatch under reconstructed road geometry.
+  \item \textbf{Progress axis.} Hard geometric vetoes greatly increase progress and
+    distance travelled, showing that the DAgger argmax often chooses externally
+    non-progressive tokens.
+  \item \textbf{Safety axis.} Neither clamping nor hard vetoes reduce collision rate in
+    the 10-clip matrix; both increase it. Geometry repair and progress repair are
+    therefore not equivalent to safety repair.
+  \item \textbf{Lane-adherence axis.} Source decay improves wrong-lane rate without
+    changing collision or offroad rate, showing that aggregation calibration affects a
+    different boundary than the geometric veto.
+\end{itemize}
+
+This decomposition is the paper's external-transfer claim. The learned policy is not
+simply ``bad'' outside its simulator, and the rule-based scorer is not simply ``better.''
+Instead, each correction reveals one latent incompatibility between the internal training
+geometry and the external proxy-state interface. A robust transfer evaluation must expose
+these axes separately; otherwise an intervention can appear to improve by moving along
+one metric while silently degrading another.
 
 \subsection{What the Strong Baselines Change}
 \label{sec:analysis:discrete}
@@ -802,13 +968,13 @@ Spotlight Reflex & 96.67 / 0.28 & 90.00 / 0.83 & 90.00 / 2.50 \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:scorer} rules out a simpler explanation: the remaining gap is not solved
-by replacing the flat token head with a candidate utility scorer over ego trajectories plus
-lightweight interaction features. The scorer sees the candidate futures, but it is still an
-offline selector. In closed loop it trails the two-step DAgger policy on Gauntlet and
-Adversarial and does not preserve the zero-PV hidden result. This points to closed-loop
-state coverage as the dominant ingredient in the current simulator, rather than a need for
-more expressive per-candidate scalar scoring.
+Table~\ref{tab:scorer} weakens a simpler explanation: in this setup, the remaining gap is
+not closed by replacing the flat token head with a candidate utility scorer over ego
+trajectories plus lightweight interaction features. The scorer sees the candidate futures,
+but it is still an offline selector. In closed loop it trails the two-step DAgger policy on
+Gauntlet and Adversarial and does not preserve the zero-PV hidden result. This points to
+closed-loop state coverage as the dominant ingredient in the current simulator, rather
+than a need for the tested per-candidate scalar scorers.
 
 \subsection{Failure Mode Taxonomy}
 \label{sec:analysis:failures}
@@ -848,8 +1014,9 @@ the obstacle is; all require knowledge of \emph{where} it is.
 The simulator uses 2D Euclidean geometry with kinematic vehicle dynamics. The AlpaSim
 diagnostic (Sec.~\ref{sec:exp:alpasim}) shows that internal simulator success is not a
 transfer guarantee: the learned selector's calibration can fail when the same token
-vocabulary is driven by reconstructed external geometry. The two-clip AlpaSim result is
-mechanistic evidence from selection logs, not a population estimate. A full physics
+vocabulary is driven by reconstructed external geometry. The 10-clip AlpaSim matrix is
+mechanistic evidence from matched external clips and selection logs, not a population
+estimate. A full physics
 simulation (e.g., CARLA, nuPlan with dynamics) or real-vehicle evaluation is needed before
 making broad vehicle-dynamics claims.
 
@@ -918,13 +1085,14 @@ should study aggregation schedules, loss weighting by rollout source, validation
 closed-loop profile, and safety-constrained selection among DAgger checkpoints.
 
 \paragraph{External calibration is not solved.}
-The AlpaSim hard-veto experiment shows that a learned selector can be internally strong and
-externally invalid: 99.25\% of DAgger argmax decisions are rejected by the geometric
+The AlpaSim hard-veto experiment shows that a learned selector can be internally strong
+and externally invalid: 1987/1990 DAgger argmax decisions are rejected by the geometric
 suppression layer. This is not a threshold-tuning problem; it indicates that proxy-state
-reconstruction changes the decision geometry. Future work should validate token policies
-under multiple independent simulators, log per-frame disagreement with geometric
-constraints, and treat high veto rates as a failure signal rather than as a hyperparameter
-to tune away.
+reconstruction changes the decision geometry. The 10-clip matrix further shows that
+interventions are not co-monotone across collision, offroad, wrong-lane, progress, and
+tracking error. Future work should validate token policies under multiple independent
+simulators, log per-frame disagreement with geometric constraints, and report per-axis
+failure metrics rather than tuning one aggregate score.
 
 % =====================================================================
 \section{Conclusion}
@@ -938,21 +1106,24 @@ methods story: on-policy correction repairs plain BC and nearly matches the geom
 policy.
 
 The AlpaSim diagnostic changes the conclusion. When the learned selector is driven by a
-front-camera proxy adapter, its token calibration no longer matches the external geometry.
-Lateral clamping repairs action magnitude but not decision validity; hard suppression
-recovers some progress but vetoes 99.25\% of learned argmax decisions and collapses the
-hybrid almost entirely back to Spotlight-style selection. The useful finding is therefore
-not that DAgger plus a veto layer is a winning method. It is that offline accuracy and
-internal closed-loop performance can be structurally misleading proxies for external
-robustness when the state reconstruction interface changes the geometry of the decision
+front-camera proxy adapter, its token calibration no longer matches the external geometry,
+and the resulting transfer error is multi-axis. Lateral clamping repairs offroad and
+wrong-lane behavior but increases collision rate. Hard geometric suppression repairs
+progress and offroad behavior but vetoes 1987/1990 learned argmax decisions, raises
+collision rate, and leaves wrong-lane rate unchanged. Source decay improves wrong-lane
+rate but does not repair offroad or collision. The useful finding is therefore not that
+DAgger plus a veto layer is a winning method. It is that offline accuracy and internal
+closed-loop performance can be structurally misleading proxies for external robustness
+when the state reconstruction interface changes the metric ordering of the decision
 problem.
 
-The practical implication is that token policies should be audited at the decision level,
-not only by aggregate rollout metrics. A learned policy that passes an internal simulator
-may still be selecting tokens that an external geometric scorer rejects almost every frame.
-For safety-critical imitation learning, per-frame constraint disagreement and external
-proxy-state validation should be treated as first-class diagnostics alongside pass rate,
-collision rate, and offline validation accuracy.
+The practical implication is that token policies should be audited at the decision level
+and per failure axis, not only by aggregate rollout metrics. A learned policy that passes
+an internal simulator may still be selecting tokens that an external geometric scorer
+rejects almost every frame. For safety-critical imitation learning, per-frame constraint
+disagreement, external proxy-state validation, and separate geometry/safety/progress/lane
+metrics should be treated as first-class diagnostics alongside pass rate and offline
+validation accuracy.
 
 \acknowledgments{Developed independently as a research prototype for the Waymo Open Dataset
 E2E Challenge. We thank the Waymo team for the AlpaSim evaluation environment.}

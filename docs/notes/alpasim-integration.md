@@ -31,16 +31,40 @@ repo into the AlpaSim driver environment too:
 
 ```bash
 export ALPASIM_ROOT=/abs/path/to/alpasim
-./scripts/bootstrap_alpasim_checkout.sh
+./scripts/bootstrap_alpasim_runtime.sh
+./scripts/check_alpasim_readiness.py --scene-preset fresh_3scene
 ./.venv/bin/python scripts/fetch_checkpoints.py
 ```
 
+`ALPASIM_ROOT` must be a real nested AlpaSim git checkout. A copied directory
+with `src/driver` and `src/wizard` but no `.git` marker is not sufficient: the
+wizard will discover the wrong repo root and fail to find its Hydra configs.
+`./scripts/bootstrap_alpasim_checkout.sh` now detects that invalid layout,
+moves it aside, and reclones the pinned upstream checkout automatically.
+
+Platform note: local AlpaSim external-driver rollouts currently require an
+`x86_64` host. The upstream NVIDIA NRE `sensorsim` image is amd64-only; on ARM
+machines such as DGX Spark we observed emulated `sensorsim` processes hang or
+crash before opening the expected gRPC port. `./scripts/check_alpasim_readiness.py`
+now fails fast on ARM unless `MSA_ALLOW_UNSUPPORTED_ALPASIM_ARM=1` is set to
+override the guard intentionally.
+
 If the repo env already exists and you only need the repo-side env without
-cloning/fetching AlpaSim, use:
+preparing runtime Docker execution, use:
 
 ```bash
 ./scripts/bootstrap_alpasim_env.sh
 ```
+
+For the supported one-command runtime bootstrap, use:
+
+```bash
+./scripts/bootstrap_alpasim_runtime.sh
+```
+
+That wrapper validates the checkout, bootstraps both Python environments, runs
+readiness before any expensive Docker work, and only then builds the local
+`alpasim-base:0.66.0` image.
 
 If you only need the plugin registration step:
 
@@ -118,6 +142,25 @@ That writes:
 
 and prints the exact matched commands for the run.
 
+The launcher now rejects the three setup failures that previously looked like
+runtime bugs:
+
+- invalid copied `ALPASIM_ROOT` checkout with no `.git`
+- Docker daemon not reachable from the current user
+- missing local base image `alpasim-base:0.66.0`
+
+Build the local image explicitly with:
+
+```bash
+./scripts/build_alpasim_base_image.sh
+```
+
+Or verify everything at once before launching:
+
+```bash
+./scripts/check_alpasim_readiness.py --scene-preset front_camera_10scene_smoke
+```
+
 ## Run As An External Driver
 
 The preferred path is the repo-local launcher, which writes a concrete
@@ -154,6 +197,28 @@ Hydra overrides.
 The learned presets intentionally force `model.device: cuda`, so a production
 AlpaSim sweep cannot silently run on CPU.
 
+## Repo-Native Batch Path
+
+For the easiest repo-only path on a fresh machine, keep a repo-local HF token in
+`.env.alpasim_hf` and use:
+
+```bash
+./scripts/run_alpasim_transfer_matrix_repo.sh \
+  --mode both \
+  --models token_dagger_iter2,token_dagger_iter2_clamped,token_dagger_iter2_axis_constrained_clamped,token_dagger_iter2_hybrid_clamped,token_dagger_srcdecay \
+  --scene-presets front_camera_10scene_smoke \
+  --matrix-dir runs/alpasim_transfer_matrix_run_10scene \
+  --allow-existing-matrix-dir \
+  --continue-on-error
+```
+
+That wrapper does all repo-side setup in order:
+
+1. validates or repairs the nested AlpaSim checkout
+2. bootstraps the AlpaSim env and plugin registry
+3. builds `alpasim-base:0.66.0` if it is missing
+4. launches the requested matrix
+
 ## One-Command Local Launch
 
 To validate the full path on a small matched scene set:
@@ -182,6 +247,10 @@ Supported model presets:
 - `token_dagger_srcdecay`
 - `token_dagger_iter2_clamped`
 - `token_dagger_srcdecay_clamped`
+- `token_dagger_iter2_axis_constrained_clamped`
+- `token_dagger_iter2_hybrid_clamped`
+- `token_dagger_srcdecay_hybrid`
+- `token_dagger_srcdecay_hybrid_clamped`
 
 Supported scene presets:
 
@@ -202,6 +271,41 @@ Notes:
   token geometry to `max_lateral_offset_m=2.0`. Use these to test whether the
   AlpaSim failure is caused by unsafe lateral projection rather than learned
   safety calibration.
+- `token_dagger_iter2_axis_constrained_clamped` is the positive-method probe. It
+  preserves the DAgger top-k preference when independent safety/progress
+  constraints pass, rather than collapsing to the scalar Spotlight rank.
+
+## CoRL Evidence Gates
+
+Before rewriting the paper around any method claim, run:
+
+```bash
+./.venv/bin/python scripts/audit_corl_evidence_strength.py
+./.venv/bin/python scripts/analyze_transfer_predictors.py
+```
+
+The current diagnostic artifacts intentionally fail the Best-Paper method gate:
+the 10-scene matrix has external tradeoffs but no uniformly dominant
+intervention. The decisive next matrix is:
+
+```bash
+./.venv/bin/python scripts/run_alpasim_transfer_matrix.py \
+  --mode both \
+  --scene-presets front_camera_30scene_merged \
+  --matrix-dir runs/alpasim_transfer_matrix_30scene_axis \
+  --allow-existing-matrix-dir \
+  --continue-on-error
+```
+
+If that run completes, analyze it with:
+
+```bash
+./.venv/bin/python scripts/analyze_alpasim_transfer_matrix.py \
+  runs/alpasim_transfer_matrix_30scene_axis \
+  --scene-preset front_camera_30scene_merged \
+  --output-json artifacts/alpasim_matrix30_axis_analysis.json \
+  --output-markdown artifacts/alpasim_matrix30_axis_analysis.md
+```
 
 ## Import AlpaSim Metrics Into Evidence
 

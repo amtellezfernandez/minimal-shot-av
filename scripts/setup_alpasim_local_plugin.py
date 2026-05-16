@@ -38,6 +38,7 @@ ALPASIM_CORE_DEPENDENCIES = (
     "pytest",
     "pytest-asyncio",
     "rich",
+    "scipy",
     "setuptools<82",
     "torch",
     "tqdm",
@@ -80,6 +81,7 @@ def main() -> None:
     args = _parse_args()
     uv_bin = _require_uv()
     alpasim_root = _resolve_alpasim_root(args.alpasim_root)
+    _validate_alpasim_checkout(alpasim_root)
     driver_project = alpasim_root / "src" / "driver"
     venv_python = alpasim_root / ".venv" / "bin" / "python"
 
@@ -137,6 +139,32 @@ def _resolve_alpasim_root(cli_value: Path | None) -> Path:
     return DEFAULT_ALPASIM_ROOT.resolve()
 
 
+def _validate_alpasim_checkout(alpasim_root: Path) -> None:
+    required_dirs = (
+        alpasim_root / "src" / "driver",
+        alpasim_root / "src" / "wizard",
+    )
+    for required_dir in required_dirs:
+        if not required_dir.is_dir():
+            raise SystemExit(f"AlpaSim checkout missing required path: {required_dir}")
+
+    pyproject_file = alpasim_root / "pyproject.toml"
+    if not pyproject_file.is_file():
+        raise SystemExit(
+            "AlpaSim checkout is missing pyproject.toml at "
+            f"{pyproject_file}. Recreate it with ./scripts/bootstrap_alpasim_checkout.sh."
+        )
+
+    git_marker = alpasim_root / ".git"
+    if not git_marker.exists():
+        raise SystemExit(
+            "ALPASIM_ROOT points at a copied directory, not a real AlpaSim checkout: "
+            f"{alpasim_root}. The wizard resolves configs from the nearest git root and "
+            "will break in this layout. Recreate the nested checkout with "
+            "./scripts/bootstrap_alpasim_checkout.sh."
+        )
+
+
 def _require_uv() -> str:
     uv_bin = which("uv")
     if uv_bin:
@@ -185,6 +213,8 @@ def _bootstrap_alpasim_venv(alpasim_root: Path, *, uv_bin: str) -> None:
         cwd=alpasim_root,
     )
 
+    _compile_alpasim_protos(alpasim_root, venv_python=venv_python)
+
     for relative in ALPASIM_EDITABLE_PACKAGES:
         package_path = alpasim_root / relative
         if not package_path.is_dir():
@@ -203,6 +233,45 @@ def _bootstrap_alpasim_venv(alpasim_root: Path, *, uv_bin: str) -> None:
                 str(package_path),
             ],
             cwd=alpasim_root,
+        )
+
+
+def _compile_alpasim_protos(alpasim_root: Path, *, venv_python: Path) -> None:
+    grpc_root = alpasim_root / "src" / "grpc"
+    if not grpc_root.is_dir():
+        raise SystemExit(f"Expected AlpaSim gRPC package path missing: {grpc_root}")
+    proto_root = grpc_root / "alpasim_grpc" / "v0"
+    if not proto_root.is_dir():
+        raise SystemExit(f"Expected AlpaSim proto directory missing: {proto_root}")
+
+    generated = tuple(proto_root.glob("*_pb2.py")) + tuple(proto_root.glob("*_pb2_grpc.py"))
+    for path in generated:
+        path.unlink()
+
+    for proto_file in sorted(proto_root.glob("*.proto")):
+        _run(
+            [
+                str(venv_python),
+                "-m",
+                "grpc_tools.protoc",
+                f"-I{grpc_root}",
+                f"--python_out={grpc_root}",
+                f"--grpc_python_out={grpc_root}",
+                str(proto_file.relative_to(grpc_root)),
+            ],
+            cwd=grpc_root,
+        )
+
+    required_outputs = (
+        proto_root / "common_pb2.py",
+        proto_root / "egodriver_pb2.py",
+        proto_root / "sensorsim_pb2.py",
+    )
+    missing = [str(path) for path in required_outputs if not path.is_file()]
+    if missing:
+        raise SystemExit(
+            "Failed to generate required AlpaSim protobuf modules: "
+            + ", ".join(missing)
         )
 
 
