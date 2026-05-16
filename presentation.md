@@ -9,7 +9,11 @@ description: CoRL 2027 submission presentation for the minimal-shot AV repositor
 
 <!--
 CoRL 2027 presentation deck.
-Render with: npx @marp-team/marp-cli presentation.md --pdf
+Render HTML:
+  npx @marp-team/marp-cli presentation.md --html --allow-local-files -o presentation.html
+Render PDF:
+  npx @marp-team/marp-cli presentation.md --pdf --allow-local-files -o presentation.pdf
+PDF export requires Chrome, Chromium, Edge, or Firefox on the host.
 Primary evidence files:
 - docs/corl2027/paper.tex
 - artifacts/corl_evidence_strength_audit.md
@@ -46,7 +50,10 @@ No evaluated intervention is co-monotone across all axes in AlpaSim.
 
 Recent VLA work moves toward physically grounded latent reasoning.
 
-LaST-VLA argues that autonomous-driving VLA reasoning should be grounded with 3D geometric priors and world-model dynamics rather than only text chain-of-thought, reporting NAVSIM v1/v2 gains through latent spatio-temporal reasoning.
+LaST-VLA argues that autonomous-driving VLA reasoning should use 3D geometric priors
+and world-model dynamics, not only text chain-of-thought.
+
+It reports NAVSIM v1/v2 gains through latent spatio-temporal reasoning.
 
 Our question is narrower and diagnostic:
 
@@ -161,7 +168,11 @@ Source: `docs/corl2027/paper.tex`, Tables 3 and 6.
 
 The plot is generated from the held-out Latin-hypercube sweep.
 
-It is useful in the talk because it makes the main internal pattern visible immediately: iteration 2 is the frontier, source decay partially rescues iteration 3, and removing inverse-frequency weighting breaks closed-loop safety.
+It makes the main internal pattern visible immediately:
+
+- iteration 2 is the frontier
+- source decay partially rescues iteration 3
+- removing inverse-frequency weighting breaks closed-loop safety
 
 ---
 
@@ -257,12 +268,12 @@ Internal simulator, true-state physics and evaluation fixed.
 
 Only the planner-visible proxy state is corrupted.
 
-| Perturbation | Raw pass/coll/lane | Clamped | Hybrid | Oracle token | Spotlight |
+| Perturbation | Raw p/c/l | Clamp | Hybrid | Oracle | Spot |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| clean | 0.917 / 0.083 / 0.312 | 0.938 / 0.062 / 0.167 | 0.958 / 0.042 / 0.167 | 0.938 / 0.062 / 0.167 | 0.938 / 0.062 / 0.167 |
-| heading bias | 0.896 / 0.104 / 0.562 | 0.938 / 0.062 / 0.396 | 0.938 / 0.062 / 0.375 | 0.896 / 0.104 / 0.292 | 0.938 / 0.062 / 0.312 |
-| actor latency | 0.604 / 0.396 / 0.875 | 0.604 / 0.396 / 0.521 | **0.854 / 0.146 / 0.208** | 0.833 / 0.167 / 0.271 | 0.583 / 0.417 / 0.250 |
-| route offset | 0.938 / 0.062 / 0.229 | 0.875 / 0.125 / 0.021 | 0.896 / 0.104 / 0.062 | 0.938 / 0.042 / 0.125 | 0.917 / 0.083 / 0.083 |
+| clean | 0.917/0.083/0.312 | 0.938/0.062/0.167 | 0.958/0.042/0.167 | 0.938/0.062/0.167 | 0.938/0.062/0.167 |
+| heading bias | 0.896/0.104/0.562 | 0.938/0.062/0.396 | 0.938/0.062/0.375 | 0.896/0.104/0.292 | 0.938/0.062/0.312 |
+| actor latency | 0.604/0.396/0.875 | 0.604/0.396/0.521 | **0.854/0.146/0.208** | 0.833/0.167/0.271 | 0.583/0.417/0.250 |
+| route offset | 0.938/0.062/0.229 | 0.875/0.125/0.021 | 0.896/0.104/0.062 | 0.938/0.042/0.125 | 0.917/0.083/0.083 |
 
 Source: `artifacts/internal_proxy_transfer_medium.md`.
 
@@ -292,7 +303,8 @@ Let each candidate token have a metric vector:
 
 `m(a) = [collision risk, offroad risk, lane risk, progress loss, tracking error]`
 
-If a proxy-state perturbation changes the action ordering for one metric but not another, a scalar intervention can improve one axis while worsening another.
+If a proxy-state perturbation changes the action ordering for one metric but not another,
+a scalar intervention can improve one axis while worsening another.
 
 The empirical question is not whether this is possible.
 
@@ -401,7 +413,11 @@ The data does not support that.
 
 Frame it as:
 
-“Internal imitation-learning success can hide transfer-axis disagreement. We provide a controlled diagnostic, reproduce the effect externally in AlpaSim, and show that physical grounding must be evaluated per axis rather than as one aggregate planning score.”
+“Internal imitation-learning success can hide transfer-axis disagreement.
+
+We provide a controlled diagnostic, reproduce the effect externally in AlpaSim,
+and show that physical grounding must be evaluated per axis rather than as one aggregate
+planning score.”
 
 That is the defensible CoRL contribution.
 
