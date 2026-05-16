@@ -22,7 +22,7 @@ Primary evidence files:
 
 ## Diagnostics from Discrete Maneuver Tokens and Grounded Selection
 
-Alba Maria Tellez Fernandez  
+Alba Maria Tellez Fernandez<br>
 Waymo Open Dataset E2E Challenge / CoRL 2027 branch
 
 ---
