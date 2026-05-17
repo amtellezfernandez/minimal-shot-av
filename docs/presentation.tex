@@ -52,7 +52,59 @@
 % ── SLIDE 1: Title ────────────────────────────────────────────────────────────
 \maketitle
 
-% ── SLIDE 2: Motivation ───────────────────────────────────────────────────────
+% ── SLIDE 2: Who I am ─────────────────────────────────────────────────────────
+\begin{frame}{Who I Am \& What I Built}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{Alba Maria Tellez Fernandez} \\[0.25em]
+      \footnotesize AI / robotics builder focused on autonomy systems that can operate
+      outside heavily curated training distributions.
+
+      \vspace{0.3em}
+      \textbf{Question behind this project:}
+      \begin{itemize}\footnotesize
+        \item Can a compact geometric representation replace memorized scene priors?
+        \item Does \emph{``avoid occupied space, preserve route''} survive new geometry?
+        \item What breaks when the same policy enters AlpaSim?
+      \end{itemize}
+
+      \vspace{0.25em}
+      \textbf{Built from scratch:}
+      \begin{itemize}\footnotesize
+        \item custom long-tail simulator + evaluation suites
+        \item Spotlight Reflex token policy runtime
+        \item DAgger, scorer, and hybrid policy experiments
+        \item AlpaSim bridge for WOD-E2E scenes
+        \item WOD-E2E selector with Cosmos features
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \begin{alertblock}{Main Claim}
+        \footnotesize Minimal-shot autonomy needs \textbf{grounded action interfaces}:
+        bounded maneuver candidates, explicit route/occupancy geometry, and
+        transfer metrics separated by axis.
+      \end{alertblock}
+      \vspace{0.15em}
+      \begin{block}{\small What this is}
+        \begin{itemize}\footnotesize
+          \item a runnable simulator and transfer harness
+          \item grounded token-selection experiments
+          \item reproducible artifacts and audit paths
+        \end{itemize}
+      \end{block}
+      \vspace{0.15em}
+      \begin{block}{\small What this is not}
+        \begin{itemize}\footnotesize
+          \item not a production AV stack
+          \item not a LaST-VLA reproduction
+          \item not a final Waymo hidden-test claim
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ── SLIDE 3: Motivation ───────────────────────────────────────────────────────
 \begin{frame}{The Problem — Continuous Policy Collapse in Long-Tail}
   \begin{columns}[T]
     \begin{column}{0.50\textwidth}

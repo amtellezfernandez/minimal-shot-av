@@ -15,13 +15,14 @@ The canonical deck for this branch is the Beamer presentation:
 This root Markdown file is intentionally only an index. The slide deck follows
 the main-branch presentation format and keeps the story compact:
 
-1. motivation and failure case
-2. grounded reasoning context
-3. why the custom simulator exists and why AlpaSim was added after it
-4. six geometry scalars and nine ManeuverTokens
-5. simulation and AlpaSim transfer results
-6. WOD-E2E selector results
-7. oracle-gap and next-step analysis
+1. who built it, what was built, and what this is not
+2. motivation and failure case
+3. grounded reasoning context
+4. why the custom simulator exists and why AlpaSim was added after it
+5. six geometry scalars and nine ManeuverTokens
+6. simulation and AlpaSim transfer results
+7. WOD-E2E selector results
+8. oracle-gap and next-step analysis
 
 Supporting artifacts:
 
