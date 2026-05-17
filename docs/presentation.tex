@@ -278,7 +278,36 @@
   \end{center}
 \end{frame}
 
-% ── SLIDE 6: 6 World-State Scalars ───────────────────────────────────────────
+% ── SLIDE 6: Core idea ────────────────────────────────────────────────────────
+\begin{frame}{Core Idea: Reason from Geometry, Not Memory}
+  \begin{columns}[T]
+    \begin{column}{0.50\textwidth}
+      \textit{``A trajectory that avoids occupied space and respects route
+      geometry is correct \textbf{regardless of what the obstacle is called}.''}
+
+      \vspace{0.5em}
+      \textbf{Formal invariance:} let $T$ be any relabelling of object identities,
+      scenario names, or cluster tags that leaves occupancy $G$ and route $R$ unchanged.
+      \[
+        \boxed{M(s) = M(T(s)) \quad \forall\,s,\;\forall\,T}
+      \]
+      \code{"sheep"} $\to$ \code{"debris"} changes nothing.
+
+      \vspace{0.3em}
+      \small\textbf{Regression-tested:} relabel all objects in every scene and assert
+      maneuver, score, and reason stay identical.
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \includegraphics[width=\linewidth]{images/kf_spotlight_success.png}
+      \vspace{0.1em}
+      \small\textit{Same wrong-way actor, night. Spotlight Reflex selects
+      \code{evasive\_right}, clears the actor, and returns to lane. Geometry resolved
+      the decision.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ── SLIDE 7: 6 World-State Scalars ───────────────────────────────────────────
 \begin{frame}{Architecture: Six World-State Scalars}
   All signals computed from raw obstacle positions and route geometry.
   \textbf{Nothing is learned; nothing is scene-specific.}
@@ -307,7 +336,7 @@
   Formal invariance tested: $M(s)=M(T(s))$ for any object-identity relabelling $T$.
 \end{frame}
 
-% ── SLIDE 5: 9 ManeuverTokens (Discrete Bottleneck) ──────────────────────────
+% ── SLIDE 8: 9 ManeuverTokens (Discrete Bottleneck) ──────────────────────────
 \begin{frame}{Architecture: Nine ManeuverTokens — The Discrete Bottleneck}
   Each token: \textbf{20-point, 5\,s trajectory at 4\,Hz} via Hermite smoothstep.
   Evasive maneuvers apply the lateral offset in the first third for fast separation.
@@ -346,7 +375,7 @@
   \end{columns}
 \end{frame}
 
-% ── SLIDE 6: Trust-Region Scoring ────────────────────────────────────────────
+% ── SLIDE 9: Trust-Region Scoring ────────────────────────────────────────────
 \begin{frame}{Architecture: Trust-Region Scoring \& Decision Flow}
   \begin{columns}[T]
     \begin{column}{0.44\textwidth}
@@ -387,7 +416,52 @@
   \end{columns}
 \end{frame}
 
-% ── SLIDE 7: Gauntlet comparison ─────────────────────────────────────────────
+% ── SLIDE 10: Decision flow ──────────────────────────────────────────────────
+\begin{frame}{Policy Architecture — Decision Flow}
+  \begin{center}
+  \begin{tikzpicture}[
+    node distance=0.3cm and 0.5cm,
+    box/.style={rectangle, rounded corners=3pt,
+                draw=spotBlue!70, fill=spotBlue!10,
+                minimum width=1.9cm, minimum height=0.72cm,
+                font=\small\bfseries, align=center},
+    arr/.style={-Stealth, thick, color=spotTeal}
+  ]
+    \node[box] (scene) {Scene Input\\[-2pt]\scriptsize obstacles · lane};
+    \node[box, right=of scene]  (perc)  {6 World-State\\[-2pt]\scriptsize Scalars};
+    \node[box, right=of perc]   (cands) {9 Maneuver\\[-2pt]\scriptsize Candidates};
+    \node[box, below=0.45cm of perc] (refs) {Ref Rules\\[-2pt]\scriptsize thresholds};
+    \node[box, right=of cands]  (score) {Trust-Region\\[-2pt]\scriptsize Scorer};
+    \node[box, fill=spotGold!25, right=of score] (sel) {Selected\\[-2pt]\scriptsize Maneuver};
+
+    \draw[arr] (scene) -- (perc);
+    \draw[arr] (perc)  -- (cands);
+    \draw[arr] (perc)  -- (refs);
+    \draw[arr] (refs.east) to[out=0,in=240] (score.south);
+    \draw[arr] (cands) -- (score);
+    \draw[arr] (score) -- (sel);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.35em}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}
+      \textbf{6 Scalars:} pressure, blockage, corridor blocked, left/right
+      clearance, preferred escape side.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \textbf{Ref Rules:} world-state thresholds $\to$ expected maneuver + score.
+      Scores $\leq50$ are unsafe.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \textbf{Scorer:} 3\,s + 5\,s horizons, speed-scaled tolerance, full log
+      emitted every step.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ── SLIDE 11: Gauntlet comparison ─────────────────────────────────────────────
 \begin{frame}{Simulation: Gauntlet — The Bottleneck Test}
   \textbf{Gauntlet:} 4 simultaneous hazards, 3.5\,m corridor, 420 matched scenarios (seeds 1–80).
 
