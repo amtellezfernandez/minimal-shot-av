@@ -17,10 +17,11 @@ the main-branch presentation format and keeps the story compact:
 
 1. motivation and failure case
 2. grounded reasoning context
-3. six geometry scalars and nine ManeuverTokens
-4. simulation and AlpaSim transfer results
-5. WOD-E2E selector results
-6. oracle-gap and next-step analysis
+3. why the custom simulator exists and why AlpaSim was added after it
+4. six geometry scalars and nine ManeuverTokens
+5. simulation and AlpaSim transfer results
+6. WOD-E2E selector results
+7. oracle-gap and next-step analysis
 
 Supporting artifacts:
 

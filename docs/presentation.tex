@@ -172,7 +172,61 @@
   \end{columns}
 \end{frame}
 
-% ── SLIDE 4: 6 World-State Scalars ───────────────────────────────────────────
+% ── SLIDE 5: What was built ───────────────────────────────────────────────────
+\begin{frame}{What I Built: Simulator First, AlpaSim Second}
+  \begin{columns}[T]
+    \begin{column}{0.47\textwidth}
+      \begin{block}{\small 1. Controlled simulator}
+        \small I built a lightweight closed-loop 2D AV simulator because it gives
+        exact ground truth and controllable long-tail stress tests.
+        \begin{itemize}\footnotesize
+          \item 11 WOD-inspired scenario clusters
+          \item compositional OOD, hidden, adversarial, gauntlet suites
+          \item paired seeds and continuous metrics: collision, clearance, progress, jerk
+        \end{itemize}
+      \end{block}
+      \vspace{0.2em}
+      \footnotesize\textbf{Purpose:} isolate whether the policy really follows
+      route/occupancy geometry when the world state is known.
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \begin{block}{\small 2. AlpaSim transfer bridge}
+        \small Then I ported the \textbf{same token-policy API} into AlpaSim, using
+        WOD-E2E front-camera scenes and a route/ego adapter.
+        \begin{itemize}\footnotesize
+          \item camera + route + ego dynamics $\to$ proxy geometry
+          \item same tokens, same policy call, different execution stack
+          \item per-frame logs for token choice and transfer failure axes
+        \end{itemize}
+      \end{block}
+      \vspace{0.2em}
+      \footnotesize\textbf{Purpose:} test whether the internal simulator result
+      survives sensor-realistic execution and proxy-state reconstruction.
+    \end{column}
+  \end{columns}
+
+  \vspace{0.45em}
+  \begin{center}
+  \begin{tikzpicture}[
+    node distance=0.7cm,
+    stage/.style={rectangle, rounded corners=3pt, draw=spotBlue!70,
+      fill=spotBlue!8, minimum width=3.2cm, minimum height=0.72cm,
+      align=center, font=\small\bfseries},
+    api/.style={rectangle, rounded corners=3pt, draw=spotGold!85,
+      fill=spotGold!12, minimum width=2.7cm, minimum height=0.72cm,
+      align=center, font=\small\bfseries},
+    arr/.style={-Stealth, thick, color=spotTeal}
+  ]
+    \node[stage] (sim) {Custom simulator\\[-2pt]\scriptsize controlled mechanism test};
+    \node[api, right=of sim] (policy) {Same token API\\[-2pt]\scriptsize 6 scalars $\to$ 9 tokens};
+    \node[stage, right=of policy] (alpa) {AlpaSim\\[-2pt]\scriptsize external transfer test};
+    \draw[arr] (sim) -- (policy);
+    \draw[arr] (policy) -- (alpa);
+  \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+% ── SLIDE 6: 6 World-State Scalars ───────────────────────────────────────────
 \begin{frame}{Architecture: Six World-State Scalars}
   All signals computed from raw obstacle positions and route geometry.
   \textbf{Nothing is learned; nothing is scene-specific.}

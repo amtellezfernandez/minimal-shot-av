@@ -36,6 +36,24 @@ models; the selector picks among them using ~137 features plus visual embeddings
 The two tracks are deliberately isolated — simulator metrics are never used for WOD
 model selection.
 
+## Why A Custom Simulator, Then AlpaSim
+
+The custom simulator is the controlled lab. I built it to make long-tail AV scenes
+cheap, randomized, and exactly measurable: the simulator knows the route, obstacles,
+actor motion, clearance, progress, and collision state at every step. That makes it
+possible to test whether a policy is using route/occupancy geometry rather than
+memorizing labels or passing one hand-picked demo.
+
+AlpaSim is the transfer test. After the mechanism worked internally, I kept the same
+token-policy API and ran it through a second execution stack built from WOD-E2E
+front-camera scenes. The AlpaSim adapter reconstructs the same proxy geometry from
+camera, route, and ego-dynamics inputs, then calls the same policies: raw DAgger,
+clamped DAgger, hard-veto hybrid, source-decayed DAgger, and Spotlight Reflex.
+
+That split is intentional: the simulator answers **why** a policy decision is made
+under known geometry; AlpaSim answers **what survives** when the same decision
+interface is forced through sensor-realistic proxy-state reconstruction.
+
 ## Relation To Large Latent VLA Work
 
 Recent systems such as [LaST-VLA](https://arxiv.org/abs/2603.01928) pursue a
