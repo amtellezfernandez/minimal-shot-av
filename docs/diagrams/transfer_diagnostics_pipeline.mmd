@@ -1,0 +1,21 @@
+flowchart LR
+  classDef train fill:#f8fafc,stroke:#334155,stroke-width:2px,color:#0f172a
+  classDef policy fill:#eef6ff,stroke:#1d4ed8,stroke-width:2px,color:#172554
+  classDef transfer fill:#fff7ed,stroke:#c2410c,stroke-width:2px,color:#431407
+  classDef axis fill:#ecfdf5,stroke:#15803d,stroke-width:2px,color:#052e16
+  classDef finding fill:#fef2f2,stroke:#b91c1c,stroke-width:2px,color:#450a0a
+
+  A["Expert rollouts<br/>Spotlight Reflex"]:::train
+  B["DAgger aggregation<br/>iter1, iter2, iter3"]:::train
+  C["Learned token policies<br/>raw, clamped, hard-veto, source-decay"]:::policy
+  D["Internal LHS sweep<br/>held-out generator profiles"]:::axis
+  E["Controlled proxy corruption<br/>heading bias, latency, route offset, noise"]:::transfer
+  F["AlpaSim WOD-E2E clips<br/>front-camera proxy reconstruction"]:::transfer
+  G["Axis metrics<br/>collision, offroad, wrong lane, progress, dist-to-GT"]:::axis
+  H["Main diagnosis<br/>aggregate success hides non-co-monotone transfer axes"]:::finding
+
+  A --> B --> C
+  C --> D --> G
+  C --> E --> G
+  C --> F --> G
+  G --> H

@@ -166,6 +166,8 @@ Two primary references — each focused on one track with no repeated content:
 - **[`presentation.md`](presentation.md)** / **[`presentation.pdf`](presentation.pdf)** —
   branch-level SOTA/CoRL presentation with architecture graphs, simulator results,
   AlpaSim transfer diagnostics, WOD-E2E results, and submission/audit links.
+- **[`docs/diagrams/`](docs/diagrams)** — Mermaid source schemas used directly in
+  the presentation; rendered slide assets live in `docs/images/mermaid_*.svg`.
 - **[`docs/corl2027/paper.tex`](docs/corl2027/paper.tex)** /
   **[`docs/corl2027/paper.pdf`](docs/corl2027/paper.pdf)** — current CoRL 2027
   draft on grounded token selection and proxy-state transfer failure.

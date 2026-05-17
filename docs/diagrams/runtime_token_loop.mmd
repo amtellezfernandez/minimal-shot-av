@@ -1,0 +1,14 @@
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
+flowchart TB
+  classDef sensor fill:#eef6ff,stroke:#1d4ed8,stroke-width:2px,color:#172554
+  classDef state fill:#f8fafc,stroke:#334155,stroke-width:2px,color:#0f172a
+  classDef token fill:#fffbeb,stroke:#b45309,stroke-width:2px,color:#451a03
+  classDef score fill:#f0fdf4,stroke:#15803d,stroke-width:2px,color:#052e16
+  classDef control fill:#fdf2f8,stroke:#be185d,stroke-width:2px,color:#500724
+
+  A["Scene signals"]:::sensor
+  B["World-state scalars"]:::state
+  C["Token candidates"]:::token
+  D["Grounded selector + controller"]:::score
+
+  A --> B --> C --> D

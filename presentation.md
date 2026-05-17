@@ -64,9 +64,9 @@ evaluation harness for minimal-shot autonomy research.
 
 # Whole System Map
 
-![width:1120](docs/images/system-map-sota-corl.svg)
+![width:1120](docs/images/mermaid_sota_system_architecture.svg)
 
-The architecture has three connected layers:
+Mermaid-authored system schema. The architecture has three connected layers:
 
 1. custom simulator for controlled minimal-shot experiments
 2. WOD-E2E selector harness for real-data grounding probes
@@ -76,7 +76,7 @@ The architecture has three connected layers:
 
 # Runtime Architecture
 
-![bg right:52% width:96%](docs/images/grand-pipeline.svg)
+![bg right:42% contain](docs/images/mermaid_runtime_token_loop.svg)
 
 Spotlight Reflex converts visible geometry into a small token decision:
 
@@ -185,6 +185,15 @@ This is a WOD-E2E front-camera AlpaSim rollout with adapter map and metrics.
 
 AlpaSim is not used to claim production safety. It is used to test whether the
 token interface survives a different observation and execution stack.
+
+---
+
+# Transfer Diagnostic Schema
+
+![width:1120](docs/images/mermaid_transfer_diagnostics_pipeline.svg)
+
+Mermaid-authored evidence pipeline: the same learned token policies are tested
+inside the simulator, under controlled proxy corruption, and in AlpaSim.
 
 ---
 
