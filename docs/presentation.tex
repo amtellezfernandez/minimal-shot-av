@@ -1,11 +1,10 @@
-% Spotlight Reflex — Beamer Presentation (CoRL 2027 framing, 13 slides)
+% Spotlight Reflex — Beamer Presentation
 % Compile: pdflatex presentation.tex  (twice for cross-references)
 
 \documentclass[aspectratio=169,10pt]{beamer}
 
 % ── Theme ─────────────────────────────────────────────────────────────────────
 \usetheme{metropolis}
-\usepackage{appendixnumberbeamer}
 
 % ── Packages ──────────────────────────────────────────────────────────────────
 \usepackage{amsmath,amssymb}
@@ -40,8 +39,8 @@
 \arrayrulecolor{spotBlue!40}
 
 % ── Meta ──────────────────────────────────────────────────────────────────────
-\title{Action-Space Quantization as a Robustness Prior}
-\subtitle{Minimal-Shot Long-Tail Driving via Discrete ManeuverTokens}
+\title{Spotlight Reflex}
+\subtitle{Minimal-Shot Autonomous Driving via Grounded ManeuverTokens}
 \author{Alba Maria Tellez Fernandez}
 \institute{amtellezfernandez@gmail.com · Waymo Open Dataset E2E Challenge}
 \date{May 2026}
@@ -86,8 +85,59 @@
   \end{columns}
 \end{frame}
 
-% ── SLIDE 3: Three Claims ─────────────────────────────────────────────────────
-\begin{frame}{Three Theoretical Claims}
+% ── SLIDE 3: Grounded reasoning context ───────────────────────────────────────
+\begin{frame}{Grounding Context: Why Not Language Tokens?}
+  \begin{columns}[T]
+    \begin{column}{0.50\textwidth}
+      Recent VLA work argues that driving should move away from long textual
+      Chain-of-Thought and toward latent spatial-temporal reasoning.
+
+      \vspace{0.3em}
+      \begin{block}{\small LaST-VLA, Xiaomi EV + Tsinghua}
+        \small Aligns latent states with \textbf{world-model dynamics} and
+        \textbf{3D geometric priors}, then refines trajectory generation with
+        reinforcement learning.
+      \end{block}
+
+      \vspace{0.2em}
+      \small We do not implement LaST-VLA. We use the same design principle at
+      prototype scale: keep the driving decision grounded in geometry, dynamics,
+      and bounded action rather than language-like output.
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \begin{center}
+      \begin{tikzpicture}[
+        node distance=0.22cm,
+        box/.style={rectangle, rounded corners=3pt, draw=spotBlue!70,
+                    fill=spotBlue!8, minimum width=3.6cm, minimum height=0.65cm,
+                    font=\small\bfseries, align=center},
+        warn/.style={rectangle, rounded corners=3pt, draw=spotRed!70,
+                    fill=spotRed!8, minimum width=3.6cm, minimum height=0.65cm,
+                    font=\small\bfseries, align=center},
+        goodbox/.style={rectangle, rounded corners=3pt, draw=spotGreen!70,
+                    fill=spotGreen!10, minimum width=3.6cm, minimum height=0.65cm,
+                    font=\small\bfseries, align=center},
+        arr/.style={-Stealth, thick, color=spotTeal}
+      ]
+        \node[warn] (text) {Textual VLA\\[-2pt]\scriptsize image $\to$ words $\to$ action};
+        \node[box, below=of text] (latent) {LaST-VLA Context\\[-2pt]\scriptsize image $\to$ physical latents $\to$ trajectory};
+        \node[goodbox, below=of latent] (ours) {Our Stack\\[-2pt]\scriptsize geometry scalars $\to$ 9 tokens};
+        \draw[arr] (text) -- node[right,font=\scriptsize] {precision loss} (latent);
+        \draw[arr] (latent) -- node[right,font=\scriptsize] {explicit prototype} (ours);
+      \end{tikzpicture}
+      \end{center}
+
+      \vspace{0.2em}
+      \footnotesize
+      \textbf{Paper context:} LaST-VLA reports 91.3 PDMS on NAVSIM v1 and
+      87.1 EPDMS on NAVSIM v2. Our result is not that scale; our contribution
+      is an auditable token/runtime testbed and transfer diagnosis.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ── SLIDE 4: Three Claims ─────────────────────────────────────────────────────
+\begin{frame}{Three Claims}
   \begin{columns}[T]
     \begin{column}{0.48\textwidth}
       \begin{block}{\small \textbf{Claim 1 — Discrete Bottleneck Hypothesis}}
@@ -300,31 +350,40 @@
   \end{columns}
 \end{frame}
 
-% ── SLIDE 9: AlpaSim ─────────────────────────────────────────────────────────
-\begin{frame}{AlpaSim: Sensor-Realistic Evidence}
+% ── SLIDE 10: AlpaSim ────────────────────────────────────────────────────────
+\begin{frame}{AlpaSim: External Transfer Diagnosis}
   \begin{columns}[T]
-    \begin{column}{0.62\textwidth}
+    \begin{column}{0.48\textwidth}
       \includegraphics[width=\linewidth]{images/alpasim_reasoning_panel.png}
       \vspace{0.1em}
-      \small\textit{Real Waymo front-camera frames alongside the adapter's reasoning output.
-      Same policy binary as simulation — 4-channel adapter bridges to geometric scalars.}
+      \small\textit{Real Waymo front-camera frames alongside adapter output.
+      The policy API is fixed; the adapter reconstructs proxy geometry.}
     \end{column}
-    \begin{column}{0.35\textwidth}
-      \small\textbf{4-channel adapter:}
-      \begin{itemize}\small
-        \item Route $\to$ lane curvature
-        \item Brightness $\to$ visibility risk
-        \item Ego dynamics $\to$ brake risk
-        \item Hazards $\to$ actor primitives
-      \end{itemize}
+    \begin{column}{0.49\textwidth}
+      \small\textbf{10 shared WOD-E2E clips, paired by scene:}
+
+      \vspace{0.15em}
+      \scriptsize
+      \begin{tabular}{lrrrr}
+        \toprule
+        \textbf{Variant} & \textbf{Coll.} & \textbf{Offroad} & \textbf{Lane} & \textbf{Prog.} \\
+        \midrule
+        Raw DAgger iter2  & 0.60 & 0.90 & 0.70 & 0.034 \\
+        Clamped DAgger    & 0.70 & \good{0.50} & \good{0.20} & 0.384 \\
+        Hard-veto hybrid  & 0.80 & \good{0.20} & 0.70 & \good{0.837} \\
+        Source decay      & 0.60 & 0.90 & 0.40 & 0.175 \\
+        \bottomrule
+      \end{tabular}
+
       \vspace{0.2em}
-      \small\textbf{30 real scenes:}\\[0.2em]
-      \good{0.0} collision\_at\_fault\\
-      0.42\,m dist.\ to GT traj\\
-      0.37 any-collision (others)
-      \vspace{0.2em}
+      \small\textbf{Interpretation:} each intervention fixes a different axis.
+      Clamping improves route geometry; hard-veto recovers progress/offroad;
+      source decay helps lane behavior. No single learned variant dominates all axes.
+
+      \vspace{0.15em}
       \begin{alertblock}{}
-        \small Zero at-fault in sensor-realistic env, no AlpaSim-specific tuning.
+        \small This is the transfer finding: internal success is not enough unless
+        the selector is grounded at execution time.
       \end{alertblock}
     \end{column}
   \end{columns}
@@ -444,7 +503,8 @@
       1.419 RFS oracle gap $\to$ visual-geometric bridge missing. \\[0.2em]
     \midrule
     \textbf{AlpaSim} &
-      Same binary, sensor-realistic: \good{0.0} collision\_at\_fault, 0.42\,m to GT. \\[0.1em]
+      10 paired WOD-E2E clips expose axis-specific transfer failures:
+      clamping helps route geometry, veto helps progress, source decay helps lane behavior. \\[0.1em]
     \textbf{WOD-E2E champion} &
       \good{7.845 RFS} (5-fold), $+$0.823 vs official Waymo baseline. \\
     \bottomrule
@@ -482,7 +542,7 @@
           \footnotesize Stratified reweighting by intent.
           GO\_RIGHT regret 2.063 → targeted fix.
 
-        \item \textbf{Test-set submission}\\
+        \item \textbf{Test-set run}\\
           \footnotesize Pipeline complete; 1,505 frames listed.
           Missing: test TFRecords (Waymo sign-in gated).
 
@@ -500,92 +560,6 @@
   \small
   \texttt{docs/simulation.md} · \texttt{docs/wod-e2e-system-walkthrough.md}\\
   \texttt{docs/corl2027/paper.pdf} · \texttt{docs/corl2027/paper.txt}
-\end{frame}
-
-% ══════════════════════════════════════════════════════════════════════════════
-\appendix
-% ══════════════════════════════════════════════════════════════════════════════
-
-\begin{frame}{Appendix: Reference Rule Engine}
-  Maps world-state threshold conditions to pseudo-rater references (name + score).
-
-  \vspace{0.3em}
-  \small
-  \begin{tabular}{p{5.8cm}p{5.2cm}}
-    \toprule
-    \textbf{World condition} & \textbf{References (score)} \\
-    \midrule
-    Low pressure ($<0.25$), low uncertainty ($<0.45$), open corridor ($>0.35$)
-      & \code{maintain} (92), lane centre (88) \\[0.2em]
-    Moderate pressure ($>0.20$)
-      & \code{slow\_yield} (86), best-side nudge (94), evasive (89) \\[0.2em]
-    High uncertainty ($>0.55$)
-      & \code{crawl} (90), \code{stop} (82) \\[0.2em]
-    Lane offset $>0.3$\,m and speed $>0.5$\,m/s
-      & \code{lane\_recover} (93) \\[0.2em]
-    Default fallback
-      & \code{maintain} (80), \code{slow\_yield} (76) \\
-    \bottomrule
-  \end{tabular}
-
-  \vspace{0.2em}
-  \small Scores 80–94 on a scale where $\leq50$ = unsafe rating.
-\end{frame}
-
-\begin{frame}{Appendix: Calibration Bias Audit}
-  Regret = oracle RFS $-$ selected RFS. Where does the error live?
-
-  \vspace{0.2em}
-  \small
-  \begin{tabular}{lcrrc}
-    \toprule
-    \textbf{Slice} & \textbf{$n$} & \textbf{Selected} & \textbf{Oracle} & \textbf{Regret} \\
-    \midrule
-    GO\_STRAIGHT & 427 & 7.959 & 9.336 & 1.377 \\
-    GO\_LEFT     &  23 & 7.107 & 8.721 & \bad{1.614} \\
-    GO\_RIGHT    &  29 & 6.574 & 8.638 & \bad{\textbf{2.063}} \\
-    \midrule
-    speed:fast   &  44 & 7.957 & 9.436 & 1.479 \\
-    speed:slow   & 133 & 7.564 & 9.196 & \bad{1.632} \\
-    speed:urban  & 136 & 8.132 & 9.416 & 1.285 \\
-    \bottomrule
-  \end{tabular}
-
-  \vspace{0.2em}
-  GO\_RIGHT ($n{=}29$) and GO\_LEFT ($n{=}23$) are rare — ranker is calibrated to
-  GO\_STRAIGHT (89\% of frames). GO\_LEFT improved 1.753→1.614 with targeted changes.
-  \textbf{Fix:} stratified loss reweighting by intent class.
-\end{frame}
-
-\begin{frame}{Appendix: RFF Derivation \& Optuna TPE}
-  \begin{columns}[T]
-    \begin{column}{0.50\textwidth}
-      \textbf{Random Fourier Features} — approximate Gaussian kernel without $N{\times}N$ matrix:
-      \begin{align*}
-        \mathbf{W} &\sim \mathcal{N}(0,\sigma^{-2}I),\quad D{=}512,\;\sigma{=}7.858 \\
-        \boldsymbol{\varphi}(\mathbf{x}) &=
-          \sqrt{\tfrac{2}{D}}\cos(\mathbf{W}^\top\tilde{\mathbf{x}}+\mathbf{b}) \\
-        \mathbb{E}[\boldsymbol{\varphi}^\top\boldsymbol{\varphi}'] &=
-          \exp\!\left(-\tfrac{\|\mathbf{x}-\mathbf{x}'\|^2}{2\sigma^2}\right)
-      \end{align*}
-      Only 512-dim ridge weights are learned. RFS: 7.834, precision 0.41.
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \textbf{Optuna TPE} — Bayesian optimisation:
-      \begin{align*}
-        \ell(x) &= P(x \mid \text{top-}p) \\
-        g(x)    &= P(x \mid \text{bottom}) \\
-        x_\text{next} &= \arg\max_x\;\tfrac{\ell(x)}{g(x)}
-      \end{align*}
-      \textbf{GPU MLP search (20 trials):}
-      \begin{itemize}\small
-        \item Best: trial\_0004 — $h{=}64$, lr=0.003866 → \good{7.845}
-        \item Mean 20 trials: 7.769
-        \item 1/20 beat the RFF baseline (7.834)
-        \item With 479 frames + 5 folds, Optuna can exploit fold patterns
-      \end{itemize}
-    \end{column}
-  \end{columns}
 \end{frame}
 
 \end{document}
