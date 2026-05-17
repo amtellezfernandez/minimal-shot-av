@@ -1174,8 +1174,14 @@ def _oracle_frame_to_current_hazards(
                 "world_heading": round(float(ego_pose["world_heading"]), 6),
             },
         }
-    legacy_hazards = list(frame.get("hazards", []))
-    return legacy_hazards, {
+    if frame.get("hazards"):
+        return None, {
+            "miss_reason": "legacy_relative_proxy_unsupported",
+            "frame_space": "legacy_relative",
+            "world_actor_count": 0,
+            "current_ego_pose": None,
+        }
+    return [], {
         "frame_space": "legacy_relative",
         "world_actor_count": 0,
         "current_ego_pose": None,
