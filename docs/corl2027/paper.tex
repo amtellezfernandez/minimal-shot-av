@@ -45,16 +45,22 @@ scenario-perturbation cases, 1440 agent rollouts), grounded vetoing strongly rep
 three-step actor latency (collision 0.396 to 0.146; lane violation 0.875 to 0.208), but
 under route-offset corruption it improves lane adherence while degrading pass/collision.
 Waymo AlpaSim validation shows the same multi-axis structure externally: clamping repairs
-offroad/wrong-lane behavior but increases collision, hard vetoing repairs progress/offroad
-but vetoes 1987/1990 DAgger argmax decisions and increases collision, and source decay
-helps wrong-lane behavior without repairing offroad or collision. These non-co-monotone
+offroad/wrong-lane behavior but increases collision, axis-constrained selection drives
+offroad to 0.200 and distance-to-ground-truth to 2.25\,m while still raising collision,
+hard vetoing repairs progress/offroad but vetoes 1987/1990 DAgger argmax decisions and
+increases collision, and source decay helps wrong-lane behavior without repairing offroad
+or collision. These non-co-monotone
 interventions show that simulator transfer error decomposes into separate axes of
 geometry, safety, progress, and lane adherence rather than a single scalar robustness
-deficit. Frozen world/VLA priors on the Waymo E2E candidate-selection track are similarly
-head-sensitive: scalar-only selection reaches 7.695 RFS, while a nonlinear head over
-Cosmos 64d embeddings reaches 7.845 RFS. The combined evidence supports a grounded
-selection thesis: internal closed-loop success and offline accuracy are weak transfer
-proxies unless per-axis geometric disagreement is instrumented directly.
+deficit. This exposes a blind spot in latent VLA-style grounding: making the state
+representation more physical is not enough if the action-ranking operator remains
+miscalibrated under transfer. Frozen world/VLA priors on the Waymo E2E candidate-selection
+track isolate the placement of grounding: scalar-only selection reaches 7.695 RFS, generic
+latent fusion remains weak, a nonlinear head over Cosmos 64d embeddings reaches 7.845 RFS,
+and adding a latent world-prior plus direct selector reaches 7.848 RFS. The combined
+evidence supports a grounded-selection thesis: internal closed-loop success and offline
+accuracy are weak transfer proxies unless world priors are tied to per-axis candidate
+ranking and geometric disagreement is instrumented directly.
 \end{abstract}
 
 \keywords{autonomous driving, imitation learning, DAgger, simulator transfer,
@@ -79,6 +85,15 @@ intermediate trajectory that belongs to neither component and intersects the uns
 discrete selector avoids this interpolation path by choosing among maneuver representatives
 with explicit clearance margins. Policy uncertainty changes which representative is chosen;
 it does not create a new trajectory between representatives.
+
+This shifts the key question for grounded autonomy. Recent latent VLA systems correctly
+argue that driving should reason in geometry and dynamics rather than in text. The missing
+interface is the last step: how a grounded state representation is converted into a concrete
+action under proxy-state error. Our experiments show that this step cannot be audited by
+offline accuracy or one aggregate planning score. The same intervention can improve route
+geometry while worsening collision, or improve progress while leaving wrong-lane behavior
+unchanged. The transfer-critical object is therefore the \emph{ordering} induced over
+bounded candidates, measured separately along safety, route, lane, and progress axes.
 
 \begin{figure}[t]
 \centering
@@ -160,8 +175,21 @@ We make six contributions (Fig.~\ref{fig:pipeline}):
     In the Waymo E2E candidate-selection track, scalar-only selectors plateau at 7.695
     RFS, InternVLA-only grounding does not help, and linear fusion of InternVLA with
     Cosmos remains weak. A nonlinear direct-policy head over frozen Cosmos 64d embeddings
-    reaches 7.845 RFS, showing that grounding signal exists but is task-head sensitive.
+    reaches 7.845 RFS, while a latent world-prior plus direct selector reaches 7.848
+    RFS with lower regret to oracle. This turns the VLA comparison into a placement
+    result: frozen geometry/world priors help when they participate in the selector that
+    ranks bounded candidates, but not when they are appended as generic latent features.
 \end{enumerate}
+
+The strength of these claims comes from the controls, not from aggregate score chasing.
+Across the learned-policy variants, the token library, low-level controller, and AlpaSim
+scene set are held fixed; clamping, vetoing, source decay, and axis constraints change
+only the selection interface. In the proxy-perturbation sweep, simulator dynamics and
+collision evaluation are held fixed while only the planner-visible reconstructed state is
+corrupted. In the WOD grounding ablation, the candidate pool and validation frames are
+held fixed while the latent prior and selector head vary. These controls let us localize
+failure to action ranking under reconstructed geometry, rather than to token availability,
+vehicle control, or a single simulator idiosyncrasy.
 
 % =====================================================================
 \section{Related Work}
@@ -202,10 +230,15 @@ chain-of-thought are not enough: latent reasoning must be grounded in geometric 
 dynamic priors. LaST-VLA~\citep{luo2026lastvla}, for example, distills 3D geometric
 features and video-world-model dynamics into latent tokens and optimizes trajectory-level
 metrics with RL. Our study is complementary rather than competitive. We do not train a
-large VLA; instead, we use a small token policy and external AlpaSim adapter to expose how
-grounding failures appear at evaluation time. The WOD grounding ablation then asks a
-narrower question aligned with LaST-VLA's thesis: when frozen world/VLA priors are used
-only for candidate selection, do they improve the ranking head, and under which head class?
+large VLA; instead, we test where such priors should enter a transfer-critical driving
+stack. The missing variable is not just representation quality; it is placement. In our
+WOD ablation, InternVLA-only features and linear Cosmos--InternVLA fusion remain below the
+scalar baseline, while a selector-aligned nonlinear Cosmos head and a latent world-prior
+plus direct selector produce the best tracked RFS and regret. The link to LaST-VLA is
+therefore operational: physical latent grounding matters most when it constrains the
+action-ranking operator over bounded candidates, the same stage that fails under AlpaSim
+proxy-state transfer. Without that placement test, aggregate planning scores can hide
+non-co-monotone failures across collision, route geometry, lane adherence, and progress.
 
 \paragraph{Simulator transfer and validation scope.}
 \citet{khurana2022differentiable} and \citet{shi2024motiondiffuser} study trajectory
@@ -681,6 +714,7 @@ Policy & Collision & Offroad & Wrong lane & Progress & Dist. (m) & Dist.-GT \\
 \midrule
 Token-DAgger (2-step) & 0.600 & 0.900 & 0.700 & 0.034 & 61.98 & 13.86 \\
 Token-DAgger (clamped lateral) & 0.700 & 0.500 & 0.200 & 0.384 & 59.85 & 5.21 \\
+Token-DAgger (axis-constrained clamped) & 0.700 & 0.200 & 0.200 & 0.358 & 54.80 & 2.25 \\
 Token-DAgger + hard veto & 0.800 & 0.200 & 0.700 & 0.837 & 166.06 & 22.71 \\
 Token-DAgger (source decay) & 0.600 & 0.900 & 0.400 & 0.175 & 62.92 & 27.16 \\
 \bottomrule
@@ -693,7 +727,10 @@ fails on all major axes: 0.600 collision rate, 0.900 offroad rate, 0.700 wrong-l
 and only 0.034 mean progress. Lateral clamping directly repairs geometry, reducing offroad
 by 0.400 and wrong-lane by 0.500 while improving distance-to-ground-truth from 13.86~m to
 5.21~m. But the same clamp raises collision rate from 0.600 to 0.700, so it is not a
-uniform transfer improvement.
+uniform transfer improvement. Adding axis constraints to the clamped selector pushes the
+geometry repair further: offroad falls to 0.200 and distance-to-ground-truth falls to
+2.25~m. Collision still remains 0.700, which isolates the central external mechanism:
+route geometry can be repaired without repairing interaction safety.
 
 The hard-veto hybrid repairs a different axis. It improves mean progress from 0.034 to
 0.837 and offroad rate from 0.900 to 0.200, but raises collision rate to 0.800, leaves
@@ -704,6 +741,15 @@ to geometric score gap and 160 due to geometric rank. Spotlight-style selection 
 frames, DAgger wins only 2, and there are 16 compromise selections. The hard veto therefore
 recovers progress largely by collapsing back to the geometric scorer, not by combining two
 well-aligned policies.
+
+The same logs also explain why stronger selector thresholds are the wrong remedy for
+AlpaSim safety. The structured-hazard interface is present in the adapter, but in this
+10-clip front-camera transfer matrix the axis-constrained and hard-veto runs both record
+0/1990 frames with structured hazards or moving actors. The scorer's top candidate is
+therefore interpreted as a clear corridor on 87.0\% of axis-constrained frames and
+90.7\% of hard-veto frames. This localizes the collision failure upstream of token
+ranking: route geometry can be clamped or re-ranked, but interaction safety cannot be
+recovered from candidates scored against an actor-incomplete proxy state.
 
 Source-decayed DAgger repairs yet another axis: wrong-lane rate improves from 0.700 to
 0.400 and progress improves from 0.034 to 0.175, but collision and offroad rates remain
@@ -769,6 +815,48 @@ lane-scale results provide controlled instances of Proposition~\ref{prop:noncomo
 an intervention can improve lane adherence while worsening pass or collision, so proxy
 transfer must be evaluated per axis.
 
+\subsection{WOD-E2E Grounding Placement}
+\label{sec:exp:wod_grounding}
+
+The AlpaSim and proxy experiments identify the failing interface: action selection under
+reconstructed geometry. We therefore test whether frozen latent grounding helps when it is
+attached to the same interface on the WOD-E2E candidate-selection track. The leverage in
+this ablation is that all rows evaluate the same 479 validation frames and candidate pool;
+only the grounding signal and selector head change.
+
+\begin{table}[t]
+\centering
+\caption{WOD-E2E grounding-placement ablation on 479 validation frames. RFS is higher
+better; regret is oracle RFS minus selected RFS. Frozen visual/world priors are not
+automatically useful: generic fusion remains weak, while selector-aligned nonlinear heads
+reduce regret.}
+\label{tab:wod_grounding}
+\scriptsize
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrlcc}
+\toprule
+Ablation & RFS & Oracle & Regret & Match & Grounding signal & World prior & Direct selector \\
+\midrule
+Scalar / geometry only & 7.695 & 9.068 & 1.373 & 0.403 & none & no & no \\
+InternVLA only & 7.672 & 9.225 & 1.554 & 0.392 & InternVLA & no & no \\
+Cosmos + InternVLA linear fusion & 7.728 & 9.208 & 1.480 & 0.403 & Cosmos + InternVLA & no & no \\
+Cosmos 64d nonlinear head & 7.845 & 9.264 & 1.419 & 0.390 & Cosmos + nonlinear head & no & yes \\
+Cosmos + latent world prior & 7.816 & 9.254 & 1.438 & 0.392 & Cosmos + latent world prior & yes & no \\
+Cosmos + latent world prior + direct selector & \textbf{7.848} & 9.254 & \textbf{1.407} & 0.399 & Cosmos + latent world prior & yes & yes \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+Table~\ref{tab:wod_grounding} provides the strongest connection to recent latent VLA
+planning work. It does not say that larger latent priors solve transfer by themselves:
+InternVLA-only features underperform scalar geometry, and linear Cosmos--InternVLA fusion
+does not close the oracle gap. The positive result appears only when the latent prior is
+made decision-facing: a nonlinear Cosmos selector reaches 7.845 RFS, and the latent
+world-prior plus direct selector reaches 7.848 RFS with the lowest tracked regret. This is
+the same placement principle exposed by AlpaSim: grounding needs to act at the bounded
+candidate-ranking stage, where externally invalid token choices are made.
+
 % =====================================================================
 \section{Analysis}
 \label{sec:analysis}
@@ -786,7 +874,9 @@ separate the axes:
 \begin{itemize}
   \item \textbf{Geometry axis.} Lateral clamping reduces offroad and wrong-lane rates and
     improves distance-to-ground-truth, showing that part of the transfer error is action
-    magnitude mismatch under reconstructed road geometry.
+    magnitude mismatch under reconstructed road geometry. Axis-constrained clamping
+    further lowers offroad and distance-to-ground-truth while leaving collision worse
+    than raw DAgger, separating route adherence from safety.
   \item \textbf{Progress axis.} Hard geometric vetoes greatly increase progress and
     distance travelled, showing that the DAgger argmax often chooses externally
     non-progressive tokens.

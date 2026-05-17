@@ -132,12 +132,18 @@ returns to the lane reference.*
 
 COMPASS: **9.137 / 10** (700 ranked runs) · 95% CI collision rate [0.0, 0.0053]
 
+This is the primary Spotlight Reflex simulator benchmark: 350 deterministic rollouts over
+seeds 1–10. The gauntlet row here is the 60-run primary-suite slice.
+
 **Gauntlet vs baseline (same 420 scenarios, matched seeds):**
 
 | Policy | Pass rate | Collision rate |
 |--------|-----------|---------------|
 | Baseline (no world-state reasoning) | 2.1% | 20.5% |
 | Spotlight Reflex | **57.6%** | **7.9%** |
+
+This is a separate larger matched comparison against the baseline policy
+(420 scenarios, seeds 1–80), not the same sample as the 60-run gauntlet row above.
 
 **WOD-E2E — 5-fold segment-grouped CV on 479 validation frames:**
 
@@ -147,12 +153,15 @@ COMPASS: **9.137 / 10** (700 ranked runs) · 95% CI collision rate [0.0, 0.0053]
 | Local baseline | 7.131 | — |
 | Gate-only | 7.803 | 5 |
 | RFF direct policy | 7.834 | 5 |
-| **GPU MLP + Cosmos 64d (champion)** | **7.845** | **5** |
+| GPU MLP + Cosmos 64d | 7.845 | 5 |
+| **Cosmos latent world prior + direct selector** | **7.848** | **5** |
 | HGB Optuna peak (2-fold only, not comparable) | 7.880 | 2 |
 | Oracle (perfect selector) | 9.264 | 5 |
 
-Oracle gap: **1.419 RFS** — the right candidate exists in the pool but the selector
-cannot identify it without visual scene information.
+Oracle gap: **1.407 RFS** for the best tracked 5-fold selector. The right candidate
+exists in the pool; the remaining problem is selector grounding, not candidate generation.
+Grounding ablations are summarized in
+[`docs/corl2027/results/wod_grounding_ablation_table.md`](docs/corl2027/results/wod_grounding_ablation_table.md).
 
 **AlpaSim transfer diagnostics — 10 shared WOD-E2E clips, paired by scene:**
 
@@ -160,13 +169,24 @@ cannot identify it without visual scene information.
 |---------|----------:|--------:|-----------:|---------:|---------:|
 | Raw DAgger iter2 | 0.600 | 0.900 | 0.700 | 0.034 | 62.0 m |
 | Clamped DAgger iter2 | 0.700 | 0.500 | 0.200 | 0.384 | 59.9 m |
+| Axis-constrained clamped | 0.700 | 0.200 | 0.200 | 0.358 | 54.8 m |
 | Hybrid clamped-veto | 0.800 | 0.200 | 0.700 | 0.837 | 166.1 m |
 | Source-decayed DAgger | 0.600 | 0.900 | 0.400 | 0.175 | 62.9 m |
 
 The external result is intentionally reported per axis, not as a single winner:
-clamping improves route geometry, hybrid veto improves progress/offroad behavior,
-and source decay improves wrong-lane rate. Full paired tests are in
-[`artifacts/alpasim_matrix10_analysis.md`](artifacts/alpasim_matrix10_analysis.md).
+clamping improves route geometry, axis-constrained clamping further improves offroad and
+distance-to-ground-truth, hybrid veto improves progress/offroad behavior, and source
+decay improves wrong-lane rate. Full paired tests are in
+[`docs/corl2027/results/alpasim_matrix10_with_axis_analysis.md`](docs/corl2027/results/alpasim_matrix10_with_axis_analysis.md).
+The proxy-visibility audit is the key interpretation check: the axis-constrained and
+hard-veto AlpaSim runs both saw `0/1990` structured-hazard frames, so collision failures
+are upstream of token ranking and require actor-aware proxy reconstruction rather than a
+stronger veto threshold
+([audit](docs/corl2027/results/alpasim_proxy_visibility_audit.md)).
+
+This table evaluates learned-policy transfer variants. It should be read as the
+transfer-diagnostic extension rather than a replacement for the original Spotlight
+readiness check (`collision_at_fault: 0.0`, `dist_to_gt: 0.42 m`).
 
 ---
 

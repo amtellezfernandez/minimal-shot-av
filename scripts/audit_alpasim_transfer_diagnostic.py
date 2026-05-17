@@ -136,6 +136,7 @@ def _selection_stats(run_dir: Path) -> dict[str, Any]:
         "decision_counts": dict(Counter(str(row.get("decision_type", "<missing>")) for row in rows)),
         "veto_reason_counts": dict(Counter(str(row.get("veto_reason", "<missing>")) for row in veto_rows)),
         "dagger_argmax_geo_gap": _numeric_summary(gaps),
+        "proxy_visibility": _proxy_visibility_stats(rows),
     }
 
 
@@ -147,9 +148,11 @@ def _combine_selection_stats(stats: list[dict[str, Any]]) -> dict[str, Any]:
     spotlight_win_count = sum(int(item.get("spotlight_win_count", 0)) for item in stats)
     decisions: Counter[str] = Counter()
     veto_reasons: Counter[str] = Counter()
+    proxy = Counter()
     for item in stats:
         decisions.update(item.get("decision_counts", {}))
         veto_reasons.update(item.get("veto_reason_counts", {}))
+        proxy.update(item.get("proxy_visibility", {}))
     return {
         "frame_count": frame_count,
         "veto_count": veto_count,
@@ -160,7 +163,69 @@ def _combine_selection_stats(stats: list[dict[str, Any]]) -> dict[str, Any]:
         "spotlight_win_count": spotlight_win_count,
         "decision_counts": dict(decisions),
         "veto_reason_counts": dict(veto_reasons),
+        "proxy_visibility": _proxy_visibility_rates(dict(proxy)),
     }
+
+
+def _proxy_visibility_stats(rows: list[dict[str, Any]]) -> dict[str, int]:
+    counts: Counter[str] = Counter()
+    for row in rows:
+        counts["frame_count"] += 1
+        signal = row.get("alpasim_signal") if isinstance(row.get("alpasim_signal"), dict) else {}
+        hazards = signal.get("structured_hazards", []) if isinstance(signal, dict) else []
+        if isinstance(hazards, list) and hazards:
+            counts["structured_hazard_frames"] += 1
+            if any(_is_moving_hazard(hazard) for hazard in hazards if isinstance(hazard, dict)):
+                counts["moving_hazard_frames"] += 1
+        if float(signal.get("visibility_risk", 0.0) or 0.0) > 0.0:
+            counts["visibility_risk_frames"] += 1
+        if float(signal.get("dynamics_risk", 0.0) or 0.0) > 0.0:
+            counts["dynamics_risk_frames"] += 1
+        if _top_candidate_looks_clear(row):
+            counts["top_candidate_clear_frames"] += 1
+    return _proxy_visibility_rates(dict(counts))
+
+
+def _proxy_visibility_rates(counts: dict[str, int | float]) -> dict[str, int | float | None]:
+    frame_count = int(counts.get("frame_count", 0) or 0)
+    output: dict[str, int | float | None] = {"frame_count": frame_count}
+    for key in (
+        "structured_hazard_frames",
+        "moving_hazard_frames",
+        "visibility_risk_frames",
+        "dynamics_risk_frames",
+        "top_candidate_clear_frames",
+    ):
+        count = int(counts.get(key, 0) or 0)
+        output[key] = count
+        output[f"{key.removesuffix('_frames')}_rate"] = _safe_rate(count, frame_count)
+    return output
+
+
+def _is_moving_hazard(hazard: dict[str, Any]) -> bool:
+    return abs(float(hazard.get("vx", 0.0) or 0.0)) > 1e-6 or abs(float(hazard.get("vy", 0.0) or 0.0)) > 1e-6
+
+
+def _top_candidate_looks_clear(row: dict[str, Any]) -> bool:
+    candidates = row.get("spotlight_top_candidates")
+    if not isinstance(candidates, list) or not candidates:
+        return False
+    top = candidates[0]
+    if not isinstance(top, dict):
+        return False
+    action_clearance = _as_float(top.get("action_clearance_m"))
+    horizon_clearance = _as_float(top.get("horizon_clearance_m"))
+    safety_penalty = _as_float(top.get("safety_penalty"))
+    return math.isinf(action_clearance) and math.isinf(horizon_clearance) and safety_penalty <= 0.0
+
+
+def _as_float(value: Any) -> float:
+    if isinstance(value, str) and value.lower() == "inf":
+        return math.inf
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return math.nan
 
 
 def _episode_metric_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
@@ -294,12 +359,24 @@ def _print_markdown(report: dict[str, Any]) -> None:
             f"min={scene['min']:.4f}, median={scene['median']:.4f}, max={scene['max']:.4f}, "
             f"sign-test p={scene['sign_test_all_gt_50pct_p']:.6f}"
         )
+    proxy = selection.get("proxy_visibility", {})
+    if proxy.get("frame_count", 0):
+        print(
+            "Proxy visibility: "
+            f"structured_hazard={_format_rate(proxy.get('structured_hazard_rate'))}, "
+            f"moving_hazard={_format_rate(proxy.get('moving_hazard_rate'))}, "
+            f"clear_top_candidate={_format_rate(proxy.get('top_candidate_clear_rate'))}"
+        )
     metrics = report["episode_metrics"]
     for metric in BINARY_EPISODE_METRICS:
         if metric in metrics:
             item = metrics[metric]
             lo, hi = item["wilson95"]
             print(f"{metric}: {item['count']}/{metrics['episode_count']} ({item['rate']:.4f}, 95% CI [{lo:.4f}, {hi:.4f}])")
+
+
+def _format_rate(value: Any) -> str:
+    return "n/a" if value is None else f"{float(value):.4f}"
 
 
 if __name__ == "__main__":

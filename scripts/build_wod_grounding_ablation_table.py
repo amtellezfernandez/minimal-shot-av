@@ -30,6 +30,16 @@ ABLATIONS = (
         ROOT / "benchmarks" / "current" / "wod_champion_v20_5fold_mlp_gpu_64d.json",
         "GPU MLP direct policy on frozen Cosmos tokenizer embeddings.",
     ),
+    (
+        "Cosmos + latent world prior",
+        ROOT / "artifacts" / "wod_champion_v20_eval" / "latent_gate_v20_479" / "clean_gate_reliability_479.json",
+        "Frozen Cosmos embeddings plus latent predictive world-prior features, no direct override head.",
+    ),
+    (
+        "Cosmos + latent world prior + direct selector",
+        ROOT / "artifacts" / "wod_champion_v20_eval" / "latent_gate_v20_hgb_tuned" / "hgb_direct_479.json",
+        "Frozen Cosmos embeddings plus latent predictive world-prior features and a direct policy override head.",
+    ),
 )
 
 
@@ -75,25 +85,32 @@ def _row(name: str, path: Path, note: str) -> dict[str, Any]:
         "combined_ranker_regret_to_oracle": float(payload["combined_ranker_regret_to_oracle"]),
         "combined_ranker_top1_oracle_match_rate": float(payload["combined_ranker_top1_oracle_match_rate"]),
         "embedding_source": payload.get("embedding_source"),
+        "selector_features": payload.get("selector_features"),
+        "world_prior": str(payload.get("world_prior") or "off"),
         "direct_policy_enabled": bool(payload.get("direct_policy_enabled")) if "direct_policy_enabled" in payload else False,
+        "direct_policy_feature_mode": payload.get("direct_policy_feature_mode"),
+        "direct_policy_override_count": int(payload.get("direct_policy_override_count", 0) or 0),
+        "direct_policy_precision": float(payload.get("direct_policy_precision", 0.0) or 0.0),
         "note": note,
     }
 
 
 def _markdown_table(rows: list[dict[str, Any]]) -> str:
     lines = [
-        "| Ablation | RFS | Oracle | Regret | Oracle match | Grounding signal |",
-        "| --- | ---: | ---: | ---: | ---: | --- |",
+        "| Ablation | RFS | Oracle | Regret | Oracle match | Grounding signal | World prior | Direct selector |",
+        "| --- | ---: | ---: | ---: | ---: | --- | --- | --- |",
     ]
     for row in rows:
         lines.append(
-            "| {name} | {rfs:.3f} | {oracle:.3f} | {regret:.3f} | {match:.3f} | {signal} |".format(
+            "| {name} | {rfs:.3f} | {oracle:.3f} | {regret:.3f} | {match:.3f} | {signal} | {world_prior} | {direct_selector} |".format(
                 name=row["name"],
                 rfs=row["combined_ranker_mean_rfs"],
                 oracle=row["combined_oracle_mean_rfs"],
                 regret=row["combined_ranker_regret_to_oracle"],
                 match=row["combined_ranker_top1_oracle_match_rate"],
                 signal=_signal_label(row),
+                world_prior=_world_prior_label(row),
+                direct_selector=_direct_selector_label(row),
             )
         )
     return "\n".join(lines) + "\n"
@@ -108,7 +125,24 @@ def _signal_label(row: dict[str, Any]) -> str:
         return "Cosmos + InternVLA"
     if row["name"] == "Cosmos 64d nonlinear head":
         return "Cosmos + nonlinear head"
+    if row["name"] == "Cosmos + latent world prior":
+        return "Cosmos + latent world prior"
+    if row["name"] == "Cosmos + latent world prior + direct selector":
+        return "Cosmos + latent world prior"
     return str(row.get("embedding_source") or "unknown")
+
+
+def _world_prior_label(row: dict[str, Any]) -> str:
+    return "yes" if row.get("world_prior") not in {None, "", "off"} else "no"
+
+
+def _direct_selector_label(row: dict[str, Any]) -> str:
+    if not row.get("direct_policy_enabled"):
+        return "no"
+    return "yes ({count}, {precision:.2f})".format(
+        count=int(row.get("direct_policy_override_count", 0)),
+        precision=float(row.get("direct_policy_precision", 0.0)),
+    )
 
 
 if __name__ == "__main__":
