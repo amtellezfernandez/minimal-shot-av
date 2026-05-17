@@ -48,6 +48,7 @@ class RunAlpaSimSceneBatchTests(unittest.TestCase):
             driver_warmup_seconds=10.0,
             wizard_dry_run=False,
             checkpoint=None,
+            oracle_actor_proxy=None,
             alpasim_root=Path("/tmp/alpasim"),
             wizard_arg=["wizard.timeout=1200"],
         )
@@ -65,6 +66,35 @@ class RunAlpaSimSceneBatchTests(unittest.TestCase):
         self.assertIn("--wizard-arg", command)
         self.assertEqual("wizard.timeout=1200", command[-1])
         self.assertEqual("/tmp/alpasim", command[command.index("--alpasim-root") + 1])
+
+    def test_scene_command_forwards_oracle_actor_proxy(self) -> None:
+        module = _load_module()
+        args = argparse.Namespace(
+            python="python",
+            mode="both",
+            model="token_dagger_iter2_axis_constrained_oracle_actor_clamped",
+            baseport=6000,
+            port=6789,
+            timeout=900,
+            topology="1gpu",
+            driver_warmup_seconds=10.0,
+            wizard_dry_run=False,
+            checkpoint=None,
+            oracle_actor_proxy=Path("/tmp/oracle_actor_proxy.json"),
+            alpasim_root=None,
+            wizard_arg=[],
+        )
+
+        command = module._scene_command(
+            args,
+            scene_id="clipgt-scene-1",
+            run_dir=Path("/tmp/run/001_clipgt-scene-1"),
+        )
+
+        self.assertEqual(
+            "/tmp/oracle_actor_proxy.json",
+            command[command.index("--oracle-actor-proxy") + 1],
+        )
 
     def test_scene_status_detects_completed_partial_and_missing(self) -> None:
         module = _load_module()

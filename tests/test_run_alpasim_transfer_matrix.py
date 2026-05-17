@@ -35,6 +35,7 @@ class RunAlpaSimTransferMatrixTests(unittest.TestCase):
             rerun_existing=False,
             continue_on_error=True,
             alpasim_root=Path("/tmp/alpasim"),
+            oracle_actor_proxy=None,
             wizard_arg=["wizard.timeout=1200"],
         )
 

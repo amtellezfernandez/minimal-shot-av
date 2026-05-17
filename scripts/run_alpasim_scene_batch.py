@@ -38,6 +38,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--wizard-dry-run", action="store_true")
     parser.add_argument("--wizard-arg", action="append", default=[])
     parser.add_argument("--checkpoint", type=Path, default=None)
+    parser.add_argument("--oracle-actor-proxy", type=Path, default=None)
     parser.add_argument("--alpasim-root", type=Path, default=None)
     parser.add_argument("--allow-existing-batch-dir", action="store_true")
     parser.add_argument("--rerun-existing", action="store_true")
@@ -65,6 +66,7 @@ def main() -> int:
         "baseport": args.baseport,
         "port": args.port,
         "wizard_args": list(args.wizard_arg),
+        "oracle_actor_proxy": str(args.oracle_actor_proxy) if args.oracle_actor_proxy else None,
         "runs": [],
     }
     _write_json(batch_dir / "batch-manifest.json", manifest)
@@ -174,6 +176,8 @@ def _scene_command(args: argparse.Namespace, *, scene_id: str, run_dir: Path) ->
         command.append("--wizard-dry-run")
     if args.checkpoint is not None:
         command.extend(["--checkpoint", str(args.checkpoint)])
+    if args.oracle_actor_proxy is not None:
+        command.extend(["--oracle-actor-proxy", str(args.oracle_actor_proxy)])
     if args.alpasim_root is not None:
         command.extend(["--alpasim-root", str(args.alpasim_root)])
     for override in args.wizard_arg:

@@ -1,3 +1,54 @@
+## Metric Provenance Audit
+
+The earlier `0.67 -> 0.33` oracle-actor collision reduction was **aggregate-filtered** and
+only covered the first six completed scenes. It should not be the headline result.
+
+| Subset / metric source | Axis-constrained clamped collision | Oracle-actor collision | Interpretation |
+| --- | ---: | ---: | --- |
+| First 6 scenes, aggregate-filtered `metrics_results.txt` | 0.667 | 0.333 | Diagnostic live read; filtered after incident/cutoff events. |
+| First 6 scenes, raw `metrics_unprocessed.parquet` | 0.667 | 0.500 | Same scene subset without AlpaSim post-filtering. |
+| Full 10 scenes, aggregate-filtered `metrics_results.txt` | 0.700 | 0.400 | Useful secondary view, but filtered/truncated. |
+| Full 10 scenes, raw `metrics_unprocessed.parquet` | 0.700 | 0.600 | Headline result for paper tables. |
+
+Use raw per-scene outcomes for main claims. Aggregate-filtered metrics can be reported as
+a secondary AlpaSim scoring view, but they should not carry the causal claim.
+
+## Scene-3 Mechanism First
+
+Scene 3 is the cleanest diagnostic example because actor-aware ranking changes the
+selected tokens while producing almost no actor-veto pressure. Wrong-lane failure
+therefore persists **inside the admissible set**, not because the actor veto is too
+conservative.
+
+| Variant | Collision | Offroad | Wrong lane | Progress | Dist. (m) | Dist.-GT | Veto frames | Decision summary |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Axis-constrained clamped | 0 | 0 | 0 | 0.323 | 55.225 | 2.144 | n/a | baseline proxy, no oracle actors |
+| Oracle actor + axis selector | 0 | 0 | 1 | 0.350 | 59.947 | 2.522 | 2/199 | 157 agreement, 40 DAgger wins, 2 fallback |
+| Oracle actor + lexicographic selector | 0 | 0 | 1 | 0.491 | 84.393 | 2.031 | 3/199 | 162 Spotlight wins, 17 DAgger wins, 3 fallback |
+
+The mechanism is sharper than the aggregate table: privileged actors are present, but the
+lane error remains with only 2-3 actor-veto frames out of 199. This localizes the next
+bottleneck to missing lane/offroad observability in the ranking features rather than to
+over-conservative actor suppression.
+
+## Oracle Actor Proxy, Full 10 Raw Scenes
+
+| Model | N | Collision | Offroad | Wrong lane | Progress | Dist. (m) | Dist.-GT |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| axis_constrained_clamped | 10 | 0.700 | 0.200 | 0.200 | 0.358 | 54.802 | 2.252 |
+| oracle_actor_axis | 10 | 0.600 | 0.300 | 0.500 | 0.289 | 46.233 | 4.596 |
+| oracle_actor_lexicographic | 10 | 0.600 | 0.200 | 0.500 | 0.352 | 54.965 | 3.241 |
+
+Oracle actors modestly reduce raw collision (`0.700 -> 0.600`), which is one fewer
+collision in the 10 paired clips or a 0.10 absolute raw reduction. They also worsen
+wrong-lane behavior (`0.200 -> 0.500`). Lexicographic reordering restores offroad and
+most progress relative to the axis oracle, but it does not solve wrong-lane. The correct
+claim is therefore not "oracle actors solve AlpaSim transfer"; it is that actor-complete
+proxy state affects a measured subset of the collision surface while exposing a separate
+lane-ranking bottleneck.
+
+## Pre-Oracle Learned-Policy Matrix
+
 Paired summary table uses the 10 scenes shared by the 5 started models.
 
 | Model | N | Collision | Offroad | Wrong lane | Progress | Dist. (m) | Dist.-GT |

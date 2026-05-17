@@ -219,6 +219,64 @@ That wrapper does all repo-side setup in order:
 3. builds `alpasim-base:0.66.0` if it is missing
 4. launches the requested matrix
 
+## Oracle Actor-Proxy Ablation
+
+The CoRL diagnostic localizes AlpaSim collision failures to an actor-incomplete
+proxy state: the selector logs can show route geometry while seeing no structured
+dynamic actors. The falsification gate is an oracle actor-proxy ablation: keep the
+learned checkpoint, token library, clamped trajectories, and axis-constrained
+selector fixed, but inject actor poses reconstructed from AlpaSim ASL logs.
+
+Build the proxy from an existing matched scene batch:
+
+```bash
+PYTHONPATH=alpasim/src/grpc:alpasim/src/utils \
+  alpasim/.venv/bin/python scripts/build_alpasim_oracle_actor_proxy.py \
+  --run-dir runs/alpasim_axis_constrained_10scene_eval/token_dagger_iter2_axis_constrained_clamped__front_camera_10scene_smoke \
+  --output artifacts/alpasim_oracle_actor_proxy_10scene.json \
+  --max-actors-per-frame 16
+```
+
+The builder reads `rollout.asl` files, projects non-ego actor poses into the ego
+frame, estimates relative velocity, and writes timestamp-keyed hazards. The adapter
+matches those timestamps at inference time and logs:
+
+- `oracle_actor_proxy_hit`
+- `oracle_actor_proxy_count`
+- `oracle_actor_proxy_delta_us`
+- `oracle_actor_proxy_scene_id`
+
+Run the oracle-gated learned policy with:
+
+```bash
+ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/run_alpasim_local_external.py \
+  --mode both \
+  --model token_dagger_iter2_axis_constrained_oracle_actor_clamped \
+  --scene-preset front_camera_10scene_smoke \
+  --oracle-actor-proxy artifacts/alpasim_oracle_actor_proxy_10scene.json
+```
+
+For scene-level paired statistics, use the same model and proxy path through the
+batch runner:
+
+```bash
+ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/run_alpasim_scene_batch.py \
+  --mode both \
+  --model token_dagger_iter2_axis_constrained_oracle_actor_clamped \
+  --scene-preset front_camera_10scene_smoke \
+  --oracle-actor-proxy artifacts/alpasim_oracle_actor_proxy_10scene.json \
+  --batch-dir runs/alpasim_oracle_actor_proxy_10scene_eval \
+  --allow-existing-batch-dir \
+  --continue-on-error
+```
+
+Interpretation rule: first verify proxy hit rate from `driver/selection-log.jsonl`.
+If hit rate is low, the run is an instrumentation failure. If hit rate is high and
+collision is unchanged, the bottleneck shifts from proxy reconstruction to the
+candidate/controller interface. If collision falls while offroad and wrong-lane stay
+controlled, the actor-incomplete proxy diagnosis passes and the next method target is
+a learned actor-aware proxy.
+
 ## One-Command Local Launch
 
 To validate the full path on a small matched scene set:

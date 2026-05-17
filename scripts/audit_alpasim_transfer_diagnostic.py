@@ -181,6 +181,11 @@ def _proxy_visibility_stats(rows: list[dict[str, Any]]) -> dict[str, int]:
             counts["visibility_risk_frames"] += 1
         if float(signal.get("dynamics_risk", 0.0) or 0.0) > 0.0:
             counts["dynamics_risk_frames"] += 1
+        if bool(signal.get("oracle_actor_proxy_enabled", False)):
+            counts["oracle_actor_proxy_enabled_frames"] += 1
+        if bool(signal.get("oracle_actor_proxy_hit", False)):
+            counts["oracle_actor_proxy_hit_frames"] += 1
+            counts["oracle_actor_proxy_hazard_total"] += int(signal.get("oracle_actor_proxy_count", 0) or 0)
         if _top_candidate_looks_clear(row):
             counts["top_candidate_clear_frames"] += 1
     return _proxy_visibility_rates(dict(counts))
@@ -195,10 +200,17 @@ def _proxy_visibility_rates(counts: dict[str, int | float]) -> dict[str, int | f
         "visibility_risk_frames",
         "dynamics_risk_frames",
         "top_candidate_clear_frames",
+        "oracle_actor_proxy_enabled_frames",
+        "oracle_actor_proxy_hit_frames",
     ):
         count = int(counts.get(key, 0) or 0)
         output[key] = count
         output[f"{key.removesuffix('_frames')}_rate"] = _safe_rate(count, frame_count)
+    output["oracle_actor_proxy_hazard_total"] = int(counts.get("oracle_actor_proxy_hazard_total", 0) or 0)
+    output["oracle_actor_proxy_mean_hazards_per_hit"] = _safe_rate(
+        int(counts.get("oracle_actor_proxy_hazard_total", 0) or 0),
+        int(counts.get("oracle_actor_proxy_hit_frames", 0) or 0),
+    )
     return output
 
 

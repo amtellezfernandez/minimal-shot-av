@@ -111,6 +111,50 @@ MODEL_PRESETS = {
             "MSA_TOKENBC_SELECTION_LOG_PATH": "{run_dir}/driver/selection-log.jsonl",
         },
     },
+    "token_dagger_iter2_axis_constrained_oracle_actor_clamped": {
+        "config_file": ROOT
+        / "src"
+        / "minimal_shot_av"
+        / "simulator"
+        / "alpasim_configs"
+        / "driver"
+        / "token_dagger_bc_clamped.yaml",
+        "wizard_driver": "spotlight_reflex",
+        "checkpoint": ROOT / "artifacts" / "bc_models_iter2" / "token_dagger_bc.pt",
+        "requires_oracle_actor_proxy": True,
+        "driver_env": {
+            "MSA_TOKENBC_SELECTION_MODE": "axis_constrained",
+            "MSA_TOKENBC_HYBRID_TOP_K": "3",
+            "MSA_TOKENBC_HYBRID_POLICY_TEMPERATURE": "1.0",
+            "MSA_TOKENBC_TRAJECTORY_MODE": "clamped_lateral",
+            "MSA_TOKENBC_MAX_LATERAL_OFFSET_M": "2.0",
+            "MSA_TOKENBC_SELECTION_LOG_PATH": "{run_dir}/driver/selection-log.jsonl",
+            "MSA_TOKENBC_ORACLE_ACTOR_PROXY_PATH": "{oracle_actor_proxy_path}",
+            "MSA_TOKENBC_ORACLE_ACTOR_PROXY_TOLERANCE_US": "50000",
+        },
+    },
+    "token_dagger_iter2_axis_lexicographic_oracle_actor_clamped": {
+        "config_file": ROOT
+        / "src"
+        / "minimal_shot_av"
+        / "simulator"
+        / "alpasim_configs"
+        / "driver"
+        / "token_dagger_bc_clamped.yaml",
+        "wizard_driver": "spotlight_reflex",
+        "checkpoint": ROOT / "artifacts" / "bc_models_iter2" / "token_dagger_bc.pt",
+        "requires_oracle_actor_proxy": True,
+        "driver_env": {
+            "MSA_TOKENBC_SELECTION_MODE": "axis_lexicographic",
+            "MSA_TOKENBC_HYBRID_TOP_K": "3",
+            "MSA_TOKENBC_HYBRID_POLICY_TEMPERATURE": "1.0",
+            "MSA_TOKENBC_TRAJECTORY_MODE": "clamped_lateral",
+            "MSA_TOKENBC_MAX_LATERAL_OFFSET_M": "2.0",
+            "MSA_TOKENBC_SELECTION_LOG_PATH": "{run_dir}/driver/selection-log.jsonl",
+            "MSA_TOKENBC_ORACLE_ACTOR_PROXY_PATH": "{oracle_actor_proxy_path}",
+            "MSA_TOKENBC_ORACLE_ACTOR_PROXY_TOLERANCE_US": "50000",
+        },
+    },
     "token_dagger_srcdecay_clamped": {
         "config_file": ROOT
         / "src"
@@ -192,6 +236,12 @@ def _parse_args() -> argparse.Namespace:
         type=Path,
         default=None,
         help="Optional checkpoint override for learned models.",
+    )
+    parser.add_argument(
+        "--oracle-actor-proxy",
+        type=Path,
+        default=None,
+        help="Oracle actor-proxy JSON from scripts/build_alpasim_oracle_actor_proxy.py.",
     )
     parser.add_argument(
         "--scene-preset",
@@ -298,6 +348,11 @@ def main() -> None:
     _prepare_run_dir(run_dir, allow_existing=args.allow_existing_run_dir)
 
     model_preset = MODEL_PRESETS[args.model]
+    if model_preset.get("requires_oracle_actor_proxy") and args.oracle_actor_proxy is None:
+        raise SystemExit(f"Model preset {args.model!r} requires --oracle-actor-proxy")
+    oracle_actor_proxy = args.oracle_actor_proxy.resolve() if args.oracle_actor_proxy else None
+    if oracle_actor_proxy is not None and not oracle_actor_proxy.is_file():
+        raise SystemExit(f"Oracle actor proxy not found: {oracle_actor_proxy}")
     checkpoint = args.checkpoint.resolve() if args.checkpoint else model_preset["checkpoint"]
     if checkpoint is not None:
         checkpoint = Path(checkpoint).resolve()
@@ -321,7 +376,7 @@ def main() -> None:
         alpasim_python=alpasim_python,
         driver_config_path=driver_config_path,
     )
-    driver_env = _driver_env(model_preset.get("driver_env", {}), run_dir=run_dir)
+    driver_env = _driver_env(model_preset.get("driver_env", {}), run_dir=run_dir, oracle_actor_proxy=oracle_actor_proxy)
     wizard_cmd = _wizard_command(
         alpasim_wizard=alpasim_wizard,
         wizard_driver=model_preset["wizard_driver"],
@@ -351,6 +406,7 @@ def main() -> None:
         "wizard_driver": model_preset["wizard_driver"],
         "wizard_deploy_target": _wizard_deploy_target(),
         "checkpoint": str(checkpoint) if checkpoint else None,
+        "oracle_actor_proxy": str(oracle_actor_proxy) if oracle_actor_proxy else None,
         "driver_env": driver_env,
         "driver_command": driver_cmd,
         "wizard_command": wizard_cmd,
@@ -659,8 +715,12 @@ def _run(cmd: list[str], *, cwd: Path, env: dict[str, str] | None = None) -> int
     return int(result.returncode)
 
 
-def _driver_env(values: dict[str, str], *, run_dir: Path) -> dict[str, str]:
-    return {str(key): str(value).format(run_dir=run_dir) for key, value in values.items()}
+def _driver_env(values: dict[str, str], *, run_dir: Path, oracle_actor_proxy: Path | None = None) -> dict[str, str]:
+    format_values = {
+        "run_dir": run_dir,
+        "oracle_actor_proxy_path": "" if oracle_actor_proxy is None else str(oracle_actor_proxy),
+    }
+    return {str(key): str(value).format(**format_values) for key, value in values.items()}
 
 
 def _merged_env(extra: dict[str, str] | None) -> dict[str, str]:

@@ -20,7 +20,13 @@ if str(SRC) not in sys.path:
 from minimal_shot_av.neutral.alpasim_metrics import build_alpasim_evidence, load_alpasim_metrics
 from minimal_shot_av.simulator.alpasim_signal import extract_alpasim_signal, scenario_from_command
 from minimal_shot_av.simulator.alpasim_spotlight import DriveCommand, SpotlightReflexAlpaSimModel
-from minimal_shot_av.simulator.alpasim_token_bc import TOKEN_ORDER, TokenBCAlpaSimModel, _GeomMLP
+from minimal_shot_av.simulator.alpasim_token_bc import (
+    TOKEN_ORDER,
+    TokenBCAlpaSimModel,
+    _GeomMLP,
+    _prediction_ego_pose_world,
+    _prediction_timestamp_us,
+)
 
 
 class AlpaSimIntegrationTests(unittest.TestCase):
@@ -626,6 +632,180 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertEqual("evasive_left", trace["hybrid_token"])
         self.assertFalse(trace["dagger_argmax_vetoed"])
         self.assertEqual("dagger_wins", trace["decision_type"])
+
+    def test_token_bc_alpasim_adapter_axis_lexicographic_prefers_geometry_among_safe_tokens(self) -> None:
+        with TemporaryDirectory() as tmp:
+            checkpoint_path = Path(tmp) / "token_dagger_bc.pt"
+            selection_log_path = Path(tmp) / "selection-log.jsonl"
+            model = _GeomMLP(len(TOKEN_ORDER))
+            for parameter in model.parameters():
+                parameter.data.zero_()
+            last_linear = [module for module in model.modules() if isinstance(module, torch.nn.Linear)][-1]
+            last_linear.bias.data[TOKEN_ORDER.index("evasive_left")] = 5.0
+            last_linear.bias.data[TOKEN_ORDER.index("maintain")] = 4.95
+            torch.save(
+                {
+                    "state_dict": model.state_dict(),
+                    "feat_mean": np.zeros(10, dtype=np.float32),
+                    "feat_std": np.ones(10, dtype=np.float32),
+                    "token_names": list(TOKEN_ORDER),
+                },
+                checkpoint_path,
+            )
+            adapter = TokenBCAlpaSimModel(
+                checkpoint_path=checkpoint_path,
+                device="cpu",
+                camera_ids=["front"],
+                context_length=1,
+                output_frequency_hz=4,
+                trajectory_mode="clamped_lateral",
+                selection_mode="axis_lexicographic",
+                hybrid_top_k=2,
+                selection_log_path=selection_log_path,
+            )
+            prediction_input = SimpleNamespace(
+                camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                command=DriveCommand.STRAIGHT,
+                speed=6.0,
+                acceleration=0.0,
+                ego_pose_history=[],
+                scene_id="clipgt-axis-lexicographic",
+            )
+
+            prediction = adapter.predict(prediction_input)
+            trace = json.loads(prediction.reasoning_text or "{}")["selection_trace"]
+
+        self.assertEqual("evasive_left", trace["dagger_argmax_token"])
+        self.assertEqual("maintain", trace["hybrid_token"])
+        self.assertFalse(trace["dagger_argmax_vetoed"])
+        self.assertEqual("spotlight_wins", trace["decision_type"])
+
+    def test_token_bc_alpasim_adapter_injects_oracle_actor_proxy_by_timestamp(self) -> None:
+        with TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            checkpoint_path = tmp_path / "token_dagger_bc.pt"
+            proxy_path = tmp_path / "oracle_actor_proxy.json"
+            model = _GeomMLP(len(TOKEN_ORDER))
+            for parameter in model.parameters():
+                parameter.data.zero_()
+            last_linear = [module for module in model.modules() if isinstance(module, torch.nn.Linear)][-1]
+            last_linear.bias.data[TOKEN_ORDER.index("maintain")] = 5.0
+            torch.save(
+                {
+                    "state_dict": model.state_dict(),
+                    "feat_mean": np.zeros(10, dtype=np.float32),
+                    "feat_std": np.ones(10, dtype=np.float32),
+                    "token_names": list(TOKEN_ORDER),
+                },
+                checkpoint_path,
+            )
+            proxy_path.write_text(
+                json.dumps(
+                    {
+                        "schema": "alpasim_oracle_actor_proxy_v2",
+                        "frames": {
+                            "1001000": {
+                                "timestamp_us": 1001000,
+                                "scene_id": "clipgt-oracle",
+                                "world_actors": [
+                                    {
+                                        "world_x": 12.0,
+                                        "world_y": 1.0,
+                                        "world_vx": 2.0,
+                                        "world_vy": 0.0,
+                                        "world_heading": 0.0,
+                                        "radius": 1.2,
+                                        "width": 2.0,
+                                        "length": 4.5,
+                                        "kind": "automobile",
+                                        "label": "oracle-car",
+                                    }
+                                ],
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            adapter = TokenBCAlpaSimModel(
+                checkpoint_path=checkpoint_path,
+                device="cpu",
+                camera_ids=["front"],
+                context_length=1,
+                output_frequency_hz=4,
+                oracle_actor_proxy_path=proxy_path,
+                oracle_actor_proxy_tolerance_us=20_000,
+            )
+            prediction_input = SimpleNamespace(
+                camera_images={"front": [SimpleNamespace(timestamp_us=1000000, image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                command=DriveCommand.STRAIGHT,
+                speed=6.0,
+                acceleration=0.0,
+                ego_pose_history=[
+                    SimpleNamespace(
+                        timestamp_us=1000000,
+                        pose=SimpleNamespace(
+                            vec=SimpleNamespace(x=10.0, y=1.0, z=0.0),
+                            quat=SimpleNamespace(x=0.0, y=0.0, z=0.0, w=1.0),
+                        ),
+                    )
+                ],
+            )
+
+            prediction = adapter.predict(prediction_input)
+            payload = json.loads(prediction.reasoning_text or "{}")
+            signal = payload["alpasim_signal"]
+
+        self.assertTrue(signal["oracle_actor_proxy_enabled"])
+        self.assertTrue(signal["oracle_actor_proxy_hit"])
+        self.assertEqual(1, signal["oracle_actor_proxy_count"])
+        self.assertEqual(1, signal["oracle_actor_proxy_world_actor_count"])
+        self.assertEqual("world", signal["oracle_actor_proxy_frame_space"])
+        self.assertEqual(1_000, signal["oracle_actor_proxy_delta_us"])
+        self.assertEqual("oracle-car", signal["structured_hazards"][0]["label"])
+        self.assertAlmostEqual(2.0, signal["structured_hazards"][0]["x"], places=5)
+        self.assertAlmostEqual(0.0, signal["structured_hazards"][0]["y"], places=5)
+        self.assertAlmostEqual(-4.0, signal["structured_hazards"][0]["vx"], places=5)
+
+    def test_prediction_timestamp_uses_ego_history_then_camera_frames(self) -> None:
+        with_ego_history = SimpleNamespace(
+            ego_pose_history=[SimpleNamespace(timestamp_us=123), SimpleNamespace(timestamp_us=456)],
+            camera_images={"front": [(789, np.zeros((1, 1, 3), dtype=np.uint8))]},
+        )
+        with_camera_only = SimpleNamespace(
+            ego_pose_history=[],
+            camera_images={"front": [(789, np.zeros((1, 1, 3), dtype=np.uint8))]},
+        )
+
+        self.assertEqual(456, _prediction_timestamp_us(with_ego_history))
+        self.assertEqual(789, _prediction_timestamp_us(with_camera_only))
+
+    def test_prediction_ego_pose_world_reads_current_pose(self) -> None:
+        prediction_input = SimpleNamespace(
+            ego_pose_history=[
+                SimpleNamespace(timestamp_us=123, x=1.0, y=2.0, yaw=0.25),
+                SimpleNamespace(
+                    timestamp_us=456,
+                    pose=SimpleNamespace(
+                        vec=SimpleNamespace(x=3.0, y=4.0, z=0.0),
+                        quat=SimpleNamespace(
+                            x=0.0,
+                            y=0.0,
+                            z=float(np.sin(0.5 / 2.0)),
+                            w=float(np.cos(0.5 / 2.0)),
+                        ),
+                    ),
+                ),
+            ]
+        )
+
+        pose = _prediction_ego_pose_world(prediction_input)
+
+        self.assertIsNotNone(pose)
+        assert pose is not None
+        self.assertAlmostEqual(3.0, pose["world_x"])
+        self.assertAlmostEqual(4.0, pose["world_y"])
+        self.assertAlmostEqual(0.5, pose["world_heading"])
 
     def test_token_bc_alpasim_adapter_rejects_unknown_checkpoint_tokens(self) -> None:
         with TemporaryDirectory() as tmp:

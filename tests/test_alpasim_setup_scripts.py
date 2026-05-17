@@ -13,6 +13,7 @@ from scripts.run_alpasim_local_external import _preflight_docker_access
 from scripts.run_alpasim_local_external import _preflight_alpasim_base_image
 from scripts.run_alpasim_local_external import _validate_alpasim_checkout as validate_run_checkout
 from scripts.run_alpasim_local_external import (
+    _driver_env,
     _driver_command,
     _preflight_platform_compatibility,
     _wizard_command,
@@ -148,6 +149,19 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
         )
         with patch("scripts.run_alpasim_local_external.subprocess.run", return_value=present):
             _preflight_alpasim_base_image()
+
+    def test_driver_env_expands_run_dir_and_oracle_actor_proxy(self) -> None:
+        env = _driver_env(
+            {
+                "MSA_TOKENBC_SELECTION_LOG_PATH": "{run_dir}/driver/selection-log.jsonl",
+                "MSA_TOKENBC_ORACLE_ACTOR_PROXY_PATH": "{oracle_actor_proxy_path}",
+            },
+            run_dir=Path("/tmp/run"),
+            oracle_actor_proxy=Path("/tmp/oracle.json"),
+        )
+
+        self.assertEqual("/tmp/run/driver/selection-log.jsonl", env["MSA_TOKENBC_SELECTION_LOG_PATH"])
+        self.assertEqual("/tmp/oracle.json", env["MSA_TOKENBC_ORACLE_ACTOR_PROXY_PATH"])
 
     def test_setup_script_applies_repo_tracked_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

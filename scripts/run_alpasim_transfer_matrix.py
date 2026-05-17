@@ -41,6 +41,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--topology", default="1gpu")
     parser.add_argument("--driver-warmup-seconds", type=float, default=10.0)
     parser.add_argument("--wizard-arg", action="append", default=[])
+    parser.add_argument("--oracle-actor-proxy", type=Path, default=None)
     parser.add_argument("--alpasim-root", type=Path, default=None)
     parser.add_argument("--allow-existing-matrix-dir", action="store_true")
     parser.add_argument("--rerun-existing", action="store_true")
@@ -175,6 +176,8 @@ def _job_command(
         command.append("--continue-on-error")
     if args.alpasim_root is not None:
         command.extend(["--alpasim-root", str(args.alpasim_root)])
+    if args.oracle_actor_proxy is not None:
+        command.extend(["--oracle-actor-proxy", str(args.oracle_actor_proxy)])
     for override in args.wizard_arg:
         command.extend(["--wizard-arg", override])
     return command

@@ -702,6 +702,32 @@ launch path.
 
 \begin{table}[t]
 \centering
+\caption{Scene-3 mechanism audit. The actor-complete oracle proxy changes selection, but
+wrong-lane failure persists with only 2--3 actor-veto frames out of 199. The error is
+therefore not explained by over-conservative actor suppression; it remains inside the
+admissible candidate set.}
+\label{tab:alpasim_scene3}
+\scriptsize
+\begin{tabular}{lrrrrrrl}
+\toprule
+Policy & Collision & Offroad & Wrong lane & Progress & Dist. (m) & Veto frames & Selection summary \\
+\midrule
+Axis-constrained clamped & 0 & 0 & 0 & 0.323 & 55.23 & -- & baseline proxy \\
+Oracle actor + axis & 0 & 0 & 1 & 0.350 & 59.95 & 2/199 & 157 agree, 40 DAgger, 2 fallback \\
+Oracle actor + lexicographic & 0 & 0 & 1 & 0.491 & 84.39 & 3/199 & 162 Spotlight, 17 DAgger, 3 fallback \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+We lead with this scene-level audit because it isolates the mechanism more sharply than
+an aggregate table. Injecting privileged AlpaSim actors into the proxy is not a noop: it
+changes token selection and exposes the dynamic actors in all 199 frames. But the
+resulting failure moves to lane adherence while the actor veto fires on only 1--2\% of
+frames. This localizes the next bottleneck to the ranking features used for lane/offroad
+discrimination, not to the actor veto threshold.
+
+\begin{table}[t]
+\centering
 \caption{AlpaSim external diagnostic on 10 matched WOD-E2E clips. Rates are fractions of
 episodes; progress and distances are means. Each intervention repairs a different
 transfer axis and leaves or worsens another, exposing non-co-monotone simulator-transfer
@@ -717,6 +743,26 @@ Token-DAgger (clamped lateral) & 0.700 & 0.500 & 0.200 & 0.384 & 59.85 & 5.21 \\
 Token-DAgger (axis-constrained clamped) & 0.700 & 0.200 & 0.200 & 0.358 & 54.80 & 2.25 \\
 Token-DAgger + hard veto & 0.800 & 0.200 & 0.700 & 0.837 & 166.06 & 22.71 \\
 Token-DAgger (source decay) & 0.600 & 0.900 & 0.400 & 0.175 & 62.92 & 27.16 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Oracle actor-proxy ablation on the same 10 AlpaSim clips. These are raw
+per-scene outcomes from \texttt{metrics\_unprocessed.parquet}, not aggregate-filtered
+AlpaSim summaries. Aggregate-filtered metrics make the first-six live read appear as a
+0.67 to 0.33 collision reduction; the raw full-10 headline is the more conservative
+0.70 to 0.60.}
+\label{tab:alpasim_oracle_actor}
+\scriptsize
+\begin{tabular}{lrrrrrr}
+\toprule
+Policy & Collision & Offroad & Wrong lane & Progress & Dist. (m) & Dist.-GT \\
+\midrule
+Axis-constrained clamped & 0.700 & 0.200 & 0.200 & 0.358 & 54.80 & 2.25 \\
+Oracle actor + axis & 0.600 & 0.300 & 0.500 & 0.289 & 46.23 & 4.60 \\
+Oracle actor + lexicographic & 0.600 & 0.200 & 0.500 & 0.352 & 54.96 & 3.24 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -749,7 +795,14 @@ AlpaSim safety. The structured-hazard interface is present in the adapter, but i
 therefore interpreted as a clear corridor on 87.0\% of axis-constrained frames and
 90.7\% of hard-veto frames. This localizes the collision failure upstream of token
 ranking: route geometry can be clamped or re-ranked, but interaction safety cannot be
-recovered from candidates scored against an actor-incomplete proxy state.
+fully recovered from candidates scored against an actor-incomplete proxy state.
+Table~\ref{tab:alpasim_oracle_actor} provides the falsification gate. Adding privileged
+actors reduces raw collision from 0.700 to 0.600: one fewer collision in the 10 paired
+clips, or a 0.10 absolute raw reduction. The same intervention worsens wrong-lane from
+0.200 to 0.500. Lexicographic ordering restores offroad and most progress relative to the
+axis oracle, but does not repair lane adherence. Thus actor completeness is causal for a
+measured subset of the collision surface, not the whole transfer failure; AlpaSim transfer
+requires actor-aware ranking \emph{and} explicit lane/offroad observability.
 
 Source-decayed DAgger repairs yet another axis: wrong-lane rate improves from 0.700 to
 0.400 and progress improves from 0.034 to 0.175, but collision and offroad rates remain
