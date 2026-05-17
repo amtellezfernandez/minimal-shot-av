@@ -28,3 +28,7 @@ Supporting artifacts:
 - [`docs/simulation.md`](docs/simulation.md)
 - [`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md)
 - [`docs/corl2027/paper.pdf`](docs/corl2027/paper.pdf)
+
+For a more technical view of the experiment logs, AlpaSim transfer harness, and
+ongoing paper work, use the
+[`CoRL-2027` branch](https://github.com/amtellezfernandez/minimal-shot-av/tree/CoRL-2027).

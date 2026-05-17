@@ -101,9 +101,10 @@
       \end{block}
 
       \vspace{0.2em}
-      \small Our work is deliberately different: we build a compact testbed where
-      grounding is explicit and auditable. The car reasons through route blockage,
-      clearance, actor motion, and a fixed set of maneuver tokens.
+      \small That leaves our complementary question: after actions are grounded,
+      \textbf{what transfers across simulators?} Our stack exposes route blockage,
+      clearance, actor motion, and fixed maneuver tokens, so failures separate into
+      collision, lane, route, and progress axes.
     \end{column}
     \begin{column}{0.47\textwidth}
       \begin{center}
@@ -124,15 +125,16 @@
         \node[box, below=of text] (latent) {Foundation-Model Route\\[-2pt]\scriptsize physical latents $\to$ trajectory};
         \node[goodbox, below=of latent] (ours) {This Project\\[-2pt]\scriptsize geometry scalars $\to$ 9 tokens};
         \draw[arr] (text) -- node[right,font=\scriptsize] {remove text bottleneck} (latent);
-        \draw[arr] (latent) -- node[right,font=\scriptsize] {make it auditable} (ours);
+        \draw[arr] (latent) -- node[right,font=\scriptsize] {test transfer axes} (ours);
       \end{tikzpicture}
       \end{center}
 
       \vspace{0.2em}
       \footnotesize
-      \textbf{Positioning:} LaST-VLA is a large VLA training framework. This
-      project is an experimental autonomy stack: simulator, token runtime,
-      AlpaSim bridge, WOD selector, and failure analysis.
+      \textbf{Positioning:} LaST-VLA is a large latent VLA planner. This project
+      is not a smaller copy: it is a minimal-shot transfer stack that exposes
+      when grounded token selection helps, when it breaks, and which metric axis
+      caused the break.
     \end{column}
   \end{columns}
 \end{frame}

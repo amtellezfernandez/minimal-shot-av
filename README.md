@@ -36,6 +36,21 @@ models; the selector picks among them using ~137 features plus visual embeddings
 The two tracks are deliberately isolated — simulator metrics are never used for WOD
 model selection.
 
+## Relation To Large Latent VLA Work
+
+Recent systems such as [LaST-VLA](https://arxiv.org/abs/2603.01928) pursue a
+large-model route: replace textual chain-of-thought with physically grounded latent
+spatio-temporal reasoning, then train for trajectory generation at scale. This repo
+does not try to reproduce that stack.
+
+The complementary contribution here is narrower and more inspectable: keep the
+action interface explicit, run the same token API in both the custom simulator and
+AlpaSim, and measure transfer per axis — collision, offroad, lane adherence, and
+progress — instead of hiding everything inside one aggregate score. The advantage is
+not only auditability; it is failure localization. The experiments identify when
+grounded selection transfers, when learned token selection breaks, and which metric
+axis caused the break.
+
 ---
 
 ## Architecture At A Glance
@@ -172,7 +187,10 @@ Two primary references — each focused on one track with no repeated content:
   **[`docs/corl2027/paper.pdf`](docs/corl2027/paper.pdf)** — current CoRL 2027
   draft on grounded token selection and proxy-state transfer failure.
 
-For the CoRL 2027 branch specifically, start here:
+If you are browsing the stable `main` branch, switch to
+[`CoRL-2027`](https://github.com/amtellezfernandez/minimal-shot-av/tree/CoRL-2027)
+for the more technical experiment logs, AlpaSim transfer harness, and ongoing paper
+work. On this branch specifically, start here:
 
 - **[`docs/corl2027/AUDIT.md`](docs/corl2027/AUDIT.md)** — the shortest audit path:
   branch assumptions, what is published on Hugging Face, what can be checked without
