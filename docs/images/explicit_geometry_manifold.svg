@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#1e3a8a"/>
+    </marker>
+    <linearGradient id="tube" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#dbeafe"/>
+      <stop offset="55%" stop-color="#ccfbf1"/>
+      <stop offset="100%" stop-color="#dcfce7"/>
+    </linearGradient>
+    <style>
+      .title{font:700 30px Helvetica,Arial,sans-serif;fill:#102033}
+      .sub{font:400 16px Helvetica,Arial,sans-serif;fill:#526070}
+      .label{font:700 18px Helvetica,Arial,sans-serif;fill:#132438}
+      .txt{font:400 14px Helvetica,Arial,sans-serif;fill:#23364a}
+      .small{font:400 12px Helvetica,Arial,sans-serif;fill:#5b6777}
+      .box{fill:#ffffff;stroke:#cbd5e1;stroke-width:2}
+      .blue{fill:#eff6ff;stroke:#2563eb}
+      .green{fill:#ecfdf5;stroke:#16a34a}
+      .orange{fill:#fff7ed;stroke:#d97706}
+      .red{fill:#fff1f2;stroke:#e11d48}
+      .arrow{stroke:#1e3a8a;stroke-width:3.2;fill:none;marker-end:url(#arrow)}
+      .thin{stroke:#64748b;stroke-width:1.7;fill:none;stroke-dasharray:6 5}
+      .path{stroke:#f59e0b;stroke-width:7;fill:none;stroke-linecap:round}
+      .badpath{stroke:#ef4444;stroke-width:4;fill:none;stroke-dasharray:9 7}
+    </style>
+  </defs>
+  <rect width="1280" height="720" fill="#f8fafc"/>
+  <text x="72" y="72" class="title">Our “Manifold” Is Explicit: Geometry, Dynamics, Bounded Tokens</text>
+  <text x="74" y="102" class="sub">We do not train a 124-d latent VLA. We expose the physical bottleneck as small auditable signals and candidate actions.</text>
+
+  <rect x="78" y="160" width="250" height="370" rx="20" class="blue"/>
+  <text x="106" y="200" class="label">Scene State</text>
+  <text x="106" y="238" class="txt">route corridor</text>
+  <text x="106" y="264" class="txt">actor positions</text>
+  <text x="106" y="290" class="txt">relative speed</text>
+  <text x="106" y="316" class="txt">lane clearance</text>
+  <text x="106" y="360" class="small">AlpaSim adapter reconstructs this</text>
+  <text x="106" y="380" class="small">from camera, route, and ego dynamics.</text>
+
+  <path d="M328 346 C362 346 372 346 406 346" class="arrow"/>
+
+  <rect x="406" y="130" width="470" height="430" rx="26" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="440" y="172" class="label">Explicit Physical Feasibility Region</text>
+  <ellipse cx="640" cy="355" rx="180" ry="86" fill="url(#tube)" stroke="#38bdf8" stroke-width="3" opacity=".95"/>
+  <ellipse cx="640" cy="355" rx="118" ry="48" fill="#ffffff" stroke="#16a34a" stroke-width="2.5" opacity=".92"/>
+  <path d="M488 378 C550 290 646 300 755 342" class="path"/>
+  <path d="M502 286 C600 248 728 428 802 278" class="badpath"/>
+  <text x="464" y="470" class="txt">outer region: route + obstacle geometry</text>
+  <text x="464" y="496" class="txt">inner region: speed, acceleration, time margin</text>
+  <text x="464" y="522" class="txt">gold path: selected bounded maneuver</text>
+  <text x="698" y="286" class="small">unsafe candidate</text>
+  <text x="694" y="397" class="small">selected candidate</text>
+
+  <path d="M876 346 C910 346 920 346 954 346" class="arrow"/>
+
+  <rect x="954" y="160" width="248" height="370" rx="20" class="green"/>
+  <text x="982" y="200" class="label">ManeuverToken</text>
+  <text x="982" y="238" class="txt">stop / crawl</text>
+  <text x="982" y="264" class="txt">maintain / slow yield</text>
+  <text x="982" y="290" class="txt">nudge left / right</text>
+  <text x="982" y="316" class="txt">evasive left / right</text>
+  <text x="982" y="342" class="txt">lane recover</text>
+  <text x="982" y="386" class="small">The final action is a bounded</text>
+  <text x="982" y="406" class="small">control primitive, not an open</text>
+  <text x="982" y="426" class="small">language or trajectory string.</text>
+
+  <rect x="96" y="604" width="1088" height="56" rx="16" fill="#ffffff" stroke="#d0dae6" stroke-width="2"/>
+  <text x="124" y="638" class="txt">Why this matters:</text>
+  <text x="232" y="638" class="small">the same action manifold can be tested internally, under proxy corruption, and in AlpaSim to see exactly where transfer breaks.</text>
+</svg>

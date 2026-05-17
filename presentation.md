@@ -61,6 +61,18 @@ than one isolated benchmark.
 
 ---
 
+# Why Grounding, Not Language
+
+![width:1000](docs/images/grounded_vla_comparison.svg)
+
+Recent VLA work, including LaST-VLA, argues that driving decisions should be
+grounded in continuous geometry and dynamics rather than long textual reasoning.
+
+Our implementation is smaller and explicit: no full VLA training, but the same
+principle appears as a bounded geometry-to-token control stack.
+
+---
+
 # Whole System Map
 
 ![width:1120](docs/images/system-map-sota-corl.svg)
@@ -86,6 +98,16 @@ Spotlight Reflex is organized as a spatial-temporal compression path:
 
 The runtime does not use scene IDs, maps of prior episodes, or dataset-specific
 fine-tuning.
+
+---
+
+# Explicit Physical Bottleneck
+
+![width:1000](docs/images/explicit_geometry_manifold.svg)
+
+The physical bottleneck is visible: proxy geometry, clearance, dynamics, and the
+9-token action set. This is why the same policy can be inspected in the custom
+simulator, corrupted internally, and bridged into AlpaSim.
 
 ---
 
@@ -256,6 +278,17 @@ still needs stronger grounded scene understanding.
 
 ---
 
+# Foundation-Prior Roadmap
+
+![width:1000](docs/images/foundation_prior_roadmap.svg)
+
+What we tested: frozen Cosmos and InternVLA priors as selector inputs.
+
+What remains: preference-aligned geometry and dynamics adapters, connected to
+the token selector and evaluated under external transfer axes.
+
+---
+
 # Reproducibility
 
 Start here:
@@ -284,84 +317,17 @@ https://github.com/amtellezfernandez/minimal-shot-av/tree/CoRL-2027
 
 ---
 
-# Boundaries
+# What This Unlocks
 
-| Claim | Status |
+This is now a working testbed for grounded minimal-shot driving.
+
+| Built asset | What it enables next |
 | --- | --- |
-| working minimal-shot AV simulator | yes |
-| autonomous policy demo in randomized long-tail scenes | yes |
-| WOD-E2E validation-CV selector result | yes, not hidden-test |
-| AlpaSim external transfer diagnosis | yes, 10 paired shared clips |
-| production AV safety claim | no |
-| uniform positive learned method | no |
-
-This is strongest as an architecture prototype plus a transfer-diagnostic
-environment, not as a single universal learned-policy win.
-
----
-
-# Research Appendix
-
-The same repo also contains a CoRL 2027 paper draft and full experiment logs.
-
-The paper-focused part of the repo studies one narrower question:
-
-> when learned token policies look good internally, what exactly breaks under
-> external transfer, and which failures come from geometry, proxy state, or
-> action ordering?
-
-That analysis lives here because it was built on the same stack, not because
-this deck is only a paper summary.
-
----
-
-# Internal Imitation-Learning Result
-
-Held-out Latin-hypercube sweep: 12 profiles, seeds 1-10, Gauntlet / Adversarial / Hidden.
-
-| Agent | Overall pass / PV | Gauntlet | Adversarial | Hidden |
-| --- | ---: | ---: | ---: | ---: |
-| Continuous-BC | 77.69 / 3.52 | 77.50 / 4.31 | 75.42 / 2.08 | 83.33 / 1.67 |
-| Token-BC | 76.85 / 4.26 | 77.64 / 4.86 | 71.67 / 2.92 | 82.50 / 3.33 |
-| Token-RNN-BC | 78.43 / 2.96 | 79.17 / 2.92 | 74.58 / 2.50 | 81.67 / 4.17 |
-| Token-DAgger-BC, 2-step | **94.54 / 0.19** | 96.25 / 0.28 | **90.83 / 0.00** | **91.67 / 0.00** |
-| Spotlight Reflex | 94.44 / 0.65 | **96.67 / 0.28** | 90.00 / 0.83 | 90.00 / 2.50 |
-
-Internal imitation learning improved sharply, but external transfer still broke
-along separate axes.
-
----
-
-# Controlled Proxy-State Test
-
-The simulator reproduces AlpaSim-style tradeoffs when only policy-visible state is corrupted.
-
-| Perturbation | Raw p/c/l | Clamp | Hybrid | Oracle | Spot |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| clean | 0.917/0.083/0.312 | 0.938/0.062/0.167 | 0.958/0.042/0.167 | 0.938/0.062/0.167 | 0.938/0.062/0.167 |
-| actor latency | 0.604/0.396/0.875 | 0.604/0.396/0.521 | **0.854/0.146/0.208** | 0.833/0.167/0.271 | 0.583/0.417/0.250 |
-| route offset | 0.938/0.062/0.229 | 0.875/0.125/0.021 | 0.896/0.104/0.062 | 0.938/0.042/0.125 | 0.917/0.083/0.083 |
-| feature noise | 0.917/0.083/0.917 | 0.938/0.062/0.146 | 0.917/0.083/0.125 | 0.896/0.104/0.104 | 0.938/0.062/0.167 |
-
-`p/c/l` means pass / collision / lane-violation rate.
-
-Source: `artifacts/internal_proxy_transfer_medium.md`.
-
----
-
-# Grounding Context
-
-Recent VLA work argues for physically grounded latent reasoning.
-
-LaST-VLA uses 3D geometric priors and world-model dynamics to improve autonomous-driving VLA planning.
-
-Our complementary lesson:
-
-- grounding is useful
-- scalar summaries can hide metric-axis conflicts
-- grounded selectors should report collision, lane, offroad, progress, and tracking separately
-
-Reference: [LaST-VLA, arXiv:2603.01928](https://arxiv.org/abs/2603.01928)
+| custom simulator with 11 long-tail clusters | controlled stress tests before external runs |
+| explicit geometry-to-token runtime | camera-grounded hazard encoder |
+| BC / DAgger / scorer / veto probes | axis-aware token selector |
+| AlpaSim proxy-state bridge | 100+ paired external scenes |
+| WOD-E2E Cosmos / InternVLA probes | preference-aligned visual adapters |
 
 ---
 

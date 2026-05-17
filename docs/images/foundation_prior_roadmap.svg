@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <style>
+      .title{font:700 30px Helvetica,Arial,sans-serif;fill:#102033}
+      .sub{font:400 16px Helvetica,Arial,sans-serif;fill:#526070}
+      .box{fill:#ffffff;stroke:#cbd5e1;stroke-width:2.2}
+      .have{fill:#ecfdf5;stroke:#16a34a}
+      .test{fill:#eff6ff;stroke:#2563eb}
+      .gap{fill:#fff7ed;stroke:#d97706}
+      .next{fill:#f5f3ff;stroke:#7c3aed}
+      .label{font:700 18px Helvetica,Arial,sans-serif;fill:#132438}
+      .txt{font:400 14px Helvetica,Arial,sans-serif;fill:#23364a}
+      .small{font:400 12px Helvetica,Arial,sans-serif;fill:#5b6777}
+      .tag{font:700 12px Helvetica,Arial,sans-serif;letter-spacing:.7px;fill:#334155}
+      .arrow{stroke:#334155;stroke-width:3.2;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#94a3b8;stroke-width:2.2;fill:none;stroke-dasharray:7 6;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1280" height="720" fill="#f8fafc"/>
+  <text x="72" y="72" class="title">Foundation Priors: What We Tested, What Comes Next</text>
+  <text x="74" y="102" class="sub">LaST-VLA uses teacher priors during VLA training. Our current system uses frozen priors as selector inputs and transfer diagnostics.</text>
+
+  <rect x="76" y="164" width="230" height="330" rx="18" class="have"/>
+  <text x="104" y="204" class="tag">BUILT</text>
+  <text x="104" y="244" class="label">Explicit Runtime</text>
+  <text x="104" y="284" class="txt">6-10 geometry scalars</text>
+  <text x="104" y="310" class="txt">9 bounded tokens</text>
+  <text x="104" y="336" class="txt">trust-region scoring</text>
+  <text x="104" y="362" class="txt">scenario generator</text>
+  <text x="104" y="414" class="small">Internal: 350 rollouts, 0 collisions,</text>
+  <text x="104" y="434" class="small">93.1% pass, COMPASS 9.137.</text>
+
+  <path d="M306 330 C340 330 350 330 384 330" class="arrow"/>
+
+  <rect x="384" y="164" width="230" height="330" rx="18" class="test"/>
+  <text x="412" y="204" class="tag">TESTED</text>
+  <text x="412" y="244" class="label">Frozen World Priors</text>
+  <text x="412" y="284" class="txt">Cosmos 64d features</text>
+  <text x="412" y="310" class="txt">InternVLA 128d probes</text>
+  <text x="412" y="336" class="txt">WOD selector CV</text>
+  <text x="412" y="362" class="txt">GPU MLP head</text>
+  <text x="412" y="414" class="small">Best validation-CV: 7.845 RFS.</text>
+  <text x="412" y="434" class="small">Signal appears only with the right head.</text>
+
+  <path d="M614 330 C648 330 658 330 692 330" class="arrow"/>
+
+  <rect x="692" y="164" width="230" height="330" rx="18" class="gap"/>
+  <text x="720" y="204" class="tag">FOUND GAP</text>
+  <text x="720" y="244" class="label">Transfer Mismatch</text>
+  <text x="720" y="284" class="txt">proxy-state adapter</text>
+  <text x="720" y="310" class="txt">external execution</text>
+  <text x="720" y="336" class="txt">axis tradeoffs</text>
+  <text x="720" y="362" class="txt">candidate-vs-selector split</text>
+  <text x="720" y="414" class="small">AlpaSim exposes collision, offroad,</text>
+  <text x="720" y="434" class="small">lane, and progress failures separately.</text>
+
+  <path d="M922 330 C956 330 966 330 1000 330" class="dash"/>
+
+  <rect x="1000" y="164" width="230" height="330" rx="18" class="next"/>
+  <text x="1028" y="204" class="tag">NEXT</text>
+  <text x="1028" y="244" class="label">Aligned Grounding</text>
+  <text x="1028" y="284" class="txt">camera hazard encoder</text>
+  <text x="1028" y="310" class="txt">geometry/dynamics adapters</text>
+  <text x="1028" y="336" class="txt">axis-aware selector</text>
+  <text x="1028" y="362" class="txt">100+ scene external matrix</text>
+  <text x="1028" y="414" class="small">This is the LaST-VLA-inspired path,</text>
+  <text x="1028" y="434" class="small">adapted to our token-selection stack.</text>
+
+  <rect x="92" y="604" width="1096" height="56" rx="16" fill="#ffffff" stroke="#d0dae6" stroke-width="2"/>
+  <text x="120" y="638" class="txt">Important boundary:</text>
+  <text x="248" y="638" class="small">we are not claiming a LaST-VLA implementation. We use its principle to frame our tested Cosmos/InternVLA evidence and the next grounded selector.</text>
+</svg>

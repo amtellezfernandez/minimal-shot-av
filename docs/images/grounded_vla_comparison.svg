@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <style>
+      .title{font:700 30px Helvetica,Arial,sans-serif;fill:#102033}
+      .sub{font:400 16px Helvetica,Arial,sans-serif;fill:#526070}
+      .box{fill:#ffffff;stroke:#cbd5e1;stroke-width:2.2}
+      .bad{fill:#fff1f2;stroke:#e11d48}
+      .mid{fill:#fff7ed;stroke:#d97706}
+      .good{fill:#ecfdf5;stroke:#16a34a}
+      .ours{fill:#eff6ff;stroke:#2563eb}
+      .label{font:700 19px Helvetica,Arial,sans-serif;fill:#132438}
+      .txt{font:400 14px Helvetica,Arial,sans-serif;fill:#23364a}
+      .small{font:400 12px Helvetica,Arial,sans-serif;fill:#5b6777}
+      .tag{font:700 12px Helvetica,Arial,sans-serif;letter-spacing:.8px;fill:#334155}
+      .arrow{stroke:#334155;stroke-width:3;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#94a3b8;stroke-width:2;fill:none;stroke-dasharray:7 6}
+      .cross{stroke:#dc2626;stroke-width:4}
+      .check{stroke:#16a34a;stroke-width:4;fill:none}
+    </style>
+  </defs>
+  <rect width="1280" height="720" fill="#f8fafc"/>
+  <text x="70" y="72" class="title">Driving Reasoning: Text Tokens, Learned Latents, Explicit Grounding</text>
+  <text x="72" y="102" class="sub">LaST-VLA motivates the shift away from textual reasoning. Our stack implements a smaller explicit version of that idea.</text>
+
+  <rect x="72" y="170" width="245" height="330" rx="18" class="box bad"/>
+  <text x="100" y="208" class="tag">TEXTUAL VLA</text>
+  <text x="100" y="248" class="label">Scene to Words to Action</text>
+  <text x="100" y="292" class="txt">camera / state</text>
+  <path d="M168 312 L168 352" class="arrow"/>
+  <text x="100" y="382" class="txt">text chain</text>
+  <path d="M168 402 L168 442" class="arrow"/>
+  <text x="100" y="472" class="txt">trajectory tokens</text>
+  <line x1="248" y1="278" x2="282" y2="312" class="cross"/>
+  <line x1="282" y1="278" x2="248" y2="312" class="cross"/>
+  <text x="100" y="536" class="small">Precise geometry is compressed through language.</text>
+  <text x="100" y="558" class="small">Latency and hallucination become planning risks.</text>
+
+  <rect x="382" y="170" width="245" height="330" rx="18" class="box mid"/>
+  <text x="410" y="208" class="tag">NAIVE LATENT</text>
+  <text x="410" y="248" class="label">Scene to Hidden Space</text>
+  <text x="410" y="292" class="txt">camera / state</text>
+  <path d="M478 312 L478 352" class="arrow"/>
+  <text x="410" y="382" class="txt">unconstrained latent</text>
+  <path d="M478 402 L478 442" class="arrow"/>
+  <text x="410" y="472" class="txt">trajectory tokens</text>
+  <path d="M550 286 C586 330 584 390 548 438" class="dash"/>
+  <text x="410" y="536" class="small">Fast, but hidden states can drift away</text>
+  <text x="410" y="558" class="small">from physical geometry and dynamics.</text>
+
+  <rect x="692" y="170" width="245" height="330" rx="18" class="box good"/>
+  <text x="720" y="208" class="tag">LAST-VLA CONTEXT</text>
+  <text x="720" y="248" class="label">Supervised Physical Latents</text>
+  <text x="720" y="292" class="txt">vision-language backbone</text>
+  <path d="M794 312 L794 352" class="arrow"/>
+  <text x="720" y="382" class="txt">geometry + dynamics latents</text>
+  <path d="M794 402 L794 442" class="arrow"/>
+  <text x="720" y="472" class="txt">trajectory planning</text>
+  <path d="M858 282 L886 310 L858 338" class="check"/>
+  <text x="720" y="536" class="small">VGGT-like geometry and world-model dynamics</text>
+  <text x="720" y="558" class="small">are used as teacher priors.</text>
+
+  <rect x="1002" y="170" width="205" height="330" rx="18" class="box ours"/>
+  <text x="1030" y="208" class="tag">OUR STACK</text>
+  <text x="1030" y="248" class="label">Explicit Grounded Selector</text>
+  <text x="1030" y="292" class="txt">proxy geometry</text>
+  <path d="M1094 312 L1094 352" class="arrow"/>
+  <text x="1030" y="382" class="txt">6-10 scalars</text>
+  <path d="M1094 402 L1094 442" class="arrow"/>
+  <text x="1030" y="472" class="txt">9 bounded tokens</text>
+  <path d="M1144 282 L1172 310 L1144 338" class="check"/>
+  <text x="1030" y="536" class="small">No full VLA training. The physical</text>
+  <text x="1030" y="558" class="small">bottleneck is explicit and auditable.</text>
+
+  <rect x="92" y="612" width="1096" height="56" rx="16" fill="#ffffff" stroke="#d0dae6" stroke-width="2"/>
+  <text x="120" y="646" class="txt">Adapted claim:</text>
+  <text x="225" y="646" class="small">we test the same principle at prototype scale: move driving decisions from language-like output toward grounded geometry, dynamics, and bounded action.</text>
+</svg>
