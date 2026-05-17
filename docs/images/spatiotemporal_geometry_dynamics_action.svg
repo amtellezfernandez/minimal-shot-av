@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f7fafc"/>
+      <stop offset="100%" stop-color="#eef4fb"/>
+    </linearGradient>
+    <linearGradient id="hero" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#0f766e"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#355070"/>
+    </marker>
+    <style>
+      .title{font:700 26px Helvetica,Arial,sans-serif;fill:#102033}
+      .sub{font:400 15px Helvetica,Arial,sans-serif;fill:#526070}
+      .box{stroke-width:2.2}
+      .blue{fill:#eaf2ff;stroke:#2d6cdf}
+      .violet{fill:#eef2ff;stroke:#5b5bd6}
+      .green{fill:#e9f8ef;stroke:#1f8a4c}
+      .amber{fill:#fff4de;stroke:#cf7b14}
+      .rose{fill:#fff0f4;stroke:#cc4778}
+      .mini{fill:#ffffff;stroke:#cbd5e1;stroke-width:1.6}
+      .label{font:700 21px Helvetica,Arial,sans-serif;fill:#132438}
+      .txt{font:400 15px Helvetica,Arial,sans-serif;fill:#22354a}
+      .small{font:400 13px Helvetica,Arial,sans-serif;fill:#5b6777}
+      .caps{font:700 12px Helvetica,Arial,sans-serif;letter-spacing:1.2px;fill:#ffffff}
+      .arrow{stroke:#355070;stroke-width:4;fill:none;marker-end:url(#arrow)}
+      .guide{stroke:#98a5b5;stroke-width:2;fill:none;stroke-dasharray:7 7}
+    </style>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bg)"/>
+
+  <rect x="70" y="48" width="1140" height="54" rx="18" fill="url(#hero)"/>
+  <text x="100" y="82" class="caps">FAST PATH FOR MINIMAL-SHOT DRIVING</text>
+  <text x="330" y="82" class="caps">SCENE -> SPATIOTEMPORAL PATTERN -> GEOMETRY -> DYNAMICS -> ACTION</text>
+
+  <text x="78" y="145" class="title">Grounded action should emerge from scene structure, not language-like token chaining.</text>
+  <text x="78" y="172" class="sub">The policy path is organized as a spatial-temporal compression problem: summarize motion, resolve geometry, preserve dynamics, then emit a bounded action.</text>
+
+  <rect x="78" y="230" width="200" height="172" rx="20" class="box blue"/>
+  <text x="102" y="272" class="label">Scene Signals</text>
+  <text x="102" y="304" class="txt">Route centerline</text>
+  <text x="102" y="328" class="txt">Actor relative motion</text>
+  <text x="102" y="352" class="txt">Lane edges and clearance</text>
+  <text x="102" y="376" class="txt">Ego speed and heading</text>
+
+  <rect x="324" y="230" width="220" height="172" rx="20" class="box violet"/>
+  <text x="350" y="272" class="label">Spatiotemporal Pattern</text>
+  <text x="350" y="304" class="txt">Where motion converges</text>
+  <text x="350" y="328" class="txt">Who blocks the route</text>
+  <text x="350" y="352" class="txt">Where conflict will appear</text>
+  <text x="350" y="376" class="txt">What must stay reachable</text>
+
+  <rect x="592" y="210" width="306" height="212" rx="24" class="box green"/>
+  <text x="620" y="252" class="label">Geometry + Dynamics Core</text>
+  <rect x="620" y="278" width="118" height="108" rx="16" class="mini"/>
+  <text x="642" y="312" class="txt">Geometry</text>
+  <text x="642" y="336" class="small">blockage</text>
+  <text x="642" y="356" class="small">clearance</text>
+  <text x="642" y="376" class="small">lane relation</text>
+  <rect x="754" y="278" width="118" height="108" rx="16" class="mini"/>
+  <text x="780" y="312" class="txt">Dynamics</text>
+  <text x="780" y="336" class="small">relative speed</text>
+  <text x="780" y="356" class="small">merge pressure</text>
+  <text x="780" y="376" class="small">time margin</text>
+  <text x="620" y="408" class="small">This is the compression layer that stays stable across simulator, proxy corruption, and transfer.</text>
+
+  <rect x="946" y="230" width="172" height="172" rx="20" class="box amber"/>
+  <text x="973" y="272" class="label">Action Interface</text>
+  <text x="973" y="304" class="txt">9 ManeuverTokens</text>
+  <text x="973" y="328" class="small">stop / crawl / maintain</text>
+  <text x="973" y="348" class="small">nudge left / right</text>
+  <text x="973" y="368" class="small">evasive left / right</text>
+  <text x="973" y="388" class="small">lane recover</text>
+
+  <rect x="1144" y="230" width="84" height="172" rx="20" class="box rose"/>
+  <text x="1158" y="284" class="label">Control</text>
+  <text x="1158" y="320" class="txt">steer</text>
+  <text x="1158" y="344" class="txt">speed</text>
+  <text x="1158" y="368" class="txt">step</text>
+
+  <path d="M278 316 C300 316 304 316 324 316" class="arrow"/>
+  <path d="M544 316 C566 316 570 316 592 316" class="arrow"/>
+  <path d="M898 316 C920 316 924 316 946 316" class="arrow"/>
+  <path d="M1118 316 C1130 316 1132 316 1144 316" class="arrow"/>
+
+  <path d="M434 430 C520 510 820 510 1010 440" class="guide"/>
+  <text x="576" y="545" class="small">Bounded action space keeps the last step explicit and auditable.</text>
+
+  <rect x="82" y="596" width="1146" height="74" rx="18" fill="#ffffff" stroke="#d2dce8" stroke-width="2"/>
+  <text x="108" y="628" class="txt">Design principle:</text>
+  <text x="226" y="628" class="txt">do not ask the policy to narrate a world state in language order.</text>
+  <text x="108" y="654" class="txt">Ask it to compress</text>
+  <text x="276" y="654" class="small">spatiotemporal pattern -> geometric feasibility -> dynamic risk -> bounded action.</text>
+</svg>

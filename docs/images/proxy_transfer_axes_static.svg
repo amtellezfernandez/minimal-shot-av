@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#304860"/>
+    </marker>
+    <style>
+      .title{font:700 28px Helvetica,Arial,sans-serif;fill:#102033}
+      .sub{font:400 15px Helvetica,Arial,sans-serif;fill:#526070}
+      .box{stroke-width:2.2}
+      .core{fill:#eef2ff;stroke:#4f46e5}
+      .eval{fill:#f8fafc;stroke:#64748b}
+      .warn{fill:#fff7ed;stroke:#c2410c}
+      .axis{fill:#ecfdf5;stroke:#15803d}
+      .diag{fill:#fff1f2;stroke:#e11d48}
+      .label{font:700 20px Helvetica,Arial,sans-serif;fill:#132438}
+      .txt{font:400 15px Helvetica,Arial,sans-serif;fill:#23364a}
+      .small{font:400 13px Helvetica,Arial,sans-serif;fill:#5b6777}
+      .arrow{stroke:#304860;stroke-width:3.5;fill:none;marker-end:url(#arrow)}
+      .branch{stroke:#7c8da3;stroke-width:2.2;fill:none}
+    </style>
+  </defs>
+
+  <rect width="1280" height="720" fill="#f6f8fb"/>
+
+  <text x="72" y="78" class="title">Same policy, three interfaces, one axis-separable transfer diagnosis.</text>
+  <text x="72" y="106" class="sub">The method claim is not “one hybrid wins”. The controlled result is that different interfaces break different safety axes.</text>
+
+  <rect x="88" y="250" width="238" height="174" rx="22" class="box core"/>
+  <text x="116" y="292" class="label">Shared Learned Policy Set</text>
+  <text x="116" y="326" class="txt">token DAgger iter2</text>
+  <text x="116" y="350" class="txt">clamped lateral</text>
+  <text x="116" y="374" class="txt">hard-veto hybrid</text>
+  <text x="116" y="398" class="txt">source-decayed variant</text>
+
+  <rect x="412" y="120" width="226" height="122" rx="18" class="box eval"/>
+  <text x="438" y="158" class="label">Internal Held-Out Sweep</text>
+  <text x="438" y="188" class="txt">LHS profiles</text>
+  <text x="438" y="212" class="txt">gauntlet / adversarial / hidden</text>
+
+  <rect x="412" y="298" width="226" height="122" rx="18" class="box warn"/>
+  <text x="438" y="336" class="label">Proxy Corruption</text>
+  <text x="438" y="366" class="txt">latency / heading bias</text>
+  <text x="438" y="390" class="txt">route offset / feature noise</text>
+
+  <rect x="412" y="476" width="226" height="122" rx="18" class="box eval"/>
+  <text x="438" y="514" class="label">AlpaSim Transfer</text>
+  <text x="438" y="544" class="txt">WOD-E2E front camera</text>
+  <text x="438" y="568" class="txt">proxy-state reconstruction</text>
+
+  <rect x="726" y="250" width="236" height="174" rx="22" class="box axis"/>
+  <text x="754" y="292" class="label">Per-Axis Metrics</text>
+  <text x="754" y="326" class="txt">collision</text>
+  <text x="754" y="350" class="txt">offroad</text>
+  <text x="754" y="374" class="txt">wrong lane</text>
+  <text x="754" y="398" class="txt">progress / distance-to-GT</text>
+
+  <rect x="1034" y="232" width="178" height="210" rx="22" class="box diag"/>
+  <text x="1060" y="274" class="label">Diagnosis</text>
+  <text x="1060" y="308" class="txt">aggregate pass hides</text>
+  <text x="1060" y="332" class="txt">non-co-monotone</text>
+  <text x="1060" y="356" class="txt">transfer axes</text>
+  <text x="1060" y="392" class="small">one fix helps geometry,</text>
+  <text x="1060" y="412" class="small">another helps progress,</text>
+  <text x="1060" y="432" class="small">neither dominates all axes</text>
+
+  <path d="M326 337 C360 337 372 184 412 184" class="arrow"/>
+  <path d="M326 337 C360 337 374 359 412 359" class="arrow"/>
+  <path d="M326 337 C360 337 372 536 412 536" class="arrow"/>
+
+  <path d="M638 184 C690 184 690 278 726 298" class="branch"/>
+  <path d="M638 359 C690 359 690 337 726 337" class="arrow"/>
+  <path d="M638 536 C690 536 690 402 726 380" class="branch"/>
+
+  <path d="M962 337 C994 337 1002 337 1034 337" class="arrow"/>
+
+  <rect x="82" y="632" width="1132" height="48" rx="16" fill="#ffffff" stroke="#d0dae6" stroke-width="2"/>
+  <text x="108" y="662" class="txt">Interpretation:</text>
+  <text x="226" y="662" class="small">the transfer problem is not one scalar failure. It is a mismatch between policy-visible state, geometry, and dynamic action ordering.</text>
+</svg>
