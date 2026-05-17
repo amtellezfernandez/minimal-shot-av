@@ -384,3 +384,91 @@ The research contribution is the diagnosis:
 
 **minimal-shot AV systems should be judged by grounded, per-axis transfer behavior,
 not by offline accuracy or a single aggregate score.**
+
+---
+
+# Mermaid Appendix
+
+GitHub renders the next slides as native Mermaid diagrams.
+
+The earlier slides keep rendered SVGs so `presentation.pdf` stays usable.
+
+---
+
+# Mermaid: Whole System Map
+
+```mermaid
+flowchart LR
+  classDef input fill:#eef6ff,stroke:#24527a,stroke-width:2px,color:#0b2540
+  classDef core fill:#f5f7fa,stroke:#1f2937,stroke-width:2px,color:#111827
+  classDef eval fill:#fff7ed,stroke:#9a3412,stroke-width:2px,color:#431407
+  classDef evidence fill:#ecfdf5,stroke:#166534,stroke-width:2px,color:#052e16
+  classDef limit fill:#fef2f2,stroke:#991b1b,stroke-width:2px,color:#450a0a
+
+  A["WOD-style long-tail clusters<br/>construction, debris, cut-in, actors"]:::input
+  B["Randomized custom simulator<br/>OOD, gauntlet, hidden, LHS"]:::core
+  C["Spotlight Reflex runtime<br/>6 geometry scalars + 9 tokens"]:::core
+  D["Closed-loop scenario videos<br/>success and failure cases"]:::evidence
+  E["WOD-E2E selector harness<br/>479 validation frames, grouped CV"]:::core
+  F["Frozen grounding priors<br/>Cosmos / InternVLA probes"]:::input
+  G["AlpaSim transfer harness<br/>front camera + proxy-state adapter"]:::eval
+  H["Per-axis diagnostics<br/>collision, offroad, lane, progress"]:::eval
+  I["SoTA submission package<br/>README, deck, audit artifacts"]:::evidence
+  J["Claim boundary<br/>prototype, not production AV"]:::limit
+
+  A --> B --> C --> D
+  C --> G --> H
+  E --> H
+  F --> E
+  D --> I
+  H --> I
+  J --> I
+```
+
+---
+
+# Mermaid: Runtime Architecture
+
+```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
+flowchart TB
+  classDef sensor fill:#eef6ff,stroke:#1d4ed8,stroke-width:2px,color:#172554
+  classDef state fill:#f8fafc,stroke:#334155,stroke-width:2px,color:#0f172a
+  classDef token fill:#fffbeb,stroke:#b45309,stroke-width:2px,color:#451a03
+  classDef score fill:#f0fdf4,stroke:#15803d,stroke-width:2px,color:#052e16
+
+  A["Scene signals"]:::sensor
+  B["World-state scalars"]:::state
+  C["Token candidates"]:::token
+  D["Grounded selector + controller"]:::score
+
+  A --> B --> C --> D
+```
+
+---
+
+# Mermaid: Transfer Diagnostic Schema
+
+```mermaid
+flowchart LR
+  classDef train fill:#f8fafc,stroke:#334155,stroke-width:2px,color:#0f172a
+  classDef policy fill:#eef6ff,stroke:#1d4ed8,stroke-width:2px,color:#172554
+  classDef transfer fill:#fff7ed,stroke:#c2410c,stroke-width:2px,color:#431407
+  classDef axis fill:#ecfdf5,stroke:#15803d,stroke-width:2px,color:#052e16
+  classDef finding fill:#fef2f2,stroke:#b91c1c,stroke-width:2px,color:#450a0a
+
+  A["Expert rollouts<br/>Spotlight Reflex"]:::train
+  B["DAgger aggregation<br/>iter1, iter2, iter3"]:::train
+  C["Learned token policies<br/>raw, clamped, hard-veto, source-decay"]:::policy
+  D["Internal LHS sweep<br/>held-out generator profiles"]:::axis
+  E["Controlled proxy corruption<br/>heading bias, latency, route offset, noise"]:::transfer
+  F["AlpaSim WOD-E2E clips<br/>front-camera proxy reconstruction"]:::transfer
+  G["Axis metrics<br/>collision, offroad, wrong lane, progress, dist-to-GT"]:::axis
+  H["Main diagnosis<br/>aggregate success hides non-co-monotone transfer axes"]:::finding
+
+  A --> B --> C
+  C --> D --> G
+  C --> E --> G
+  C --> F --> G
+  G --> H
+```
