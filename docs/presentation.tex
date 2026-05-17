@@ -86,23 +86,24 @@
 \end{frame}
 
 % ── SLIDE 3: Grounded reasoning context ───────────────────────────────────────
-\begin{frame}{Grounding Context: Why Not Language Tokens?}
+\begin{frame}{Motivation: Grounded Decisions, Not Language Plans}
   \begin{columns}[T]
     \begin{column}{0.50\textwidth}
-      Recent VLA work argues that driving should move away from long textual
-      Chain-of-Thought and toward latent spatial-temporal reasoning.
+      Recent VLA work gives a useful direction: driving decisions need physical
+      grounding, because language is a lossy interface for meter-level geometry,
+      timing, clearance, and acceleration.
 
       \vspace{0.3em}
-      \begin{block}{\small LaST-VLA, Xiaomi EV + Tsinghua}
-        \small Aligns latent states with \textbf{world-model dynamics} and
-        \textbf{3D geometric priors}, then refines trajectory generation with
-        reinforcement learning.
+      \begin{block}{\small Related context: LaST-VLA (arXiv:2603.01928)}
+        \small Xiaomi EV + Tsinghua align latent states with \textbf{world-model
+        dynamics} and \textbf{3D geometric priors}. That is a foundation-model
+        path to physical grounding.
       \end{block}
 
       \vspace{0.2em}
-      \small We do not implement LaST-VLA. We use the same design principle at
-      prototype scale: keep the driving decision grounded in geometry, dynamics,
-      and bounded action rather than language-like output.
+      \small Our work is deliberately different: we build a compact testbed where
+      grounding is explicit and auditable. The car reasons through route blockage,
+      clearance, actor motion, and a fixed set of maneuver tokens.
     \end{column}
     \begin{column}{0.47\textwidth}
       \begin{center}
@@ -119,19 +120,19 @@
                     font=\small\bfseries, align=center},
         arr/.style={-Stealth, thick, color=spotTeal}
       ]
-        \node[warn] (text) {Textual VLA\\[-2pt]\scriptsize image $\to$ words $\to$ action};
-        \node[box, below=of text] (latent) {LaST-VLA Context\\[-2pt]\scriptsize image $\to$ physical latents $\to$ trajectory};
-        \node[goodbox, below=of latent] (ours) {Our Stack\\[-2pt]\scriptsize geometry scalars $\to$ 9 tokens};
-        \draw[arr] (text) -- node[right,font=\scriptsize] {precision loss} (latent);
-        \draw[arr] (latent) -- node[right,font=\scriptsize] {explicit prototype} (ours);
+        \node[warn] (text) {Language Interface\\[-2pt]\scriptsize image $\to$ words $\to$ action};
+        \node[box, below=of text] (latent) {Foundation-Model Route\\[-2pt]\scriptsize physical latents $\to$ trajectory};
+        \node[goodbox, below=of latent] (ours) {This Project\\[-2pt]\scriptsize geometry scalars $\to$ 9 tokens};
+        \draw[arr] (text) -- node[right,font=\scriptsize] {remove text bottleneck} (latent);
+        \draw[arr] (latent) -- node[right,font=\scriptsize] {make it auditable} (ours);
       \end{tikzpicture}
       \end{center}
 
       \vspace{0.2em}
       \footnotesize
-      \textbf{Paper context:} LaST-VLA reports 91.3 PDMS on NAVSIM v1 and
-      87.1 EPDMS on NAVSIM v2. Our result is not that scale; our contribution
-      is an auditable token/runtime testbed and transfer diagnosis.
+      \textbf{Positioning:} LaST-VLA is a large VLA training framework. This
+      project is an experimental autonomy stack: simulator, token runtime,
+      AlpaSim bridge, WOD selector, and failure analysis.
     \end{column}
   \end{columns}
 \end{frame}
@@ -350,16 +351,44 @@
   \end{columns}
 \end{frame}
 
-% ── SLIDE 10: AlpaSim ────────────────────────────────────────────────────────
-\begin{frame}{AlpaSim: External Transfer Diagnosis}
+% ── SLIDE 10: AlpaSim bridge ─────────────────────────────────────────────────
+\begin{frame}{AlpaSim: What We Built}
   \begin{columns}[T]
-    \begin{column}{0.48\textwidth}
+    \begin{column}{0.56\textwidth}
       \includegraphics[width=\linewidth]{images/alpasim_reasoning_panel.png}
       \vspace{0.1em}
       \small\textit{Real Waymo front-camera frames alongside adapter output.
       The policy API is fixed; the adapter reconstructs proxy geometry.}
     \end{column}
-    \begin{column}{0.49\textwidth}
+    \begin{column}{0.41\textwidth}
+      \footnotesize\textbf{Engineering work completed:}
+      \begin{itemize}\footnotesize
+        \item Local AlpaSim plugin wrapping the same token policy API
+        \item Front-camera + route + ego-dynamics adapter
+        \item Proxy-state reconstruction into Spotlight/DAgger features
+        \item Docker/runtime bootstrap scripts
+        \item Scene presets and paired matrix runner
+        \item Per-frame token, adapter, collision, offroad, lane, progress logs
+      \end{itemize}
+      \vspace{0.1em}
+      \begin{alertblock}{}
+        \footnotesize This made the simulator result auditable in a second execution stack,
+        instead of staying as a closed internal demo.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ── SLIDE 11: AlpaSim transfer diagnosis ─────────────────────────────────────
+\begin{frame}{AlpaSim: External Transfer Matrix}
+  \begin{columns}[T]
+    \begin{column}{0.44\textwidth}
+      \includegraphics[width=\linewidth]{images/alpasim_reasoning_panel.png}
+      \vspace{0.1em}
+      \small\textit{Same AlpaSim bridge, now used to run paired learned-policy
+      transfer matrices over shared WOD-E2E clips.}
+    \end{column}
+    \begin{column}{0.53\textwidth}
       \small\textbf{10 shared WOD-E2E clips, paired by scene:}
 
       \vspace{0.15em}
@@ -389,7 +418,7 @@
   \end{columns}
 \end{frame}
 
-% ── SLIDE 10: WOD-E2E Results ─────────────────────────────────────────────────
+% ── SLIDE 12: WOD-E2E Results ─────────────────────────────────────────────────
 \begin{frame}{WOD-E2E Benchmark: Trajectory Selector}
   \textbf{479 preference-labeled Waymo frames · segment-grouped 5-fold CV · RFS = preference alignment}
 
@@ -502,9 +531,12 @@
       Failure modes trace to scalar interactions, not object labels.
       1.419 RFS oracle gap $\to$ visual-geometric bridge missing. \\[0.2em]
     \midrule
-    \textbf{AlpaSim} &
-      10 paired WOD-E2E clips expose axis-specific transfer failures:
-      clamping helps route geometry, veto helps progress, source decay helps lane behavior. \\[0.1em]
+    \textbf{AlpaSim bridge} &
+      Same token-policy API runs through a front-camera/route/ego adapter with
+      paired scene matrices and per-frame axis logs. \\[0.1em]
+    \textbf{AlpaSim finding} &
+      10 paired WOD-E2E clips expose axis-specific transfer: clamping helps route
+      geometry, veto helps progress, source decay helps lane behavior. \\[0.1em]
     \textbf{WOD-E2E champion} &
       \good{7.845 RFS} (5-fold), $+$0.823 vs official Waymo baseline. \\
     \bottomrule
@@ -516,39 +548,36 @@
   \begin{columns}[T]
     \begin{column}{0.50\textwidth}
       \textbf{What we showed:}
-      \begin{itemize}\small
-        \item Discrete action-space quantization is a \textbf{structural robustness prior}
-          — 9 tokens, 0 collisions, 27$\times$ gauntlet gain.
-        \item Cosmos visual latents carry \textbf{geometrically structured preference signal}
-          — extractable only by a nonlinear readout.
-        \item The 1.419 RFS oracle gap is \textbf{causally localized} to the
-          visual-to-geometric bridge — not the action space, not the ranker.
+      \begin{itemize}\footnotesize
+        \item \textbf{Discrete bottleneck:} 9 tokens, 0 collisions, 27$\times$
+          gauntlet gain.
+        \item \textbf{Grounded visual signal:} Cosmos helps only with a nonlinear
+          readout.
+        \item \textbf{Bottleneck localized:} 1.419 RFS oracle gap points to the
+          visual-to-geometric bridge.
+        \item \textbf{AlpaSim bridge:} same policy API, second execution stack,
+          paired WOD-E2E scenes, per-axis logs.
       \end{itemize}
 
-      \vspace{0.3em}
+      \vspace{0.15em}
       \textbf{General principle:}\\
-      \small\textit{Structured inductive biases in the action space propagate to better
-      generalization, more interpretable failure modes, and more precise identification
-      of the information bottleneck.}
+      \footnotesize\textit{Grounded action interfaces make transfer failures
+      measurable instead of hidden inside one aggregate score.}
     \end{column}
     \begin{column}{0.47\textwidth}
       \textbf{Next steps:}
-      \begin{enumerate}\small
-        \item \textbf{Preference-aligned visual encoder} (highest impact)\\
-          \footnotesize Fine-tune encoder on preference triplets (frame, win, loss).
-          Expected: close most of the 1.419 oracle gap.
+      \begin{enumerate}\footnotesize
+        \item \textbf{Preference-aligned visual encoder}\\
+          Fine-tune on triplets (frame, win, loss) to close the oracle gap.
 
         \item \textbf{Intent calibration}\\
-          \footnotesize Stratified reweighting by intent.
-          GO\_RIGHT regret 2.063 → targeted fix.
+          Stratified reweighting by intent; GO\_RIGHT regret is 2.063.
 
         \item \textbf{Test-set run}\\
-          \footnotesize Pipeline complete; 1,505 frames listed.
-          Missing: test TFRecords (Waymo sign-in gated).
+          Pipeline complete; missing gated Waymo test TFRecords.
 
-        \item \textbf{Physical deployment}\\
-          \footnotesize Obstacle sensors + route command → Spotlight Reflex.
-          AlpaSim adapter is the real-sensor bridge template.
+        \item \textbf{Physical deployment path}\\
+          Obstacle sensors + route command $\to$ Spotlight Reflex.
       \end{enumerate}
     \end{column}
   \end{columns}
