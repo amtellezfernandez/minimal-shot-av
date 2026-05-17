@@ -56,12 +56,12 @@
   <text x="1018" y="285" class="txt">wrong lane</text>
   <text x="1018" y="315" class="txt">progress</text>
   <text x="1018" y="345" class="txt">distance to GT</text>
-  <text x="1018" y="400" class="small">Not a single aggregate score.</text>
+  <text x="1018" y="400" class="small">Axis-by-axis external readout.</text>
 
   <path d="M290 330 L360 330" class="arrow"/>
   <path d="M620 330 L690 330" class="arrow"/>
   <path d="M920 330 L990 330" class="arrow"/>
 
   <path d="M805 510 C820 610 460 610 490 530" class="dash"/>
-  <text x="515" y="620" class="small">Selection failures feed back through execution, not through offline accuracy.</text>
+  <text x="515" y="620" class="small">Selection failures appear only after adapter reconstruction and execution.</text>
 </svg>

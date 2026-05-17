@@ -40,10 +40,10 @@ model selection.
 
 ## Architecture At A Glance
 
-![SOTA and CoRL system map](docs/images/system-map-sota-corl.svg)
+![Minimal-shot AV system map](docs/images/system-map-sota-corl.svg)
 
 *Repository map — custom simulator, AlpaSim transfer harness, WOD-E2E selector, and
-the CoRL/SOTA evidence path are separate but auditable from the same branch.*
+the diagnostic evidence path are separate but auditable from the same branch.*
 
 ![AlpaSim transfer stack](docs/images/alpasim-transfer-stack.svg)
 
@@ -142,7 +142,7 @@ and source decay improves wrong-lane rate. Full paired tests are in
 - **Development analysis, not zero-shot.** The WOD-E2E selector is trained on the same validation preference labels it is evaluated on — under segment-grouped cross-validation to prevent data leakage, but still the validation set. Moving training to the Waymo train split would make this a true test-set generalisation claim.
 - **No camera perception.** The WOD-E2E model sees only ego velocity history, speed, acceleration, and route intent — not the camera images. This is the identified bottleneck; a preference-aligned visual encoder is the next step.
 - **2D abstract simulation.** The simulator is 2D with structured obstacles, not a physics engine. AlpaSim integration runs the same policy in a sensor-realistic environment but at the trajectory-plugin level.
-- **Test set not evaluated.** The submission packaging pipeline is complete. The test TFRecords (Waymo Google Drive, sign-in gated) are the only missing piece for a test-set submission.
+- **Test set not evaluated.** The packaging pipeline is complete. The test TFRecords (Waymo Google Drive, sign-in gated) are the only missing piece for a test-set run.
 
 ---
 
@@ -164,8 +164,8 @@ Two primary references — each focused on one track with no repeated content:
 - **[`docs/presentation.tex`](docs/presentation.tex)** — LaTeX Beamer slide deck
   (`pdflatex docs/presentation.tex` or paste into Overleaf).
 - **[`presentation.md`](presentation.md)** / **[`presentation-sota.pdf`](presentation-sota.pdf)** —
-  branch-level SOTA/CoRL presentation with architecture graphs, simulator results,
-  AlpaSim transfer diagnostics, WOD-E2E results, and submission/audit links.
+  branch-level presentation with architecture graphs, simulator results,
+  AlpaSim transfer diagnostics, WOD-E2E results, and audit links.
 - **[`docs/diagrams/`](docs/diagrams)** — Mermaid source schemas used directly in
   the presentation; rendered slide assets live in `docs/images/mermaid_*.svg`.
 - **[`docs/corl2027/paper.tex`](docs/corl2027/paper.tex)** /

@@ -19,15 +19,15 @@
     </style>
   </defs>
   <rect width="1280" height="720" fill="#f6f8fb"/>
-  <text x="50" y="58" class="title">Minimal-Shot AV: One Repo, Two Claims</text>
-  <text x="52" y="86" class="sub">SOTA submission is the packaged system. CoRL paper is the transfer diagnostic built on the same infrastructure.</text>
+  <text x="50" y="58" class="title">Minimal-Shot AV Stack</text>
+  <text x="52" y="86" class="sub">Runtime, simulator, transfer harness, and grounding probes share one bounded action interface.</text>
 
   <rect x="55" y="135" width="245" height="145" rx="16" class="green"/>
-  <text x="80" y="168" class="label">SOTA Runtime</text>
+  <text x="80" y="168" class="label">Runtime Stack</text>
   <text x="80" y="198" class="txt">Spotlight Reflex</text>
   <text x="80" y="220" class="txt">6 world-state scalars</text>
   <text x="80" y="242" class="txt">9 ManeuverTokens</text>
-  <text x="80" y="264" class="small">Episode-free, no production claim</text>
+  <text x="80" y="264" class="small">Episode-free, bounded action interface</text>
 
   <rect x="365" y="115" width="255" height="185" rx="16" class="blue"/>
   <text x="390" y="148" class="label">Custom Simulator</text>
@@ -61,9 +61,9 @@
   <text x="715" y="540" class="small">Auxiliary validation-CV only</text>
 
   <rect x="55" y="405" width="565" height="155" rx="16" class="box"/>
-  <text x="82" y="438" class="label">Claim Boundary</text>
-  <text x="82" y="470" class="txt">SOTA: auditable minimal-shot system package, not production deployment.</text>
-  <text x="82" y="498" class="txt">CoRL: internal success hides multi-axis simulator-transfer failure.</text>
+  <text x="82" y="438" class="label">Evidence Boundary</text>
+  <text x="82" y="470" class="txt">Auditable minimal-shot system package, not production deployment.</text>
+  <text x="82" y="498" class="txt">Internal success can hide multi-axis simulator-transfer failure.</text>
   <text x="82" y="526" class="txt">WOD: grounding signal is validation-CV, not hidden-test generalization.</text>
 
   <path d="M300 208 C330 208 335 208 365 208" class="arrow"/>

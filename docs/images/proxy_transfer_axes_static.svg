@@ -22,15 +22,15 @@
 
   <rect width="1280" height="720" fill="#f6f8fb"/>
 
-  <text x="72" y="78" class="title">Same policy, three interfaces, one axis-separable transfer diagnosis.</text>
-  <text x="72" y="106" class="sub">The method claim is not “one hybrid wins”. The controlled result is that different interfaces break different safety axes.</text>
+  <text x="72" y="78" class="title">Same policy, three interfaces, different external failures.</text>
+  <text x="72" y="106" class="sub">Internal success, proxy corruption, and AlpaSim expose different axis tradeoffs.</text>
 
   <rect x="88" y="250" width="238" height="174" rx="22" class="box core"/>
   <text x="116" y="292" class="label">Shared Learned Policy Set</text>
   <text x="116" y="326" class="txt">token DAgger iter2</text>
   <text x="116" y="350" class="txt">clamped lateral</text>
   <text x="116" y="374" class="txt">hard-veto hybrid</text>
-  <text x="116" y="398" class="txt">source-decayed variant</text>
+  <text x="116" y="398" class="txt">source decay</text>
 
   <rect x="412" y="120" width="226" height="122" rx="18" class="box eval"/>
   <text x="438" y="158" class="label">Internal Held-Out Sweep</text>
@@ -56,12 +56,11 @@
 
   <rect x="1034" y="232" width="178" height="210" rx="22" class="box diag"/>
   <text x="1060" y="274" class="label">Diagnosis</text>
-  <text x="1060" y="308" class="txt">aggregate pass hides</text>
-  <text x="1060" y="332" class="txt">non-co-monotone</text>
-  <text x="1060" y="356" class="txt">transfer axes</text>
-  <text x="1060" y="392" class="small">one fix helps geometry,</text>
-  <text x="1060" y="412" class="small">another helps progress,</text>
-  <text x="1060" y="432" class="small">neither dominates all axes</text>
+  <text x="1060" y="308" class="txt">global pass hides</text>
+  <text x="1060" y="332" class="txt">multi-axis transfer</text>
+  <text x="1060" y="356" class="txt">disagreement</text>
+  <text x="1060" y="392" class="small">geometry and progress</text>
+  <text x="1060" y="412" class="small">do not move together</text>
 
   <path d="M326 337 C360 337 372 184 412 184" class="arrow"/>
   <path d="M326 337 C360 337 374 359 412 359" class="arrow"/>
@@ -75,5 +74,5 @@
 
   <rect x="82" y="632" width="1132" height="48" rx="16" fill="#ffffff" stroke="#d0dae6" stroke-width="2"/>
   <text x="108" y="662" class="txt">Interpretation:</text>
-  <text x="226" y="662" class="small">the transfer problem is not one scalar failure. It is a mismatch between policy-visible state, geometry, and dynamic action ordering.</text>
+  <text x="226" y="662" class="small">The mismatch shows up through proxy state, geometry, and dynamic action ordering.</text>
 </svg>

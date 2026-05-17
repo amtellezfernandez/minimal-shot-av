@@ -3,12 +3,12 @@ marp: true
 theme: default
 paginate: true
 size: 16:9
-title: Minimal-Shot Autonomous Driving for SoTA Commission I
-description: SoTA Commission I submission deck with CoRL 2027 research appendix
+title: Minimal-Shot Autonomous Driving
+description: Minimal-shot AV architecture, transfer diagnostics, and WOD-E2E grounding
 ---
 
 <!--
-SoTA Commission I primary submission deck.
+Minimal-shot AV presentation deck.
 Render HTML:
   npx @marp-team/marp-cli presentation.md --html --allow-local-files -o presentation.html
 Render PDF:
@@ -18,13 +18,13 @@ PDF export requires Chrome, Chromium, Edge, or Firefox on the host.
 
 # Minimal-Shot Autonomous Driving
 
-## SoTA Commission I Submission
+## Geometry-Grounded Runtime, Transfer Diagnostics, WOD-E2E Grounding
 
 Alba Maria Tellez Fernandez<br>
 GitHub branch: `CoRL-2027`
 
-**Goal:** build an autonomous-driving prototype that can face unfamiliar long-tail
-scenarios by reasoning from geometry, not memorizing a mapped training world.
+This stack is built to handle unfamiliar long-tail traffic structure through
+explicit geometry, bounded actions, and auditable transfer tests.
 
 ---
 
@@ -41,24 +41,23 @@ Minimal-shot autonomy needs a different capability:
 | hide failures inside aggregate metrics | expose failures by scenario and axis |
 | expensive data dependence | reusable simulator and audit harness |
 
-This project asks whether a small, auditable driving system can handle rare
-geometry shifts without fine-tuning on an AV dataset.
+The repo connects runtime, simulator, transfer harness, and real-data grounding
+in one reproducible pipeline.
 
 ---
 
-# What Was Built For The Challenge
+# System Contributions
 
-| SoTA requirement | Delivered artifact |
+| Layer | What we built | Why it matters |
 | --- | --- |
-| simulation environment | custom 2D long-tail AV simulator |
-| randomized scenarios | WOD-style clusters, OOD generator, gauntlet, LHS sweeps |
-| autonomous system demo | Spotlight Reflex token policy + rollout GIFs |
-| realistic constraints | small scalar runtime, deterministic controller, no heavy online model |
-| WOD-E2E pathway | selector harness over real WOD-E2E validation frames |
-| repo and evidence | reproducible scripts, audit reports, presentation, paper draft |
+| runtime | Spotlight Reflex token policy | auditable geometry-first decision path |
+| simulator | custom 2D long-tail environment | controlled causal stress testing |
+| learning probes | BC, RNN, DAgger, scorer variants | isolates what imitation actually learns |
+| transfer harness | AlpaSim proxy-state adapter | exposes external failure modes |
+| grounding track | WOD-E2E selector harness | tests visual/world-model priors on real data |
 
-The submission is not a production AV claim. It is a working prototype and
-evaluation harness for minimal-shot autonomy research.
+The stack is useful because these layers connect into one evidence chain rather
+than one isolated benchmark.
 
 ---
 
@@ -66,7 +65,7 @@ evaluation harness for minimal-shot autonomy research.
 
 ![width:1120](docs/images/system-map-sota-corl.svg)
 
-The architecture has three connected layers:
+Three connected layers:
 
 1. custom simulator for controlled minimal-shot experiments
 2. WOD-E2E selector harness for real-data grounding probes
@@ -112,7 +111,7 @@ candidate geometry from bad token selection.
 
 ![width:1120](docs/images/simulator-evaluation-loop.svg)
 
-The simulator is the challenge environment and the controlled lab.
+The simulator is both the deployment sandbox and the controlled lab.
 
 It supports WOD-style long-tail clusters, compositional OOD scenarios,
 adversarial multi-hazard scenes, hidden holdout profiles, and Latin-hypercube
@@ -139,8 +138,21 @@ clears the actor, and returns to lane center.
 | --- | --- |
 | ![width:430](docs/images/construction_success.gif) | ![width:430](docs/images/fod_success.gif) |
 
-The point is not photorealism. The point is controlled variation of geometry,
-hazards, clearances, and recovery choices.
+The point is controlled variation of geometry, hazards, clearances, and
+recovery choices.
+
+---
+
+# Wins Snapshot
+
+| Win | Result | Why it matters |
+| --- | --- | --- |
+| closed-loop internal safety | `350` rollouts, `0` collisions, `93.1%` overall pass | runtime is not a toy one-off demo |
+| baseline gap on hardest internal suite | `57.6%` vs `2.1%` pass, `7.9%` vs `20.5%` collision | geometry-grounded selection changes behavior materially |
+| real-data grounding signal | `7.845` RFS on WOD-E2E validation-CV | frozen scene priors help when the selector head is right |
+
+These are three different wins: internal closed-loop competence, strong baseline
+separation, and non-trivial grounding signal on real WOD-E2E scenes.
 
 ---
 
@@ -172,7 +184,7 @@ Matched gauntlet comparison: same 420 scenarios, same seeds.
 | Baseline, no world-state reasoning | 2.1% | 20.5% |
 | Spotlight Reflex | **57.6%** | **7.9%** |
 
-Takeaway for SoTA: explicit geometric reasoning gives a large improvement over a
+Explicit geometric reasoning gives a large improvement over a
 non-reasoning baseline in the randomized challenge environment.
 
 ---
@@ -185,6 +197,17 @@ This is a WOD-E2E front-camera AlpaSim rollout with adapter map and metrics.
 
 AlpaSim is not used to claim production safety. It is used to test whether the
 token interface survives a different observation and execution stack.
+
+---
+
+# AlpaSim Adapter
+
+![width:1120](docs/images/alpasim-transfer-stack.svg)
+
+The policy is held fixed. What changes is the observation adapter and the
+execution interface.
+
+This makes the transfer failure interpretable instead of hand-wavy.
 
 ---
 
@@ -228,39 +251,8 @@ Source: `artifacts/alpasim_matrix10_analysis.md`.
 | GPU MLP + Cosmos 64d | **7.845** | 5 | best validation-CV |
 | Oracle selector | 9.264 | 5 | upper bound |
 
-This is auxiliary evidence, not a hidden-test claim: the right trajectory often
-exists, but selection needs stronger grounded scene understanding.
-
----
-
-# Why The Project Is Novel
-
-| Judging axis | Evidence |
-| --- | --- |
-| technical excellence | simulator, token runtime, AlpaSim bridge, WOD-E2E harness |
-| novelty | minimal-shot geometry-first token selection, per-axis transfer diagnosis |
-| feasibility | small runtime, deterministic policy, clear deployment path |
-| adherence to brief | custom simulation, randomized scenarios, videos, repo, audit trail |
-
-The strongest idea is not “one model wins everywhere.”
-
-It is that minimal-shot autonomy should be evaluated by how failures decompose
-under new geometry, not only by aggregate pass rate.
-
----
-
-# What Funding Enables
-
-The next prototype milestone is a real grounded-selection loop:
-
-1. scale AlpaSim validation from 10 paired scenes to 100+ scenes
-2. add camera-grounded hazard and lane reconstruction to reduce proxy mismatch
-3. train an axis-aware selector that optimizes collision, lane, offroad, and progress separately
-4. run the same system on off-road or closed-course RC vehicle footage
-5. publish the simulator and audit protocol as a minimal-shot AV benchmark
-
-The prize money would fund compute, WOD/AlpaSim storage, annotation checks, and
-hardware for a small physical prototype.
+This is auxiliary evidence: the right trajectory often exists, but selection
+still needs stronger grounded scene understanding.
 
 ---
 
@@ -276,13 +268,12 @@ docs/corl2027/AUDIT.md
 ./scripts/run_corl2027_audit.sh
 ```
 
-Submission evidence:
+Primary artifacts:
 
 ```text
-artifacts/final_submission_readiness_audit.json
-artifacts/sota_judging_criteria_audit.json
 artifacts/minimal_shot_claim_audit.json
 artifacts/alpasim_matrix10_analysis.md
+artifacts/compass_evidence_report.json
 ```
 
 Branch:
@@ -293,7 +284,7 @@ https://github.com/amtellezfernandez/minimal-shot-av/tree/CoRL-2027
 
 ---
 
-# Claim Boundary
+# Boundaries
 
 | Claim | Status |
 | --- | --- |
@@ -304,20 +295,23 @@ https://github.com/amtellezfernandez/minimal-shot-av/tree/CoRL-2027
 | production AV safety claim | no |
 | uniform positive learned method | no |
 
-The submission is strongest as a prototype plus diagnostic environment, with an
-honest failure analysis and a concrete path to a stronger grounded selector.
+This is strongest as an architecture prototype plus a transfer-diagnostic
+environment, not as a single universal learned-policy win.
 
 ---
 
-# CoRL Research Appendix
+# Research Appendix
 
-The same repo also contains a CoRL 2027 diagnostic paper draft:
+The same repo also contains a CoRL 2027 paper draft and full experiment logs.
 
-> Internal imitation-learning success can hide transfer-axis disagreement. We
-> reproduce the mechanism under controlled proxy-state corruption and external
-> AlpaSim transfer.
+The paper-focused part of the repo studies one narrower question:
 
-This appendix supports the SoTA submission but is not the main deck framing.
+> when learned token policies look good internally, what exactly breaks under
+> external transfer, and which failures come from geometry, proxy state, or
+> action ordering?
+
+That analysis lives here because it was built on the same stack, not because
+this deck is only a paper summary.
 
 ---
 
@@ -333,7 +327,8 @@ Held-out Latin-hypercube sweep: 12 profiles, seeds 1-10, Gauntlet / Adversarial 
 | Token-DAgger-BC, 2-step | **94.54 / 0.19** | 96.25 / 0.28 | **90.83 / 0.00** | **91.67 / 0.00** |
 | Spotlight Reflex | 94.44 / 0.65 | **96.67 / 0.28** | 90.00 / 0.83 | 90.00 / 2.50 |
 
-Internal success alone was misleading; external transfer exposed axis conflicts.
+Internal imitation learning improved sharply, but external transfer still broke
+along separate axes.
 
 ---
 
@@ -363,7 +358,7 @@ LaST-VLA uses 3D geometric priors and world-model dynamics to improve autonomous
 Our complementary lesson:
 
 - grounding is useful
-- but aggregate scores can hide metric-axis conflicts
+- scalar summaries can hide metric-axis conflicts
 - grounded selectors should report collision, lane, offroad, progress, and tracking separately
 
 Reference: [LaST-VLA, arXiv:2603.01928](https://arxiv.org/abs/2603.01928)
@@ -372,17 +367,13 @@ Reference: [LaST-VLA, arXiv:2603.01928](https://arxiv.org/abs/2603.01928)
 
 # Final Takeaway
 
-The SoTA contribution is a complete minimal-shot AV prototype:
+The core contribution is a minimal-shot AV stack that makes the control path,
+the stress environment, the transfer interface, and the failure modes all
+explicit.
 
-- custom randomized simulator
-- auditable geometry-first policy
-- scenario videos and external AlpaSim transfer
-- WOD-E2E validation-CV selector harness
-- transparent failure analysis
+The strongest claim is concrete:
 
-The research contribution is the diagnosis:
-
-**minimal-shot AV systems should be judged by grounded, per-axis transfer behavior,
-not by offline accuracy or a single aggregate score.**
+**the stack works internally, transfers unevenly across external axes, and
+shows exactly where grounding and proxy-state mismatch start to matter.**
 
 ---
