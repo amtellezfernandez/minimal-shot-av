@@ -163,7 +163,7 @@ Two primary references — each focused on one track with no repeated content:
 
 - **[`docs/presentation.tex`](docs/presentation.tex)** — LaTeX Beamer slide deck
   (`pdflatex docs/presentation.tex` or paste into Overleaf).
-- **[`presentation.md`](presentation.md)** / **[`presentation.pdf`](presentation.pdf)** —
+- **[`presentation.md`](presentation.md)** / **[`presentation-sota.pdf`](presentation-sota.pdf)** —
   branch-level SOTA/CoRL presentation with architecture graphs, simulator results,
   AlpaSim transfer diagnostics, WOD-E2E results, and submission/audit links.
 - **[`docs/diagrams/`](docs/diagrams)** — Mermaid source schemas used directly in

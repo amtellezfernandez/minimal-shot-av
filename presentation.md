@@ -12,7 +12,7 @@ SoTA Commission I primary submission deck.
 Render HTML:
   npx @marp-team/marp-cli presentation.md --html --allow-local-files -o presentation.html
 Render PDF:
-  npx @marp-team/marp-cli presentation.md --pdf --allow-local-files -o presentation.pdf
+  npx @marp-team/marp-cli presentation.md --pdf --allow-local-files -o presentation-sota.pdf
 PDF export requires Chrome, Chromium, Edge, or Firefox on the host.
 -->
 
@@ -270,7 +270,7 @@ Start here:
 
 ```text
 README.md
-presentation.md / presentation.pdf
+presentation.md / presentation-sota.pdf
 docs/corl2027/paper.pdf
 docs/corl2027/AUDIT.md
 ./scripts/run_corl2027_audit.sh
