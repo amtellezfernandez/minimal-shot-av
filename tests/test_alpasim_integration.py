@@ -743,15 +743,17 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertEqual("actor_axis_constrained", json.loads(prediction.reasoning_text or "{}")["selection_mode"])
         self.assertEqual("maintain", trace["dagger_argmax_token"])
         self.assertNotEqual("maintain", trace["hybrid_token"])
-        self.assertTrue(trace["dagger_argmax_vetoed"])
-        self.assertIn(trace["veto_reason"], {"horizon_clearance", "unsafe_action"})
+        self.assertIn(trace["hybrid_token"], {"crawl", "slow_yield", "stop", "lane_recover"})
+        self.assertIn(trace["veto_reason"], {"none", "horizon_clearance", "unsafe_action", "actor_route_guard"})
         self.assertIn("axis_signals", trace)
         self.assertIn("maintain", trace["axis_signals"])
         self.assertIn("actor_action_clearance_m", trace["axis_signals"]["maintain"])
         self.assertIn("lane_margin_m", trace["axis_signals"]["maintain"])
         self.assertIn("hybrid_axis_scores", trace)
+        self.assertIn("route_stable_actor_safe", trace["hybrid_axis_scores"]["maintain"])
         self.assertEqual(1, len(records))
         self.assertIn("axis_signals", records[0])
+        self.assertIn("actor_route_guard_applied", records[0])
 
     def test_token_bc_alpasim_adapter_injects_oracle_actor_proxy_by_timestamp(self) -> None:
         with TemporaryDirectory() as tmp:

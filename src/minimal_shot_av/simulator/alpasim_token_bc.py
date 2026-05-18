@@ -41,6 +41,7 @@ DROPOUT = 0.15
 TRAJECTORY_MODES = ("token", "longitudinal_only", "clamped_lateral")
 SELECTION_MODES = ("argmax", "hybrid_veto", "axis_constrained", "axis_lexicographic", "actor_axis_constrained")
 ACTOR_AXIS_CLEARANCE_CAP_M = 12.0
+ROUTE_STABLE_TOKENS = frozenset({"stop", "crawl", "maintain", "slow_yield", "lane_recover"})
 TOKEN_ORDER = (
     "stop",
     "crawl",
@@ -233,21 +234,34 @@ class TokenBCAlpaSimModel(BaseTrajectoryModel):
 
         command = self._encode_command(prediction_input.command)
         speed_mps = max(0.25, float(prediction_input.speed))
-        alpasim_signal = extract_alpasim_signal(prediction_input)
-        alpasim_signal = self._inject_oracle_actor_proxy(prediction_input, alpasim_signal)
-        scenario = scenario_from_command(command, alpasim_signal)
-        active_scenario = scenario_at_tick(scenario, 0)
-        position = active_scenario.start
-        perception = perceive_scene(active_scenario, position)
-        world_state = update_world_state(active_scenario, position, perception)
+        sensor_alpasim_signal = extract_alpasim_signal(prediction_input)
+        alpasim_signal = self._inject_oracle_actor_proxy(prediction_input, sensor_alpasim_signal)
+        policy_alpasim_signal = (
+            sensor_alpasim_signal if self._selection_mode == "actor_axis_constrained" else alpasim_signal
+        )
+        policy_scenario = scenario_from_command(command, policy_alpasim_signal)
+        active_policy_scenario = scenario_at_tick(policy_scenario, 0)
+        selection_scenario = scenario_from_command(command, alpasim_signal)
+        active_selection_scenario = scenario_at_tick(selection_scenario, 0)
+        position = active_policy_scenario.start
+        policy_perception = perceive_scene(active_policy_scenario, position)
+        policy_world_state = update_world_state(active_policy_scenario, position, policy_perception)
+        selection_perception = perceive_scene(active_selection_scenario, position)
+        selection_world_state = update_world_state(active_selection_scenario, position, selection_perception)
 
-        features = _extract_features(world_state, perception, speed_mps)
+        features = _extract_features(policy_world_state, policy_perception, speed_mps)
         norm_features = ((features - self._feat_mean) / self._feat_std).astype(np.float32)
         with torch.no_grad():
             x = torch.from_numpy(norm_features).unsqueeze(0).to(self._device)
             logits = self._model(x).squeeze(0).detach().cpu().numpy()
 
-        heading = _planning_heading(position, world_state, perception, active_scenario, DEFAULT_SPOTLIGHT_CONFIG)
+        heading = _planning_heading(
+            position,
+            selection_world_state,
+            selection_perception,
+            active_selection_scenario,
+            DEFAULT_SPOTLIGHT_CONFIG,
+        )
         adapter_config = _adapter_spotlight_config(
             trajectory_mode=self._trajectory_mode,
             max_lateral_offset_m=self._max_lateral_offset_m,
@@ -260,17 +274,17 @@ class TokenBCAlpaSimModel(BaseTrajectoryModel):
             config=adapter_config,
         )
         spotlight_evaluations, reference_count = evaluate_maneuver_candidates(
-            active_scenario,
+            active_selection_scenario,
             position,
-            world_state,
-            perception,
+            selection_world_state,
+            selection_perception,
             speed_mps=speed_mps,
             config=adapter_config,
         )
         axis_signals = (
             _candidate_axis_signals(
                 spotlight_evaluations,
-                scenario=active_scenario,
+                scenario=active_selection_scenario,
                 position=position,
                 config=adapter_config,
             )
@@ -318,13 +332,15 @@ class TokenBCAlpaSimModel(BaseTrajectoryModel):
                         reverse=True,
                     )[:3]
                 ],
-                "obstacle_pressure": world_state.obstacle_pressure,
-                "route_blockage": world_state.route_blockage,
-                "corridor_blocked": world_state.corridor_blocked,
-                "left_clearance": world_state.left_clearance,
-                "right_clearance": world_state.right_clearance,
-                "preferred_escape_side": world_state.preferred_escape_side,
+                "obstacle_pressure": policy_world_state.obstacle_pressure,
+                "route_blockage": policy_world_state.route_blockage,
+                "corridor_blocked": policy_world_state.corridor_blocked,
+                "left_clearance": policy_world_state.left_clearance,
+                "right_clearance": policy_world_state.right_clearance,
+                "preferred_escape_side": policy_world_state.preferred_escape_side,
                 "alpasim_signal": alpasim_signal,
+                "policy_alpasim_signal": policy_alpasim_signal,
+                "actor_axis_policy_uses_oracle_actor_proxy": policy_alpasim_signal is alpasim_signal,
             },
             sort_keys=True,
         )
@@ -379,6 +395,9 @@ class TokenBCAlpaSimModel(BaseTrajectoryModel):
             "max_geometric_rank": selection_info["max_geometric_rank"],
             "veto_reason": selection_info["veto_reason"],
             "vetoed_tokens": selection_info["vetoed_tokens"],
+            "actor_route_guard_applied": selection_info.get("actor_route_guard_applied", False),
+            "actor_route_guard_previous_token": selection_info.get("actor_route_guard_previous_token"),
+            "actor_route_guard_reason": selection_info.get("actor_route_guard_reason"),
             "axis_signals": selection_info.get("axis_signals", {}),
             "hybrid_axis_scores": selection_info.get("hybrid_axis_scores", {}),
             "top_logits": _top_logits(logits, self._token_order),
@@ -866,7 +885,7 @@ def _select_actor_axis_constrained(
     veto_margin: float,
     max_geometric_rank: int,
 ) -> dict[str, Any]:
-    record = _select_axis_constrained(
+    base_record = _select_axis_constrained(
         token_order=token_order,
         raw_idx=raw_idx,
         topk_indices=topk_indices,
@@ -880,8 +899,7 @@ def _select_actor_axis_constrained(
         veto_margin=veto_margin,
         max_geometric_rank=max_geometric_rank,
     )
-    record["axis_signals"] = _selection_axis_signals(axis_signals)
-    record["hybrid_axis_scores"] = {
+    actor_axis_scores = {
         str(token_order[idx]): _actor_axis_score_summary(
             spotlight_eval_by_name[str(token_order[idx])],
             axis_signals.get(str(token_order[idx]), {}),
@@ -889,6 +907,93 @@ def _select_actor_axis_constrained(
         )
         for idx in topk_indices
     }
+    base_chosen_token = str(base_record["hybrid_token"])
+    if not _actor_axis_route_guard_required(base_chosen_token, axis_signals):
+        base_record["axis_signals"] = _selection_axis_signals(axis_signals)
+        base_record["hybrid_axis_scores"] = actor_axis_scores
+        base_record["actor_route_guard_applied"] = False
+        base_record["actor_route_guard_previous_token"] = base_chosen_token
+        base_record["actor_route_guard_reason"] = "not_required"
+        return base_record
+
+    stable_topk_indices, stable_vetoes = _actor_route_stable_candidates(
+        token_order=token_order,
+        candidate_indices=topk_indices,
+        spotlight_eval_by_name=spotlight_eval_by_name,
+        axis_signals=axis_signals,
+    )
+    used_fallback_geometric = False
+    if stable_topk_indices:
+        chosen_idx = int(
+            max(
+                stable_topk_indices,
+                key=lambda idx: _actor_route_stable_key(
+                    spotlight_eval_by_name[str(token_order[idx])],
+                    axis_signals[str(token_order[idx])],
+                    float(policy_log_probs[idx]),
+                ),
+            )
+        )
+        safe_indices = stable_topk_indices
+    else:
+        all_indices = [int(token_order.index(evaluation.candidate.name)) for evaluation in evaluations]
+        stable_all_indices, stable_all_vetoes = _actor_route_stable_candidates(
+            token_order=token_order,
+            candidate_indices=all_indices,
+            spotlight_eval_by_name=spotlight_eval_by_name,
+            axis_signals=axis_signals,
+        )
+        stable_vetoes.extend(stable_all_vetoes)
+        if stable_all_indices:
+            chosen_idx = int(
+                max(
+                    stable_all_indices,
+                    key=lambda idx: _actor_route_stable_key(
+                        spotlight_eval_by_name[str(token_order[idx])],
+                        axis_signals[str(token_order[idx])],
+                        float(policy_log_probs[idx]),
+                    ),
+                )
+            )
+            safe_indices = stable_all_indices
+            used_fallback_geometric = True
+        else:
+            base_record["axis_signals"] = _selection_axis_signals(axis_signals)
+            base_record["hybrid_axis_scores"] = actor_axis_scores
+            base_record["actor_route_guard_applied"] = False
+            base_record["actor_route_guard_previous_token"] = base_chosen_token
+            base_record["actor_route_guard_reason"] = "no_route_stable_actor_safe_candidate"
+            base_record["actor_route_guard_vetoed_tokens"] = stable_vetoes
+            return base_record
+
+    raw_token = str(token_order[raw_idx])
+    record = _selection_record(
+        token_order=token_order,
+        raw_idx=raw_idx,
+        chosen_idx=chosen_idx,
+        spotlight_token=spotlight_token,
+        topk_indices=topk_indices,
+        safe_topk_indices=safe_indices,
+        used_fallback_geometric=used_fallback_geometric,
+        dagger_argmax_vetoed=raw_idx not in safe_indices,
+        hybrid_policy_scores={str(token_order[idx]): round(float(policy_log_probs[idx]), 4) for idx in topk_indices},
+        hybrid_geometric_scores={
+            str(token_order[idx]): round(float(geometric_scores[str(token_order[idx])]), 4)
+            for idx in topk_indices
+        },
+        dagger_argmax_geo_gap=max(0.0, best_geometric_score - float(geometric_scores[raw_token])),
+        dagger_argmax_geo_rank=int(geometric_ranks.get(raw_token, len(evaluations) + 1)),
+        veto_margin=veto_margin,
+        max_geometric_rank=max_geometric_rank,
+        veto_reason="actor_route_guard" if raw_idx not in safe_indices else str(base_record["veto_reason"]),
+        vetoed_tokens=list(base_record["vetoed_tokens"]) + stable_vetoes,
+    )
+    record["axis_signals"] = _selection_axis_signals(axis_signals)
+    record["hybrid_axis_scores"] = actor_axis_scores
+    record["actor_route_guard_applied"] = str(token_order[chosen_idx]) != base_chosen_token
+    record["actor_route_guard_previous_token"] = base_chosen_token
+    record["actor_route_guard_reason"] = "prefer_route_stable_actor_safe_candidate"
+    record["actor_route_guard_vetoed_tokens"] = stable_vetoes
     return record
 
 
@@ -1064,6 +1169,66 @@ def _axis_constraint_violation(token: str, evaluation: Any | None) -> str | None
     return None
 
 
+def _actor_axis_route_guard_required(chosen_token: str, axis_signals: dict[str, dict[str, Any]]) -> bool:
+    if chosen_token in ROUTE_STABLE_TOKENS:
+        return False
+    return any(_axis_signal_float(signal, "actor_count") > 0.0 for signal in axis_signals.values())
+
+
+def _actor_route_stable_candidates(
+    *,
+    token_order: tuple[str, ...],
+    candidate_indices: list[int],
+    spotlight_eval_by_name: dict[str, Any],
+    axis_signals: dict[str, dict[str, Any]],
+) -> tuple[list[int], list[dict[str, Any]]]:
+    stable_indices: list[int] = []
+    vetoes: list[dict[str, Any]] = []
+    seen: set[int] = set()
+    for idx in candidate_indices:
+        if idx in seen:
+            continue
+        seen.add(idx)
+        token = str(token_order[idx])
+        reason = _actor_route_stable_violation(
+            token,
+            spotlight_eval_by_name.get(token),
+            axis_signals.get(token),
+        )
+        if reason is None:
+            stable_indices.append(idx)
+        else:
+            vetoes.append({"token": token, "reason": reason})
+    return stable_indices, vetoes
+
+
+def _actor_route_stable_violation(token: str, evaluation: Any | None, signal: dict[str, Any] | None) -> str | None:
+    if token not in ROUTE_STABLE_TOKENS:
+        return "lateral_route_risk"
+    if evaluation is None:
+        return "missing_evaluation"
+    if signal is None:
+        return "missing_axis_signal"
+    explanation = evaluation.explanation
+    if explanation.safety_penalty > 0.0:
+        return "unsafe_action"
+    if token == "stop" and explanation.stop_penalty > 0.0:
+        return "unnecessary_stop"
+    if _axis_signal_float(signal, "actor_action_clearance_m") < _axis_signal_float(
+        signal,
+        "actor_action_clearance_min_m",
+    ):
+        return "actor_action_clearance"
+    if _axis_signal_float(signal, "static_action_clearance_m") < _axis_signal_float(
+        signal,
+        "static_action_clearance_min_m",
+    ):
+        return "static_action_clearance"
+    if _axis_signal_float(signal, "lane_margin_m") < _axis_signal_float(signal, "lane_margin_min_m"):
+        return "lane_margin"
+    return None
+
+
 def _actor_axis_constraint_violation(token: str, evaluation: Any | None, signal: dict[str, Any] | None) -> str | None:
     if evaluation is None:
         return "missing_evaluation"
@@ -1092,6 +1257,27 @@ def _actor_axis_constraint_violation(token: str, evaluation: Any | None, signal:
     if token == "stop" and explanation.stop_penalty > 0.0:
         return "unnecessary_stop"
     return None
+
+
+def _actor_route_stable_key(evaluation: Any, signal: dict[str, Any], policy_log_prob: float) -> tuple[float, ...]:
+    score = evaluation.score
+    actor_action = _axis_signal_float(signal, "actor_action_clearance_m")
+    actor_horizon = _axis_signal_float(signal, "actor_horizon_clearance_m")
+    static_action = _axis_signal_float(signal, "static_action_clearance_m")
+    static_horizon = _axis_signal_float(signal, "static_horizon_clearance_m")
+    lane_margin = _axis_signal_float(signal, "lane_margin_m")
+    return (
+        1.0 if score.inside_5s_region else 0.0,
+        1.0 if score.inside_3s_region else 0.0,
+        _capped_clearance(lane_margin),
+        _capped_clearance(actor_action),
+        _capped_clearance(static_action),
+        _capped_clearance(actor_horizon),
+        _capped_clearance(static_horizon),
+        float(evaluation.explanation.progress_bonus),
+        float(evaluation.explanation.effective_score),
+        float(policy_log_prob),
+    )
 
 
 def _axis_lexicographic_key(evaluation: Any, policy_log_prob: float) -> tuple[float, ...]:
@@ -1144,6 +1330,8 @@ def _actor_axis_score_summary(evaluation: Any, signal: dict[str, Any], policy_lo
     return {
         "feasible": bool(axis_feasible),
         "actor_proxy_feasible": bool(actor_proxy_feasible),
+        "route_stable": bool(evaluation.candidate.name in ROUTE_STABLE_TOKENS),
+        "route_stable_actor_safe": _actor_route_stable_violation(evaluation.candidate.name, evaluation, signal) is None,
         "actor_clearance_key": _round_axis_value(key[9]),
         "static_clearance_key": _round_axis_value(key[11]),
         "lane_margin_key": _round_axis_value(key[13]),
