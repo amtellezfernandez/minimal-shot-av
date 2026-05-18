@@ -1,55 +1,71 @@
-## World-Frame Actor Probe and Actor-Axis Rerun
+## Matched Rear-Risk Actor-Axis Rerun
 
-The stale-frame-relative oracle result is superseded. The current paper uses a
-world-frame actor proxy: actors are stored in global coordinates and transformed into the
-current rollout ego frame at inference time.
+The stale-frame-relative oracle result is superseded. The current actor proxy stores
+actors in world coordinates and transforms them into the current rollout ego frame at
+inference time. The newest matched rerun uses the same 10 scenes and same launch path for
+the baseline and actor-axis model:
 
-Score-cutoff AlpaSim summaries on the matched 10-scene rerun:
+`runs/alpasim_rear_flow_actor_axis_10scene`
 
-| Variant | Collision | At-fault | Offroad | Wrong lane | Progress | Dist.-GT | Paired collision |
+Raw full-rollout summaries from `aggregate/metrics_unprocessed.parquet`:
+
+| Variant | Collision | Offroad | Wrong lane | Progress | Dist. (m) | Dist.-GT | Paired collision |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Axis-constrained clamped baseline | 0.700 | 0.000 | 0.100 | 0.200 | 0.218 | 0.904 | -- |
-| World-frame oracle + axis | 0.400 | 0.000 | 0.200 | 0.400 | 0.221 | 1.739 | better=3, worse=0, p=0.25 |
-| World-frame oracle + lexicographic | 0.500 | 0.000 | 0.200 | 0.400 | 0.282 | 1.966 | better=2, worse=0, p=0.50 |
-| Route-aware actor-axis proxy | 0.700 | 0.200 | 0.000 | 0.300 | 0.464 | 1.457 | better=1, worse=1, p=1.00 |
-| Time-swept actor-axis proxy | 0.600 | 0.000 | 0.000 | 0.300 | 0.445 | 1.074 | better=1, worse=0, p=1.00 |
+| Axis-constrained clamped baseline | 0.700 | 0.100 | 0.300 | 0.216 | 33.340 | 1.315 | -- |
+| Rear-risk actor-axis oracle proxy | 0.700 | 0.100 | 0.400 | 0.471 | 90.914 | 8.555 | better=0, worse=0 |
 
-Interpretation: world-frame oracle actors are a useful diagnostic for actor-incomplete
-proxy state, but not a population-level causal claim at n=10 and not a deployable method.
-The time-swept actor-axis proxy is an engineering improvement over the first actor-axis
-proxy, but collision improves by only one paired clip and wrong-lane regresses. Do not
-headline it as a positive external method before adding rear-risk and lane guards.
+Paired tests:
+
+| Axis | Delta | Paired test |
+| --- | ---: | --- |
+| raw_collision_any | +0.000 | n=10; McNemar p=n/a; better=0, worse=0 |
+| raw_offroad | +0.000 | n=10; McNemar p=n/a; better=0, worse=0 |
+| raw_wrong_lane | +0.100 | n=10; McNemar p=1.0000; better=1, worse=2 |
+| raw_progress | +0.255 | bootstrap95=[0.083, 0.444]; sign p=0.1094 |
+| raw_dist_traveled_m | +57.574 | bootstrap95=[15.491, 106.777]; sign p=0.1094 |
+| raw_dist_to_gt_trajectory | +7.240 | bootstrap95=[-0.881, 22.222]; sign p=0.7539 |
+
+Selector-log audit for the rear-risk actor-axis model:
+
+| Signal | Count |
+| --- | ---: |
+| Frames | 1990 |
+| Oracle proxy enabled | 1990 |
+| Oracle proxy hit | 1990 |
+| Frames with rear actor signal | 519 |
+| Frames with rear-flow risk | 312 |
+| Actor route guard applied | 878 |
+
+Interpretation: the actor-aware proxy is instrumented and active, but it is not a
+positive external method yet. It increases progress and distance travelled, but raw
+collision and offroad are unchanged and wrong-lane regresses. The deployable method claim
+should therefore be "inconclusive actor-axis proxy," not "actor-aware success."
 
 ## Metric Provenance Audit
 
 The earlier `0.67 -> 0.33` oracle-actor collision reduction was aggregate-filtered and
-only covered the first six completed scenes. It should not be the headline result.
-Full unprocessed traces are still useful for debugging, but paper claims now use
-score-cutoff summaries plus paired counts from the matched world-frame rerun.
+only covered the first six completed scenes. The previous score-cutoff world-frame oracle
+table also remains diagnostic, not a method result: score-cutoff aggregation can hide
+late raw incidents after AlpaSim applies collision/offroad or distance-to-ground-truth
+cutoffs. The paper now cites raw full-rollout metrics for the matched actor-axis method
+claim and keeps score-cutoff summaries only as provenance.
 
 ## Scene-3 Mechanism Vignette
 
-Scene 3 is the cleanest diagnostic example because actor-aware signals improve
-progress/route tracking while wrong-lane behavior remains unresolved.
+Scene 3 remains a clean diagnostic example: actor-aware signals improve route tracking
+and progress, but introduce wrong-lane behavior.
 
-| Variant | Collision | At-fault | Offroad | Wrong lane | Progress | Dist.-GT |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Axis-constrained clamped | 0 | 0 | 0 | 0 | 0.323 | 2.144 |
-| World-frame oracle + axis | 0 | 0 | 0 | 1 | 0.351 | 3.165 |
-| World-frame oracle + lexicographic | 0 | 0 | 0 | 1 | 0.554 | 3.609 |
-| Route-aware actor-axis proxy | 1 | 1 | 0 | 1 | 0.646 | 0.220 |
-| Time-swept actor-axis proxy | 0 | 0 | 0 | 1 | 0.754 | 0.219 |
-
-The route-aware actor-axis proxy turns this vignette into an at-fault collision; the
-time-swept proxy removes that collision but not the wrong-lane failure. This localizes
-the next method work to lane/offroad ranking plus rear-risk handling.
+| Variant | Collision | Offroad | Wrong lane | Progress | Dist.-GT |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Axis-constrained clamped | 0 | 0 | 0 | 0.185 | 0.791 |
+| Rear-risk actor-axis oracle proxy | 0 | 0 | 1 | 0.754 | 0.219 |
 
 ## Superseded Relative-Frame Oracle Result
 
 The previous relative-frame oracle table (`0.700 -> 0.600` raw collision) should be
 treated as superseded because actor hazards were projected into the source-rollout ego
-frame and then reused under different ego motion. The world-frame rerun above is the
-recoverable result to cite.
+frame and then reused under different ego motion. The matched rear-risk actor-axis rerun
+above is the recoverable method result to cite.
 
 ## Pre-Oracle Learned-Policy Matrix
 

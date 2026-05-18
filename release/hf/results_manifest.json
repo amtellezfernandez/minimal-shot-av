@@ -59,7 +59,17 @@
     {
       "hf_path": "results/alpasim_actor_axis_worldframe_10scene_summary.json",
       "local_path": "artifacts/alpasim_actor_axis_worldframe_10scene_summary.json",
-      "description": "Compact 10-scene AlpaSim evidence artifact covering matched baseline, world-frame oracle actor proxy, route-axis proxy, and time-swept actor-axis proxy metrics."
+      "description": "Superseded diagnostic 10-scene AlpaSim artifact covering matched baseline, world-frame oracle actor proxy, and legacy actor-axis proxy metrics."
+    },
+    {
+      "hf_path": "results/alpasim_rear_flow_actor_axis_10scene_analysis.json",
+      "local_path": "artifacts/alpasim_rear_flow_actor_axis_10scene_analysis.json",
+      "description": "Matched raw 10-scene AlpaSim rear-risk actor-axis analysis showing full oracle-proxy coverage, unchanged collision/offroad, worse wrong-lane, and higher progress."
+    },
+    {
+      "hf_path": "results/alpasim_rear_flow_actor_axis_10scene_analysis.md",
+      "local_path": "artifacts/alpasim_rear_flow_actor_axis_10scene_analysis.md",
+      "description": "Human-readable paired summary for the matched raw 10-scene rear-risk actor-axis AlpaSim rerun."
     },
     {
       "hf_path": "results/alpasim_oracle_actor_proxy_10scene.json",
@@ -69,17 +79,17 @@
     {
       "hf_path": "paper/corl2027/paper.pdf",
       "local_path": "docs/corl2027/paper.pdf",
-      "description": "Current CoRL manuscript PDF aligned with the world-frame AlpaSim actor-proxy evidence."
+      "description": "Current CoRL manuscript PDF aligned with the matched raw rear-risk actor-axis AlpaSim evidence."
     },
     {
       "hf_path": "paper/corl2027/paper.tex",
       "local_path": "docs/corl2027/paper.tex",
-      "description": "Current CoRL manuscript source aligned with the world-frame AlpaSim actor-proxy evidence."
+      "description": "Current CoRL manuscript source aligned with the matched raw rear-risk actor-axis AlpaSim evidence."
     },
     {
       "hf_path": "paper/corl2027/alpasim_matrix10_with_axis_analysis.md",
       "local_path": "docs/corl2027/results/alpasim_matrix10_with_axis_analysis.md",
-      "description": "Reviewer-facing AlpaSim metric provenance and world-frame actor-axis rerun note."
+      "description": "Reviewer-facing AlpaSim metric provenance and matched raw rear-risk actor-axis rerun note."
     },
     {
       "hf_path": "scene_presets/fresh_3scene.yaml",
