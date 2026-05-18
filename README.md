@@ -189,14 +189,16 @@ extracts privileged world-frame actor poses from AlpaSim ASL logs, and the
 `token_dagger_iter2_axis_constrained_oracle_actor_clamped` preset injects them into the
 same learned selector for a controlled oracle-proxy ablation
 ([commands](docs/notes/alpasim-integration.md#oracle-actor-proxy-ablation)).
-The latest matched raw rerun is diagnostic, not a finished method: the rear-risk
-actor-axis oracle proxy has full timestamp coverage (`1990/1990` proxy hits) and activates
-rear-flow risk on `312/1990` frames, but raw collision stays `0.70 -> 0.70`, offroad stays
-`0.10 -> 0.10`, wrong-lane worsens `0.30 -> 0.40`, and progress improves
-`0.216 -> 0.471`. Scene 3 is the mechanism example: actor-aware signals improve
-progress/route tracking while introducing wrong-lane behavior, so the remaining bottleneck
-is lane/offroad ranking and candidate/controller calibration rather than missing proxy
-instrumentation.
+Do not conflate the actor-aware numbers: the `0.70 -> 0.40` collision reduction is a
+score-cutoff world-frame oracle diagnostic, the same oracle weakens to `0.70 -> 0.60`
+under raw full-rollout evaluation, and the deployable rear-risk actor-axis method is the
+latest same-pass raw result. That method has full timestamp coverage (`1990/1990` proxy
+hits) and activates rear-flow risk on `312/1990` frames, but raw collision stays
+`0.70 -> 0.70`, offroad stays `0.10 -> 0.10`, wrong-lane worsens `0.30 -> 0.40`, and
+progress improves `0.216 -> 0.471`. Scene 3 is the mechanism example: actor-aware signals
+improve progress/route tracking while introducing wrong-lane behavior, so the remaining
+bottleneck is lane/offroad ranking and candidate/controller calibration rather than
+missing proxy instrumentation.
 
 This table evaluates learned-policy transfer variants. It should be read as the
 transfer-diagnostic extension rather than a replacement for the original Spotlight

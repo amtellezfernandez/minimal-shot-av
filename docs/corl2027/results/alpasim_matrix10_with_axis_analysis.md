@@ -7,6 +7,18 @@ the baseline and actor-axis model:
 
 `runs/alpasim_rear_flow_actor_axis_10scene`
 
+Evidence hierarchy:
+
+| Number | Probe / method | Metric view | Allowed claim |
+| --- | --- | --- | --- |
+| `0.700 -> 0.400` | World-frame oracle actor probe | Score cutoff | Actor visibility affects cutoff-era collision accounting; diagnostic only. |
+| `0.700 -> 0.600` | World-frame oracle actor probe | Raw full rollout | The oracle effect weakens to one paired raw improvement; inconclusive at `n=10`. |
+| `0.700 -> 0.700` | Rear-risk actor-axis method | Same-pass raw full rollout | Deployable actor-axis proxy is active but not collision-positive. |
+
+These rows answer different questions and must not be compared as repeated measurements
+of one intervention. The first two rows are oracle-probe provenance. The third row is the
+only deployable actor-axis method result.
+
 Raw full-rollout summaries from `aggregate/metrics_unprocessed.parquet`:
 
 | Variant | Collision | Offroad | Wrong lane | Progress | Dist. (m) | Dist.-GT | Paired collision |
@@ -62,10 +74,10 @@ and progress, but introduce wrong-lane behavior.
 
 ## Superseded Relative-Frame Oracle Result
 
-The previous relative-frame oracle table (`0.700 -> 0.600` raw collision) should be
-treated as superseded because actor hazards were projected into the source-rollout ego
-frame and then reused under different ego motion. The matched rear-risk actor-axis rerun
-above is the recoverable method result to cite.
+A still earlier relative-frame oracle table also reported `0.700 -> 0.600` raw collision,
+but it is not part of the hierarchy above: actor hazards were projected into the
+source-rollout ego frame and then reused under different ego motion. The matched
+rear-risk actor-axis rerun above is the recoverable method result to cite.
 
 ## Pre-Oracle Learned-Policy Matrix
 

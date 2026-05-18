@@ -278,12 +278,15 @@ Interpretation rule: first verify proxy hit rate from `driver/selection-log.json
 If hit rate is low, the run is an instrumentation failure. If hit rate is high and
 collision is unchanged, the bottleneck shifts from proxy reconstruction to the
 candidate/controller interface. If collision falls but offroad or wrong-lane regresses,
-treat the result as diagnostic only. The latest matched raw rear-risk actor-axis rerun
-has full proxy hit rate (`1990/1990`) and active rear-flow gating (`312/1990` risk
-frames), but leaves collision unchanged (`0.70 -> 0.70`), leaves offroad unchanged
-(`0.10 -> 0.10`), worsens wrong-lane (`0.30 -> 0.40`), and improves progress
-(`0.216 -> 0.471`). The next method target is stricter lane/offroad ranking plus
-candidate/controller calibration under explicit actor cues.
+treat the result as diagnostic only. Keep the metric hierarchy explicit: `0.70 -> 0.40`
+is the score-cutoff world-frame oracle diagnostic, `0.70 -> 0.60` is the raw full-rollout
+world-frame oracle diagnostic, and `0.70 -> 0.70` is the latest same-pass raw rear-risk
+actor-axis method result. That actor-axis rerun has full proxy hit rate (`1990/1990`) and
+active rear-flow gating (`312/1990` risk frames), leaves collision unchanged
+(`0.70 -> 0.70`), leaves offroad unchanged (`0.10 -> 0.10`), worsens wrong-lane
+(`0.30 -> 0.40`), and improves progress (`0.216 -> 0.471`). The next method target is
+stricter lane/offroad ranking plus candidate/controller calibration under explicit actor
+cues.
 
 ## One-Command Local Launch
 

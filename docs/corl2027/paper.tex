@@ -48,10 +48,11 @@ Waymo AlpaSim validation shows the same multi-axis structure externally. In the 
 10-clip matrix, clamping repairs offroad/wrong-lane behavior while increasing collision,
 hard vetoing repairs progress/offroad while vetoing 1987/1990 DAgger argmax decisions,
 and source decay helps wrong-lane behavior without repairing offroad or collision. Actor
-completion is not yet a positive method: a world-frame oracle is diagnostic under
-score-cutoff aggregation, but the latest matched raw rear-risk actor-axis rerun leaves
-collision unchanged at 0.700 while increasing progress from 0.216 to 0.471 and worsening
-wrong-lane from 0.300 to 0.400. These non-co-monotone
+completion is not yet a positive method: the apparent 0.700 to 0.400 collision reduction
+is a score-cutoff world-frame oracle diagnostic, weakens to 0.700 to 0.600 under raw
+full-rollout oracle evaluation, and the latest same-pass raw rear-risk actor-axis method
+leaves collision unchanged at 0.700 while increasing progress from 0.216 to 0.471 and
+worsening wrong-lane from 0.300 to 0.400. These non-co-monotone
 interventions show that simulator transfer error decomposes into separate axes of
 geometry, safety, progress, and lane adherence rather than a single scalar robustness
 deficit. This identifies a narrower grounding issue: making the state representation more
@@ -735,7 +736,7 @@ Token-DAgger (source decay) & 0.600 & 0.900 & 0.400 & 0.175 & 62.92 & 27.16 \\
 full-rollout summaries. $\Delta$ collision is the paired better/worse count against the
 same-pass axis-constrained baseline. The actor-axis proxy has full oracle-proxy timestamp
 coverage (1990/1990 frames) but remains an inconclusive external method.}
-\label{tab:alpasim_oracle_actor}
+\label{tab:alpasim_actor_axis_method}
 \scriptsize
 \begin{tabular}{lrrrrrrr}
 \toprule
@@ -743,6 +744,27 @@ Policy & Collision & Offroad & Wrong lane & Progress & Dist. (m) & Dist.-GT & $\
 \midrule
 Axis-constrained clamped (matched) & 0.700 & 0.100 & 0.300 & 0.216 & 33.34 & 1.31 & -- \\
 Rear-risk actor-axis oracle proxy & 0.700 & 0.100 & 0.400 & 0.471 & 90.91 & 8.55 & 0/0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Metric provenance for the three actor-aware AlpaSim numbers. The rows answer
+different questions and must not be read as repeated measurements of one intervention.
+Only the same-pass raw rear-risk actor-axis row is a deployable-method result.}
+\label{tab:alpasim_actor_provenance}
+\scriptsize
+\begin{tabular}{@{}p{0.18\linewidth}p{0.15\linewidth}p{0.17\linewidth}p{0.40\linewidth}@{}}
+\toprule
+Probe & Metric view & Collision & Allowed claim \\
+\midrule
+World-frame oracle & Score cutoff & 0.700 $\rightarrow$ 0.400 &
+Actor visibility affects cutoff-era collision accounting; diagnostic only. \\
+World-frame oracle & Raw full rollout & 0.700 $\rightarrow$ 0.600 &
+The oracle effect weakens to one paired raw improvement; inconclusive at $n=10$. \\
+Rear-risk actor-axis method & Same-pass raw & 0.700 $\rightarrow$ 0.700 &
+Deployable actor-axis proxy is active but not collision-positive. \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -779,16 +801,18 @@ fully recovered from candidates scored against an actor-incomplete proxy state.
 
 The world-frame actor-proxy probe fixes the earlier stale-frame oracle confound by storing
 actors in world coordinates and transforming them into the current rollout ego frame at
-inference time. In score-cutoff aggregation it suggests an actor-visibility mechanism, but
-the method claim must use the stricter same-pass raw rerun in
-Table~\ref{tab:alpasim_oracle_actor}. In that rerun the oracle proxy hits every frame
-(1990/1990), and rear-flow risk is active on 312/1990 frames, yet actor-axis selection
-does not change raw collision rate: 0.700 to 0.700, with zero paired improvements and zero
-paired regressions. It also leaves offroad unchanged at 0.100, worsens wrong-lane from
-0.300 to 0.400, and increases mean distance-to-ground-truth from 1.31~m to 8.55~m. The
-one robust positive signal is progress, which increases from 0.216 to 0.471
-(bootstrap 95\% CI [0.083, 0.444] for the paired mean delta). This is useful mechanism
-evidence, but it is not a deployable actor-aware method.
+inference time. Table~\ref{tab:alpasim_actor_provenance} separates its two diagnostic
+metric views from the deployable actor-axis method. The 0.700 to 0.400 number is a
+score-cutoff oracle result, not a method result; under raw full-rollout evaluation the
+same world-frame oracle weakens to 0.700 to 0.600. The method claim must therefore use the
+stricter same-pass raw rerun in Table~\ref{tab:alpasim_actor_axis_method}. In that rerun
+the oracle proxy hits every frame (1990/1990), and rear-flow risk is active on 312/1990
+frames, yet actor-axis selection does not change raw collision rate: 0.700 to 0.700, with
+zero paired improvements and zero paired regressions. It also leaves offroad unchanged at
+0.100, worsens wrong-lane from 0.300 to 0.400, and increases mean distance-to-ground-truth
+from 1.31~m to 8.55~m. The one robust positive signal is progress, which increases from
+0.216 to 0.471 (bootstrap 95\% CI [0.083, 0.444] for the paired mean delta). This is
+useful mechanism evidence, but it is not a deployable actor-aware method.
 
 \begin{table}[t]
 \centering
