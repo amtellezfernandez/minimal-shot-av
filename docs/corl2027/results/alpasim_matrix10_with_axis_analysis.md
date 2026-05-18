@@ -1,51 +1,55 @@
+## World-Frame Actor Probe and Actor-Axis Rerun
+
+The stale-frame-relative oracle result is superseded. The current paper uses a
+world-frame actor proxy: actors are stored in global coordinates and transformed into the
+current rollout ego frame at inference time.
+
+Score-cutoff AlpaSim summaries on the matched 10-scene rerun:
+
+| Variant | Collision | At-fault | Offroad | Wrong lane | Progress | Dist.-GT | Paired collision |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Axis-constrained clamped baseline | 0.700 | 0.000 | 0.100 | 0.200 | 0.218 | 0.904 | -- |
+| World-frame oracle + axis | 0.400 | 0.000 | 0.200 | 0.400 | 0.221 | 1.739 | better=3, worse=0, p=0.25 |
+| World-frame oracle + lexicographic | 0.500 | 0.000 | 0.200 | 0.400 | 0.282 | 1.966 | better=2, worse=0, p=0.50 |
+| Route-aware actor-axis proxy | 0.700 | 0.200 | 0.000 | 0.300 | 0.464 | 1.457 | better=1, worse=1, p=1.00 |
+| Time-swept actor-axis proxy | 0.600 | 0.000 | 0.000 | 0.300 | 0.445 | 1.074 | better=1, worse=0, p=1.00 |
+
+Interpretation: world-frame oracle actors are a useful diagnostic for actor-incomplete
+proxy state, but not a population-level causal claim at n=10 and not a deployable method.
+The time-swept actor-axis proxy is an engineering improvement over the first actor-axis
+proxy, but collision improves by only one paired clip and wrong-lane regresses. Do not
+headline it as a positive external method before adding rear-risk and lane guards.
+
 ## Metric Provenance Audit
 
-The earlier `0.67 -> 0.33` oracle-actor collision reduction was **aggregate-filtered** and
+The earlier `0.67 -> 0.33` oracle-actor collision reduction was aggregate-filtered and
 only covered the first six completed scenes. It should not be the headline result.
+Full unprocessed traces are still useful for debugging, but paper claims now use
+score-cutoff summaries plus paired counts from the matched world-frame rerun.
 
-| Subset / metric source | Axis-constrained clamped collision | Oracle-actor collision | Interpretation |
-| --- | ---: | ---: | --- |
-| First 6 scenes, aggregate-filtered `metrics_results.txt` | 0.667 | 0.333 | Diagnostic live read; filtered after incident/cutoff events. |
-| First 6 scenes, raw `metrics_unprocessed.parquet` | 0.667 | 0.500 | Same scene subset without AlpaSim post-filtering. |
-| Full 10 scenes, aggregate-filtered `metrics_results.txt` | 0.700 | 0.400 | Useful secondary view, but filtered/truncated. |
-| Full 10 scenes, raw `metrics_unprocessed.parquet` | 0.700 | 0.600 | Headline result for paper tables. |
+## Scene-3 Mechanism Vignette
 
-Use raw per-scene outcomes for main claims. Aggregate-filtered metrics can be reported as
-a secondary AlpaSim scoring view, but they should not carry the causal claim.
+Scene 3 is the cleanest diagnostic example because actor-aware signals improve
+progress/route tracking while wrong-lane behavior remains unresolved.
 
-## Scene-3 Mechanism First
+| Variant | Collision | At-fault | Offroad | Wrong lane | Progress | Dist.-GT |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Axis-constrained clamped | 0 | 0 | 0 | 0 | 0.323 | 2.144 |
+| World-frame oracle + axis | 0 | 0 | 0 | 1 | 0.351 | 3.165 |
+| World-frame oracle + lexicographic | 0 | 0 | 0 | 1 | 0.554 | 3.609 |
+| Route-aware actor-axis proxy | 1 | 1 | 0 | 1 | 0.646 | 0.220 |
+| Time-swept actor-axis proxy | 0 | 0 | 0 | 1 | 0.754 | 0.219 |
 
-Scene 3 is the cleanest diagnostic example because actor-aware ranking changes the
-selected tokens while producing almost no actor-veto pressure. Wrong-lane failure
-therefore persists **inside the admissible set**, not because the actor veto is too
-conservative.
+The route-aware actor-axis proxy turns this vignette into an at-fault collision; the
+time-swept proxy removes that collision but not the wrong-lane failure. This localizes
+the next method work to lane/offroad ranking plus rear-risk handling.
 
-| Variant | Collision | Offroad | Wrong lane | Progress | Dist. (m) | Dist.-GT | Veto frames | Decision summary |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Axis-constrained clamped | 0 | 0 | 0 | 0.323 | 55.225 | 2.144 | n/a | baseline proxy, no oracle actors |
-| Oracle actor + axis selector | 0 | 0 | 1 | 0.350 | 59.947 | 2.522 | 2/199 | 157 agreement, 40 DAgger wins, 2 fallback |
-| Oracle actor + lexicographic selector | 0 | 0 | 1 | 0.491 | 84.393 | 2.031 | 3/199 | 162 Spotlight wins, 17 DAgger wins, 3 fallback |
+## Superseded Relative-Frame Oracle Result
 
-The mechanism is sharper than the aggregate table: privileged actors are present, but the
-lane error remains with only 2-3 actor-veto frames out of 199. This localizes the next
-bottleneck to missing lane/offroad observability in the ranking features rather than to
-over-conservative actor suppression.
-
-## Oracle Actor Proxy, Full 10 Raw Scenes
-
-| Model | N | Collision | Offroad | Wrong lane | Progress | Dist. (m) | Dist.-GT |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| axis_constrained_clamped | 10 | 0.700 | 0.200 | 0.200 | 0.358 | 54.802 | 2.252 |
-| oracle_actor_axis | 10 | 0.600 | 0.300 | 0.500 | 0.289 | 46.233 | 4.596 |
-| oracle_actor_lexicographic | 10 | 0.600 | 0.200 | 0.500 | 0.352 | 54.965 | 3.241 |
-
-Oracle actors modestly reduce raw collision (`0.700 -> 0.600`), which is one fewer
-collision in the 10 paired clips or a 0.10 absolute raw reduction. They also worsen
-wrong-lane behavior (`0.200 -> 0.500`). Lexicographic reordering restores offroad and
-most progress relative to the axis oracle, but it does not solve wrong-lane. The correct
-claim is therefore not "oracle actors solve AlpaSim transfer"; it is that actor-complete
-proxy state affects a measured subset of the collision surface while exposing a separate
-lane-ranking bottleneck.
+The previous relative-frame oracle table (`0.700 -> 0.600` raw collision) should be
+treated as superseded because actor hazards were projected into the source-rollout ego
+frame and then reused under different ego motion. The world-frame rerun above is the
+recoverable result to cite.
 
 ## Pre-Oracle Learned-Policy Matrix
 

@@ -183,18 +183,20 @@ hard-veto AlpaSim runs both saw `0/1990` structured-hazard frames, so collision 
 are upstream of token ranking and require actor-aware proxy reconstruction rather than a
 stronger veto threshold
 ([audit](docs/corl2027/results/alpasim_proxy_visibility_audit.md)).
-The repo now includes the falsification gate for that diagnosis:
+The repo now includes the oracle-proxy probe for that diagnosis:
 [`scripts/build_alpasim_oracle_actor_proxy.py`](scripts/build_alpasim_oracle_actor_proxy.py)
-extracts privileged actor poses from AlpaSim ASL logs, and the
+extracts privileged world-frame actor poses from AlpaSim ASL logs, and the
 `token_dagger_iter2_axis_constrained_oracle_actor_clamped` preset injects them into the
 same learned selector for a controlled oracle-proxy ablation
 ([commands](docs/notes/alpasim-integration.md#oracle-actor-proxy-ablation)).
-The provenance audit matters: an early `0.67 -> 0.33` collision reduction came from
-aggregate-filtered metrics on the first six scenes. The raw full-10 headline is more
-conservative: oracle actors move collision from `0.70 -> 0.60` while worsening wrong-lane
-from `0.20 -> 0.50`. Scene 3 is the mechanism example: wrong-lane persists with only
-`2-3/199` actor-veto frames, localizing the remaining bottleneck to lane/offroad ranking
-features rather than an over-conservative actor veto.
+The matched world-frame rerun is diagnostic, not a finished method: oracle actors move
+score-cutoff collision from `0.70 -> 0.40` with 3 paired improvements and 0 regressions,
+but worsen offroad and wrong-lane. The deployable time-swept actor-axis proxy is weaker:
+collision moves only `0.70 -> 0.60`, offroad improves `0.10 -> 0.00`, wrong-lane worsens
+`0.20 -> 0.30`, and progress improves `0.218 -> 0.445`. Scene 3 is the mechanism
+example: actor-aware signals improve progress/route tracking, but wrong-lane persists,
+so the remaining bottleneck is lane/offroad ranking plus rear-risk handling rather than
+an over-conservative actor veto.
 
 This table evaluates learned-policy transfer variants. It should be read as the
 transfer-diagnostic extension rather than a replacement for the original Spotlight

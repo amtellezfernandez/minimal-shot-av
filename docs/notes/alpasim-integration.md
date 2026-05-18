@@ -223,11 +223,12 @@ That wrapper does all repo-side setup in order:
 
 ## Oracle Actor-Proxy Ablation
 
-The CoRL diagnostic localizes AlpaSim collision failures to an actor-incomplete
-proxy state: the selector logs can show route geometry while seeing no structured
-dynamic actors. The falsification gate is an oracle actor-proxy ablation: keep the
-learned checkpoint, token library, clamped trajectories, and axis-constrained
-selector fixed, but inject actor poses reconstructed from AlpaSim ASL logs.
+The CoRL diagnostic localizes part of the AlpaSim collision surface to an
+actor-incomplete proxy state: the selector logs can show route geometry while seeing no
+structured dynamic actors. The oracle actor-proxy ablation is a diagnostic probe, not a
+pass/fail gate: keep the learned checkpoint, token library, clamped trajectories, and
+axis-constrained selector fixed, but inject actor poses reconstructed from AlpaSim ASL
+logs.
 
 Build the proxy from an existing matched scene batch:
 
@@ -239,9 +240,10 @@ PYTHONPATH=alpasim/src/grpc:alpasim/src/utils \
   --max-actors-per-frame 16
 ```
 
-The builder reads `rollout.asl` files, projects non-ego actor poses into the ego
-frame, estimates relative velocity, and writes timestamp-keyed hazards. The adapter
-matches those timestamps at inference time and logs:
+The builder reads `rollout.asl` files, stores non-ego actor poses in world coordinates,
+estimates world-frame velocity, and writes timestamp-keyed hazards. The adapter matches
+those timestamps at inference time, transforms actors into the current rollout ego frame,
+and logs:
 
 - `oracle_actor_proxy_hit`
 - `oracle_actor_proxy_count`
@@ -275,9 +277,11 @@ ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/run_alpasim_scene_b
 Interpretation rule: first verify proxy hit rate from `driver/selection-log.jsonl`.
 If hit rate is low, the run is an instrumentation failure. If hit rate is high and
 collision is unchanged, the bottleneck shifts from proxy reconstruction to the
-candidate/controller interface. If collision falls while offroad and wrong-lane stay
-controlled, the actor-incomplete proxy diagnosis passes and the next method target is
-a learned actor-aware proxy.
+candidate/controller interface. If collision falls but offroad or wrong-lane regresses,
+treat the result as diagnostic only. The matched world-frame rerun currently reduces
+score-cutoff collision from `0.70 -> 0.40` for the oracle-axis probe, but the deployable
+time-swept actor-axis proxy only reaches `0.70 -> 0.60` and worsens wrong-lane. The next
+method target is rear-risk handling plus stricter lane/offroad ranking.
 
 ## One-Command Local Launch
 
