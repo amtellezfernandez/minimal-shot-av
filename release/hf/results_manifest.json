@@ -1,5 +1,5 @@
 {
-  "repo_commit": "567c5e2fd0e6aad16e7a109abcc6f5785e5dcfca",
+  "repo_commit": "a88bc532e08eb2d567c5fd4bd5bbb24a42c500b9",
   "results": [
     {
       "hf_path": "results/bc_vs_spotlight.json",
@@ -55,6 +55,16 @@
       "hf_path": "results/alpasim_hardveto_diagnostic.json",
       "local_path": "artifacts/alpasim_hardveto_diagnostic.json",
       "description": "Two-scene AlpaSim hard-veto diagnostic showing that geometric suppression rejects nearly all DAgger argmax decisions under proxy-state reconstruction."
+    },
+    {
+      "hf_path": "results/alpasim_actor_axis_worldframe_10scene_summary.json",
+      "local_path": "artifacts/alpasim_actor_axis_worldframe_10scene_summary.json",
+      "description": "Compact 10-scene AlpaSim evidence artifact covering matched baseline, world-frame oracle actor proxy, route-axis proxy, and time-swept actor-axis proxy metrics."
+    },
+    {
+      "hf_path": "results/alpasim_oracle_actor_proxy_10scene.json",
+      "local_path": "artifacts/alpasim_oracle_actor_proxy_10scene.json",
+      "description": "World-frame 10-scene oracle actor proxy used by the AlpaSim oracle and actor-axis reruns."
     },
     {
       "hf_path": "scene_presets/fresh_3scene.yaml",
