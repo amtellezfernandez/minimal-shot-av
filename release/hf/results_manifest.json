@@ -1,5 +1,5 @@
 {
-  "repo_commit": "a88bc532e08eb2d567c5fd4bd5bbb24a42c500b9",
+  "repo_commit": "09d87c9662f69e91427db66f35eeea6feaf88b8e",
   "results": [
     {
       "hf_path": "results/bc_vs_spotlight.json",
@@ -65,6 +65,21 @@
       "hf_path": "results/alpasim_oracle_actor_proxy_10scene.json",
       "local_path": "artifacts/alpasim_oracle_actor_proxy_10scene.json",
       "description": "World-frame 10-scene oracle actor proxy used by the AlpaSim oracle and actor-axis reruns."
+    },
+    {
+      "hf_path": "paper/corl2027/paper.pdf",
+      "local_path": "docs/corl2027/paper.pdf",
+      "description": "Current CoRL manuscript PDF aligned with the world-frame AlpaSim actor-proxy evidence."
+    },
+    {
+      "hf_path": "paper/corl2027/paper.tex",
+      "local_path": "docs/corl2027/paper.tex",
+      "description": "Current CoRL manuscript source aligned with the world-frame AlpaSim actor-proxy evidence."
+    },
+    {
+      "hf_path": "paper/corl2027/alpasim_matrix10_with_axis_analysis.md",
+      "local_path": "docs/corl2027/results/alpasim_matrix10_with_axis_analysis.md",
+      "description": "Reviewer-facing AlpaSim metric provenance and world-frame actor-axis rerun note."
     },
     {
       "hf_path": "scene_presets/fresh_3scene.yaml",
