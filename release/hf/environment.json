@@ -4,5 +4,5 @@
   "torch": "2.11.0+cu129",
   "cuda_available": true,
   "cuda_version": "12.9",
-  "git_commit": "09d87c9662f69e91427db66f35eeea6feaf88b8e"
+  "git_commit": "780f30b43923bb8d6d30f3ea6fcfb38dfb0f4058"
 }
