@@ -24,9 +24,17 @@ from minimal_shot_av.simulator.alpasim_token_bc import (
     TOKEN_ORDER,
     TokenBCAlpaSimModel,
     _GeomMLP,
+    _actor_axis_route_guard_required,
+    _actor_route_stable_violation,
+    _adapter_spotlight_config,
+    _candidate_axis_signals,
     _prediction_ego_pose_world,
     _prediction_timestamp_us,
 )
+from minimal_shot_av.simulator.environment import scenario_at_tick
+from minimal_shot_av.simulator.perception import perceive_scene
+from minimal_shot_av.simulator.spotlight_reflex import evaluate_maneuver_candidates
+from minimal_shot_av.simulator.world_model import update_world_state
 
 
 class AlpaSimIntegrationTests(unittest.TestCase):
@@ -783,13 +791,83 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertIn("route_deviation_m", trace["axis_signals"]["maintain"])
         self.assertIn("route_final_deviation_m", trace["axis_signals"]["maintain"])
         self.assertIn("route_recovery_m", trace["axis_signals"]["maintain"])
+        self.assertIn("rear_flow_ttc_s", trace["axis_signals"]["maintain"])
+        self.assertIn("candidate_mean_forward_speed_mps", trace["axis_signals"]["maintain"])
         self.assertIn("hybrid_axis_scores", trace)
         self.assertIn("route_stable_actor_safe", trace["hybrid_axis_scores"]["maintain"])
+        self.assertIn("rear_flow_safe", trace["hybrid_axis_scores"]["maintain"])
         self.assertEqual("time_swept", trace["hybrid_axis_scores"]["maintain"]["actor_forecast_mode"])
         self.assertIn("route_deviation_m", trace["hybrid_axis_scores"]["maintain"])
         self.assertEqual(1, len(records))
         self.assertIn("axis_signals", records[0])
         self.assertIn("actor_route_guard_applied", records[0])
+
+    def test_actor_axis_rear_flow_signal_vetoes_slow_candidate_under_closing_rear_actor(self) -> None:
+        signal = extract_alpasim_signal(
+            SimpleNamespace(
+                camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                speed=6.0,
+                acceleration=0.0,
+                ego_pose_history=[],
+                route_waypoints=[
+                    {"x": 0.0, "y": 0.0, "z": 0.0},
+                    {"x": 30.0, "y": 0.0, "z": 0.0},
+                    {"x": 60.0, "y": 0.0, "z": 0.0},
+                ],
+                traffic_hazards=[
+                    {
+                        "x": -10.5,
+                        "y": 0.1,
+                        "radius": 1.0,
+                        "length": 4.0,
+                        "kind": "vehicle",
+                        "label": "rear_closing_vehicle",
+                        "vx": 0.0,
+                        "vy": 0.0,
+                    }
+                ],
+            )
+        )
+        scenario = scenario_at_tick(scenario_from_command("straight", signal), 0)
+        position = scenario.start
+        perception = perceive_scene(scenario, position)
+        world_state = update_world_state(scenario, position, perception)
+        config = _adapter_spotlight_config(
+            trajectory_mode="clamped_lateral",
+            max_lateral_offset_m=2.0,
+            selection_mode="actor_axis_constrained",
+        )
+        evaluations, _ = evaluate_maneuver_candidates(
+            scenario,
+            position,
+            world_state,
+            perception,
+            speed_mps=6.0,
+            config=config,
+        )
+        signals = _candidate_axis_signals(
+            evaluations,
+            scenario=scenario,
+            position=position,
+            speed_mps=6.0,
+            config=config,
+        )
+        evaluations_by_name = {evaluation.candidate.name: evaluation for evaluation in evaluations}
+
+        self.assertTrue(signals["stop"]["rear_flow_risk"])
+        self.assertTrue(signals["crawl"]["rear_flow_risk"])
+        self.assertFalse(signals["maintain"]["rear_flow_risk"])
+        self.assertEqual(
+            "rear_flow_risk",
+            _actor_route_stable_violation("stop", evaluations_by_name["stop"], signals["stop"]),
+        )
+        self.assertEqual(
+            "rear_flow_risk",
+            _actor_route_stable_violation("crawl", evaluations_by_name["crawl"], signals["crawl"]),
+        )
+        self.assertIsNone(_actor_route_stable_violation("maintain", evaluations_by_name["maintain"], signals["maintain"]))
+        self.assertTrue(_actor_axis_route_guard_required("stop", evaluations_by_name, signals))
+        self.assertFalse(_actor_axis_route_guard_required("maintain", evaluations_by_name, signals))
 
     def test_token_bc_alpasim_adapter_injects_oracle_actor_proxy_by_timestamp(self) -> None:
         with TemporaryDirectory() as tmp:

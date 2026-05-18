@@ -43,6 +43,12 @@ DROPOUT = 0.15
 TRAJECTORY_MODES = ("token", "longitudinal_only", "clamped_lateral")
 SELECTION_MODES = ("argmax", "hybrid_veto", "axis_constrained", "axis_lexicographic", "actor_axis_constrained")
 ACTOR_AXIS_CLEARANCE_CAP_M = 12.0
+REAR_FLOW_TTC_THRESHOLD_S = 3.0
+REAR_FLOW_MAX_REAR_GAP_M = 18.0
+REAR_FLOW_MIN_CLOSING_MPS = 0.5
+REAR_FLOW_MIN_EGO_SPEED_MPS = 2.0
+REAR_FLOW_LATERAL_GATE_M = 3.0
+REAR_FLOW_REQUIRED_SPEED_FRACTION = 0.45
 ROUTE_STABLE_TOKENS = frozenset({"stop", "crawl", "maintain", "slow_yield", "lane_recover"})
 TOKEN_ORDER = (
     "stop",
@@ -288,6 +294,7 @@ class TokenBCAlpaSimModel(BaseTrajectoryModel):
                 spotlight_evaluations,
                 scenario=active_selection_scenario,
                 position=position,
+                speed_mps=speed_mps,
                 config=adapter_config,
             )
             if self._selection_mode == "actor_axis_constrained"
@@ -539,10 +546,17 @@ def _candidate_axis_signals(
     *,
     scenario: Any,
     position: tuple[float, float],
+    speed_mps: float,
     config: Any,
 ) -> dict[str, dict[str, Any]]:
     static_obstacles = static_obstacles_at_time(scenario, float(scenario.environment.get("tick", 0.0)))
     lane_points = interpolate_lane(scenario.lane_center)
+    route_tangent = _route_tangent(position, lane_points)
+    rear_flow_context = _rear_flow_context(
+        scenario,
+        position=position,
+        route_tangent=route_tangent,
+    )
     signals: dict[str, dict[str, Any]] = {}
     for evaluation in evaluations:
         candidate = evaluation.candidate
@@ -564,6 +578,18 @@ def _candidate_axis_signals(
         route_source = str(getattr(scenario, "tags", {}).get("route_source", "command_proxy"))
         route_waypoint_count = int(str(getattr(scenario, "tags", {}).get("route_waypoint_count", "0")) or "0")
         route_deviation_max = float(scenario.lane_half_width) * (0.8 if route_source == "alpasim_waypoints" else 1.0)
+        candidate_forward_progress = _trajectory_forward_progress(trajectory, position, route_tangent)
+        candidate_mean_speed = candidate_forward_progress / max(1e-6, float(config.trajectory.horizon_seconds))
+        rear_flow = _candidate_rear_flow_metrics(
+            rear_flow_context,
+            speed_mps=speed_mps,
+            candidate_mean_speed_mps=candidate_mean_speed,
+        )
+        rear_flow_required_speed = max(1.5, float(speed_mps) * REAR_FLOW_REQUIRED_SPEED_FRACTION)
+        rear_flow_risk = bool(
+            rear_flow["rear_flow_active"]
+            and candidate_mean_speed < rear_flow_required_speed
+        )
         signals[candidate.name] = {
             "actor_count": len(getattr(scenario, "actors", []) or []),
             "actor_forecast_mode": "time_swept" if config.scoring.use_privileged_actor_forecast else "frozen",
@@ -600,6 +626,15 @@ def _candidate_axis_signals(
             "route_recovery_m": route_start_deviation - route_final_deviation,
             "route_inside_3s": bool(evaluation.score.inside_3s_region),
             "route_inside_5s": bool(evaluation.score.inside_5s_region),
+            "candidate_forward_progress_m": candidate_forward_progress,
+            "candidate_mean_forward_speed_mps": candidate_mean_speed,
+            "rear_actor_count": rear_flow["rear_actor_count"],
+            "rear_closing_actor_count": rear_flow["rear_closing_actor_count"],
+            "rear_flow_gap_m": rear_flow["rear_flow_gap_m"],
+            "rear_flow_ttc_s": rear_flow["rear_flow_ttc_s"],
+            "rear_flow_ttc_threshold_s": REAR_FLOW_TTC_THRESHOLD_S,
+            "rear_flow_required_speed_mps": rear_flow_required_speed,
+            "rear_flow_risk": rear_flow_risk,
             "progress_bonus": float(evaluation.explanation.progress_bonus),
             "selector_effective_score": float(evaluation.explanation.effective_score),
             "safety_penalty": float(evaluation.explanation.safety_penalty),
@@ -705,6 +740,155 @@ def _trajectory_route_deviation(
         _, _, lane_error = nearest_lane_point(point, lane_points)
         max_deviation = max(max_deviation, float(lane_error))
     return max_deviation
+
+
+def _route_tangent(point: tuple[float, float], lane_points: list[tuple[float, float]]) -> tuple[float, float]:
+    if len(lane_points) < 2:
+        return (1.0, 0.0)
+    index, _, _ = nearest_lane_point(point, lane_points)
+    if index <= 0:
+        start, end = lane_points[0], lane_points[1]
+    elif index >= len(lane_points) - 1:
+        start, end = lane_points[-2], lane_points[-1]
+    else:
+        start, end = lane_points[index - 1], lane_points[index + 1]
+    return _normalize_pair((end[0] - start[0], end[1] - start[1]))
+
+
+def _trajectory_forward_progress(
+    trajectory: list[tuple[float, float]],
+    position: tuple[float, float],
+    route_tangent: tuple[float, float],
+) -> float:
+    if not trajectory:
+        return 0.0
+    dx = float(trajectory[-1][0]) - float(position[0])
+    dy = float(trajectory[-1][1]) - float(position[1])
+    return max(0.0, dx * route_tangent[0] + dy * route_tangent[1])
+
+
+def _rear_flow_context(
+    scenario: Any,
+    *,
+    position: tuple[float, float],
+    route_tangent: tuple[float, float],
+) -> dict[str, Any]:
+    actors = getattr(scenario, "actors", []) or []
+    current_tick = float(getattr(scenario, "environment", {}).get("tick", 0.0))
+    lane_half_width = float(getattr(scenario, "lane_half_width", REAR_FLOW_LATERAL_GATE_M))
+    lateral_gate = min(max(1.5, lane_half_width + 0.25), REAR_FLOW_LATERAL_GATE_M)
+    route_left = (-route_tangent[1], route_tangent[0])
+    rear_actor_states: list[dict[str, float]] = []
+    min_gap = math.inf
+
+    for actor in actors:
+        obstacle = actor_to_obstacle_at_time(actor, current_tick)
+        if obstacle is None:
+            continue
+        rel_forward_speed = float(actor.vx) * route_tangent[0] + float(actor.vy) * route_tangent[1]
+        state = _rear_flow_obstacle_state(
+            obstacle,
+            position=position,
+            route_tangent=route_tangent,
+            route_left=route_left,
+            lateral_gate=lateral_gate,
+            rel_forward_speed=rel_forward_speed,
+        )
+        if state is None:
+            continue
+        rear_actor_states.append(state)
+        min_gap = min(min_gap, state["gap_m"])
+
+    for obstacle in static_obstacles_at_time(scenario, current_tick):
+        if not _rear_flow_vehicle_like_obstacle(obstacle):
+            continue
+        state = _rear_flow_obstacle_state(
+            obstacle,
+            position=position,
+            route_tangent=route_tangent,
+            route_left=route_left,
+            lateral_gate=lateral_gate,
+            rel_forward_speed=0.0,
+        )
+        if state is None:
+            continue
+        rear_actor_states.append(state)
+        min_gap = min(min_gap, state["gap_m"])
+
+    return {
+        "rear_actor_states": tuple(rear_actor_states),
+        "rear_actor_count": len(rear_actor_states),
+        "rear_flow_gap_m": min_gap,
+    }
+
+
+def _rear_flow_obstacle_state(
+    obstacle: Any,
+    *,
+    position: tuple[float, float],
+    route_tangent: tuple[float, float],
+    route_left: tuple[float, float],
+    lateral_gate: float,
+    rel_forward_speed: float,
+) -> dict[str, float] | None:
+    dx = float(obstacle.x) - float(position[0])
+    dy = float(obstacle.y) - float(position[1])
+    longitudinal = dx * route_tangent[0] + dy * route_tangent[1]
+    lateral = dx * route_left[0] + dy * route_left[1]
+    if longitudinal >= -0.5 or abs(lateral) > lateral_gate:
+        return None
+    half_length = float(obstacle.length) * 0.5 if obstacle.length is not None else float(obstacle.radius)
+    gap = max(0.0, -longitudinal - half_length - DEFAULT_EGO_RADIUS_M)
+    if gap > REAR_FLOW_MAX_REAR_GAP_M:
+        return None
+    return {"gap_m": gap, "rel_forward_speed_mps": float(rel_forward_speed)}
+
+
+def _rear_flow_vehicle_like_obstacle(obstacle: Any) -> bool:
+    label = f"{getattr(obstacle, 'kind', '')} {getattr(obstacle, 'label', '')}".lower()
+    return any(token in label for token in ("vehicle", "car", "truck", "bus", "van", "actor", "traffic"))
+
+
+def _candidate_rear_flow_metrics(
+    rear_flow_context: dict[str, Any],
+    *,
+    speed_mps: float,
+    candidate_mean_speed_mps: float,
+) -> dict[str, float | int | bool]:
+    rear_actor_states = rear_flow_context.get("rear_actor_states", ())
+    rear_actor_count = int(rear_flow_context.get("rear_actor_count", 0))
+    min_gap = float(rear_flow_context.get("rear_flow_gap_m", math.inf))
+    min_ttc = math.inf
+    rear_closing_actor_count = 0
+    for state in rear_actor_states:
+        gap = float(state["gap_m"])
+        rel_forward_speed = float(state["rel_forward_speed_mps"])
+        candidate_closing_speed = float(speed_mps) + rel_forward_speed - float(candidate_mean_speed_mps)
+        if candidate_closing_speed < REAR_FLOW_MIN_CLOSING_MPS:
+            continue
+        rear_closing_actor_count += 1
+        min_gap = min(min_gap, gap)
+        min_ttc = min(min_ttc, gap / max(candidate_closing_speed, 1e-6))
+
+    active = bool(
+        float(speed_mps) >= REAR_FLOW_MIN_EGO_SPEED_MPS
+        and rear_closing_actor_count > 0
+        and min_ttc <= REAR_FLOW_TTC_THRESHOLD_S
+    )
+    return {
+        "rear_actor_count": rear_actor_count,
+        "rear_closing_actor_count": rear_closing_actor_count,
+        "rear_flow_gap_m": min_gap,
+        "rear_flow_ttc_s": min_ttc,
+        "rear_flow_active": active,
+    }
+
+
+def _normalize_pair(vector: tuple[float, float]) -> tuple[float, float]:
+    norm = math.hypot(float(vector[0]), float(vector[1]))
+    if norm <= 1e-9:
+        return (1.0, 0.0)
+    return (float(vector[0]) / norm, float(vector[1]) / norm)
 
 
 def _resolve_device(device: str) -> str:
@@ -971,7 +1155,7 @@ def _select_actor_axis_constrained(
         for idx in topk_indices
     }
     base_chosen_token = str(base_record["hybrid_token"])
-    if not _actor_axis_route_guard_required(base_chosen_token, axis_signals):
+    if not _actor_axis_route_guard_required(base_chosen_token, spotlight_eval_by_name, axis_signals):
         base_record["axis_signals"] = _selection_axis_signals(axis_signals)
         base_record["hybrid_axis_scores"] = actor_axis_scores
         base_record["actor_route_guard_applied"] = False
@@ -1232,10 +1416,27 @@ def _axis_constraint_violation(token: str, evaluation: Any | None) -> str | None
     return None
 
 
-def _actor_axis_route_guard_required(chosen_token: str, axis_signals: dict[str, dict[str, Any]]) -> bool:
-    if chosen_token in ROUTE_STABLE_TOKENS:
+def _actor_axis_route_guard_required(
+    chosen_token: str,
+    spotlight_eval_by_name: dict[str, Any],
+    axis_signals: dict[str, dict[str, Any]],
+) -> bool:
+    if not any(
+        _axis_signal_float(signal, "actor_count") > 0.0
+        or _axis_signal_float(signal, "rear_actor_count") > 0.0
+        for signal in axis_signals.values()
+    ):
         return False
-    return any(_axis_signal_float(signal, "actor_count") > 0.0 for signal in axis_signals.values())
+    if chosen_token in ROUTE_STABLE_TOKENS:
+        return (
+            _actor_route_stable_violation(
+                chosen_token,
+                spotlight_eval_by_name.get(chosen_token),
+                axis_signals.get(chosen_token),
+            )
+            is not None
+        )
+    return True
 
 
 def _actor_route_stable_candidates(
@@ -1285,6 +1486,8 @@ def _actor_route_stable_violation(token: str, evaluation: Any | None, signal: di
         "static_action_clearance_min_m",
     ):
         return "static_action_clearance"
+    if (rear_reason := _actor_axis_rear_flow_violation(signal)) is not None:
+        return rear_reason
     if (lane_reason := _actor_axis_lane_violation(signal)) is not None:
         return lane_reason
     if (route_reason := _actor_axis_route_violation(signal)) is not None:
@@ -1313,6 +1516,8 @@ def _actor_axis_constraint_violation(token: str, evaluation: Any | None, signal:
         "static_action_clearance_min_m",
     ):
         return "static_action_clearance"
+    if (rear_reason := _actor_axis_rear_flow_violation(signal)) is not None:
+        return rear_reason
     if (lane_reason := _actor_axis_lane_violation(signal)) is not None:
         return lane_reason
     if (route_reason := _actor_axis_route_violation(signal)) is not None:
@@ -1348,6 +1553,12 @@ def _actor_axis_route_violation(signal: dict[str, Any]) -> str | None:
     return "route_deviation"
 
 
+def _actor_axis_rear_flow_violation(signal: dict[str, Any]) -> str | None:
+    if not _axis_signal_bool(signal, "rear_flow_risk"):
+        return None
+    return "rear_flow_risk"
+
+
 def _actor_route_stable_key(evaluation: Any, signal: dict[str, Any], policy_log_prob: float) -> tuple[float, ...]:
     score = evaluation.score
     actor_action = _axis_signal_float(signal, "actor_action_clearance_m")
@@ -1357,10 +1568,14 @@ def _actor_route_stable_key(evaluation: Any, signal: dict[str, Any], policy_log_
     lane_margin = _axis_signal_float(signal, "lane_margin_m")
     route_deviation = _axis_signal_float(signal, "route_deviation_m")
     route_recovery = _axis_signal_float(signal, "route_recovery_m")
+    rear_flow_speed = _axis_signal_float(signal, "candidate_mean_forward_speed_mps")
+    rear_flow_active = _axis_signal_float(signal, "rear_closing_actor_count") > 0.0
     return (
         1.0 if score.inside_5s_region else 0.0,
         1.0 if score.inside_3s_region else 0.0,
+        1.0 if _actor_axis_rear_flow_violation(signal) is None else 0.0,
         _capped_clearance(lane_margin),
+        min(ACTOR_AXIS_CLEARANCE_CAP_M, rear_flow_speed) if rear_flow_active else 0.0,
         float(route_recovery),
         -float(route_deviation),
         _capped_clearance(actor_action),
@@ -1399,15 +1614,19 @@ def _actor_axis_lexicographic_key(evaluation: Any, signal: dict[str, Any], polic
     lane_margin = _axis_signal_float(signal, "lane_margin_m")
     route_deviation = _axis_signal_float(signal, "route_deviation_m")
     route_recovery = _axis_signal_float(signal, "route_recovery_m")
+    rear_flow_speed = _axis_signal_float(signal, "candidate_mean_forward_speed_mps")
+    rear_flow_active = _axis_signal_float(signal, "rear_closing_actor_count") > 0.0
     return (
         1.0 if _actor_axis_constraint_violation(evaluation.candidate.name, evaluation, signal) is None else 0.0,
         1.0 if actor_action >= _axis_signal_float(signal, "actor_action_clearance_min_m") else 0.0,
         1.0 if actor_horizon >= _axis_signal_float(signal, "actor_horizon_clearance_min_m") else 0.0,
         1.0 if static_action >= _axis_signal_float(signal, "static_action_clearance_min_m") else 0.0,
+        1.0 if _actor_axis_rear_flow_violation(signal) is None else 0.0,
         1.0 if _actor_axis_lane_violation(signal) is None else 0.0,
         1.0 if _actor_axis_route_violation(signal) is None else 0.0,
         1.0 if score.inside_5s_region else 0.0,
         1.0 if score.inside_3s_region else 0.0,
+        min(ACTOR_AXIS_CLEARANCE_CAP_M, rear_flow_speed) if rear_flow_active else 0.0,
         float(route_recovery),
         float(explanation.progress_bonus),
         float(explanation.effective_score),
@@ -1422,22 +1641,31 @@ def _actor_axis_lexicographic_key(evaluation: Any, signal: dict[str, Any], polic
 
 
 def _actor_axis_score_summary(evaluation: Any, signal: dict[str, Any], policy_log_prob: float) -> dict[str, Any]:
-    key = _actor_axis_lexicographic_key(evaluation, signal, policy_log_prob)
     axis_feasible = _axis_constraint_violation(evaluation.candidate.name, evaluation) is None
     actor_proxy_feasible = _actor_axis_constraint_violation(evaluation.candidate.name, evaluation, signal) is None
+    rear_flow_safe = _actor_axis_rear_flow_violation(signal) is None
     return {
         "feasible": bool(axis_feasible),
         "actor_proxy_feasible": bool(actor_proxy_feasible),
         "route_stable": bool(evaluation.candidate.name in ROUTE_STABLE_TOKENS),
         "route_stable_actor_safe": _actor_route_stable_violation(evaluation.candidate.name, evaluation, signal) is None,
+        "rear_flow_safe": bool(rear_flow_safe),
+        "rear_flow_risk": _axis_signal_bool(signal, "rear_flow_risk"),
+        "rear_flow_ttc_s": _round_axis_value(_axis_signal_float(signal, "rear_flow_ttc_s")),
+        "rear_flow_candidate_speed_mps": _round_axis_value(
+            _axis_signal_float(signal, "candidate_mean_forward_speed_mps")
+        ),
+        "rear_flow_required_speed_mps": _round_axis_value(_axis_signal_float(signal, "rear_flow_required_speed_mps")),
         "actor_forecast_mode": str(signal.get("actor_forecast_mode", "frozen")),
         "route_source": str(signal.get("route_source", "command_proxy")),
         "route_deviation_m": _round_axis_value(_axis_signal_float(signal, "route_deviation_m")),
         "route_final_deviation_m": _round_axis_value(_axis_signal_float(signal, "route_final_deviation_m")),
         "route_recovery_m": _round_axis_value(_axis_signal_float(signal, "route_recovery_m")),
-        "actor_clearance_key": _round_axis_value(key[11]),
-        "static_clearance_key": _round_axis_value(key[13]),
-        "lane_margin_key": _round_axis_value(key[15]),
+        "actor_clearance_key": _round_axis_value(_capped_clearance(_axis_signal_float(signal, "actor_action_clearance_m"))),
+        "static_clearance_key": _round_axis_value(
+            _capped_clearance(_axis_signal_float(signal, "static_action_clearance_m"))
+        ),
+        "lane_margin_key": _round_axis_value(_capped_clearance(_axis_signal_float(signal, "lane_margin_m"))),
         "progress_bonus": _round_axis_value(evaluation.explanation.progress_bonus),
         "policy_log_prob": round(float(policy_log_prob), 4) if math.isfinite(float(policy_log_prob)) else "-inf",
     }
@@ -1454,6 +1682,13 @@ def _axis_signal_float(signal: dict[str, Any], key: str) -> float:
         return float(value)
     except (TypeError, ValueError):
         return -math.inf
+
+
+def _axis_signal_bool(signal: dict[str, Any], key: str) -> bool:
+    value = signal.get(key)
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes"}
+    return bool(value)
 
 
 def _capped_clearance(value: float) -> float:
