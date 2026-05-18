@@ -203,7 +203,15 @@ for the collision-causality question. The follow-up collision-surface audit
 `maintain` as top candidate and `0/18` structured-hazard frames, while oracle logs show
 proxy hits, actors, and non-maintain selected actions on `17/17` logged collision clips.
 The remaining collision surface therefore points beyond selector ranking alone, toward
-candidate-set coverage or controller/traffic execution.
+candidate-set coverage or controller/traffic execution. The selector-side candidate
+counterfactual
+([Markdown](artifacts/alpasim_candidate_counterfactual_30scene.md),
+[JSON](artifacts/alpasim_candidate_counterfactual_30scene.json)) injects the same
+world-frame actor proxy into the baseline timeline and reconstructs candidate feasibility
+without rerunning AlpaSim. It finds `0/18` actor-axis-safe first-impact frames, only
+`5/25` missed actor-axis-safe actionable frames, and `12/18` scenes where actor-axis-safe
+selected tokens still collide later. That narrows selector miss to a minority explanation;
+the remaining proof step is true candidate/controller replay.
 
 This table evaluates learned-policy transfer variants. It should be read as the
 transfer-diagnostic extension rather than a replacement for the original Spotlight

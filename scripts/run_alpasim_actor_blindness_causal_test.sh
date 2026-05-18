@@ -23,6 +23,8 @@ ANALYSIS_JSON="${ANALYSIS_JSON:-$ROOT/artifacts/alpasim_actor_blindness_30scene_
 ANALYSIS_MD="${ANALYSIS_MD:-$ROOT/artifacts/alpasim_actor_blindness_30scene_raw_analysis.md}"
 COLLISION_AUDIT_JSON="${COLLISION_AUDIT_JSON:-$ROOT/artifacts/alpasim_collision_surface_30scene_audit.json}"
 COLLISION_AUDIT_MD="${COLLISION_AUDIT_MD:-$ROOT/artifacts/alpasim_collision_surface_30scene_audit.md}"
+COUNTERFACTUAL_AUDIT_JSON="${COUNTERFACTUAL_AUDIT_JSON:-$ROOT/artifacts/alpasim_candidate_counterfactual_30scene.json}"
+COUNTERFACTUAL_AUDIT_MD="${COUNTERFACTUAL_AUDIT_MD:-$ROOT/artifacts/alpasim_candidate_counterfactual_30scene.md}"
 
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-900}"
 TOPOLOGY="${TOPOLOGY:-1gpu}"
@@ -179,6 +181,16 @@ run_collision_surface_audit() {
     --output-markdown "$COLLISION_AUDIT_MD"
 }
 
+run_candidate_counterfactual_audit() {
+  log "Running selector-side candidate-counterfactual audit"
+  "$PYTHON_BIN" "$ROOT/scripts/audit_alpasim_candidate_counterfactuals.py" \
+    --baseline-run-dir "$BASELINE_STAGING_DIR" \
+    --candidate-run-dir "$ORACLE_BATCH_DIR" \
+    --oracle-actor-proxy "$ORACLE_PROXY_JSON" \
+    --output-json "$COUNTERFACTUAL_AUDIT_JSON" \
+    --output-markdown "$COUNTERFACTUAL_AUDIT_MD"
+}
+
 main() {
   ensure_hf_token
   link_baseline_into_matrix
@@ -187,6 +199,7 @@ main() {
   complete_batch "$ORACLE_BATCH_DIR" "$ORACLE_MODEL" "$ORACLE_PROXY_JSON"
   run_analysis
   run_collision_surface_audit
+  run_candidate_counterfactual_audit
   log "Done"
 }
 

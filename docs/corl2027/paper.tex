@@ -53,7 +53,10 @@ rerun, collision remains 0.600 to 0.600 while offroad worsens from 0.207 to 0.31
 wrong-lane improves from 0.241 to 0.172, and progress increases from 0.170 to 0.184.
 A first-impact audit sharpens the negative result: the same 18 clips collide under
 baseline and oracle; the baseline scorer sees clear corridor at impact, while the oracle
-sees actors and switches away from maintain yet still collides.
+sees actors and switches away from maintain yet still collides. A selector-side
+counterfactual audit further finds no actor-axis-safe token at first impact in any of the
+18 collision clips, and only 5 missed actor-axis-safe actionable frames across the
+54 audited pre-impact frames.
 These non-co-monotone
 interventions show that simulator transfer error decomposes into separate axes of
 geometry, safety, progress, and lane adherence rather than a single scalar robustness
@@ -842,6 +845,34 @@ Median first-impact time shift & \multicolumn{2}{c}{+0.1\,s} \\
 \end{tabular}
 \end{table}
 
+\begin{table}[t]
+\centering
+\caption{Selector-side candidate counterfactual on the 18 baseline collision clips. The
+audit injects the world-frame oracle actor proxy into the baseline timeline and
+reconstructs candidate feasibility at 20, 10, 5, 2, 1, and 0 frames before first impact.
+This is not a controller replay; it asks whether the logged selector-side candidate set
+contained actor-axis-safe tokens. Actionable frames are at least 0.5\,s before impact.}
+\label{tab:alpasim_candidate_counterfactual}
+\scriptsize
+\begin{tabular}{lr}
+\toprule
+Audit quantity & Count \\
+\midrule
+Baseline collision scenes audited & 18 \\
+Same-scene oracle collisions & 18 \\
+Actionable pre-impact frames & 54 \\
+Ordinary axis-safe actionable frames & 52/54 \\
+Actor-axis-safe actionable frames & 25/54 \\
+Actor-axis-safe frames selected by baseline token & 20/25 \\
+Actor-axis-safe frames missed by baseline token & 5/25 \\
+Actor-axis-safe first-impact frames & 0/18 \\
+Scenes with no actionable actor-axis-safe token & 2/18 \\
+Scenes with any actor-axis-safe selector miss & 4/18 \\
+Scenes where selected actor-axis-safe tokens still collide & 12/18 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 Table~\ref{tab:alpasim_collision_surface} distinguishes the proxy question from the
 remaining collision question. In the baseline, every raw-collision clip has a selection
 log; at the first collision frame, the geometric scorer's top candidate is \token{maintain}
@@ -852,11 +883,25 @@ non-\token{maintain} selected token. For the logged oracle rear impacts, rear-la
 are present in 14/14 cases. Despite this, the oracle collides on the same 18 clips, with
 the same first-impact component in 17/18 cases and a median first-impact time shift of
 only +0.1\,s. The failure is therefore not explained by actor visibility or action ranking
-alone. What remains unresolved is whether the bounded token set lacks a collision-avoiding
-candidate, whether the low-level controller cannot execute that candidate under AlpaSim
-dynamics, or whether traffic interaction requires a response class not represented by the
-current tokens. Resolving that split requires counterfactual candidate/controller replay,
-not another selector-only oracle rerun.
+alone.
+
+Table~\ref{tab:alpasim_candidate_counterfactual} pushes the audit one step further without
+running new simulations. It injects the same world-frame actor proxy into the baseline
+timeline and reconstructs the candidate set at fixed pre-impact leads. The ordinary axis
+test remains too permissive for rear interactions: it still marks at least one candidate
+safe in 52/54 actionable frames and even in 5/18 first-impact frames. The stricter
+actor-axis test is more diagnostic. It finds no actor-axis-safe token at the first-impact
+frame in any collision clip. Across the actionable pre-impact frames, it finds 25
+actor-axis-safe frames; the baseline-selected token already satisfies the actor-axis test
+in 20 of them, while only 5 are selector-side misses. At scene level, only 4/18 clips have
+any actor-axis-safe selector miss, 2/18 have no actionable actor-axis-safe token, and
+12/18 have actor-axis-safe selections that still collide later. This narrows the residual
+collision explanation: selector miss exists, but it is not the dominant explanation in
+the current logs. What remains unresolved is whether the bounded token set lacks a
+collision-avoiding candidate, whether the low-level controller cannot execute that
+candidate under AlpaSim dynamics, or whether traffic interaction requires a response class
+not represented by the current tokens. Resolving that split requires counterfactual
+candidate/controller replay, not another selector-only oracle rerun.
 
 \begin{table}[t]
 \centering

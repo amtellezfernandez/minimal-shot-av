@@ -102,6 +102,16 @@
       "description": "Human-readable first-impact audit showing that actor completion changes awareness and action choice but leaves the 30-scene raw collision surface unchanged."
     },
     {
+      "hf_path": "results/alpasim_candidate_counterfactual_30scene.json",
+      "local_path": "artifacts/alpasim_candidate_counterfactual_30scene.json",
+      "description": "Selector-side candidate counterfactual that injects the world-frame oracle actor proxy into the baseline collision timeline and audits axis versus actor-axis candidate feasibility."
+    },
+    {
+      "hf_path": "results/alpasim_candidate_counterfactual_30scene.md",
+      "local_path": "artifacts/alpasim_candidate_counterfactual_30scene.md",
+      "description": "Human-readable selector-side candidate counterfactual showing that actor-axis selector misses are a minority explanation and that controller-level replay is still required."
+    },
+    {
       "hf_path": "paper/corl2027/paper.pdf",
       "local_path": "docs/corl2027/paper.pdf",
       "description": "Current CoRL manuscript PDF aligned with the matched 30-scene raw world-frame oracle AlpaSim evidence."
