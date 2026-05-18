@@ -297,6 +297,9 @@ export ALPASIM_ROOT=/abs/path/to/alpasim
 builds a minimal `$ALPASIM_ROOT/.venv` with `uv`. The launcher then invokes
 `$ALPASIM_ROOT/.venv/bin/python` and `$ALPASIM_ROOT/.venv/bin/alpasim_wizard`
 directly, so it does not depend on AlpaSim's full workspace lockfile.
+During setup, repo-tracked AlpaSim patches in `third_party/alpasim_overrides/`
+are applied first; this includes the route-waypoint bridge required by the
+actor-axis proxy.
 
 Published paper checkpoints live in the public Hugging Face repo
 `amtellezfernandez/minimal-shot-av-corl2027-checkpoints`. The tracked manifest at

@@ -178,9 +178,15 @@ def _require_uv() -> str:
 def _apply_local_alpasim_overrides(alpasim_root: Path) -> None:
     if not ALPASIM_OVERRIDE_ROOT.is_dir():
         return
+    patch_files = sorted(ALPASIM_OVERRIDE_ROOT.rglob("*.patch"))
+    for patch_file in patch_files:
+        _apply_alpasim_patch(alpasim_root, patch_file)
+
     copied: list[str] = []
     for source in ALPASIM_OVERRIDE_ROOT.rglob("*"):
         if not source.is_file():
+            continue
+        if source.suffix == ".patch":
             continue
         relative = source.relative_to(ALPASIM_OVERRIDE_ROOT)
         target = alpasim_root / relative
@@ -191,6 +197,34 @@ def _apply_local_alpasim_overrides(alpasim_root: Path) -> None:
         print("Applied repo-tracked AlpaSim overrides:")
         for relative in copied:
             print(f"  {relative}")
+
+
+def _apply_alpasim_patch(alpasim_root: Path, patch_file: Path) -> None:
+    relative = patch_file.relative_to(ALPASIM_OVERRIDE_ROOT)
+    reverse_check = subprocess.run(
+        ["git", "apply", "--reverse", "--check", str(patch_file)],
+        cwd=alpasim_root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if reverse_check.returncode == 0:
+        print(f"AlpaSim patch already applied: {relative}")
+        return
+
+    check = subprocess.run(
+        ["git", "apply", "--check", str(patch_file)],
+        cwd=alpasim_root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if check.returncode != 0:
+        message = check.stderr.strip() or check.stdout.strip() or "git apply --check failed"
+        raise SystemExit(f"Cannot apply AlpaSim patch {relative}: {message}")
+
+    _run(["git", "apply", str(patch_file)], cwd=alpasim_root)
+    print(f"Applied AlpaSim patch: {relative}")
 
 
 def _bootstrap_alpasim_venv(alpasim_root: Path, *, uv_bin: str) -> None:

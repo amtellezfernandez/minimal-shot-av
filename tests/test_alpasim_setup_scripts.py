@@ -215,6 +215,37 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
 
             self.assertEqual("driver-model-override\n", target_file.read_text(encoding="utf-8"))
 
+    def test_setup_script_applies_patch_files_without_copying_them(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            alpasim_root = Path(tmp) / "alpasim"
+            source_root = Path(tmp) / "overrides"
+            target_file = alpasim_root / "patched.txt"
+            patch_file = source_root / "route.patch"
+            target_file.parent.mkdir(parents=True)
+            source_root.mkdir(parents=True)
+            target_file.write_text("old\n", encoding="utf-8")
+            patch_file.write_text(
+                "\n".join(
+                    [
+                        "diff --git a/patched.txt b/patched.txt",
+                        "--- a/patched.txt",
+                        "+++ b/patched.txt",
+                        "@@ -1 +1 @@",
+                        "-old",
+                        "+patched",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with patch("scripts.setup_alpasim_local_plugin.ALPASIM_OVERRIDE_ROOT", source_root):
+                _apply_local_alpasim_overrides(alpasim_root)
+                _apply_local_alpasim_overrides(alpasim_root)
+
+            self.assertEqual("patched\n", target_file.read_text(encoding="utf-8"))
+            self.assertFalse((alpasim_root / "route.patch").exists())
+
     def test_bootstrap_alpasim_venv_uses_minimal_editable_install_plan(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             alpasim_root = Path(tmp) / "alpasim"

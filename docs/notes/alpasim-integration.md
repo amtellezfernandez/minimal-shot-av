@@ -94,18 +94,20 @@ The AlpaSim checkout used on this laptop is an external repo at:
 ```
 
 It is based on upstream `NVlabs/alpasim` `v2026.4` (`049f70f`) and currently
-needs two local override files that are now stored directly in this repo:
+needs repo-tracked local overrides and patches:
 
 - `third_party/alpasim_overrides/src/wizard/alpasim_wizard/deployment/docker_compose.py`
 - `third_party/alpasim_overrides/Dockerfile.amd64`
 - `third_party/alpasim_overrides/src/driver/src/alpasim_driver/models/__init__.py`
+- `third_party/alpasim_overrides/route_waypoints.patch`
 
-`scripts/setup_alpasim_local_plugin.py` now copies these overrides into
+`scripts/setup_alpasim_local_plugin.py` now applies patch files and copies overrides into
 `$ALPASIM_ROOT` automatically unless `--skip-overrides` is passed.
 
-The important behavior change is in `docker_compose.py`: it prevents the runtime
-service from requesting `count: all` GPUs when the selected topology does not
-assign GPUs to simulation containers.
+The important behavior changes are route-waypoint exposure to driver models and
+the `docker_compose.py` guard that prevents the runtime service from requesting
+`count: all` GPUs when the selected topology does not assign GPUs to simulation
+containers.
 
 The pinned external source version is:
 
