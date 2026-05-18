@@ -550,8 +550,18 @@ def _candidate_axis_signals(
             lane_half_width=float(scenario.lane_half_width),
             origin=position,
         )
+        route_deviation = _trajectory_route_deviation(
+            trajectory,
+            lane_points=lane_points,
+            origin=position,
+        )
+        route_source = str(getattr(scenario, "tags", {}).get("route_source", "command_proxy"))
+        route_waypoint_count = int(str(getattr(scenario, "tags", {}).get("route_waypoint_count", "0")) or "0")
+        route_deviation_max = float(scenario.lane_half_width) * (0.8 if route_source == "alpasim_waypoints" else 1.0)
         signals[candidate.name] = {
             "actor_count": len(getattr(scenario, "actors", []) or []),
+            "route_source": route_source,
+            "route_waypoint_count": route_waypoint_count,
             "actor_action_clearance_m": _trajectory_actor_clearance(
                 action_trajectory,
                 scenario=scenario,
@@ -575,6 +585,7 @@ def _candidate_axis_signals(
                 origin=position,
             ),
             "lane_margin_m": lane_margin,
+            "route_deviation_m": route_deviation,
             "route_inside_3s": bool(evaluation.score.inside_3s_region),
             "route_inside_5s": bool(evaluation.score.inside_5s_region),
             "progress_bonus": float(evaluation.explanation.progress_bonus),
@@ -585,6 +596,7 @@ def _candidate_axis_signals(
             "actor_horizon_clearance_min_m": float(config.scoring.horizon_clearance_target_m),
             "static_action_clearance_min_m": float(config.scoring.min_action_clearance_m),
             "lane_margin_min_m": 0.0,
+            "route_deviation_max_m": route_deviation_max,
         }
     return signals
 
@@ -642,6 +654,19 @@ def _trajectory_lane_margin(
         _, _, lane_error = nearest_lane_point(point, lane_points)
         min_margin = min(min_margin, lane_half_width - float(lane_error))
     return min_margin
+
+
+def _trajectory_route_deviation(
+    trajectory: list[tuple[float, float]],
+    *,
+    lane_points: list[tuple[float, float]],
+    origin: tuple[float, float],
+) -> float:
+    max_deviation = 0.0
+    for point in (origin, *trajectory):
+        _, _, lane_error = nearest_lane_point(point, lane_points)
+        max_deviation = max(max_deviation, float(lane_error))
+    return max_deviation
 
 
 def _resolve_device(device: str) -> str:
@@ -1226,6 +1251,8 @@ def _actor_route_stable_violation(token: str, evaluation: Any | None, signal: di
         return "static_action_clearance"
     if _axis_signal_float(signal, "lane_margin_m") < _axis_signal_float(signal, "lane_margin_min_m"):
         return "lane_margin"
+    if _axis_signal_float(signal, "route_deviation_m") > _axis_signal_float(signal, "route_deviation_max_m"):
+        return "route_deviation"
     return None
 
 
@@ -1252,6 +1279,8 @@ def _actor_axis_constraint_violation(token: str, evaluation: Any | None, signal:
         return "static_action_clearance"
     if _axis_signal_float(signal, "lane_margin_m") < _axis_signal_float(signal, "lane_margin_min_m"):
         return "lane_margin"
+    if _axis_signal_float(signal, "route_deviation_m") > _axis_signal_float(signal, "route_deviation_max_m"):
+        return "route_deviation"
     if explanation.safety_penalty > 0.0:
         return "unsafe_action"
     if token == "stop" and explanation.stop_penalty > 0.0:
@@ -1266,10 +1295,12 @@ def _actor_route_stable_key(evaluation: Any, signal: dict[str, Any], policy_log_
     static_action = _axis_signal_float(signal, "static_action_clearance_m")
     static_horizon = _axis_signal_float(signal, "static_horizon_clearance_m")
     lane_margin = _axis_signal_float(signal, "lane_margin_m")
+    route_deviation = _axis_signal_float(signal, "route_deviation_m")
     return (
         1.0 if score.inside_5s_region else 0.0,
         1.0 if score.inside_3s_region else 0.0,
         _capped_clearance(lane_margin),
+        -float(route_deviation),
         _capped_clearance(actor_action),
         _capped_clearance(static_action),
         _capped_clearance(actor_horizon),
@@ -1304,12 +1335,14 @@ def _actor_axis_lexicographic_key(evaluation: Any, signal: dict[str, Any], polic
     static_action = _axis_signal_float(signal, "static_action_clearance_m")
     static_horizon = _axis_signal_float(signal, "static_horizon_clearance_m")
     lane_margin = _axis_signal_float(signal, "lane_margin_m")
+    route_deviation = _axis_signal_float(signal, "route_deviation_m")
     return (
         1.0 if _actor_axis_constraint_violation(evaluation.candidate.name, evaluation, signal) is None else 0.0,
         1.0 if actor_action >= _axis_signal_float(signal, "actor_action_clearance_min_m") else 0.0,
         1.0 if actor_horizon >= _axis_signal_float(signal, "actor_horizon_clearance_min_m") else 0.0,
         1.0 if static_action >= _axis_signal_float(signal, "static_action_clearance_min_m") else 0.0,
         1.0 if lane_margin >= _axis_signal_float(signal, "lane_margin_min_m") else 0.0,
+        1.0 if route_deviation <= _axis_signal_float(signal, "route_deviation_max_m") else 0.0,
         1.0 if score.inside_5s_region else 0.0,
         1.0 if score.inside_3s_region else 0.0,
         float(explanation.progress_bonus),
@@ -1319,6 +1352,7 @@ def _actor_axis_lexicographic_key(evaluation: Any, signal: dict[str, Any], polic
         _capped_clearance(static_action),
         _capped_clearance(static_horizon),
         _capped_clearance(lane_margin),
+        -float(route_deviation),
         float(policy_log_prob),
     )
 
@@ -1332,9 +1366,11 @@ def _actor_axis_score_summary(evaluation: Any, signal: dict[str, Any], policy_lo
         "actor_proxy_feasible": bool(actor_proxy_feasible),
         "route_stable": bool(evaluation.candidate.name in ROUTE_STABLE_TOKENS),
         "route_stable_actor_safe": _actor_route_stable_violation(evaluation.candidate.name, evaluation, signal) is None,
-        "actor_clearance_key": _round_axis_value(key[9]),
-        "static_clearance_key": _round_axis_value(key[11]),
-        "lane_margin_key": _round_axis_value(key[13]),
+        "route_source": str(signal.get("route_source", "command_proxy")),
+        "route_deviation_m": _round_axis_value(_axis_signal_float(signal, "route_deviation_m")),
+        "actor_clearance_key": _round_axis_value(key[10]),
+        "static_clearance_key": _round_axis_value(key[12]),
+        "lane_margin_key": _round_axis_value(key[14]),
         "progress_bonus": _round_axis_value(evaluation.explanation.progress_bonus),
         "policy_log_prob": round(float(policy_log_prob), 4) if math.isfinite(float(policy_log_prob)) else "-inf",
     }

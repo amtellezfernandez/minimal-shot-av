@@ -11,28 +11,47 @@ from .environment import Actor, Obstacle, Scenario
 def scenario_from_command(command: str, signal: dict[str, Any] | None = None) -> Scenario:
     signal = signal or {}
     lateral_goal = {"left": 16.0, "straight": 0.0, "right": -16.0}[command]
-    lane_center = [
-        (0.0, 0.0),
-        (18.0, lateral_goal * 0.12),
-        (38.0, lateral_goal * 0.45),
-        (62.0, lateral_goal * 0.82),
-        (82.0, lateral_goal),
-    ]
+    route_waypoints = route_waypoints_from_signal(signal)
+    real_route = len(route_waypoints) >= 2
+    if real_route:
+        lane_center = _lane_center_from_route_waypoints(route_waypoints)
+        lane_half_width = float(signal.get("route_lane_half_width_m", 3.5))
+        goal = lane_center[-1]
+        max_x = max(abs(point[0]) for point in lane_center)
+        max_y = max(abs(point[1]) for point in lane_center)
+        width = max(100.0, max_x + 18.0)
+        height = max(60.0, max_y * 2.0 + 18.0)
+        route_source = "alpasim_waypoints"
+    else:
+        lane_center = [
+            (0.0, 0.0),
+            (18.0, lateral_goal * 0.12),
+            (38.0, lateral_goal * 0.45),
+            (62.0, lateral_goal * 0.82),
+            (82.0, lateral_goal),
+        ]
+        lane_half_width = 6.0
+        goal = (86.0, lateral_goal)
+        width = 100.0
+        height = 60.0
+        route_source = "command_proxy"
     obstacles = signal_obstacles(signal)
     actors = signal_actors(signal)
     return Scenario(
-        width=100.0,
-        height=60.0,
+        width=width,
+        height=height,
         lane_center=lane_center,
-        lane_half_width=6.0,
+        lane_half_width=lane_half_width,
         obstacles=obstacles,
         start=(0.0, 0.0),
-        goal=(86.0, lateral_goal),
+        goal=goal,
         seed=0,
         cluster="alpasim_route_command",
         tags={
             "source": "alpasim_adapter",
             "route_command": command,
+            "route_source": route_source,
+            "route_waypoint_count": str(len(route_waypoints)),
             "signal_obstacle_count": str(len(obstacles)),
             "signal_actor_count": str(len(actors)),
             "visibility_risk": f"{float(signal.get('visibility_risk', 0.0)):.3f}",
@@ -44,15 +63,90 @@ def scenario_from_command(command: str, signal: dict[str, Any] | None = None) ->
 
 def extract_alpasim_signal(prediction_input: Any) -> dict[str, Any]:
     structured_hazards = structured_hazards_from_input(prediction_input)
+    route_waypoints = route_waypoints_from_input(prediction_input)
     visibility_risk = visibility_risk_from_cameras(prediction_input.camera_images)
     dynamics_risk_value = dynamics_risk(float(prediction_input.speed), float(prediction_input.acceleration))
     return {
         "structured_hazards": structured_hazards,
+        "route_waypoints": route_waypoints,
+        "route_waypoint_count": len(route_waypoints),
         "visibility_risk": round(visibility_risk, 6),
         "dynamics_risk": round(dynamics_risk_value, 6),
         "camera_count": len(prediction_input.camera_images),
         "pose_history_len": len(prediction_input.ego_pose_history),
     }
+
+
+def route_waypoints_from_input(prediction_input: Any) -> list[dict[str, float]]:
+    raw = _first_present_attr(
+        prediction_input,
+        ("route_waypoints", "route_path", "navigation_waypoints", "route"),
+    )
+    if raw is None:
+        return []
+    if hasattr(raw, "waypoints"):
+        raw = getattr(raw, "waypoints")
+    if isinstance(raw, dict):
+        raw = raw.get("waypoints", raw.get("route_waypoints", []))
+    if not isinstance(raw, (list, tuple)):
+        try:
+            raw = list(raw)
+        except TypeError:
+            return []
+    waypoints: list[dict[str, float]] = []
+    for item in raw:
+        waypoint = _route_waypoint_from_item(item)
+        if waypoint is not None:
+            waypoints.append(waypoint)
+    return waypoints
+
+
+def route_waypoints_from_signal(signal: dict[str, Any]) -> list[dict[str, float]]:
+    raw = signal.get("route_waypoints", [])
+    if not isinstance(raw, list):
+        return []
+    waypoints: list[dict[str, float]] = []
+    for item in raw:
+        waypoint = _route_waypoint_from_item(item)
+        if waypoint is not None:
+            waypoints.append(waypoint)
+    return waypoints
+
+
+def _route_waypoint_from_item(item: Any) -> dict[str, float] | None:
+    if isinstance(item, dict):
+        x = item.get("x", item.get("forward_m", item.get("longitudinal_m")))
+        y = item.get("y", item.get("left_m", item.get("lateral_m", 0.0)))
+        z = item.get("z", 0.0)
+    else:
+        x = getattr(item, "x", getattr(item, "forward_m", getattr(item, "longitudinal_m", None)))
+        y = getattr(item, "y", getattr(item, "left_m", getattr(item, "lateral_m", 0.0)))
+        z = getattr(item, "z", 0.0)
+    if x is None:
+        return None
+    x_f = float(x)
+    y_f = float(y)
+    z_f = float(z)
+    if not (math.isfinite(x_f) and math.isfinite(y_f) and math.isfinite(z_f)):
+        return None
+    return {"x": round(x_f, 6), "y": round(y_f, 6), "z": round(z_f, 6)}
+
+
+def _lane_center_from_route_waypoints(route_waypoints: list[dict[str, float]]) -> list[tuple[float, float]]:
+    points: list[tuple[float, float]] = [(0.0, 0.0)]
+    for waypoint in route_waypoints:
+        x = float(waypoint["x"])
+        y = float(waypoint["y"])
+        if x < -5.0:
+            continue
+        if math.hypot(x, y) > 140.0:
+            continue
+        if math.dist(points[-1], (x, y)) < 0.5:
+            continue
+        points.append((x, y))
+    if len(points) < 2:
+        return [(0.0, 0.0), (24.0, 0.0)]
+    return points
 
 
 def structured_hazards_from_input(prediction_input: Any) -> list[dict[str, float | str]]:

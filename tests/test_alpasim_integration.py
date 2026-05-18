@@ -93,6 +93,29 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertEqual(scenario.obstacles[0].x, 12.0)
         self.assertEqual(scenario.obstacles[0].kind, "vehicle")
 
+    def test_alpasim_signal_uses_route_waypoints_as_lane_center(self) -> None:
+        prediction_input = SimpleNamespace(
+            camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+            speed=6.0,
+            acceleration=0.0,
+            ego_pose_history=[object()],
+            route_waypoints=[
+                SimpleNamespace(x=0.0, y=0.0, z=0.0),
+                SimpleNamespace(x=18.0, y=2.0, z=0.0),
+                SimpleNamespace(x=40.0, y=8.0, z=0.0),
+            ],
+        )
+
+        signal = extract_alpasim_signal(prediction_input)
+        scenario = scenario_from_command("straight", signal)
+
+        self.assertEqual(3, signal["route_waypoint_count"])
+        self.assertEqual("alpasim_waypoints", scenario.tags["route_source"])
+        self.assertEqual("3", scenario.tags["route_waypoint_count"])
+        self.assertAlmostEqual(40.0, scenario.goal[0])
+        self.assertAlmostEqual(8.0, scenario.goal[1])
+        self.assertLess(scenario.lane_half_width, 6.0)
+
     def test_alpasim_signal_preserves_static_hazard_shape_metadata(self) -> None:
         prediction_input = SimpleNamespace(
             camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
@@ -719,6 +742,11 @@ class AlpaSimIntegrationTests(unittest.TestCase):
                 speed=6.0,
                 acceleration=0.0,
                 ego_pose_history=[],
+                route_waypoints=[
+                    {"x": 0.0, "y": 0.0, "z": 0.0},
+                    {"x": 25.0, "y": 0.0, "z": 0.0},
+                    {"x": 55.0, "y": 0.0, "z": 0.0},
+                ],
                 traffic_hazards=[
                     {
                         "x": 8.0,
@@ -749,8 +777,11 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertIn("maintain", trace["axis_signals"])
         self.assertIn("actor_action_clearance_m", trace["axis_signals"]["maintain"])
         self.assertIn("lane_margin_m", trace["axis_signals"]["maintain"])
+        self.assertEqual("alpasim_waypoints", trace["axis_signals"]["maintain"]["route_source"])
+        self.assertIn("route_deviation_m", trace["axis_signals"]["maintain"])
         self.assertIn("hybrid_axis_scores", trace)
         self.assertIn("route_stable_actor_safe", trace["hybrid_axis_scores"]["maintain"])
+        self.assertIn("route_deviation_m", trace["hybrid_axis_scores"]["maintain"])
         self.assertEqual(1, len(records))
         self.assertIn("axis_signals", records[0])
         self.assertIn("actor_route_guard_applied", records[0])
