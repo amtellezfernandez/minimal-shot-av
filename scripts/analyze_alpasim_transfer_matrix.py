@@ -40,6 +40,7 @@ MODEL_LABELS = {
     "token_dagger_iter2_axis_constrained_clamped": "axis_constrained_clamped",
     "token_dagger_iter2_axis_constrained_oracle_actor_clamped": "oracle_actor_axis_constrained_clamped",
     "token_dagger_iter2_axis_lexicographic_oracle_actor_clamped": "oracle_actor_axis_lexicographic_clamped",
+    "token_dagger_iter2_actor_axis_oracle_actor_clamped": "actor_axis_oracle_actor_clamped",
     "token_dagger_iter2_hybrid_clamped": "hybrid_clamped",
     "token_dagger_srcdecay": "srcdecay",
 }

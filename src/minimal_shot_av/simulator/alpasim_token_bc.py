@@ -20,7 +20,15 @@ except ImportError:  # pragma: no cover - exercised only in non-alpasim installs
 
 from .alpasim_signal import extract_alpasim_signal, scenario_from_command
 from .alpasim_spotlight import BaseTrajectoryModel, DriveCommand, ModelPrediction, PredictionInput, _resample_to_frequency
-from .environment import scenario_at_tick
+from .environment import (
+    DEFAULT_EGO_RADIUS_M,
+    actor_to_obstacle_at_time,
+    interpolate_lane,
+    min_segment_clearance,
+    nearest_lane_point,
+    scenario_at_tick,
+    static_obstacles_at_time,
+)
 from .perception import perceive_scene
 from .spotlight_reflex import DEFAULT_SPOTLIGHT_CONFIG, evaluate_maneuver_candidates, generate_maneuver_candidates, _planning_heading
 from .world_model import update_world_state
@@ -31,7 +39,8 @@ N_TOKENS = 9
 HIDDEN = 256
 DROPOUT = 0.15
 TRAJECTORY_MODES = ("token", "longitudinal_only", "clamped_lateral")
-SELECTION_MODES = ("argmax", "hybrid_veto", "axis_constrained", "axis_lexicographic")
+SELECTION_MODES = ("argmax", "hybrid_veto", "axis_constrained", "axis_lexicographic", "actor_axis_constrained")
+ACTOR_AXIS_CLEARANCE_CAP_M = 12.0
 TOKEN_ORDER = (
     "stop",
     "crawl",
@@ -242,6 +251,7 @@ class TokenBCAlpaSimModel(BaseTrajectoryModel):
         adapter_config = _adapter_spotlight_config(
             trajectory_mode=self._trajectory_mode,
             max_lateral_offset_m=self._max_lateral_offset_m,
+            selection_mode=self._selection_mode,
         )
         candidates = _generate_adapter_candidates(
             position,
@@ -257,10 +267,21 @@ class TokenBCAlpaSimModel(BaseTrajectoryModel):
             speed_mps=speed_mps,
             config=adapter_config,
         )
+        axis_signals = (
+            _candidate_axis_signals(
+                spotlight_evaluations,
+                scenario=active_scenario,
+                position=position,
+                config=adapter_config,
+            )
+            if self._selection_mode == "actor_axis_constrained"
+            else {}
+        )
         selection_info = _select_token_with_mode(
             logits=logits,
             token_order=self._token_order,
             evaluations=spotlight_evaluations,
+            axis_signals=axis_signals,
             selection_mode=self._selection_mode,
             hybrid_top_k=self._hybrid_top_k,
             hybrid_geometric_weight=self._hybrid_geometric_weight,
@@ -358,6 +379,8 @@ class TokenBCAlpaSimModel(BaseTrajectoryModel):
             "max_geometric_rank": selection_info["max_geometric_rank"],
             "veto_reason": selection_info["veto_reason"],
             "vetoed_tokens": selection_info["vetoed_tokens"],
+            "axis_signals": selection_info.get("axis_signals", {}),
+            "hybrid_axis_scores": selection_info.get("hybrid_axis_scores", {}),
             "top_logits": _top_logits(logits, self._token_order),
             "spotlight_top_candidates": [
                 evaluation.explanation.to_summary()
@@ -455,18 +478,19 @@ def _resolve_selection_mode(mode: str) -> str:
     return normalized
 
 
-def _adapter_spotlight_config(*, trajectory_mode: str, max_lateral_offset_m: float) -> Any:
-    if trajectory_mode == "token":
-        return DEFAULT_SPOTLIGHT_CONFIG
-    adjusted_maneuvers = []
-    for spec in DEFAULT_SPOTLIGHT_CONFIG.maneuvers:
-        lateral_offset = spec.lateral_offset_m
-        if trajectory_mode == "longitudinal_only":
-            lateral_offset = 0.0
-        elif trajectory_mode == "clamped_lateral":
-            lateral_offset = float(np.clip(lateral_offset, -max_lateral_offset_m, max_lateral_offset_m))
-        adjusted_maneuvers.append(replace(spec, lateral_offset_m=lateral_offset))
-    return replace(DEFAULT_SPOTLIGHT_CONFIG, maneuvers=tuple(adjusted_maneuvers))
+def _adapter_spotlight_config(*, trajectory_mode: str, max_lateral_offset_m: float, selection_mode: str = "argmax") -> Any:
+    config = DEFAULT_SPOTLIGHT_CONFIG
+    if trajectory_mode != "token":
+        adjusted_maneuvers = []
+        for spec in config.maneuvers:
+            lateral_offset = spec.lateral_offset_m
+            if trajectory_mode == "longitudinal_only":
+                lateral_offset = 0.0
+            elif trajectory_mode == "clamped_lateral":
+                lateral_offset = float(np.clip(lateral_offset, -max_lateral_offset_m, max_lateral_offset_m))
+            adjusted_maneuvers.append(replace(spec, lateral_offset_m=lateral_offset))
+        config = replace(config, maneuvers=tuple(adjusted_maneuvers))
+    return config
 
 
 def _generate_adapter_candidates(
@@ -485,6 +509,120 @@ def _generate_adapter_candidates(
             config,
         )
     }
+
+
+def _candidate_axis_signals(
+    evaluations: list[Any],
+    *,
+    scenario: Any,
+    position: tuple[float, float],
+    config: Any,
+) -> dict[str, dict[str, Any]]:
+    static_obstacles = static_obstacles_at_time(scenario, float(scenario.environment.get("tick", 0.0)))
+    lane_points = interpolate_lane(scenario.lane_center)
+    signals: dict[str, dict[str, Any]] = {}
+    for evaluation in evaluations:
+        candidate = evaluation.candidate
+        trajectory = candidate.trajectory
+        action_trajectory = trajectory[: config.trajectory.action_index + 1]
+        lane_margin = _trajectory_lane_margin(
+            trajectory,
+            lane_points=lane_points,
+            lane_half_width=float(scenario.lane_half_width),
+            origin=position,
+        )
+        signals[candidate.name] = {
+            "actor_count": len(getattr(scenario, "actors", []) or []),
+            "actor_action_clearance_m": _trajectory_actor_clearance(
+                action_trajectory,
+                scenario=scenario,
+                config=config,
+                origin=position,
+            ),
+            "actor_horizon_clearance_m": _trajectory_actor_clearance(
+                trajectory,
+                scenario=scenario,
+                config=config,
+                origin=position,
+            ),
+            "static_action_clearance_m": _trajectory_static_clearance(
+                action_trajectory,
+                static_obstacles=static_obstacles,
+                origin=position,
+            ),
+            "static_horizon_clearance_m": _trajectory_static_clearance(
+                trajectory,
+                static_obstacles=static_obstacles,
+                origin=position,
+            ),
+            "lane_margin_m": lane_margin,
+            "route_inside_3s": bool(evaluation.score.inside_3s_region),
+            "route_inside_5s": bool(evaluation.score.inside_5s_region),
+            "progress_bonus": float(evaluation.explanation.progress_bonus),
+            "selector_effective_score": float(evaluation.explanation.effective_score),
+            "safety_penalty": float(evaluation.explanation.safety_penalty),
+            "stop_penalty": float(evaluation.explanation.stop_penalty),
+            "actor_action_clearance_min_m": float(config.scoring.min_action_clearance_m),
+            "actor_horizon_clearance_min_m": float(config.scoring.horizon_clearance_target_m),
+            "static_action_clearance_min_m": float(config.scoring.min_action_clearance_m),
+            "lane_margin_min_m": 0.0,
+        }
+    return signals
+
+
+def _trajectory_actor_clearance(
+    trajectory: list[tuple[float, float]],
+    *,
+    scenario: Any,
+    config: Any,
+    origin: tuple[float, float],
+) -> float:
+    if not getattr(scenario, "actors", None):
+        return math.inf
+    current_tick = float(scenario.environment.get("tick", 0.0))
+    actor_obstacles = [
+        obstacle
+        for actor in scenario.actors
+        if (obstacle := actor_to_obstacle_at_time(actor, current_tick)) is not None
+    ]
+    return _trajectory_static_clearance(
+        trajectory,
+        static_obstacles=actor_obstacles,
+        origin=origin,
+    )
+
+
+def _trajectory_static_clearance(
+    trajectory: list[tuple[float, float]],
+    *,
+    static_obstacles: list[Any],
+    origin: tuple[float, float],
+) -> float:
+    if not static_obstacles:
+        return math.inf
+    min_clearance = math.inf
+    previous_point = origin
+    for point in trajectory:
+        min_clearance = min(
+            min_clearance,
+            min_segment_clearance(previous_point, point, static_obstacles, ego_radius=DEFAULT_EGO_RADIUS_M),
+        )
+        previous_point = point
+    return min_clearance
+
+
+def _trajectory_lane_margin(
+    trajectory: list[tuple[float, float]],
+    *,
+    lane_points: list[tuple[float, float]],
+    lane_half_width: float,
+    origin: tuple[float, float],
+) -> float:
+    min_margin = math.inf
+    for point in (origin, *trajectory):
+        _, _, lane_error = nearest_lane_point(point, lane_points)
+        min_margin = min(min_margin, lane_half_width - float(lane_error))
+    return min_margin
 
 
 def _resolve_device(device: str) -> str:
@@ -532,6 +670,7 @@ def _select_token_with_mode(
     logits: np.ndarray,
     token_order: tuple[str, ...],
     evaluations: list[Any],
+    axis_signals: dict[str, dict[str, Any]],
     selection_mode: str,
     hybrid_top_k: int,
     hybrid_geometric_weight: float,
@@ -586,6 +725,25 @@ def _select_token_with_mode(
     policy_log_probs = scaled_logits - _logsumexp(scaled_logits)
     sorted_indices = list(np.argsort(logits)[::-1])
     topk_indices = sorted_indices[: max(1, min(hybrid_top_k, len(sorted_indices)))]
+    if selection_mode == "actor_axis_constrained":
+        return _select_actor_axis_constrained(
+            token_order=token_order,
+            raw_idx=raw_idx,
+            topk_indices=topk_indices,
+            policy_log_probs=policy_log_probs,
+            evaluations=evaluations,
+            spotlight_eval_by_name=spotlight_eval_by_name,
+            axis_signals=axis_signals,
+            geometric_scores={
+                evaluation.candidate.name: float(evaluation.explanation.effective_score)
+                for evaluation in evaluations
+            },
+            geometric_ranks=geometric_ranks,
+            best_geometric_score=best_geometric_score,
+            spotlight_token=spotlight_token,
+            veto_margin=hybrid_veto_margin,
+            max_geometric_rank=hybrid_max_geometric_rank,
+        )
     if selection_mode == "axis_constrained":
         return _select_axis_constrained(
             token_order=token_order,
@@ -690,6 +848,48 @@ def _select_token_with_mode(
         veto_reason=raw_veto_reason,
         vetoed_tokens=vetoed_tokens,
     )
+
+
+def _select_actor_axis_constrained(
+    *,
+    token_order: tuple[str, ...],
+    raw_idx: int,
+    topk_indices: list[int],
+    policy_log_probs: np.ndarray,
+    evaluations: list[Any],
+    spotlight_eval_by_name: dict[str, Any],
+    axis_signals: dict[str, dict[str, Any]],
+    geometric_scores: dict[str, float],
+    geometric_ranks: dict[str, int],
+    best_geometric_score: float,
+    spotlight_token: str,
+    veto_margin: float,
+    max_geometric_rank: int,
+) -> dict[str, Any]:
+    record = _select_axis_constrained(
+        token_order=token_order,
+        raw_idx=raw_idx,
+        topk_indices=topk_indices,
+        policy_log_probs=policy_log_probs,
+        evaluations=evaluations,
+        spotlight_eval_by_name=spotlight_eval_by_name,
+        geometric_scores=geometric_scores,
+        geometric_ranks=geometric_ranks,
+        best_geometric_score=best_geometric_score,
+        spotlight_token=spotlight_token,
+        veto_margin=veto_margin,
+        max_geometric_rank=max_geometric_rank,
+    )
+    record["axis_signals"] = _selection_axis_signals(axis_signals)
+    record["hybrid_axis_scores"] = {
+        str(token_order[idx]): _actor_axis_score_summary(
+            spotlight_eval_by_name[str(token_order[idx])],
+            axis_signals.get(str(token_order[idx]), {}),
+            float(policy_log_probs[idx]),
+        )
+        for idx in topk_indices
+    }
+    return record
 
 
 def _select_axis_constrained(
@@ -864,6 +1064,36 @@ def _axis_constraint_violation(token: str, evaluation: Any | None) -> str | None
     return None
 
 
+def _actor_axis_constraint_violation(token: str, evaluation: Any | None, signal: dict[str, Any] | None) -> str | None:
+    if evaluation is None:
+        return "missing_evaluation"
+    if signal is None:
+        return "missing_axis_signal"
+    explanation = evaluation.explanation
+    if _axis_signal_float(signal, "actor_action_clearance_m") < _axis_signal_float(
+        signal,
+        "actor_action_clearance_min_m",
+    ):
+        return "actor_action_clearance"
+    if _axis_signal_float(signal, "actor_horizon_clearance_m") < _axis_signal_float(
+        signal,
+        "actor_horizon_clearance_min_m",
+    ):
+        return "actor_horizon_clearance"
+    if _axis_signal_float(signal, "static_action_clearance_m") < _axis_signal_float(
+        signal,
+        "static_action_clearance_min_m",
+    ):
+        return "static_action_clearance"
+    if _axis_signal_float(signal, "lane_margin_m") < _axis_signal_float(signal, "lane_margin_min_m"):
+        return "lane_margin"
+    if explanation.safety_penalty > 0.0:
+        return "unsafe_action"
+    if token == "stop" and explanation.stop_penalty > 0.0:
+        return "unnecessary_stop"
+    return None
+
+
 def _axis_lexicographic_key(evaluation: Any, policy_log_prob: float) -> tuple[float, ...]:
     explanation = evaluation.explanation
     score = evaluation.score
@@ -878,6 +1108,90 @@ def _axis_lexicographic_key(evaluation: Any, policy_log_prob: float) -> tuple[fl
         float(explanation.effective_score),
         float(policy_log_prob),
     )
+
+
+def _actor_axis_lexicographic_key(evaluation: Any, signal: dict[str, Any], policy_log_prob: float) -> tuple[float, ...]:
+    explanation = evaluation.explanation
+    score = evaluation.score
+    actor_action = _axis_signal_float(signal, "actor_action_clearance_m")
+    actor_horizon = _axis_signal_float(signal, "actor_horizon_clearance_m")
+    static_action = _axis_signal_float(signal, "static_action_clearance_m")
+    static_horizon = _axis_signal_float(signal, "static_horizon_clearance_m")
+    lane_margin = _axis_signal_float(signal, "lane_margin_m")
+    return (
+        1.0 if _actor_axis_constraint_violation(evaluation.candidate.name, evaluation, signal) is None else 0.0,
+        1.0 if actor_action >= _axis_signal_float(signal, "actor_action_clearance_min_m") else 0.0,
+        1.0 if actor_horizon >= _axis_signal_float(signal, "actor_horizon_clearance_min_m") else 0.0,
+        1.0 if static_action >= _axis_signal_float(signal, "static_action_clearance_min_m") else 0.0,
+        1.0 if lane_margin >= _axis_signal_float(signal, "lane_margin_min_m") else 0.0,
+        1.0 if score.inside_5s_region else 0.0,
+        1.0 if score.inside_3s_region else 0.0,
+        float(explanation.progress_bonus),
+        float(explanation.effective_score),
+        _capped_clearance(actor_action),
+        _capped_clearance(actor_horizon),
+        _capped_clearance(static_action),
+        _capped_clearance(static_horizon),
+        _capped_clearance(lane_margin),
+        float(policy_log_prob),
+    )
+
+
+def _actor_axis_score_summary(evaluation: Any, signal: dict[str, Any], policy_log_prob: float) -> dict[str, Any]:
+    key = _actor_axis_lexicographic_key(evaluation, signal, policy_log_prob)
+    axis_feasible = _axis_constraint_violation(evaluation.candidate.name, evaluation) is None
+    actor_proxy_feasible = _actor_axis_constraint_violation(evaluation.candidate.name, evaluation, signal) is None
+    return {
+        "feasible": bool(axis_feasible),
+        "actor_proxy_feasible": bool(actor_proxy_feasible),
+        "actor_clearance_key": _round_axis_value(key[9]),
+        "static_clearance_key": _round_axis_value(key[11]),
+        "lane_margin_key": _round_axis_value(key[13]),
+        "progress_bonus": _round_axis_value(evaluation.explanation.progress_bonus),
+        "policy_log_prob": round(float(policy_log_prob), 4) if math.isfinite(float(policy_log_prob)) else "-inf",
+    }
+
+
+def _axis_signal_float(signal: dict[str, Any], key: str) -> float:
+    value = signal.get(key)
+    if isinstance(value, str):
+        if value == "inf":
+            return math.inf
+        if value == "-inf":
+            return -math.inf
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return -math.inf
+
+
+def _capped_clearance(value: float) -> float:
+    if math.isinf(value):
+        return ACTOR_AXIS_CLEARANCE_CAP_M if value > 0.0 else -ACTOR_AXIS_CLEARANCE_CAP_M
+    if math.isnan(value):
+        return -ACTOR_AXIS_CLEARANCE_CAP_M
+    return max(-ACTOR_AXIS_CLEARANCE_CAP_M, min(ACTOR_AXIS_CLEARANCE_CAP_M, float(value)))
+
+
+def _selection_axis_signals(axis_signals: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    return {
+        token: {key: _round_axis_value(value) for key, value in signal.items()}
+        for token, signal in sorted(axis_signals.items())
+    }
+
+
+def _round_axis_value(value: Any) -> Any:
+    if isinstance(value, bool) or isinstance(value, int):
+        return value
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return value
+    if math.isinf(numeric):
+        return "inf" if numeric > 0.0 else "-inf"
+    if math.isnan(numeric):
+        return "nan"
+    return round(numeric, 4)
 
 
 def _selection_record(
@@ -898,6 +1212,8 @@ def _selection_record(
     max_geometric_rank: int,
     veto_reason: str,
     vetoed_tokens: list[dict[str, Any]],
+    axis_signals: dict[str, dict[str, Any]] | None = None,
+    hybrid_axis_scores: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     dagger_token = str(token_order[raw_idx])
     hybrid_token = str(token_order[chosen_idx])
@@ -911,7 +1227,7 @@ def _selection_record(
         decision_type = "spotlight_wins"
     else:
         decision_type = "compromise"
-    return {
+    record = {
         "dagger_argmax_token": dagger_token,
         "spotlight_token": spotlight_token,
         "hybrid_token": hybrid_token,
@@ -931,6 +1247,11 @@ def _selection_record(
         "veto_reason": veto_reason,
         "vetoed_tokens": list(vetoed_tokens),
     }
+    if axis_signals is not None:
+        record["axis_signals"] = axis_signals
+    if hybrid_axis_scores is not None:
+        record["hybrid_axis_scores"] = hybrid_axis_scores
+    return record
 
 
 def _prediction_scene_id(prediction_input: Any) -> str | None:
@@ -1182,7 +1503,7 @@ def _oracle_frame_to_current_hazards(
             "current_ego_pose": None,
         }
     return [], {
-        "frame_space": "legacy_relative",
+        "frame_space": "world",
         "world_actor_count": 0,
         "current_ego_pose": None,
     }

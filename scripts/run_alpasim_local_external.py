@@ -155,6 +155,28 @@ MODEL_PRESETS = {
             "MSA_TOKENBC_ORACLE_ACTOR_PROXY_TOLERANCE_US": "50000",
         },
     },
+    "token_dagger_iter2_actor_axis_oracle_actor_clamped": {
+        "config_file": ROOT
+        / "src"
+        / "minimal_shot_av"
+        / "simulator"
+        / "alpasim_configs"
+        / "driver"
+        / "token_dagger_bc_clamped.yaml",
+        "wizard_driver": "spotlight_reflex",
+        "checkpoint": ROOT / "artifacts" / "bc_models_iter2" / "token_dagger_bc.pt",
+        "requires_oracle_actor_proxy": True,
+        "driver_env": {
+            "MSA_TOKENBC_SELECTION_MODE": "actor_axis_constrained",
+            "MSA_TOKENBC_HYBRID_TOP_K": "3",
+            "MSA_TOKENBC_HYBRID_POLICY_TEMPERATURE": "1.0",
+            "MSA_TOKENBC_TRAJECTORY_MODE": "clamped_lateral",
+            "MSA_TOKENBC_MAX_LATERAL_OFFSET_M": "2.0",
+            "MSA_TOKENBC_SELECTION_LOG_PATH": "{run_dir}/driver/selection-log.jsonl",
+            "MSA_TOKENBC_ORACLE_ACTOR_PROXY_PATH": "{oracle_actor_proxy_path}",
+            "MSA_TOKENBC_ORACLE_ACTOR_PROXY_TOLERANCE_US": "50000",
+        },
+    },
     "token_dagger_srcdecay_clamped": {
         "config_file": ROOT
         / "src"

@@ -13,6 +13,7 @@ from scripts.run_alpasim_local_external import _preflight_docker_access
 from scripts.run_alpasim_local_external import _preflight_alpasim_base_image
 from scripts.run_alpasim_local_external import _validate_alpasim_checkout as validate_run_checkout
 from scripts.run_alpasim_local_external import (
+    MODEL_PRESETS,
     _driver_env,
     _driver_command,
     _preflight_platform_compatibility,
@@ -162,6 +163,13 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
 
         self.assertEqual("/tmp/run/driver/selection-log.jsonl", env["MSA_TOKENBC_SELECTION_LOG_PATH"])
         self.assertEqual("/tmp/oracle.json", env["MSA_TOKENBC_ORACLE_ACTOR_PROXY_PATH"])
+
+    def test_actor_axis_preset_requires_oracle_actor_proxy(self) -> None:
+        preset = MODEL_PRESETS["token_dagger_iter2_actor_axis_oracle_actor_clamped"]
+
+        self.assertTrue(preset["requires_oracle_actor_proxy"])
+        self.assertEqual("actor_axis_constrained", preset["driver_env"]["MSA_TOKENBC_SELECTION_MODE"])
+        self.assertEqual("3", preset["driver_env"]["MSA_TOKENBC_HYBRID_TOP_K"])
 
     def test_setup_script_applies_repo_tracked_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
