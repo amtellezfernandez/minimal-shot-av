@@ -48,11 +48,13 @@ Waymo AlpaSim validation shows the same multi-axis structure externally. In the 
 10-clip matrix, clamping repairs offroad/wrong-lane behavior while increasing collision,
 hard vetoing repairs progress/offroad while vetoing 1987/1990 DAgger argmax decisions,
 and source decay helps wrong-lane behavior without repairing offroad or collision. Actor
-completion is not yet a positive method: the apparent 0.700 to 0.400 collision reduction
-is a score-cutoff world-frame oracle diagnostic, weakens to 0.700 to 0.600 under raw
-full-rollout oracle evaluation, and the latest same-pass raw rear-risk actor-axis method
-leaves collision unchanged at 0.700 while increasing progress from 0.216 to 0.471 and
-worsening wrong-lane from 0.300 to 0.400. These non-co-monotone
+completion is not yet a positive method: in a matched 30-scene world-frame raw oracle
+rerun, collision remains 0.600 to 0.600 while offroad worsens from 0.207 to 0.310,
+wrong-lane improves from 0.241 to 0.172, and progress increases from 0.170 to 0.184.
+A first-impact audit sharpens the negative result: the same 18 clips collide under
+baseline and oracle; the baseline scorer sees clear corridor at impact, while the oracle
+sees actors and switches away from maintain yet still collides.
+These non-co-monotone
 interventions show that simulator transfer error decomposes into separate axes of
 geometry, safety, progress, and lane adherence rather than a single scalar robustness
 deficit. This identifies a narrower grounding issue: making the state representation more
@@ -163,8 +165,13 @@ We make six contributions (Fig.~\ref{fig:pipeline}):
     (Sec.~\ref{sec:exp:alpasim}).}
     A 10-clip external transfer matrix shows that clamping, source decay, and hard
     geometric vetoes repair different axes and damage others. A matched world-frame
-    actor-oracle rerun localizes part of the collision surface to missing dynamic actors,
-    while an explicit actor-axis proxy remains inconclusive as a positive method. Transfer
+    actor-oracle rerun removes the stale-frame confound but remains inconclusive for
+    collision causality: full actor completion leaves raw collision unchanged while
+    modestly improving progress and changing lane/offroad behavior in opposite directions.
+    A first-impact audit shows that actor completion changes both visibility and action
+    choice on the collision clips, so the residual collision surface lies beyond selector
+    ranking alone.
+    An explicit actor-axis proxy is likewise inconclusive as a positive method. Transfer
     failure is therefore not a single scalar degradation: offroad, wrong-lane, collision,
     progress, and distance-to-ground-truth expose distinct mechanisms.
 
@@ -732,39 +739,40 @@ Token-DAgger (source decay) & 0.600 & 0.900 & 0.400 & 0.175 & 62.92 & 27.16 \\
 
 \begin{table}[t]
 \centering
-\caption{Matched rear-risk actor-axis rerun on the same 10 AlpaSim clips. Rates are raw
-full-rollout summaries. $\Delta$ collision is the paired better/worse count against the
-same-pass axis-constrained baseline. The actor-axis proxy has full oracle-proxy timestamp
-coverage (1990/1990 frames) but remains an inconclusive external method.}
+\caption{Matched 30-scene world-frame oracle rerun on the same raw full-rollout metric for
+baseline and actor-complete proxy. Offroad and wrong-lane are valid on 29/30 scenes for
+each model; $\Delta$ collision is the paired better/worse count on the full 30-scene set.
+The world-frame oracle removes the stale-frame confound but remains inconclusive for
+collision causality.}
 \label{tab:alpasim_actor_axis_method}
 \scriptsize
 \begin{tabular}{lrrrrrrr}
 \toprule
 Policy & Collision & Offroad & Wrong lane & Progress & Dist. (m) & Dist.-GT & $\Delta$ col. \\
 \midrule
-Axis-constrained clamped (matched) & 0.700 & 0.100 & 0.300 & 0.216 & 33.34 & 1.31 & -- \\
-Rear-risk actor-axis oracle proxy & 0.700 & 0.100 & 0.400 & 0.471 & 90.91 & 8.55 & 0/0 \\
+Axis-constrained clamped (matched 30-scene) & 0.600 & 0.207 & 0.241 & 0.170 & 27.23 & 1.54 & -- \\
+World-frame oracle actor completion & 0.600 & 0.310 & 0.172 & 0.184 & 29.89 & 1.42 & 0/0 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}[t]
 \centering
-\caption{Metric provenance for the three actor-aware AlpaSim numbers. The rows answer
-different questions and must not be read as repeated measurements of one intervention.
-Only the same-pass raw rear-risk actor-axis row is a deployable-method result.}
+\caption{Metric provenance for the actor-aware AlpaSim numbers. The rows answer different
+questions and must not be read as repeated measurements of one intervention. Only the
+matched 30-scene raw world-frame oracle row is the canonical causal test in this paper.}
 \label{tab:alpasim_actor_provenance}
 \scriptsize
 \begin{tabular}{@{}p{0.18\linewidth}p{0.15\linewidth}p{0.17\linewidth}p{0.40\linewidth}@{}}
 \toprule
 Probe & Metric view & Collision & Allowed claim \\
 \midrule
-World-frame oracle & Score cutoff & 0.700 $\rightarrow$ 0.400 &
-Actor visibility affects cutoff-era collision accounting; diagnostic only. \\
-World-frame oracle & Raw full rollout & 0.700 $\rightarrow$ 0.600 &
-The oracle effect weakens to one paired raw improvement; inconclusive at $n=10$. \\
-Rear-risk actor-axis method & Same-pass raw & 0.700 $\rightarrow$ 0.700 &
-Deployable actor-axis proxy is active but not collision-positive. \\
+Historical world-frame oracle & Score cutoff & 0.700 $\rightarrow$ 0.400 &
+Cutoff-only diagnostic from the 10-clip sweep; not comparable to raw full-rollout rates. \\
+Historical world-frame oracle & Raw full rollout & 0.700 $\rightarrow$ 0.600 &
+Small-sample 10-clip diagnostic; superseded by the matched 30-scene rerun. \\
+Matched world-frame oracle & Raw full rollout & 0.600 $\rightarrow$ 0.600 &
+Canonical causal test: actor completion changes other axes but yields no paired collision gain. \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -801,18 +809,54 @@ fully recovered from candidates scored against an actor-incomplete proxy state.
 
 The world-frame actor-proxy probe fixes the earlier stale-frame oracle confound by storing
 actors in world coordinates and transforming them into the current rollout ego frame at
-inference time. Table~\ref{tab:alpasim_actor_provenance} separates its two diagnostic
-metric views from the deployable actor-axis method. The 0.700 to 0.400 number is a
-score-cutoff oracle result, not a method result; under raw full-rollout evaluation the
-same world-frame oracle weakens to 0.700 to 0.600. The method claim must therefore use the
-stricter same-pass raw rerun in Table~\ref{tab:alpasim_actor_axis_method}. In that rerun
-the oracle proxy hits every frame (1990/1990), and rear-flow risk is active on 312/1990
-frames, yet actor-axis selection does not change raw collision rate: 0.700 to 0.700, with
-zero paired improvements and zero paired regressions. It also leaves offroad unchanged at
-0.100, worsens wrong-lane from 0.300 to 0.400, and increases mean distance-to-ground-truth
-from 1.31~m to 8.55~m. The one robust positive signal is progress, which increases from
-0.216 to 0.471 (bootstrap 95\% CI [0.083, 0.444] for the paired mean delta). This is
-useful mechanism evidence, but it is not a deployable actor-aware method.
+inference time. Table~\ref{tab:alpasim_actor_provenance} separates the historical 10-clip
+diagnostics from the matched 30-scene raw rerun that we treat as canonical. In that
+matched rerun (Table~\ref{tab:alpasim_actor_axis_method}), collision remains unchanged at
+0.600 to 0.600, with zero paired improvements and zero paired regressions across 30
+scenes. Offroad worsens from 0.207 to 0.310 on the 29 valid comparisons, wrong-lane
+improves from 0.241 to 0.172 on the same valid subset, and mean progress increases from
+0.170 to 0.184 (bootstrap 95\% CI [0.004, 0.024] for the paired delta). The actor-complete
+oracle therefore changes metric ordering, but it does not establish actor-blindness as the
+primary cause of the collision failure surface.
+
+\begin{table}[t]
+\centering
+\caption{First-impact audit for the matched 30-scene baseline and world-frame oracle runs.
+The baseline collision frames look actor-blind to the scorer; the oracle frames are
+actor-aware and select non-maintain actions, yet the same collision scenes remain.}
+\label{tab:alpasim_collision_surface}
+\scriptsize
+\begin{tabular}{lrr}
+\toprule
+Audit quantity & Baseline & World-frame oracle \\
+\midrule
+Raw collision scenes & 18/30 & 18/30 \\
+Paired collision changes & \multicolumn{2}{c}{0 improved, 0 worsened} \\
+First-impact top candidate is \token{maintain} & 18/18 & 0/17 logged \\
+First-impact selected token is not \token{maintain} & 12/18 & 17/17 logged \\
+First-impact structured hazards present & 0/18 & 17/17 logged \\
+Rear-lane hazard at logged rear impacts & -- & 14/14 \\
+First-impact component unchanged & \multicolumn{2}{c}{17/18} \\
+Median first-impact time shift & \multicolumn{2}{c}{+0.1\,s} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:alpasim_collision_surface} distinguishes the proxy question from the
+remaining collision question. In the baseline, every raw-collision clip has a selection
+log; at the first collision frame, the geometric scorer's top candidate is \token{maintain}
+for all 18 clips and the structured-hazard count is zero. In the oracle run, 17/18
+collision clips have first-impact selector logs. All 17 have an oracle proxy hit, a
+positive structured-hazard count, a non-\token{maintain} geometric top candidate, and a
+non-\token{maintain} selected token. For the logged oracle rear impacts, rear-lane hazards
+are present in 14/14 cases. Despite this, the oracle collides on the same 18 clips, with
+the same first-impact component in 17/18 cases and a median first-impact time shift of
+only +0.1\,s. The failure is therefore not explained by actor visibility or action ranking
+alone. What remains unresolved is whether the bounded token set lacks a collision-avoiding
+candidate, whether the low-level controller cannot execute that candidate under AlpaSim
+dynamics, or whether traffic interaction requires a response class not represented by the
+current tokens. Resolving that split requires counterfactual candidate/controller replay,
+not another selector-only oracle rerun.
 
 \begin{table}[t]
 \centering
@@ -963,8 +1007,8 @@ separate the axes:
     the 10-clip matrix; both increase it. Geometry repair and progress repair are
     therefore not equivalent to safety repair.
   \item \textbf{Actor-completeness axis.} World-frame actor injection is a diagnostic
-    factor, not a solved transfer method: the latest same-pass raw actor-axis rerun has
-    full oracle-proxy timestamp coverage but leaves collision unchanged.
+    factor, not a solved transfer method: the matched 30-scene raw world-frame oracle
+    rerun leaves collision unchanged despite complete actor injection.
   \item \textbf{Actor-axis method axis.} The explicit rear-risk actor-axis proxy increases
     progress and distance travelled, but it leaves raw collision/offroad unchanged and
     worsens wrong-lane. Scaling this variant as a positive method would overstate the
@@ -1266,10 +1310,10 @@ and externally invalid: 1987/1990 DAgger argmax decisions are rejected by the ge
 suppression layer. This is not a threshold-tuning problem; it indicates that proxy-state
 reconstruction changes the decision geometry. The 10-clip matrix further shows that
 interventions are not co-monotone across collision, offroad, wrong-lane, progress, and
-tracking error. The actor-aware external result is also limited: even with 1990/1990
-oracle-proxy timestamp hits and rear-risk activations on 312/1990 frames, the latest
-matched raw actor-axis rerun leaves collision unchanged and worsens wrong-lane while
-improving progress. Future work should validate token policies under multiple independent
+tracking error. The actor-aware external result is also limited: even the matched
+30-scene world-frame oracle rerun leaves collision unchanged while worsening offroad,
+improving wrong-lane, and slightly increasing progress. Future work should validate token
+policies under multiple independent
 simulators, log per-frame disagreement with geometric constraints, separate rear/at-fault
 collisions, and report per-axis failure metrics rather than tuning one aggregate score.
 
@@ -1290,10 +1334,10 @@ and the resulting transfer error is multi-axis. Lateral clamping repairs offroad
 wrong-lane behavior but increases collision rate. Hard geometric suppression repairs
 progress and offroad behavior but vetoes 1987/1990 learned argmax decisions, raises
 collision rate, and leaves wrong-lane rate unchanged. Source decay improves wrong-lane
-rate but does not repair offroad or collision. The actor-aware proxy then shows the same
-pattern: full oracle-proxy coverage and rear-risk signals increase progress, but do not
-reduce raw collision and worsen wrong-lane. The useful finding is therefore not that
-DAgger plus a veto layer or actor-axis proxy is a winning method. It is that offline
+rate but does not repair offroad or collision. The actor-aware oracle then shows the same
+pattern: full actor completion changes offroad, wrong-lane, and progress, but does not
+reduce raw collision. The useful finding is therefore not that DAgger plus a veto layer
+or actor completion is a winning method. It is that offline
 accuracy and internal closed-loop performance can be structurally misleading
 proxies for external robustness when the state reconstruction interface changes the metric
 ordering of the decision problem.

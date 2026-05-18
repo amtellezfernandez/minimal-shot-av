@@ -1,5 +1,5 @@
 {
-  "repo_commit": "19d0c8a21ba5a445e667e736bda19ec0a2c5ac5e",
+  "repo_commit": "76bccf30d0f3e39ed2034a856c5c845ddeb488fc",
   "results": [
     {
       "hf_path": "results/bc_vs_spotlight.json",
@@ -77,14 +77,39 @@
       "description": "World-frame 10-scene oracle actor proxy used by the AlpaSim oracle and actor-axis reruns."
     },
     {
+      "hf_path": "results/alpasim_actor_blindness_30scene_raw_analysis.json",
+      "local_path": "artifacts/alpasim_actor_blindness_30scene_raw_analysis.json",
+      "description": "Canonical matched 30-scene raw paired analysis for the world-frame oracle actor-completion rerun."
+    },
+    {
+      "hf_path": "results/alpasim_actor_blindness_30scene_raw_analysis.md",
+      "local_path": "artifacts/alpasim_actor_blindness_30scene_raw_analysis.md",
+      "description": "Human-readable paired summary for the canonical matched 30-scene world-frame oracle rerun."
+    },
+    {
+      "hf_path": "results/alpasim_oracle_actor_proxy_30scene.json",
+      "local_path": "artifacts/alpasim_oracle_actor_proxy_30scene.json",
+      "description": "World-frame 30-scene oracle actor proxy built from the matched axis-constrained baseline rerun."
+    },
+    {
+      "hf_path": "results/alpasim_collision_surface_30scene_audit.json",
+      "local_path": "artifacts/alpasim_collision_surface_30scene_audit.json",
+      "description": "First-impact collision-surface audit aligning raw collision frames, selector logs, oracle proxy hits, and controller traces for the matched 30-scene baseline and world-frame oracle reruns."
+    },
+    {
+      "hf_path": "results/alpasim_collision_surface_30scene_audit.md",
+      "local_path": "artifacts/alpasim_collision_surface_30scene_audit.md",
+      "description": "Human-readable first-impact audit showing that actor completion changes awareness and action choice but leaves the 30-scene raw collision surface unchanged."
+    },
+    {
       "hf_path": "paper/corl2027/paper.pdf",
       "local_path": "docs/corl2027/paper.pdf",
-      "description": "Current CoRL manuscript PDF aligned with the matched raw rear-risk actor-axis AlpaSim evidence."
+      "description": "Current CoRL manuscript PDF aligned with the matched 30-scene raw world-frame oracle AlpaSim evidence."
     },
     {
       "hf_path": "paper/corl2027/paper.tex",
       "local_path": "docs/corl2027/paper.tex",
-      "description": "Current CoRL manuscript source aligned with the matched raw rear-risk actor-axis AlpaSim evidence."
+      "description": "Current CoRL manuscript source aligned with the matched 30-scene raw world-frame oracle AlpaSim evidence."
     },
     {
       "hf_path": "paper/corl2027/alpasim_matrix10_with_axis_analysis.md",

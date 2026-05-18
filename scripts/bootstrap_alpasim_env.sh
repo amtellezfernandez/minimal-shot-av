@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UV_BIN="${UV_BIN:-$(command -v uv || true)}"
 ALPASIM_ROOT="${ALPASIM_ROOT:-$ROOT/alpasim}"
+TORCH_PACKAGE="${TORCH_PACKAGE:-torch==2.11.0+cu129}"
+TORCH_INDEX_URL="${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu129}"
 
 if [[ -z "$UV_BIN" ]]; then
   echo "uv is required. Install it first, e.g. python3 -m pip install --user uv" >&2
@@ -19,6 +21,11 @@ fi
 env UV_CACHE_DIR="$ROOT/.uv-cache" "$UV_BIN" pip install \
   --python "$ROOT/.venv/bin/python" \
   -e "$ROOT[alpasim]"
+
+env UV_CACHE_DIR="$ROOT/.uv-cache" "$UV_BIN" pip install \
+  --python "$ROOT/.venv/bin/python" \
+  --index-url "$TORCH_INDEX_URL" \
+  "$TORCH_PACKAGE"
 
 if [[ -d "$ALPASIM_ROOT/src/driver" ]]; then
   ALPASIM_ROOT="$ALPASIM_ROOT" "$ROOT/.venv/bin/python" "$ROOT/scripts/setup_alpasim_local_plugin.py"

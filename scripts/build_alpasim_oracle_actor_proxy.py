@@ -5,6 +5,7 @@ import argparse
 import asyncio
 import json
 import math
+import struct
 import sys
 from dataclasses import dataclass
 from datetime import datetime
@@ -94,29 +95,85 @@ def _discover_asl_files(asl_files: Iterable[Path], run_dirs: Iterable[Path]) -> 
         if run_dir.is_file() and run_dir.name.endswith(".asl"):
             discovered.append(run_dir.resolve())
         elif run_dir.is_dir():
-            discovered.extend(path.resolve() for path in run_dir.rglob("rollout.asl") if path.is_file())
+            candidate_run_dirs = [run_dir] if (run_dir / "aggregate").is_dir() else [
+                path for path in sorted(run_dir.iterdir()) if path.is_dir()
+            ]
+            for candidate_run_dir in candidate_run_dirs:
+                selected = _asl_for_completed_run(candidate_run_dir)
+                if selected is not None:
+                    discovered.append(selected)
+                    continue
+                discovered.extend(path.resolve() for path in candidate_run_dir.rglob("rollout.asl") if path.is_file())
     unique = sorted(dict.fromkeys(discovered))
     return unique
 
 
+def _asl_for_completed_run(run_dir: Path) -> Path | None:
+    rollout_id = _aggregate_rollout_id(run_dir)
+    if not rollout_id:
+        return None
+    matches = [
+        path.resolve()
+        for path in run_dir.rglob("rollout.asl")
+        if path.parent.name == rollout_id
+    ]
+    if len(matches) == 1:
+        return matches[0]
+    return None
+
+
+def _aggregate_rollout_id(run_dir: Path) -> str | None:
+    aggregate_path = run_dir / "aggregate" / "metrics_unprocessed.parquet"
+    if not aggregate_path.is_file():
+        return None
+    try:
+        import pyarrow.parquet as pq
+
+        table = pq.read_table(aggregate_path, columns=["rollout_id"])
+    except Exception:
+        return None
+    values = [
+        str(value.as_py())
+        for value in table.column("rollout_id")
+        if value.as_py() not in (None, "")
+    ]
+    unique = sorted(set(values))
+    if len(unique) == 1:
+        return unique[0]
+    return None
+
+
 async def _build_proxy(args: argparse.Namespace, asl_files: list[Path]) -> dict[str, Any]:
     try:
-        from alpasim_utils.logs import async_read_pb_log
+        from alpasim_grpc.v0.logging_pb2 import LogEntry
     except ImportError as exc:
         raise SystemExit(
-            "Could not import alpasim_utils.logs. Run with the AlpaSim environment, for example:\n"
-            "  PYTHONPATH=alpasim/src/grpc:alpasim/src/utils alpasim/.venv/bin/python "
+            f"Could not import AlpaSim logging protobufs ({exc}). Run with the AlpaSim environment, for example:\n"
+            "  PYTHONPATH=alpasim/src/grpc alpasim/.venv/bin/python "
             "scripts/build_alpasim_oracle_actor_proxy.py ..."
         ) from exc
+
+    async def read_pb_log(fname: str, raise_on_malformed: bool = False) -> Any:
+        with open(fname, "rb", buffering=1024 * 1024) as file:
+            while size_prefix := file.read(4):
+                (message_size,) = struct.unpack(">L", size_prefix)
+                message_chunk = file.read(message_size)
+                if len(message_chunk) != message_size:
+                    message = f"Malformed ASL log {fname}: expected {message_size} bytes, found {len(message_chunk)}"
+                    if raise_on_malformed:
+                        raise OSError(message)
+                    break
+                yield LogEntry.FromString(message_chunk)
 
     frames: dict[str, dict[str, Any]] = {}
     scene_ids: set[str] = set()
     collision_count = 0
     source_files = []
 
-    for asl_path in asl_files:
+    for index, asl_path in enumerate(asl_files, start=1):
         source_files.append(str(asl_path))
-        result = await _frames_from_asl(async_read_pb_log, asl_path, args)
+        result = await _frames_from_asl(read_pb_log, asl_path, args)
+        print(f"Parsed ASL {index}/{len(asl_files)}: {asl_path}", flush=True)
         scene_id = result["scene_id"]
         if scene_id:
             scene_ids.add(scene_id)

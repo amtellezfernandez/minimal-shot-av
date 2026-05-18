@@ -13,17 +13,22 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ALPASIM_ROOT = ROOT / "alpasim"
 ALPASIM_OVERRIDE_ROOT = ROOT / "third_party" / "alpasim_overrides"
 REQUIRED_MODELS = ("spotlight_reflex", "token_dagger_bc")
+TORCH_PACKAGE = "torch==2.11.0+cu129"
+TORCH_INDEX_URL = "https://download.pytorch.org/whl/cu129"
 ALPASIM_CORE_DEPENDENCIES = (
     "PyYAML>=6",
+    "aiofiles",
     "GitPython",
     "boto3",
     "click",
+    "csaps",
     "dataclasses-json>=0.6.7",
     "filelock",
     "grpcio",
     "grpcio-tools",
     "huggingface_hub",
     "hydra-core",
+    "imageio[ffmpeg]",
     "matplotlib",
     "numpy",
     "omegaconf",
@@ -40,7 +45,6 @@ ALPASIM_CORE_DEPENDENCIES = (
     "rich",
     "scipy",
     "setuptools<82",
-    "torch",
     "tqdm",
     "types-PyYAML",
     "typing-extensions",
@@ -48,6 +52,7 @@ ALPASIM_CORE_DEPENDENCIES = (
 ALPASIM_EDITABLE_PACKAGES = (
     "src/plugins",
     "src/grpc",
+    "src/utils_rs",
     "src/utils",
     "src/driver",
     "src/wizard",
@@ -103,9 +108,9 @@ def main() -> None:
                 str(ROOT / ".uv-cache"),
                 "--python",
                 str(venv_python),
+                "--no-deps",
                 "-e",
                 str(ROOT),
-                "PyYAML>=6",
             ],
             cwd=ROOT,
         )
@@ -243,6 +248,22 @@ def _bootstrap_alpasim_venv(alpasim_root: Path, *, uv_bin: str) -> None:
             "--python",
             str(venv_python),
             *ALPASIM_CORE_DEPENDENCIES,
+        ],
+        cwd=alpasim_root,
+    )
+
+    _run(
+        [
+            uv_bin,
+            "pip",
+            "install",
+            "--cache-dir",
+            str(ROOT / ".uv-cache"),
+            "--python",
+            str(venv_python),
+            "--index-url",
+            TORCH_INDEX_URL,
+            TORCH_PACKAGE,
         ],
         cwd=alpasim_root,
     )

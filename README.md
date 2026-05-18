@@ -190,15 +190,20 @@ extracts privileged world-frame actor poses from AlpaSim ASL logs, and the
 same learned selector for a controlled oracle-proxy ablation
 ([commands](docs/notes/alpasim-integration.md#oracle-actor-proxy-ablation)).
 Do not conflate the actor-aware numbers: the `0.70 -> 0.40` collision reduction is a
-score-cutoff world-frame oracle diagnostic, the same oracle weakens to `0.70 -> 0.60`
-under raw full-rollout evaluation, and the deployable rear-risk actor-axis method is the
-latest same-pass raw result. That method has full timestamp coverage (`1990/1990` proxy
-hits) and activates rear-flow risk on `312/1990` frames, but raw collision stays
-`0.70 -> 0.70`, offroad stays `0.10 -> 0.10`, wrong-lane worsens `0.30 -> 0.40`, and
-progress improves `0.216 -> 0.471`. Scene 3 is the mechanism example: actor-aware signals
-improve progress/route tracking while introducing wrong-lane behavior, so the remaining
-bottleneck is lane/offroad ranking and candidate/controller calibration rather than
-missing proxy instrumentation.
+score-cutoff world-frame oracle diagnostic, and the historical `0.70 -> 0.60` raw result
+was a 10-clip diagnostic. The canonical causal test is the matched `30/30` raw world-frame
+oracle rerun in [`artifacts/alpasim_actor_blindness_30scene_raw_analysis.md`](artifacts/alpasim_actor_blindness_30scene_raw_analysis.md):
+collision stays `0.60 -> 0.60` with `better=0, worse=0`, offroad worsens
+`0.207 -> 0.310`, wrong-lane improves `0.241 -> 0.172`, and progress improves
+`0.170 -> 0.184`. That makes the actor-complete probe informative but still inconclusive
+for the collision-causality question. The follow-up collision-surface audit
+([Markdown](artifacts/alpasim_collision_surface_30scene_audit.md),
+[JSON](artifacts/alpasim_collision_surface_30scene_audit.json)) shows why: the same
+`18/30` clips collide under baseline and oracle. At first impact, baseline logs show
+`maintain` as top candidate and `0/18` structured-hazard frames, while oracle logs show
+proxy hits, actors, and non-maintain selected actions on `17/17` logged collision clips.
+The remaining collision surface therefore points beyond selector ranking alone, toward
+candidate-set coverage or controller/traffic execution.
 
 This table evaluates learned-policy transfer variants. It should be read as the
 transfer-diagnostic extension rather than a replacement for the original Spotlight
