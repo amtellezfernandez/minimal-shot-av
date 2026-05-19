@@ -184,6 +184,55 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertEqual(plan.metrics["rear_actor_count"], 1)
         self.assertEqual(plan.metrics["rear_closing_actor_count"], 1)
 
+    def test_direct_actor_planner_max_clearance_objective_ignores_cost_tie_bias(self) -> None:
+        scenario = scenario_at_tick(
+            scenario_from_command(
+                "straight",
+                {
+                    "route_waypoints": [
+                        {"x": 0.0, "y": 0.0, "z": 0.0},
+                        {"x": 40.0, "y": 0.0, "z": 0.0},
+                    ],
+                    "structured_hazards": [
+                        {
+                            "x": 8.0,
+                            "y": 0.0,
+                            "radius": 0.8,
+                            "kind": "vehicle",
+                            "label": "center_obstacle",
+                        }
+                    ],
+                },
+            ),
+            0,
+        )
+        base_config = dict(
+            speed_scales=(0.8,),
+            lateral_offsets_m=(0.0, 3.0),
+            max_lateral_offset_m=3.0,
+            clearance_weight=0.0,
+            collision_weight=0.0,
+            lane_weight=0.0,
+            route_weight=0.0,
+            lateral_weight=10.0,
+        )
+
+        cost_plan = plan_direct_actor_trajectory(
+            scenario,
+            speed_mps=6.0,
+            config=DirectPlannerConfig(selection_objective="cost", **base_config),
+        )
+        clearance_plan = plan_direct_actor_trajectory(
+            scenario,
+            speed_mps=6.0,
+            config=DirectPlannerConfig(selection_objective="max_clearance", **base_config),
+        )
+
+        self.assertEqual(cost_plan.metrics["selection_objective"], "cost")
+        self.assertEqual(clearance_plan.metrics["selection_objective"], "max_clearance")
+        self.assertLess(cost_plan.metrics["min_clearance_m"], clearance_plan.metrics["min_clearance_m"])
+        self.assertAlmostEqual(clearance_plan.metrics["lateral_offset_m"], 3.0)
+
     def test_alpasim_signal_uses_route_waypoints_as_lane_center(self) -> None:
         prediction_input = SimpleNamespace(
             camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},

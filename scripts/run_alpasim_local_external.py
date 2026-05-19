@@ -47,6 +47,25 @@ MODEL_PRESETS = {
             "MSA_DIRECT_PLANNER_LOG_PATH": "{run_dir}/driver/direct-planner-log.jsonl",
         },
     },
+    "direct_actor_planner_max_clearance_oracle": {
+        "config_file": ROOT
+        / "src"
+        / "minimal_shot_av"
+        / "simulator"
+        / "alpasim_configs"
+        / "driver"
+        / "direct_actor_planner.yaml",
+        "wizard_driver": "spotlight_reflex",
+        "checkpoint": None,
+        "requires_oracle_actor_proxy": True,
+        "force_cuda": False,
+        "driver_env": {
+            "MSA_DIRECT_PLANNER_SELECTION_OBJECTIVE": "max_clearance",
+            "MSA_DIRECT_PLANNER_ORACLE_ACTOR_PROXY_PATH": "{oracle_actor_proxy_path}",
+            "MSA_DIRECT_PLANNER_ORACLE_ACTOR_PROXY_TOLERANCE_US": "50000",
+            "MSA_DIRECT_PLANNER_LOG_PATH": "{run_dir}/driver/direct-planner-log.jsonl",
+        },
+    },
     "token_dagger_iter2": {
         "config_file": ROOT / "src" / "minimal_shot_av" / "simulator" / "alpasim_configs" / "driver" / "token_dagger_bc.yaml",
         "wizard_driver": "spotlight_reflex",

@@ -39,6 +39,7 @@ from .environment import (
 
 @dataclass(frozen=True)
 class DirectPlannerConfig:
+    selection_objective: str = "cost"
     horizon_seconds: float = 5.0
     point_count: int = 20
     clearance_target_m: float = 1.25
@@ -102,6 +103,12 @@ class DirectActorPlannerAlpaSimModel(BaseTrajectoryModel):
             str(_cfg_value(model_cfg, "selection_log_path", "") or ""),
         ).strip()
         config = DirectPlannerConfig(
+            selection_objective=_env_str(
+                "MSA_DIRECT_PLANNER_SELECTION_OBJECTIVE",
+                model_cfg,
+                "selection_objective",
+                defaults.selection_objective,
+            ),
             horizon_seconds=_env_float(
                 "MSA_DIRECT_PLANNER_HORIZON_SECONDS",
                 model_cfg,
@@ -172,6 +179,7 @@ class DirectActorPlannerAlpaSimModel(BaseTrajectoryModel):
                 defaults.rear_flow_weight,
             ),
         )
+        _validate_selection_objective(config.selection_objective)
         return cls(
             camera_ids=camera_ids,
             context_length=context_length or 1,
@@ -337,7 +345,9 @@ def plan_direct_actor_trajectory(
     config: DirectPlannerConfig | None = None,
 ) -> DirectPlan:
     config = config or DirectPlannerConfig()
+    _validate_selection_objective(config.selection_objective)
     best: DirectPlan | None = None
+    best_key: tuple[float, ...] | None = None
     candidate_count = 0
     speed_scales = tuple(
         scale for scale in config.speed_scales if 0.0 <= scale <= max(0.0, config.max_accel_speed_scale)
@@ -365,8 +375,10 @@ def plan_direct_actor_trajectory(
                 config=config,
             )
             plan = DirectPlan(trajectory=trajectory, cost=cost, metrics=metrics)
-            if best is None or plan.cost < best.cost:
+            key = _plan_rank_key(plan, config=config)
+            if best is None or best_key is None or key > best_key:
                 best = plan
+                best_key = key
     if best is None:
         candidate_count += 1
         trajectory = _candidate_trajectory(
@@ -386,7 +398,29 @@ def plan_direct_actor_trajectory(
         )
         best = DirectPlan(trajectory=trajectory, cost=cost, metrics=metrics)
     best.metrics["candidate_count"] = candidate_count
+    best.metrics["selection_objective"] = config.selection_objective
     return best
+
+
+def _validate_selection_objective(selection_objective: str) -> None:
+    if selection_objective not in {"cost", "max_clearance"}:
+        raise ValueError("selection_objective must be one of: cost, max_clearance")
+
+
+def _plan_rank_key(plan: DirectPlan, *, config: DirectPlannerConfig) -> tuple[float, ...]:
+    min_clearance = _metric_float(plan.metrics.get("min_clearance_m"))
+    progress = _metric_float(plan.metrics.get("progress_m"))
+    lane_violation = _metric_float(plan.metrics.get("lane_violation_mean_sq"))
+    route_deviation = _metric_float(plan.metrics.get("max_route_deviation_m"))
+    if config.selection_objective == "max_clearance":
+        return (
+            min_clearance,
+            progress,
+            -lane_violation,
+            -route_deviation,
+            -float(plan.cost),
+        )
+    return (-float(plan.cost), min_clearance, progress)
 
 
 def _candidate_trajectory(
@@ -640,6 +674,24 @@ def _env_int(env_name: str, model_cfg: Any, key: str, default: int) -> int:
     if raw is None:
         raw = _cfg_value(model_cfg, key, default)
     return int(raw)
+
+
+def _env_str(env_name: str, model_cfg: Any, key: str, default: str) -> str:
+    raw = os.getenv(env_name)
+    if raw is None:
+        raw = _cfg_value(model_cfg, key, default)
+    return str(raw)
+
+
+def _metric_float(value: Any) -> float:
+    if value == "inf":
+        return math.inf
+    if value == "-inf":
+        return -math.inf
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return math.nan
 
 
 def _compact_signal(signal: dict[str, Any]) -> dict[str, Any]:

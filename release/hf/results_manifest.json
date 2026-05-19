@@ -132,6 +132,16 @@
       "description": "Human-readable paired summary for the selector-free direct actor-aware planner collision18 diagnostic."
     },
     {
+      "hf_path": "results/alpasim_direct_grid_max_clearance_collision18_analysis.json",
+      "local_path": "artifacts/alpasim_direct_grid_max_clearance_collision18_analysis.json",
+      "description": "Matched 18-scene max-clearance selector-free direct-grid oracle replay on baseline collision clips, testing whether a cost-free clearance objective resolves residual collisions."
+    },
+    {
+      "hf_path": "results/alpasim_direct_grid_max_clearance_collision18_analysis.md",
+      "local_path": "artifacts/alpasim_direct_grid_max_clearance_collision18_analysis.md",
+      "description": "Human-readable paired summary for the max-clearance selector-free direct-grid oracle collision18 replay."
+    },
+    {
       "hf_path": "paper/corl2027/paper.pdf",
       "local_path": "docs/corl2027/paper.pdf",
       "description": "Current CoRL manuscript PDF aligned with the matched 30-scene raw world-frame oracle AlpaSim evidence."

@@ -897,11 +897,42 @@ in 20 of them, while only 5 are selector-side misses. At scene level, only 4/18 
 any actor-axis-safe selector miss, 2/18 have no actionable actor-axis-safe token, and
 12/18 have actor-axis-safe selections that still collide later. This narrows the residual
 collision explanation: selector miss exists, but it is not the dominant explanation in
-the current logs. What remains unresolved is whether the bounded token set lacks a
-collision-avoiding candidate, whether the low-level controller cannot execute that
-candidate under AlpaSim dynamics, or whether traffic interaction requires a response class
-not represented by the current tokens. Resolving that split requires counterfactual
-candidate/controller replay, not another selector-only oracle rerun.
+the current logs.
+
+\begin{table}[t]
+\centering
+\caption{Closed-loop selector-free direct-grid replay on the 18 baseline collision clips.
+Both direct-grid planners use the same world-frame oracle actor proxy and bypass the
+learned token selector. The collision reduction is only two paired clips
+($p=0.5000$), so this is a diagnostic replay rather than a solved interaction method.}
+\label{tab:alpasim_direct_grid_replay}
+\scriptsize
+\begin{tabular}{lrrrrrrr}
+\toprule
+Policy & Collision & Offroad & Wrong lane & Progress & Dist. (m) & Dist.-GT & $\Delta$ col. \\
+\midrule
+Axis-constrained clamped collision subset & 1.000 & 0.118 & 0.235 & 0.167 & 25.49 & 1.41 & -- \\
+Selector-free direct grid, cost-ranked & 0.889 & 0.125 & 0.312 & 0.246 & 39.88 & 1.02 & 2/0 \\
+Selector-free direct grid, max-clearance & 0.889 & 0.059 & 0.176 & 0.174 & 26.78 & 0.74 & 2/0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+We then run the missing closed-loop replay directly. Before simulation, an open-loop
+action-space upper-bound audit found proxy-safe direct-grid actions in 962/1027 actionable
+pre-impact frames, and the direct-grid cost selected proxy-safe actions in all 962 such
+frames. If cost ranking were the main bottleneck, a selector-free closed-loop replay
+should therefore collapse the collision rate. Table~\ref{tab:alpasim_direct_grid_replay}
+shows that it does not. The cost-ranked direct grid improves progress
+(0.167 to 0.246, paired bootstrap 95\% CI [0.044, 0.115]) but still collides on 16/18
+clips. A deliberately cost-free max-clearance objective also collides on 16/18 clips,
+while improving distance-to-ground-truth (1.41\,m to 0.74\,m, paired bootstrap 95\% CI
+[-1.224, -0.189]). The residual collision surface is therefore not explained by the
+learned selector alone, nor by the direct-grid cost preferring unsafe candidates. What
+remains unresolved is whether the closed-loop controller cannot execute the proxy-safe
+trajectories under AlpaSim dynamics, whether receding-horizon replanning erodes the
+open-loop clearance, or whether the proxy clearance model is still mismatched to the
+simulator collision surface.
 
 \begin{table}[t]
 \centering

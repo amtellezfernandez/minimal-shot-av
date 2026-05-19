@@ -211,7 +211,14 @@ world-frame actor proxy into the baseline timeline and reconstructs candidate fe
 without rerunning AlpaSim. It finds `0/18` actor-axis-safe first-impact frames, only
 `5/25` missed actor-axis-safe actionable frames, and `12/18` scenes where actor-axis-safe
 selected tokens still collide later. That narrows selector miss to a minority explanation;
-the remaining proof step is true candidate/controller replay.
+the remaining proof step is true candidate/controller replay. The selector-free direct
+grid replay now covers that next step
+([cost-ranked](artifacts/alpasim_direct_actor_planner_collision18_v2_analysis.md),
+[max-clearance](artifacts/alpasim_direct_grid_max_clearance_collision18_analysis.md)):
+both runs improve only `2/18` collision clips (`1.000 -> 0.889`, McNemar `p=0.5000`).
+The max-clearance replay also improves distance-to-ground-truth (`1.41 m -> 0.74 m`),
+but it still collides on `16/18` clips, so the residual failure is not explained by the
+learned selector or direct-grid cost ranking alone.
 
 This table evaluates learned-policy transfer variants. It should be read as the
 transfer-diagnostic extension rather than a replacement for the original Spotlight

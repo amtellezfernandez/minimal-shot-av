@@ -44,6 +44,7 @@ MODEL_LABELS = {
     "token_dagger_iter2_hybrid_clamped": "hybrid_clamped",
     "token_dagger_srcdecay": "srcdecay",
     "direct_actor_planner_oracle": "selector_free_direct_actor_planner",
+    "direct_actor_planner_max_clearance_oracle": "selector_free_direct_grid_max_clearance_oracle",
 }
 
 

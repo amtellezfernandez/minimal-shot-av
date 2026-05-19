@@ -288,6 +288,34 @@ active rear-flow gating (`312/1990` risk frames), leaves collision unchanged
 stricter lane/offroad ranking plus candidate/controller calibration under explicit actor
 cues.
 
+## Selector-Free Direct-Grid Collision Replay
+
+The collision18 replay tests whether the residual collision surface is caused by the
+learned selector or by the downstream candidate/controller interface. It links the
+18 baseline collision scenes from the matched 30-scene axis-constrained run, then runs a
+selector-free direct actor-aware planner with the same world-frame oracle actor proxy.
+
+Cost-ranked direct grid:
+
+```bash
+scripts/run_alpasim_direct_actor_planner_collision18.sh
+```
+
+Max-clearance direct grid:
+
+```bash
+DIRECT_MODEL=direct_actor_planner_max_clearance_oracle \
+MATRIX_DIR="$PWD/runs/alpasim_direct_grid_max_clearance_collision18" \
+ANALYSIS_JSON="$PWD/artifacts/alpasim_direct_grid_max_clearance_collision18_analysis.json" \
+ANALYSIS_MD="$PWD/artifacts/alpasim_direct_grid_max_clearance_collision18_analysis.md" \
+scripts/run_alpasim_direct_actor_planner_collision18.sh
+```
+
+Current matched result: both direct-grid variants reduce collision from `18/18` to
+`16/18` (`1.000 -> 0.889`, McNemar `p=0.5000`). The max-clearance variant improves
+distance-to-ground-truth (`1.41 m -> 0.74 m`) but does not solve collision, so the
+residual failure should not be described as a learned-selector-only defect.
+
 ## One-Command Local Launch
 
 To validate the full path on a small matched scene set:
@@ -320,12 +348,16 @@ Supported model presets:
 - `token_dagger_iter2_hybrid_clamped`
 - `token_dagger_srcdecay_hybrid`
 - `token_dagger_srcdecay_hybrid_clamped`
+- `token_dagger_iter2_axis_constrained_oracle_actor_clamped`
+- `direct_actor_planner_oracle`
+- `direct_actor_planner_max_clearance_oracle`
 
 Supported scene presets:
 
 - `fresh_3scene`
 - `front_camera_10scene_smoke`
 - `front_camera_30scene_merged`
+- `front_camera_collision18`
 
 Notes:
 

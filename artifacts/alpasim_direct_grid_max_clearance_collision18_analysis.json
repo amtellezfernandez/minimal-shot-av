@@ -1,0 +1,375 @@
+{
+  "all_models_common_clip_ids": [
+    "clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888",
+    "clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75",
+    "clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e",
+    "clipgt-804afc4a-fd1e-4f58-bd39-a4c486a916e5",
+    "clipgt-825dc886-0491-482a-abe3-e1743f5972b8",
+    "clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b",
+    "clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30",
+    "clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06",
+    "clipgt-89f2eeb8-f4e4-42a1-8e07-d60003d223dc",
+    "clipgt-8aaa1135-573f-4f6c-8ff8-7ac6bd6ea5d6",
+    "clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e",
+    "clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e",
+    "clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc",
+    "clipgt-994977b5-4db6-43eb-950a-c0faaccc930b",
+    "clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e",
+    "clipgt-9b6a51bd-cb54-4a68-8ed8-0e33a504c67e",
+    "clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d",
+    "clipgt-a309e228-26e1-423e-a44c-cb00aa7378cb"
+  ],
+  "all_models_common_scene_count": 18,
+  "baseline_label": "axis_constrained_clamped",
+  "baseline_model": "token_dagger_iter2_axis_constrained_clamped",
+  "comparisons_vs_baseline": {
+    "direct_actor_planner_max_clearance_oracle": {
+      "axis_conflicts": {
+        "dist_to_gt_down_collision_up": 0,
+        "progress_up_collision_up": 0,
+        "progress_up_offroad_up": 0,
+        "progress_up_offroad_up_valid_scenes": 17,
+        "wrong_lane_down_collision_flat_or_up": 2,
+        "wrong_lane_down_collision_flat_or_up_valid_scenes": 17
+      },
+      "binary_metrics": {
+        "raw_collision_any": {
+          "baseline_rate": 1.0,
+          "candidate_rate": 0.8888888888888888,
+          "delta_rate": -0.11111111111111116,
+          "discordant_baseline_only": 2,
+          "discordant_candidate_only": 0,
+          "improved_scenes": 2,
+          "invalid_scene_count": 0,
+          "mcnemar_exact_p": 0.5,
+          "scene_count": 18,
+          "worsened_scenes": 0
+        },
+        "raw_offroad": {
+          "baseline_rate": 0.11764705882352941,
+          "candidate_rate": 0.058823529411764705,
+          "delta_rate": -0.058823529411764705,
+          "discordant_baseline_only": 1,
+          "discordant_candidate_only": 0,
+          "improved_scenes": 1,
+          "invalid_scene_count": 1,
+          "mcnemar_exact_p": 1.0,
+          "scene_count": 17,
+          "worsened_scenes": 0
+        },
+        "raw_wrong_lane": {
+          "baseline_rate": 0.23529411764705882,
+          "candidate_rate": 0.17647058823529413,
+          "delta_rate": -0.05882352941176469,
+          "discordant_baseline_only": 2,
+          "discordant_candidate_only": 1,
+          "improved_scenes": 2,
+          "invalid_scene_count": 1,
+          "mcnemar_exact_p": 1.0,
+          "scene_count": 17,
+          "worsened_scenes": 1
+        }
+      },
+      "clip_ids": [
+        "clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888",
+        "clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75",
+        "clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e",
+        "clipgt-804afc4a-fd1e-4f58-bd39-a4c486a916e5",
+        "clipgt-825dc886-0491-482a-abe3-e1743f5972b8",
+        "clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b",
+        "clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30",
+        "clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06",
+        "clipgt-89f2eeb8-f4e4-42a1-8e07-d60003d223dc",
+        "clipgt-8aaa1135-573f-4f6c-8ff8-7ac6bd6ea5d6",
+        "clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e",
+        "clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e",
+        "clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc",
+        "clipgt-994977b5-4db6-43eb-950a-c0faaccc930b",
+        "clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e",
+        "clipgt-9b6a51bd-cb54-4a68-8ed8-0e33a504c67e",
+        "clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d",
+        "clipgt-a309e228-26e1-423e-a44c-cb00aa7378cb"
+      ],
+      "continuous_metrics": {
+        "raw_dist_to_gt_trajectory": {
+          "bootstrap_mean95": [
+            -1.2237909663011206,
+            -0.18903135724503423
+          ],
+          "mean_delta": -0.6672423884284485,
+          "median_delta": -0.36506429232236887,
+          "negative_count": 15,
+          "positive_count": 3,
+          "sign_test_two_sided_p": 0.007537841796875
+        },
+        "raw_dist_traveled_m": {
+          "bootstrap_mean95": [
+            -0.6296101209329925,
+            3.2424687575082065
+          ],
+          "mean_delta": 1.2845056104449,
+          "median_delta": 1.7668047864792067,
+          "negative_count": 7,
+          "positive_count": 11,
+          "sign_test_two_sided_p": 0.480682373046875
+        },
+        "raw_progress": {
+          "bootstrap_mean95": [
+            -0.00698377521338855,
+            0.02046626863472398
+          ],
+          "mean_delta": 0.0073200994946195684,
+          "median_delta": 0.015290307307739094,
+          "negative_count": 7,
+          "positive_count": 11,
+          "sign_test_two_sided_p": 0.480682373046875
+        }
+      },
+      "scene_count": 18
+    }
+  },
+  "matrix_dir": "/home/amdev/sota/minimal-shot-av/runs/alpasim_direct_grid_max_clearance_collision18",
+  "models": [
+    "direct_actor_planner_max_clearance_oracle",
+    "token_dagger_iter2_axis_constrained_clamped"
+  ],
+  "per_model": {
+    "direct_actor_planner_max_clearance_oracle": {
+      "metric_warning_counts": {
+        "offroad_metric_invalid": 1,
+        "wrong_lane_metric_invalid": 1
+      },
+      "raw_collision_any": {
+        "count": 16,
+        "invalid_count": 0,
+        "rate": 0.8888888888888888,
+        "valid_count": 18,
+        "wilson95": [
+          0.6720023486982118,
+          0.9689804773543876
+        ]
+      },
+      "raw_dist_to_gt_trajectory": {
+        "count": 18,
+        "max": 2.1666266737683912,
+        "mean": 0.7413461519201736,
+        "median": 0.6585761457598501,
+        "min": 0.0442306248148997
+      },
+      "raw_dist_traveled_m": {
+        "count": 18,
+        "max": 52.074099528087025,
+        "mean": 26.776370752854653,
+        "median": 25.656997835502207,
+        "min": 3.2588107190130766
+      },
+      "raw_offroad": {
+        "count": 1,
+        "invalid_count": 1,
+        "rate": 0.058823529411764705,
+        "valid_count": 17,
+        "wilson95": [
+          0.010460400984997568,
+          0.269820306375754
+        ]
+      },
+      "raw_progress": {
+        "count": 18,
+        "max": 0.4536109202288807,
+        "mean": 0.17439943768204003,
+        "median": 0.16752465426258112,
+        "min": 0.019257715777082362
+      },
+      "raw_wrong_lane": {
+        "count": 3,
+        "invalid_count": 1,
+        "rate": 0.17647058823529413,
+        "valid_count": 17,
+        "wilson95": [
+          0.06191126637620998,
+          0.4102945856883412
+        ]
+      },
+      "scene_count": 18
+    },
+    "token_dagger_iter2_axis_constrained_clamped": {
+      "metric_warning_counts": {
+        "offroad_metric_invalid": 1,
+        "wrong_lane_metric_invalid": 1
+      },
+      "raw_collision_any": {
+        "count": 18,
+        "invalid_count": 0,
+        "rate": 1.0,
+        "valid_count": 18,
+        "wilson95": [
+          0.8241207763533424,
+          1.0
+        ]
+      },
+      "raw_dist_to_gt_trajectory": {
+        "count": 18,
+        "max": 4.712853741101958,
+        "mean": 1.408588540348622,
+        "median": 0.8543385303915525,
+        "min": 0.0503616390648187
+      },
+      "raw_dist_traveled_m": {
+        "count": 18,
+        "max": 45.28826043459452,
+        "mean": 25.491865142409754,
+        "median": 24.004501967934168,
+        "min": 7.604796342320571
+      },
+      "raw_offroad": {
+        "count": 2,
+        "invalid_count": 1,
+        "rate": 0.11764705882352941,
+        "valid_count": 17,
+        "wilson95": [
+          0.03287977376379267,
+          0.3433635059488587
+        ]
+      },
+      "raw_progress": {
+        "count": 18,
+        "max": 0.3953230514057892,
+        "mean": 0.16707933818742046,
+        "median": 0.14165094607936213,
+        "min": 0.048673242054146075
+      },
+      "raw_wrong_lane": {
+        "count": 4,
+        "invalid_count": 1,
+        "rate": 0.23529411764705882,
+        "valid_count": 17,
+        "wilson95": [
+          0.09555044322080115,
+          0.4726179811956498
+        ]
+      },
+      "scene_count": 18
+    }
+  },
+  "per_model_on_common_scenes": {
+    "direct_actor_planner_max_clearance_oracle": {
+      "metric_warning_counts": {
+        "offroad_metric_invalid": 1,
+        "wrong_lane_metric_invalid": 1
+      },
+      "raw_collision_any": {
+        "count": 16,
+        "invalid_count": 0,
+        "rate": 0.8888888888888888,
+        "valid_count": 18,
+        "wilson95": [
+          0.6720023486982118,
+          0.9689804773543876
+        ]
+      },
+      "raw_dist_to_gt_trajectory": {
+        "count": 18,
+        "max": 2.1666266737683912,
+        "mean": 0.7413461519201736,
+        "median": 0.6585761457598501,
+        "min": 0.0442306248148997
+      },
+      "raw_dist_traveled_m": {
+        "count": 18,
+        "max": 52.074099528087025,
+        "mean": 26.776370752854653,
+        "median": 25.656997835502207,
+        "min": 3.2588107190130766
+      },
+      "raw_offroad": {
+        "count": 1,
+        "invalid_count": 1,
+        "rate": 0.058823529411764705,
+        "valid_count": 17,
+        "wilson95": [
+          0.010460400984997568,
+          0.269820306375754
+        ]
+      },
+      "raw_progress": {
+        "count": 18,
+        "max": 0.4536109202288807,
+        "mean": 0.17439943768204003,
+        "median": 0.16752465426258112,
+        "min": 0.019257715777082362
+      },
+      "raw_wrong_lane": {
+        "count": 3,
+        "invalid_count": 1,
+        "rate": 0.17647058823529413,
+        "valid_count": 17,
+        "wilson95": [
+          0.06191126637620998,
+          0.4102945856883412
+        ]
+      },
+      "scene_count": 18
+    },
+    "token_dagger_iter2_axis_constrained_clamped": {
+      "metric_warning_counts": {
+        "offroad_metric_invalid": 1,
+        "wrong_lane_metric_invalid": 1
+      },
+      "raw_collision_any": {
+        "count": 18,
+        "invalid_count": 0,
+        "rate": 1.0,
+        "valid_count": 18,
+        "wilson95": [
+          0.8241207763533424,
+          1.0
+        ]
+      },
+      "raw_dist_to_gt_trajectory": {
+        "count": 18,
+        "max": 4.712853741101958,
+        "mean": 1.408588540348622,
+        "median": 0.8543385303915525,
+        "min": 0.0503616390648187
+      },
+      "raw_dist_traveled_m": {
+        "count": 18,
+        "max": 45.28826043459452,
+        "mean": 25.491865142409754,
+        "median": 24.004501967934168,
+        "min": 7.604796342320571
+      },
+      "raw_offroad": {
+        "count": 2,
+        "invalid_count": 1,
+        "rate": 0.11764705882352941,
+        "valid_count": 17,
+        "wilson95": [
+          0.03287977376379267,
+          0.3433635059488587
+        ]
+      },
+      "raw_progress": {
+        "count": 18,
+        "max": 0.3953230514057892,
+        "mean": 0.16707933818742046,
+        "median": 0.14165094607936213,
+        "min": 0.048673242054146075
+      },
+      "raw_wrong_lane": {
+        "count": 4,
+        "invalid_count": 1,
+        "rate": 0.23529411764705882,
+        "valid_count": 17,
+        "wilson95": [
+          0.09555044322080115,
+          0.4726179811956498
+        ]
+      },
+      "scene_count": 18
+    }
+  },
+  "scene_preset": "front_camera_collision18",
+  "schema": "alpasim_transfer_matrix_analysis_v1",
+  "started_model_count": 2
+}

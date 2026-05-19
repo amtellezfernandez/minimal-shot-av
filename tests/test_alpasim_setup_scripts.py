@@ -181,6 +181,17 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
             preset["driver_env"]["MSA_DIRECT_PLANNER_ORACLE_ACTOR_PROXY_PATH"],
         )
 
+    def test_direct_actor_planner_max_clearance_preset_sets_objective(self) -> None:
+        preset = MODEL_PRESETS["direct_actor_planner_max_clearance_oracle"]
+
+        self.assertTrue(preset["requires_oracle_actor_proxy"])
+        self.assertFalse(preset["force_cuda"])
+        self.assertEqual("max_clearance", preset["driver_env"]["MSA_DIRECT_PLANNER_SELECTION_OBJECTIVE"])
+        self.assertEqual(
+            "{oracle_actor_proxy_path}",
+            preset["driver_env"]["MSA_DIRECT_PLANNER_ORACLE_ACTOR_PROXY_PATH"],
+        )
+
     def test_setup_script_applies_repo_tracked_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             alpasim_root = Path(tmp) / "alpasim"
