@@ -53,10 +53,16 @@ rerun, collision remains 0.600 to 0.600 while offroad worsens from 0.207 to 0.31
 wrong-lane improves from 0.241 to 0.172, and progress increases from 0.170 to 0.184.
 A first-impact audit sharpens the negative result: the same 18 clips collide under
 baseline and oracle; the baseline scorer sees clear corridor at impact, while the oracle
-sees actors and switches away from maintain yet still collides. A selector-side
-counterfactual audit further finds no actor-axis-safe token at first impact in any of the
-18 collision clips, and only 5 missed actor-axis-safe actionable frames across the
-54 audited pre-impact frames.
+sees actors and switches away from maintain yet still collides. A matched-control bridge
+from committed audits shows systematic collision-window hazard dropout in the
+structured-hazard interface: baseline logs contain zero structured hazards at first
+impact in all 18 collision clips, while same-frame oracle reconstructions are actor-
+positive in all 18 and expose much denser actionable pre-impact windows than
+lead-to-terminal-matched non-collision controls (median oracle hazard count 22 vs.\ 4;
+median closest clearance 5.59\,m vs.\ 14.96\,m). A selector-side counterfactual audit
+further finds no actor-axis-safe token at first impact in any of the 18 collision clips,
+and only 5 missed actor-axis-safe actionable frames across the 54 audited pre-impact
+frames. Other residual axes remain unmeasured without regenerating full adapter logs.
 These non-co-monotone
 interventions show that simulator transfer error decomposes into separate axes of
 geometry, safety, progress, and lane adherence rather than a single scalar robustness
@@ -171,9 +177,12 @@ We make six contributions (Fig.~\ref{fig:pipeline}):
     actor-oracle rerun removes the stale-frame confound but remains inconclusive for
     collision causality: full actor completion leaves raw collision unchanged while
     modestly improving progress and changing lane/offroad behavior in opposite directions.
-    A first-impact audit shows that actor completion changes both visibility and action
-    choice on the collision clips, so the residual collision surface lies beyond selector
-    ranking alone.
+    A first-impact audit and matched-control bridge show systematic structured-hazard
+    dropout at the collision-critical frames: baseline impact logs are actor-empty while
+    same-frame oracle reconstructions are actor-positive and much denser than
+    lead-to-terminal-matched non-collision controls. Actor completion therefore changes
+    both visibility and action choice on the collision clips, but the residual collision
+    surface still lies beyond selector ranking alone.
     An explicit actor-axis proxy is likewise inconclusive as a positive method. Transfer
     failure is therefore not a single scalar degradation: offroad, wrong-lane, collision,
     progress, and distance-to-ground-truth expose distinct mechanisms.
@@ -183,8 +192,10 @@ We make six contributions (Fig.~\ref{fig:pipeline}):
     Inside the internal simulator, we perturb only the planner-visible proxy state while
     keeping dynamics fixed. A 288-case matched sweep (1440 agent rollouts) shows that
     latency, heading-bias, route-offset, lane-scale, and feature-noise corruption induce
-    different intervention effects, reducing the concern that the AlpaSim result is
-    purely an adapter artifact.
+    different intervention effects. The AlpaSim bridge specifically supports the
+    actor-latency/dropout part of this mechanism family; route-offset, heading-bias,
+    lane-scale, and feature-noise residuals remain unmeasured in the external adapter
+    logs.
 
   \item \textbf{Grounded selection evidence from frozen visual/world priors.}
     In the Waymo E2E candidate-selection track, scalar-only selectors plateau at 7.695
