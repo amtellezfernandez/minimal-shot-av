@@ -18,8 +18,8 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{proposition}{Proposition}
 
-\title{Multi-Axis Failure Modes in Simulator Transfer\\
-       Diagnostics from Discrete Maneuver Tokens and Grounded Selection}
+\title{Diagnosing Multi-Axis Simulator Transfer Failure\\
+       with Discrete Maneuver Tokens and Grounded Selection}
 
 \author{
   Alba Maria Tellez Fernandez\\
@@ -88,29 +88,37 @@ discrete action space, calibration, ManeuverToken, geometric world-state}
 % =====================================================================
 
 Long-tail failure is a central open problem in autonomous driving. Modern end-to-end
-policies achieve near-human performance on the common driving distribution but degrade
-sharply on the rare scenario compositions that matter most: wrong-way actors, construction
-corridors, multi-hazard interactions~\citep{dauner2023parting,hu2023planning}. The dominant
-response is scale—more data, more modalities, larger
-models~\citep{chitta2022transfuser,brohan2023rt2}. We pursue an orthogonal direction:
-\emph{reducing} action-space expressiveness as a structural regularizer.
+policies can perform well on the common driving distribution but degrade on the rare
+scenario compositions that matter most: wrong-way actors, construction corridors, and
+multi-hazard interactions~\citep{dauner2023parting,hu2023planning}. The dominant response
+is scale---more data, more modalities, larger
+models~\citep{chitta2022transfuser,brohan2023rt2}. This paper studies a different
+question: when a policy already looks strong inside its training simulator, what exactly
+breaks when the same decision interface is driven by reconstructed external geometry?
 
-The argument is topological rather than architectural. In a multi-hazard scene, the safe
-trajectory set can split into disconnected components: for example, pass left, pass right,
-or stop before the conflict. A continuous regressor moving between components can produce an
-intermediate trajectory that belongs to neither component and intersects the unsafe set. A
-discrete selector avoids this interpolation path by choosing among maneuver representatives
-with explicit clearance margins. Policy uncertainty changes which representative is chosen;
-it does not create a new trajectory between representatives.
+The central object is not a single pass rate. It is the ordering that a policy induces
+over bounded action candidates under a proxy state. A transfer intervention can repair
+route geometry while worsening collision, or repair progress while leaving lane errors
+unchanged. Treating these outcomes as one aggregate robustness score hides the mechanism.
+We therefore build a diagnostic ladder: matched external reruns, first-impact collision
+audits, selector-side counterfactuals, selector-free replay, matched non-collision
+controls, and controlled proxy-state perturbations.
 
-This shifts the key question for grounded autonomy. Recent latent VLA systems correctly
-argue that driving should reason in geometry and dynamics rather than in text. The missing
-interface is the last step: how a grounded state representation is converted into a concrete
-action under proxy-state error. Our experiments show that this step cannot be audited by
-offline accuracy or one aggregate planning score. The same intervention can improve route
-geometry while worsening collision, or improve progress while leaving wrong-lane behavior
-unchanged. The transfer-critical object is therefore the \emph{ordering} induced over
-bounded candidates, measured separately along safety, route, lane, and progress axes.
+Discrete maneuver tokens provide the controlled substrate for this study. Their appeal is
+topological rather than architectural. In a multi-hazard scene, the safe trajectory set can
+split into disconnected components: for example, pass left, pass right, or stop before the
+conflict. A continuous regressor moving between components can produce an intermediate
+trajectory that belongs to neither component and intersects the unsafe set. A discrete
+selector avoids this interpolation path by choosing among maneuver representatives with
+explicit clearance margins. Policy uncertainty changes which representative is chosen; it
+does not create a new trajectory between representatives.
+
+This makes grounded selection the transfer-critical interface. Recent latent VLA systems
+correctly argue that driving should reason in geometry and dynamics rather than in text.
+The unresolved step is how a grounded state representation is converted into a concrete
+action when the proxy state is incomplete or biased. Our experiments show that this step
+cannot be audited by offline accuracy or one aggregate planning score. It must be measured
+per axis---safety, route, lane, progress---at the point where candidates are ranked.
 
 \begin{figure}[t]
 \centering
@@ -262,7 +270,7 @@ dynamic priors. LaST-VLA~\citep{luo2026lastvla}, for example, distills 3D geomet
 features and video-world-model dynamics into latent tokens and optimizes trajectory-level
 metrics with RL. Our study is complementary rather than competitive. We do not train a
 large VLA; instead, we test where such priors should enter a transfer-critical driving
-stack. The missing variable is not just representation quality; it is placement. In our
+stack. The missing variable is not only representation quality; it is placement. In our
 WOD ablation, InternVLA-only features and linear Cosmos--InternVLA fusion remain below the
 scalar baseline, while a selector-aligned nonlinear Cosmos head and a latent world-prior
 plus direct selector produce the best tracked RFS and regret. The link to LaST-VLA is
@@ -270,6 +278,19 @@ therefore operational: physical latent grounding matters most when it constrains
 action-ranking operator over bounded candidates, the same stage that fails under AlpaSim
 proxy-state transfer. Without that placement test, aggregate planning scores can hide
 non-co-monotone failures across collision, route geometry, lane adherence, and progress.
+
+\paragraph{Transfer diagnostics and mechanism localization.}
+Most simulator-transfer evaluations report whether a policy improves under a target
+benchmark. Our goal is narrower: identify which interface changes are load-bearing when
+the same token policy is moved from known simulator state to reconstructed external
+geometry. This requires paired interventions rather than a single leaderboard row. The
+world-frame actor oracle tests actor visibility, first-impact audits test what the scorer
+believes at collision time, selector-side counterfactuals test whether a safe token was
+available in the logged candidate set, selector-free replay tests whether ranking was the
+bottleneck, and matched non-collision controls test whether impact windows differ from the
+rest of the scene set. The resulting negative evidence is part of the mechanism claim: if
+collision remains after actor completion and selector removal, then the residual transfer
+surface lies beyond the learned selector alone.
 
 \paragraph{Simulator transfer and validation scope.}
 \citet{khurana2022differentiable} and \citet{shi2024motiondiffuser} study trajectory
@@ -769,8 +790,8 @@ collision causality.}
 \toprule
 Policy & Collision & Offroad & Wrong lane & Progress & Dist. (m) & Dist.-GT & $\Delta$ col. \\
 \midrule
-Axis-constrained clamped (matched 30-scene) & 0.600 & 0.207 & 0.241 & 0.170 & 27.23 & 1.54 & -- \\
-World-frame oracle actor completion & 0.600 & 0.310 & 0.172 & 0.184 & 29.89 & 1.42 & 0/0 \\
+Axis-constrained clamped & 0.600 & 0.207 & 0.241 & 0.170 & 27.23 & 1.54 & -- \\
+World-frame actor oracle & 0.600 & 0.310 & 0.172 & 0.184 & 29.89 & 1.42 & 0/0 \\
 \bottomrule
 \end{tabular}
 \end{table}
