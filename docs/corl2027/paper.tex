@@ -18,7 +18,7 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{proposition}{Proposition}
 
-\title{Grounding Is Not Enough:\\
+\title{Collision Survives the Actor Oracle:\\
        A Diagnostic Ladder for Multi-Axis Simulator Transfer Failure}
 
 \author{
@@ -32,10 +32,11 @@
 \maketitle
 
 \begin{abstract}
-We show that grounding alone is not a safety certificate for simulator transfer. A
-closed-loop imitation policy can nearly solve its internal training interface while
-failing externally in ways that survive actor completion, selector constraints, and
-selector-free replay. Our controlled substrate is a discrete autonomous-driving token
+We present a transfer result that is negative in the useful sense: in external Waymo
+AlpaSim rollouts, collision persists after actor visibility is restored with a
+world-frame oracle and after the learned selector is bypassed. The discovery is not that
+one policy fails, but that two common causal stories fail---missing actors alone and
+learned-selector ranking alone. Our controlled substrate is a discrete autonomous-driving token
 library with a geometry-driven expert, Spotlight Reflex. On a 1080-rollout held-out
 Latin-hypercube generator sweep, plain continuous, token, and recurrent BC reach only
 77--78\% pass rate with 3.0--4.3\% Proximity Violations, while two DAgger-style relabeling
@@ -55,10 +56,9 @@ localization result. At first impact, baseline logs contain zero structured haza
 18 collision clips, while same-frame oracle reconstructions are actor-positive in all 18;
 matched non-collision controls have far lower actor load (median oracle hazard count 4
 vs.\ 22, median closest clearance 14.96\,m vs.\ 5.59\,m). Yet once actor visibility is
-restored, the same collision surface remains. The diagnostic ladder therefore rules out
-two tempting explanations---missing actors alone and learned-selector ranking alone---and
-identifies a deeper transfer boundary between reconstructed proxy state, candidate
-feasibility, controller execution, and per-axis safety metrics. Frozen world/VLA priors on
+restored, the same collision surface remains. The diagnostic ladder therefore identifies
+a deeper transfer boundary between reconstructed proxy state, candidate feasibility,
+controller execution, and per-axis safety metrics. Frozen world/VLA priors on
 the Waymo E2E candidate-selection track reinforce the same placement thesis: scalar-only
 selection reaches 7.695 RFS, generic latent fusion remains weak, a nonlinear Cosmos head
 reaches 7.845 RFS, and adding a latent world-prior plus direct selector reaches 7.848 RFS.
@@ -79,11 +79,21 @@ scenario compositions that matter most: wrong-way actors, construction corridors
 multi-hazard interactions~\citep{dauner2023parting,hu2023planning}. The dominant response
 is scale---more data, more modalities, larger
 models~\citep{chitta2022transfuser,brohan2023rt2}. This paper reports a sharper
-falsification result: even when a policy looks strong inside its training simulator,
-restoring actor visibility and bypassing the learned selector can still leave the
-external collision surface mostly intact. The question is therefore not only how to make
-the state more grounded, but how to determine which transfer boundary is still
-load-bearing after grounding has been supplied.
+falsification result: a learned policy can look strong inside its training simulator, but
+its external collision surface can survive both a world-frame actor oracle and
+selector-free replay. The question is therefore not only how to make the state more
+grounded, but how to determine which transfer boundary remains load-bearing after
+grounding and selector removal have already been supplied.
+
+\paragraph{Main discovery.}
+The external failure is not explained by the first two explanations a reviewer should
+ask about. Missing actors are real: at first impact, baseline logs contain zero structured
+hazards in all 18 collision clips, while same-frame oracle reconstructions are
+actor-positive in all 18. But missing actors are not sufficient: the matched 30-scene
+world-frame actor oracle leaves collision unchanged at 0.600 to 0.600. Learned ranking is
+also not sufficient: on the same 18 collision clips, selector-free direct-grid replay
+improves only two paired clips. The magnitude of the result is this double falsification:
+the residual collision surface survives both actor completion and selector removal.
 
 The central object is not a single pass rate. It is the ordering that a policy induces
 over bounded action candidates under a proxy state, and the way that ordering interacts
@@ -172,7 +182,7 @@ We make six contributions (Fig.~\ref{fig:pipeline}):
     one-step DAgger is weaker, three-step DAgger regresses, and trajectory scorers over
     token candidates do not close the stress-suite gap.
 
-  \item \textbf{Hypothesis-falsifying AlpaSim diagnostic
+  \item \textbf{Collision survives actor oracle and selector-free replay
     (Sec.~\ref{sec:exp:alpasim}).}
     A 10-clip external transfer matrix shows that clamping, source decay, and hard
     geometric vetoes repair different axes and damage others. A matched world-frame
@@ -1494,7 +1504,8 @@ pattern: full actor completion changes offroad, wrong-lane, and progress, but do
 reduce raw collision. Selector-free replay improves only two collision clips. This is the
 central discovery: a transfer failure can remain after the proxy is made actor-visible and
 after the learned selector is removed. Missing actors and learned ranking errors are real,
-but neither is sufficient to explain the residual collision surface.
+but neither is sufficient to explain the residual collision surface. The result is a
+double falsification of the two easiest external-transfer explanations.
 
 The paper's positive contribution is the diagnostic ladder that makes this falsification
 defensible. Matched world-frame actor completion tests actor visibility; first-impact
