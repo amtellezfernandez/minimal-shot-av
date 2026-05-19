@@ -18,6 +18,7 @@ tuning = ["optuna>=3.6"]
 [project.entry-points."alpasim.models"]
 spotlight_reflex = "minimal_shot_av.simulator.alpasim_spotlight:SpotlightReflexAlpaSimModel"
 token_dagger_bc = "minimal_shot_av.simulator.alpasim_token_bc:TokenBCAlpaSimModel"
+direct_actor_planner = "minimal_shot_av.simulator.alpasim_direct_actor_planner:DirectActorPlannerAlpaSimModel"
 
 [project.entry-points."alpasim.configs"]
 spotlight_reflex = "minimal_shot_av.simulator.alpasim_configs"

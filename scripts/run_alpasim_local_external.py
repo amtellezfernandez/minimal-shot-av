@@ -29,6 +29,24 @@ MODEL_PRESETS = {
         "checkpoint": None,
         "driver_env": {},
     },
+    "direct_actor_planner_oracle": {
+        "config_file": ROOT
+        / "src"
+        / "minimal_shot_av"
+        / "simulator"
+        / "alpasim_configs"
+        / "driver"
+        / "direct_actor_planner.yaml",
+        "wizard_driver": "spotlight_reflex",
+        "checkpoint": None,
+        "requires_oracle_actor_proxy": True,
+        "force_cuda": False,
+        "driver_env": {
+            "MSA_DIRECT_PLANNER_ORACLE_ACTOR_PROXY_PATH": "{oracle_actor_proxy_path}",
+            "MSA_DIRECT_PLANNER_ORACLE_ACTOR_PROXY_TOLERANCE_US": "50000",
+            "MSA_DIRECT_PLANNER_LOG_PATH": "{run_dir}/driver/direct-planner-log.jsonl",
+        },
+    },
     "token_dagger_iter2": {
         "config_file": ROOT / "src" / "minimal_shot_av" / "simulator" / "alpasim_configs" / "driver" / "token_dagger_bc.yaml",
         "wizard_driver": "spotlight_reflex",
@@ -234,6 +252,7 @@ SCENE_PRESETS = {
     "fresh_3scene": SCENE_PRESET_ROOT / "fresh_3scene.yaml",
     "front_camera_10scene_smoke": SCENE_PRESET_ROOT / "front_camera_10scene_smoke.yaml",
     "front_camera_30scene_merged": SCENE_PRESET_ROOT / "front_camera_30scene_merged.yaml",
+    "front_camera_collision18": SCENE_PRESET_ROOT / "front_camera_collision18.yaml",
 }
 
 
@@ -391,7 +410,7 @@ def main() -> None:
         checkpoint=checkpoint,
         port=args.port,
         output_dir=run_dir / "driver",
-        force_cuda=args.model != "spotlight_reflex",
+        force_cuda=bool(model_preset.get("force_cuda", args.model != "spotlight_reflex")),
     )
 
     driver_cmd = _driver_command(

@@ -171,6 +171,16 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
         self.assertEqual("actor_axis_constrained", preset["driver_env"]["MSA_TOKENBC_SELECTION_MODE"])
         self.assertEqual("3", preset["driver_env"]["MSA_TOKENBC_HYBRID_TOP_K"])
 
+    def test_direct_actor_planner_preset_requires_oracle_actor_proxy(self) -> None:
+        preset = MODEL_PRESETS["direct_actor_planner_oracle"]
+
+        self.assertTrue(preset["requires_oracle_actor_proxy"])
+        self.assertFalse(preset["force_cuda"])
+        self.assertEqual(
+            "{oracle_actor_proxy_path}",
+            preset["driver_env"]["MSA_DIRECT_PLANNER_ORACLE_ACTOR_PROXY_PATH"],
+        )
+
     def test_setup_script_applies_repo_tracked_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             alpasim_root = Path(tmp) / "alpasim"

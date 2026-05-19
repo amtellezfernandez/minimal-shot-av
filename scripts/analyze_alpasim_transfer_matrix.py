@@ -43,6 +43,7 @@ MODEL_LABELS = {
     "token_dagger_iter2_actor_axis_oracle_actor_clamped": "actor_axis_oracle_actor_clamped",
     "token_dagger_iter2_hybrid_clamped": "hybrid_clamped",
     "token_dagger_srcdecay": "srcdecay",
+    "direct_actor_planner_oracle": "selector_free_direct_actor_planner",
 }
 
 

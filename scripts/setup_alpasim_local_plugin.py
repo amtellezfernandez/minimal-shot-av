@@ -12,7 +12,7 @@ import shutil
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ALPASIM_ROOT = ROOT / "alpasim"
 ALPASIM_OVERRIDE_ROOT = ROOT / "third_party" / "alpasim_overrides"
-REQUIRED_MODELS = ("spotlight_reflex", "token_dagger_bc")
+REQUIRED_MODELS = ("spotlight_reflex", "token_dagger_bc", "direct_actor_planner")
 TORCH_PACKAGE = "torch==2.11.0+cu129"
 TORCH_INDEX_URL = "https://download.pytorch.org/whl/cu129"
 ALPASIM_CORE_DEPENDENCIES = (

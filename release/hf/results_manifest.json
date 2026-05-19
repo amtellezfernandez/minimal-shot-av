@@ -112,6 +112,16 @@
       "description": "Human-readable selector-side candidate counterfactual showing that actor-axis selector misses are a minority explanation and that controller-level replay is still required."
     },
     {
+      "hf_path": "results/alpasim_direct_actor_planner_collision18_analysis.json",
+      "local_path": "artifacts/alpasim_direct_actor_planner_collision18_v2_analysis.json",
+      "description": "Matched 18-scene selector-free direct actor-aware planner analysis on baseline collision clips, showing weak collision recovery and stronger progress gains."
+    },
+    {
+      "hf_path": "results/alpasim_direct_actor_planner_collision18_analysis.md",
+      "local_path": "artifacts/alpasim_direct_actor_planner_collision18_v2_analysis.md",
+      "description": "Human-readable paired summary for the selector-free direct actor-aware planner collision18 diagnostic."
+    },
+    {
       "hf_path": "paper/corl2027/paper.pdf",
       "local_path": "docs/corl2027/paper.pdf",
       "description": "Current CoRL manuscript PDF aligned with the matched 30-scene raw world-frame oracle AlpaSim evidence."
@@ -140,6 +150,11 @@
       "hf_path": "scene_presets/front_camera_30scene_merged.yaml",
       "local_path": "src/minimal_shot_av/simulator/alpasim_scene_presets/front_camera_30scene_merged.yaml",
       "description": "30-scene front-camera AlpaSim merged preset tracked in the main repo."
+    },
+    {
+      "hf_path": "scene_presets/front_camera_collision18.yaml",
+      "local_path": "src/minimal_shot_av/simulator/alpasim_scene_presets/front_camera_collision18.yaml",
+      "description": "18-scene AlpaSim preset containing baseline collision clips used by the selector-free direct actor-aware planner diagnostic."
     }
   ]
 }

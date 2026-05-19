@@ -18,6 +18,11 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.neutral.alpasim_metrics import build_alpasim_evidence, load_alpasim_metrics
+from minimal_shot_av.simulator.alpasim_direct_actor_planner import (
+    DirectActorPlannerAlpaSimModel,
+    DirectPlannerConfig,
+    plan_direct_actor_trajectory,
+)
 from minimal_shot_av.simulator.alpasim_signal import extract_alpasim_signal, scenario_from_command
 from minimal_shot_av.simulator.alpasim_spotlight import DriveCommand, SpotlightReflexAlpaSimModel
 from minimal_shot_av.simulator.alpasim_token_bc import (
@@ -49,6 +54,10 @@ class AlpaSimIntegrationTests(unittest.TestCase):
             "minimal_shot_av.simulator.alpasim_token_bc:TokenBCAlpaSimModel",
         )
         self.assertEqual(
+            pyproject['project.entry-points."alpasim.models"']["direct_actor_planner"],
+            "minimal_shot_av.simulator.alpasim_direct_actor_planner:DirectActorPlannerAlpaSimModel",
+        )
+        self.assertEqual(
             pyproject['project.entry-points."alpasim.configs"']["spotlight_reflex"],
             "minimal_shot_av.simulator.alpasim_configs",
         )
@@ -58,6 +67,13 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         config = config_path.read_text()
         self.assertIn("model_type: spotlight_reflex", config)
         self.assertIn("output_frequency_hz: 4", config)
+
+    def test_direct_actor_planner_config_exists(self) -> None:
+        config_path = Path("src/minimal_shot_av/simulator/alpasim_configs/driver/direct_actor_planner.yaml")
+        config = config_path.read_text()
+        self.assertIn("model_type: direct_actor_planner", config)
+        self.assertIn('device: "cpu"', config)
+        self.assertIn("trajectory_optimizer:", config)
 
     def test_alpasim_token_dagger_configs_exist_and_default_to_cuda(self) -> None:
         for name in (
@@ -100,6 +116,73 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertEqual(len(scenario.obstacles), 1)
         self.assertEqual(scenario.obstacles[0].x, 12.0)
         self.assertEqual(scenario.obstacles[0].kind, "vehicle")
+
+    def test_direct_actor_planner_returns_trajectory_without_token_selector(self) -> None:
+        model = DirectActorPlannerAlpaSimModel(camera_ids=["front"], context_length=1, output_frequency_hz=4)
+        prediction_input = SimpleNamespace(
+            camera_images={"front": [SimpleNamespace(image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+            command=DriveCommand.STRAIGHT,
+            speed=8.0,
+            acceleration=0.0,
+            ego_pose_history=[object()],
+            route_waypoints=[
+                {"x": 0.0, "y": 0.0, "z": 0.0},
+                {"x": 30.0, "y": 0.0, "z": 0.0},
+                {"x": 60.0, "y": 0.0, "z": 0.0},
+            ],
+            alpasignal={"hazards": []},
+        )
+
+        output = model.predict(prediction_input)
+        reasoning = json.loads(output.reasoning_text)
+
+        self.assertEqual(output.trajectory_xy.shape, (20, 2))
+        self.assertEqual(reasoning["planner"], "selector_free_actor_aware_grid")
+        self.assertNotIn("selected_maneuver", reasoning)
+        self.assertGreater(reasoning["plan"]["progress_m"], 0.0)
+
+    def test_direct_actor_planner_does_not_brake_into_closing_rear_actor(self) -> None:
+        scenario = scenario_at_tick(
+            scenario_from_command(
+                "straight",
+                {
+                    "route_waypoints": [
+                        {"x": 0.0, "y": 0.0, "z": 0.0},
+                        {"x": 40.0, "y": 0.0, "z": 0.0},
+                        {"x": 80.0, "y": 0.0, "z": 0.0},
+                    ],
+                    "structured_hazards": [
+                        {
+                            "x": -8.0,
+                            "y": 0.0,
+                            "radius": 1.0,
+                            "width": 2.0,
+                            "length": 4.0,
+                            "kind": "vehicle",
+                            "label": "rear_closing_vehicle",
+                            "vx": 2.0,
+                            "vy": 0.0,
+                        }
+                    ],
+                },
+            ),
+            0,
+        )
+
+        plan = plan_direct_actor_trajectory(
+            scenario,
+            speed_mps=8.0,
+            config=DirectPlannerConfig(
+                speed_scales=(0.0, 0.35, 0.75, 1.0),
+                lateral_offsets_m=(0.0,),
+                rear_flow_weight=5000.0,
+            ),
+        )
+
+        self.assertGreaterEqual(plan.metrics["speed_scale"], 0.75)
+        self.assertGreaterEqual(plan.metrics["candidate_mean_speed_mps"], 6.0)
+        self.assertEqual(plan.metrics["rear_actor_count"], 1)
+        self.assertEqual(plan.metrics["rear_closing_actor_count"], 1)
 
     def test_alpasim_signal_uses_route_waypoints_as_lane_center(self) -> None:
         prediction_input = SimpleNamespace(
