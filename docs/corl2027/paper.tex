@@ -66,15 +66,18 @@ frames. Other residual axes remain unmeasured without regenerating full adapter 
 These non-co-monotone
 interventions show that simulator transfer error decomposes into separate axes of
 geometry, safety, progress, and lane adherence rather than a single scalar robustness
-deficit. This identifies a narrower grounding issue: making the state representation more
-physical is not enough if the action-ranking operator remains miscalibrated under
-transfer. Frozen world/VLA priors on the Waymo E2E candidate-selection
-track isolate the placement of grounding: scalar-only selection reaches 7.695 RFS, generic
-latent fusion remains weak, a nonlinear head over Cosmos 64d embeddings reaches 7.845 RFS,
-and adding a latent world-prior plus direct selector reaches 7.848 RFS. The combined
-evidence supports a grounded-selection thesis: internal closed-loop success and offline
-accuracy are weak transfer proxies unless world priors are tied to per-axis candidate
-ranking and geometric disagreement is instrumented directly.
+deficit. The contribution is therefore diagnostic and mechanistic rather than a new
+winning transfer policy: we identify where actor visibility helps, where selector
+corrections fail, and which residual collision surfaces remain after those controls. This
+identifies a narrower grounding issue: making the state representation more physical is
+not enough if the action-ranking operator remains miscalibrated under transfer. Frozen
+world/VLA priors on the Waymo E2E candidate-selection track isolate the placement of
+grounding: scalar-only selection reaches 7.695 RFS, generic latent fusion remains weak, a
+nonlinear head over Cosmos 64d embeddings reaches 7.845 RFS, and adding a latent
+world-prior plus direct selector reaches 7.848 RFS. The combined evidence supports a
+grounded-selection thesis: internal closed-loop success and offline accuracy are weak
+transfer proxies unless world priors are tied to per-axis candidate ranking and geometric
+disagreement is instrumented directly.
 \end{abstract}
 
 \keywords{autonomous driving, imitation learning, DAgger, simulator transfer,
@@ -170,7 +173,7 @@ We make six contributions (Fig.~\ref{fig:pipeline}):
     one-step DAgger is weaker, three-step DAgger regresses, and trajectory scorers over
     token candidates do not close the stress-suite gap.
 
-  \item \textbf{Multi-axis transfer failure in AlpaSim
+  \item \textbf{Multi-axis transfer diagnostic in AlpaSim
     (Sec.~\ref{sec:exp:alpasim}).}
     A 10-clip external transfer matrix shows that clamping, source decay, and hard
     geometric vetoes repair different axes and damage others. A matched world-frame
@@ -187,7 +190,7 @@ We make six contributions (Fig.~\ref{fig:pipeline}):
     failure is therefore not a single scalar degradation: offroad, wrong-lane, collision,
     progress, and distance-to-ground-truth expose distinct mechanisms.
 
-  \item \textbf{Controlled proxy-perturbation diagnostic
+  \item \textbf{Controlled proxy-perturbation mechanism study
     (Sec.~\ref{sec:exp:proxy}).}
     Inside the internal simulator, we perturb only the planner-visible proxy state while
     keeping dynamics fixed. A 288-case matched sweep (1440 agent rollouts) shows that
@@ -207,7 +210,9 @@ We make six contributions (Fig.~\ref{fig:pipeline}):
     ranks bounded candidates, but not when they are appended as generic latent features.
 \end{enumerate}
 
-The strength of these claims comes from the controls, not from aggregate score chasing.
+Taken together, these contributions form a diagnostic ladder: matched external reruns,
+first-impact audits, selector-side counterfactuals, selector-free replay, and controlled
+proxy perturbations that progressively localize where transfer mismatch enters.
 Across the learned-policy variants, the token library, low-level controller, and AlpaSim
 scene set are held fixed; clamping, vetoing, source decay, and axis constraints change
 only the selection interface. In the proxy-perturbation sweep, simulator dynamics and
@@ -1474,7 +1479,10 @@ reduce raw collision. The useful finding is therefore not that DAgger plus a vet
 or actor completion is a winning method. It is that offline
 accuracy and internal closed-loop performance can be structurally misleading
 proxies for external robustness when the state reconstruction interface changes the metric
-ordering of the decision problem.
+ordering of the decision problem. The paper's positive contribution is the diagnostic
+ladder that makes this statement defensible: matched world-frame actor completion,
+first-impact collision audits, selector-side counterfactual feasibility checks,
+selector-free replay, and a matched-control bridge to controlled proxy perturbations.
 
 The practical implication is that token policies should be audited at the decision level
 and per failure axis, not only by aggregate rollout metrics. A learned policy that passes
@@ -1482,7 +1490,9 @@ an internal simulator may still be selecting tokens that an external geometric s
 rejects almost every frame. For safety-critical imitation learning, per-frame constraint
 disagreement, external proxy-state validation, and separate geometry/safety/progress/lane
 metrics should be treated as first-class diagnostics alongside pass rate and offline
-validation accuracy.
+validation accuracy. In that sense, the negative external result is not a side note; it is
+the mechanism result. It shows which forms of grounded correction are insufficient, and
+therefore which interface mismatches remain load-bearing for robust transfer.
 
 \acknowledgments{Developed independently as a research prototype for the Waymo Open Dataset
 E2E Challenge. We thank the Waymo team for the AlpaSim evaluation environment.}
