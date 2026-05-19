@@ -904,8 +904,8 @@ the current logs.
 \caption{Partial bridge from committed AlpaSim audits to the controlled proxy
 perturbation study. Collision-window rows use the 18 baseline collision clips; control
 rows sample the same lead-to-terminal offsets from the 12 non-colliding scenes in the
-same 30-scene oracle actor proxy. This bridge is exact for actor visibility at first
-impact, but it does not recover full route, heading, lane-scale, or feature-noise
+same 30-scene oracle actor proxy. This bridge is exact for structured-hazard dropout at
+first impact, but it does not recover full route, heading, lane-scale, or feature-noise
 residuals without regenerating raw adapter logs.}
 \label{tab:alpasim_partial_bridge}
 \scriptsize
@@ -930,17 +930,20 @@ AlpaSim diagnostic and the controlled proxy-state perturbation in
 Section~\ref{sec:exp:proxy}. It is deliberately partial because the committed artifacts
 do not preserve the full raw adapter state on every frame. The part they do preserve is
 load-bearing for the collision claim: at first impact, the baseline adapter records zero
-structured actors in all 18 collision clips, while the world-frame oracle proxy contains
-actors in all 18 same-frame reconstructions. Those collision windows are also much more
-actor-dense than terminal-matched non-collision controls: median oracle hazard count is
-22 rather than 4, and median closest clearance is 5.59\,m rather than 14.96\,m. Thus the
-external collision surface lies inside the actor-state corruption family studied by the
-controlled latency experiment, where raw DAgger collision rises to 0.396 and hybrid
-grounding reduces it to 0.146. The bridge does not claim that the AlpaSim failure is
-fully explained by the synthetic perturbation: route-offset, heading-bias, lane-scale, and
-feature-noise residuals require regenerating full adapter logs. It does justify using the
-controlled perturbation sweep as the mechanistic backbone for the actor-visibility part
-of the external failure.
+structured hazards in all 18 collision clips, while the world-frame oracle proxy contains
+actors in all 18 same-frame reconstructions. Here ``structured hazards'' refers to the
+logged adapter field itself, not a downstream score threshold. Those collision windows are
+also much more actor-dense than terminal-matched non-collision controls sampled at the
+same lead-to-terminal frame offsets: median oracle hazard count is 22 rather than 4, and
+median closest clearance is 5.59\,m rather than 14.96\,m. This supports a narrower claim
+than full residual-distribution recovery: the external collision surface exhibits
+systematic collision-window hazard dropout, a residual class consistent with the
+actor-latency/dropout family studied by the controlled latency experiment, where raw
+DAgger collision rises to 0.396 and hybrid grounding reduces it to 0.146. The bridge does
+not claim that the AlpaSim failure is fully explained by the synthetic perturbation:
+route-offset, heading-bias, lane-scale, and feature-noise residuals require regenerating
+full adapter logs. It does justify using the controlled perturbation sweep as the
+mechanistic backbone for the structured-hazard dropout part of the external failure.
 
 \begin{table}[t]
 \centering

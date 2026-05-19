@@ -114,9 +114,19 @@ def analyze_partial_bridge(
             "internal_proxy_json": str(internal_proxy_path),
         },
         "limitations": {
+            "structured_hazard_definition": (
+                "The baseline count uses the logged adapter field alpasim_signal.structured_hazards. "
+                "In the adapter code path this field is forwarded directly from prediction_input when present; "
+                "the bridge therefore measures hazard omission in the logged structured-hazard interface, "
+                "not a downstream score threshold."
+            ),
             "adapter_state_scope": (
                 "Committed audits preserve exact adapter-vs-oracle actor omission at first impact, "
                 "but not full raw adapter alpasim_signal for every 30-scene frame."
+            ),
+            "control_matching": (
+                "Non-collision controls are matched by lead-to-terminal frame offset using the same 30-scene "
+                "oracle actor proxy. They are not additionally matched on scene class or ego speed."
             ),
             "preimpact_scope": (
                 "Actionable pre-impact frames are reconstructed for the 18 baseline collision clips. "
@@ -416,9 +426,9 @@ def _bridge_interpretation(
     latency = perturbation_map.get("latency_3", {})
     return {
         "supported_bridge_claim": (
-            "The committed audits support an actor-visibility bridge in the collision-critical window: "
-            "baseline adapter logs have zero structured hazards at first impact while the world-frame "
-            "oracle proxy has positive actor hazards at the same impact frames."
+            "The committed audits support a collision-window hazard-dropout bridge: baseline adapter logs "
+            "have zero structured hazards at first impact while the world-frame oracle proxy has positive "
+            "actor hazards at the same impact frames."
         ),
         "not_supported_without_rerun": (
             "The committed audits do not support full per-frame route, heading, lane-scale, or feature-noise "
@@ -436,10 +446,10 @@ def _bridge_interpretation(
             "regime_raw_collision": (latency.get("raw_iter2") or {}).get("collision"),
             "regime_hybrid_collision": (latency.get("hybrid_veto_iter2") or {}).get("collision"),
             "reason": (
-                "AlpaSim impact residual is stronger than a three-step delay in the specific sense that "
-                "the baseline adapter records no structured actors at impact while the oracle proxy records actors. "
-                "This aligns qualitatively with the controlled actor-latency failure mode, but not with the "
-                "route-offset or lane-scale regimes unless raw adapter logs are regenerated."
+                "AlpaSim impact residual is a hazard-dropout signal: the baseline adapter records no structured "
+                "actors at impact while the oracle proxy records actors. That aligns qualitatively with the "
+                "controlled actor-latency/dropout failure mode, but not yet with route-offset or lane-scale "
+                "residuals unless raw adapter logs are regenerated."
             ),
         },
     }
@@ -469,6 +479,7 @@ def _markdown(report: dict[str, Any]) -> str:
             f"hazards in `{impact['oracle_positive_hazards_at_same_impact']}/"
             f"{impact['scene_count']}` scenes."
         ),
+        "- The baseline count is the logged `alpasim_signal.structured_hazards` field, not a downstream score threshold.",
         (
             f"- Median oracle hazard count at impact: "
             f"`{_fmt((impact['oracle_hazard_count_at_same_impact'] or {}).get('median'))}`; "
@@ -498,7 +509,7 @@ def _markdown(report: dict[str, Any]) -> str:
         "",
         (
             f"- Control frames: `{control['count']}` from `{control['scene_count']}` non-collision scenes, "
-            "matched by lead-to-end frame offsets."
+            "matched by lead-to-end frame offsets only."
         ),
         (
             f"- Median oracle hazard count: `{_fmt((control['hazard_count'] or {}).get('median'))}`; "
@@ -520,10 +531,10 @@ def _markdown(report: dict[str, Any]) -> str:
         "## Paper-safe interpretation",
         "",
         (
-            "The committed audits support a partial bridge for actor-state corruption in the "
-            "collision-critical window. They do not yet support a full residual-density bridge "
-            "for route offset, heading bias, lane scale, or feature noise. A full regenerate should "
-            "therefore be targeted at raw adapter logs for those axes, not at redesigning the method."
+            "The committed audits support a partial bridge for collision-window hazard dropout in the "
+            "structured-hazard interface. They do not yet support a full residual-density bridge for route "
+            "offset, heading bias, lane scale, or feature noise. A full regenerate should therefore be "
+            "targeted at raw adapter logs for those axes, not at redesigning the method."
         ),
     ]
     return "\n".join(lines)

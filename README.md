@@ -225,7 +225,9 @@ The partial bridge analysis
 to the controlled proxy perturbation: at first impact, baseline adapter logs contain
 `0/18` structured hazards while the world-frame oracle proxy has positive actor hazards in
 `18/18`; actionable collision windows have median `22` oracle hazards versus `4` in
-terminal-matched non-collision controls.
+terminal-matched non-collision controls. This is a hazard-dropout bridge in the
+structured-hazard interface, not yet a full residual-density bridge for route, heading,
+lane, or feature-noise errors.
 
 This table evaluates learned-policy transfer variants. It should be read as the
 transfer-diagnostic extension rather than a replacement for the original Spotlight

@@ -335,8 +335,10 @@ Current result: at first impact, baseline adapter logs contain `0/18` structured
 while the world-frame oracle proxy has positive actor hazards in `18/18` same-frame
 reconstructions. Across actionable collision windows, median oracle hazard count is `22`
 versus `4` in terminal-matched non-collision controls. This supports the actor-state
-corruption bridge to the internal latency perturbation, but full route/heading/lane/noise
-residual distributions still require regenerating raw adapter logs.
+dropout bridge to the internal latency perturbation, but full route/heading/lane/noise
+residual distributions still require regenerating raw adapter logs. The non-collision
+controls are matched by the same lead-to-terminal frame offsets, not by scene class or
+ego speed.
 
 ## One-Command Local Launch
 

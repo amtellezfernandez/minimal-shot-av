@@ -6,6 +6,7 @@ This analysis uses only committed artifacts. It does not require rerunning AlpaS
 
 - First-impact collision scenes: `18`; baseline adapter structured hazards are zero in `18/18`.
 - At the same baseline impact frames, the world-frame oracle proxy has positive hazards in `18/18` scenes.
+- The baseline count is the logged `alpasim_signal.structured_hazards` field, not a downstream score threshold.
 - Median oracle hazard count at impact: `22.500`; median closest clearance: `0.320 m`.
 
 ## Pre-impact window
@@ -16,15 +17,15 @@ This analysis uses only committed artifacts. It does not require rerunning AlpaS
 
 ## Terminal-matched non-collision control
 
-- Control frames: `12324` from `12` non-collision scenes, matched by lead-to-end frame offsets.
+- Control frames: `12324` from `12` non-collision scenes, matched by lead-to-end frame offsets only.
 - Median oracle hazard count: `4.000`; median closest clearance: `14.961 m`; closest actor is rear-lane in `0.002` of frames.
 
 ## Controlled-perturbation alignment
 
 - Internal `latency_3` raw collision is `0.396`; hybrid collision is `0.146`.
-- Supported bridge claim: The committed audits support an actor-visibility bridge in the collision-critical window: baseline adapter logs have zero structured hazards at first impact while the world-frame oracle proxy has positive actor hazards at the same impact frames.
+- Supported bridge claim: The committed audits support a collision-window hazard-dropout bridge: baseline adapter logs have zero structured hazards at first impact while the world-frame oracle proxy has positive actor hazards at the same impact frames.
 - Not supported without rerun: The committed audits do not support full per-frame route, heading, lane-scale, or feature-noise residual distributions; those require regenerating raw adapter selection logs.
 
 ## Paper-safe interpretation
 
-The committed audits support a partial bridge for actor-state corruption in the collision-critical window. They do not yet support a full residual-density bridge for route offset, heading bias, lane scale, or feature noise. A full regenerate should therefore be targeted at raw adapter logs for those axes, not at redesigning the method.
+The committed audits support a partial bridge for collision-window hazard dropout in the structured-hazard interface. They do not yet support a full residual-density bridge for route offset, heading bias, lane scale, or feature noise. A full regenerate should therefore be targeted at raw adapter logs for those axes, not at redesigning the method.
