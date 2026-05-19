@@ -316,6 +316,28 @@ Current matched result: both direct-grid variants reduce collision from `18/18` 
 distance-to-ground-truth (`1.41 m -> 0.74 m`) but does not solve collision, so the
 residual failure should not be described as a learned-selector-only defect.
 
+## Partial Bridge Without Rerun
+
+The committed audits are sufficient for a collision-window bridge analysis, even though
+they do not preserve full raw adapter state for every frame:
+
+```bash
+python3 scripts/analyze_alpasim_partial_bridge.py
+```
+
+The output is:
+
+- `artifacts/alpasim_partial_bridge_preimpact.json`
+- `artifacts/alpasim_partial_bridge_preimpact.md`
+- `artifacts/alpasim_partial_bridge_preimpact.svg`
+
+Current result: at first impact, baseline adapter logs contain `0/18` structured hazards,
+while the world-frame oracle proxy has positive actor hazards in `18/18` same-frame
+reconstructions. Across actionable collision windows, median oracle hazard count is `22`
+versus `4` in terminal-matched non-collision controls. This supports the actor-state
+corruption bridge to the internal latency perturbation, but full route/heading/lane/noise
+residual distributions still require regenerating raw adapter logs.
+
 ## One-Command Local Launch
 
 To validate the full path on a small matched scene set:

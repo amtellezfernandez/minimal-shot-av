@@ -901,6 +901,49 @@ the current logs.
 
 \begin{table}[t]
 \centering
+\caption{Partial bridge from committed AlpaSim audits to the controlled proxy
+perturbation study. Collision-window rows use the 18 baseline collision clips; control
+rows sample the same lead-to-terminal offsets from the 12 non-colliding scenes in the
+same 30-scene oracle actor proxy. This bridge is exact for actor visibility at first
+impact, but it does not recover full route, heading, lane-scale, or feature-noise
+residuals without regenerating raw adapter logs.}
+\label{tab:alpasim_partial_bridge}
+\scriptsize
+\begin{tabular}{lrr}
+\toprule
+Audit quantity & Collision window & Non-collision control \\
+\midrule
+First-impact adapter structured hazards & 0/18 & -- \\
+First-impact oracle-positive hazards & 18/18 & -- \\
+First-impact median oracle hazard count & 22.5 & -- \\
+First-impact median closest oracle clearance & 0.32\,m & -- \\
+Actionable pre-impact frames & 1027 & 12324 \\
+Median oracle hazard count & 22.0 & 4.0 \\
+Median closest oracle clearance & 5.59\,m & 14.96\,m \\
+Closest actor rear-lane rate & 0.092 & 0.002 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:alpasim_partial_bridge} provides the missing bridge between the external
+AlpaSim diagnostic and the controlled proxy-state perturbation in
+Section~\ref{sec:exp:proxy}. It is deliberately partial because the committed artifacts
+do not preserve the full raw adapter state on every frame. The part they do preserve is
+load-bearing for the collision claim: at first impact, the baseline adapter records zero
+structured actors in all 18 collision clips, while the world-frame oracle proxy contains
+actors in all 18 same-frame reconstructions. Those collision windows are also much more
+actor-dense than terminal-matched non-collision controls: median oracle hazard count is
+22 rather than 4, and median closest clearance is 5.59\,m rather than 14.96\,m. Thus the
+external collision surface lies inside the actor-state corruption family studied by the
+controlled latency experiment, where raw DAgger collision rises to 0.396 and hybrid
+grounding reduces it to 0.146. The bridge does not claim that the AlpaSim failure is
+fully explained by the synthetic perturbation: route-offset, heading-bias, lane-scale, and
+feature-noise residuals require regenerating full adapter logs. It does justify using the
+controlled perturbation sweep as the mechanistic backbone for the actor-visibility part
+of the external failure.
+
+\begin{table}[t]
+\centering
 \caption{Closed-loop selector-free direct-grid replay on the 18 baseline collision clips.
 Both direct-grid planners use the same world-frame oracle actor proxy and bypass the
 learned token selector. The collision reduction is only two paired clips

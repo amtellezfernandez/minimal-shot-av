@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="360" viewBox="0 0 720 360">
+<rect width="100%" height="100%" fill="#fbf8ef"/>
+<text x="70" y="34" font-family="Georgia,serif" font-size="20" fill="#1f2933">Partial bridge: oracle actor load in collision-critical windows</text>
+<line x1="70" y1="280" x2="630" y2="280" stroke="#243b53" stroke-width="1"/>
+<line x1="70" y1="70" x2="70" y2="280" stroke="#243b53" stroke-width="1"/>
+<text x="22" y="78" font-family="Arial,sans-serif" font-size="12" fill="#52606d">median</text>
+<text x="14" y="94" font-family="Arial,sans-serif" font-size="12" fill="#52606d">hazards</text>
+<rect x="160" y="70.0" width="150" height="210.0" fill="#9b2226" opacity="0.88"/>
+<text x="235.0" y="62.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#102a43">22.0</text>
+<text x="235.0" y="306" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#334e68">AlpaSim collision
+pre-impact</text>
+<rect x="410" y="241.8" width="150" height="38.2" fill="#005f73" opacity="0.88"/>
+<text x="485.0" y="233.8" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#102a43">4.0</text>
+<text x="485.0" y="306" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#334e68">Non-collision
+terminal control</text>
+<text x="70" y="342" font-family="Arial,sans-serif" font-size="13" fill="#52606d">Controlled actor-latency regime: raw collision 0.396, hybrid collision 0.146. Full route/lane residuals require rerun.</text>
+</svg>

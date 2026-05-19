@@ -219,6 +219,13 @@ both runs improve only `2/18` collision clips (`1.000 -> 0.889`, McNemar `p=0.50
 The max-clearance replay also improves distance-to-ground-truth (`1.41 m -> 0.74 m`),
 but it still collides on `16/18` clips, so the residual failure is not explained by the
 learned selector or direct-grid cost ranking alone.
+The partial bridge analysis
+([Markdown](artifacts/alpasim_partial_bridge_preimpact.md),
+[JSON](artifacts/alpasim_partial_bridge_preimpact.json)) connects this external failure
+to the controlled proxy perturbation: at first impact, baseline adapter logs contain
+`0/18` structured hazards while the world-frame oracle proxy has positive actor hazards in
+`18/18`; actionable collision windows have median `22` oracle hazards versus `4` in
+terminal-matched non-collision controls.
 
 This table evaluates learned-policy transfer variants. It should be read as the
 transfer-diagnostic extension rather than a replacement for the original Spotlight

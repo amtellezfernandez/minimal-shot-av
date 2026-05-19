@@ -122,6 +122,21 @@
       "description": "Human-readable action-space upper-bound audit showing that the direct grid usually selects proxy-safe actions before impact, shifting the remaining collision question toward controller/receding-horizon or simulator mismatch."
     },
     {
+      "hf_path": "results/alpasim_partial_bridge_preimpact.json",
+      "local_path": "artifacts/alpasim_partial_bridge_preimpact.json",
+      "description": "Partial bridge analysis comparing committed AlpaSim collision-window oracle actor residuals against terminal-matched non-collision controls and controlled proxy-perturbation regimes."
+    },
+    {
+      "hf_path": "results/alpasim_partial_bridge_preimpact.md",
+      "local_path": "artifacts/alpasim_partial_bridge_preimpact.md",
+      "description": "Human-readable summary of the partial AlpaSim pre-impact bridge analysis."
+    },
+    {
+      "hf_path": "results/alpasim_partial_bridge_preimpact.svg",
+      "local_path": "artifacts/alpasim_partial_bridge_preimpact.svg",
+      "description": "Small SVG figure for the partial AlpaSim pre-impact bridge analysis."
+    },
+    {
       "hf_path": "results/alpasim_direct_actor_planner_collision18_analysis.json",
       "local_path": "artifacts/alpasim_direct_actor_planner_collision18_v2_analysis.json",
       "description": "Matched 18-scene selector-free direct actor-aware planner analysis on baseline collision clips, showing weak collision recovery and stronger progress gains."

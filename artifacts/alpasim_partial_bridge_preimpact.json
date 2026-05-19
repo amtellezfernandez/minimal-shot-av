@@ -1,0 +1,748 @@
+{
+  "bridge_interpretation": {
+    "collision_vs_control_actor_load": {
+      "collision_actionable_median_closest_clearance_m": 5.5875,
+      "collision_actionable_median_hazard_count": 22.0,
+      "terminal_control_median_closest_clearance_m": 14.961128672279587,
+      "terminal_control_median_hazard_count": 4.0
+    },
+    "controlled_regime_alignment": {
+      "closest_supported_regime": "latency_3 / actor-state corruption",
+      "reason": "AlpaSim impact residual is stronger than a three-step delay in the specific sense that the baseline adapter records no structured actors at impact while the oracle proxy records actors. This aligns qualitatively with the controlled actor-latency failure mode, but not with the route-offset or lane-scale regimes unless raw adapter logs are regenerated.",
+      "regime_hybrid_collision": 0.14583333333333334,
+      "regime_raw_collision": 0.3958333333333333
+    },
+    "impact_actor_omission_exact": true,
+    "not_supported_without_rerun": "The committed audits do not support full per-frame route, heading, lane-scale, or feature-noise residual distributions; those require regenerating raw adapter selection logs.",
+    "supported_bridge_claim": "The committed audits support an actor-visibility bridge in the collision-critical window: baseline adapter logs have zero structured hazards at first impact while the world-frame oracle proxy has positive actor hazards at the same impact frames."
+  },
+  "collision_actionable_oracle_load": {
+    "closest_clearance_m": {
+      "count": 1027,
+      "max": 29.609699999999997,
+      "mean": 7.302778383641675,
+      "median": 5.5875,
+      "min": 0.0883999999999997,
+      "p10": 1.2478000000000002,
+      "p25": 2.2726500000000005,
+      "p75": 9.53855,
+      "p90": 15.064219999999999
+    },
+    "closest_distance_m": {
+      "count": 1027,
+      "max": 32.2835,
+      "mean": 10.035554040895812,
+      "median": 8.4769,
+      "min": 2.7716,
+      "p10": 4.12302,
+      "p25": 5.0599,
+      "p75": 12.084399999999999,
+      "p90": 17.75094
+    },
+    "closest_rear_rate": 0.09152872444011685,
+    "component_counts": {
+      "collision_front": 72,
+      "collision_lateral": 168,
+      "collision_rear": 787
+    },
+    "count": 1027,
+    "direct_best_clearance_m": {
+      "count": 1027,
+      "max": 26.6379,
+      "mean": 5.031907789678676,
+      "median": 3.0144,
+      "min": -1.3975,
+      "p10": 0.4993,
+      "p25": 1.9953,
+      "p75": 6.5646,
+      "p90": 13.24522
+    },
+    "direct_selected_clearance_m": {
+      "count": 1027,
+      "max": 26.6379,
+      "mean": 4.131380331061344,
+      "median": 2.242,
+      "min": -1.3975,
+      "p10": 0.4993,
+      "p25": 1.71155,
+      "p75": 4.948499999999999,
+      "p90": 11.80106
+    },
+    "direct_selected_collision_free_rate": 0.9367088607594937,
+    "direct_selected_low_margin_rate_lt_0p55": 0.10418695228821812,
+    "hazard_count": {
+      "count": 1027,
+      "max": 24.0,
+      "mean": 19.543330087633883,
+      "median": 22.0,
+      "min": 3.0,
+      "p10": 9.0,
+      "p25": 16.0,
+      "p75": 24.0,
+      "p90": 24.0
+    },
+    "lead_frames": {
+      "count": 1027,
+      "max": 172.0,
+      "mean": 47.77799415774099,
+      "median": 34.0,
+      "min": 5.0,
+      "p10": 10.0,
+      "p25": 19.0,
+      "p75": 68.0,
+      "p90": 111.0
+    },
+    "oracle_proxy_actor_count": {
+      "count": 1027,
+      "max": 24.0,
+      "mean": 19.543330087633883,
+      "median": 22.0,
+      "min": 3.0,
+      "p10": 9.0,
+      "p25": 16.0,
+      "p75": 24.0,
+      "p90": 24.0
+    },
+    "scene_count": 18,
+    "token_best_clearance_m": {
+      "count": 1027,
+      "max": 26.6379,
+      "mean": 5.145087244401169,
+      "median": 3.1595,
+      "min": -1.3119,
+      "p10": 0.7287600000000001,
+      "p25": 2.1256000000000004,
+      "p75": 6.675750000000001,
+      "p90": 13.165579999999999
+    },
+    "token_selected_clearance_m": {
+      "count": 1027,
+      "max": 26.6379,
+      "mean": 4.037069328140214,
+      "median": 2.2311,
+      "min": -1.8447,
+      "p10": -0.65228,
+      "p25": 1.4954,
+      "p75": 5.5234,
+      "p90": 10.99206
+    },
+    "token_selected_collision_free_rate": 0.8656280428432327,
+    "token_selected_low_margin_rate_lt_0p55": 0.17234664070107109
+  },
+  "collision_impact_oracle_load": {
+    "closest_clearance_m": {
+      "count": 18,
+      "max": 2.7779000000000003,
+      "mean": 0.4129277777777778,
+      "median": 0.32040000000000035,
+      "min": -1.0493999999999999,
+      "p10": -0.46864000000000006,
+      "p25": -0.16125000000000012,
+      "p75": 0.4636999999999998,
+      "p90": 1.6628700000000007
+    },
+    "closest_distance_m": {
+      "count": 18,
+      "max": 5.5403,
+      "mean": 3.1663888888888887,
+      "median": 3.002,
+      "min": 1.5927,
+      "p10": 2.2305,
+      "p25": 2.68945,
+      "p75": 3.240425,
+      "p90": 4.447930000000001
+    },
+    "closest_rear_rate": 0.7777777777777778,
+    "component_counts": {
+      "collision_front": 3,
+      "collision_lateral": 1,
+      "collision_rear": 14
+    },
+    "count": 18,
+    "direct_best_clearance_m": {
+      "count": 18,
+      "max": 1.7927,
+      "mean": -0.46332222222222225,
+      "median": -0.8916,
+      "min": -1.4723,
+      "p10": -1.3532000000000002,
+      "p25": -1.2225249999999999,
+      "p75": -0.088725,
+      "p90": 1.39144
+    },
+    "direct_selected_clearance_m": {
+      "count": 18,
+      "max": 1.7335,
+      "mean": -0.4668777777777778,
+      "median": -0.8916,
+      "min": -1.4723,
+      "p10": -1.3532000000000002,
+      "p25": -1.2225249999999999,
+      "p75": -0.088725,
+      "p90": 1.39144
+    },
+    "direct_selected_collision_free_rate": 0.2777777777777778,
+    "direct_selected_low_margin_rate_lt_0p55": 0.7777777777777778,
+    "hazard_count": {
+      "count": 18,
+      "max": 24.0,
+      "mean": 20.166666666666668,
+      "median": 22.5,
+      "min": 10.0,
+      "p10": 12.1,
+      "p25": 18.25,
+      "p75": 24.0,
+      "p90": 24.0
+    },
+    "lead_frames": {
+      "count": 18,
+      "max": 0.0,
+      "mean": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p10": 0.0,
+      "p25": 0.0,
+      "p75": 0.0,
+      "p90": 0.0
+    },
+    "oracle_proxy_actor_count": {
+      "count": 18,
+      "max": 24.0,
+      "mean": 20.166666666666668,
+      "median": 22.5,
+      "min": 10.0,
+      "p10": 12.1,
+      "p25": 18.25,
+      "p75": 24.0,
+      "p90": 24.0
+    },
+    "scene_count": 18,
+    "token_best_clearance_m": {
+      "count": 18,
+      "max": 2.3093,
+      "mean": -0.2956722222222222,
+      "median": -0.5396000000000001,
+      "min": -1.4965,
+      "p10": -1.21684,
+      "p25": -1.0408,
+      "p75": 0.022925,
+      "p90": 1.0604800000000003
+    },
+    "token_selected_clearance_m": {
+      "count": 18,
+      "max": 1.6412,
+      "mean": -0.8180888888888889,
+      "median": -1.13195,
+      "min": -1.5458,
+      "p10": -1.37127,
+      "p25": -1.295275,
+      "p75": -0.705325,
+      "p90": -0.19558999999999924
+    },
+    "token_selected_collision_free_rate": 0.1111111111111111,
+    "token_selected_low_margin_rate_lt_0p55": 0.9444444444444444
+  },
+  "first_impact_adapter_residual": {
+    "adapter_hazard_count": {
+      "count": 18,
+      "max": 0.0,
+      "mean": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p10": 0.0,
+      "p25": 0.0,
+      "p75": 0.0,
+      "p90": 0.0
+    },
+    "adapter_zero_structured_hazards": 18,
+    "oracle_closest_clearance_m": {
+      "count": 18,
+      "max": 2.7779000000000003,
+      "mean": 0.4129277777777778,
+      "median": 0.32040000000000035,
+      "min": -1.0493999999999999,
+      "p10": -0.46864000000000006,
+      "p25": -0.16125000000000012,
+      "p75": 0.4636999999999998,
+      "p90": 1.6628700000000007
+    },
+    "oracle_closest_rear_count": 14,
+    "oracle_hazard_count_at_same_impact": {
+      "count": 18,
+      "max": 24.0,
+      "mean": 20.166666666666668,
+      "median": 22.5,
+      "min": 10.0,
+      "p10": 12.1,
+      "p25": 18.25,
+      "p75": 24.0,
+      "p90": 24.0
+    },
+    "oracle_positive_hazards_at_same_impact": 18,
+    "rows": [
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "maintain",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-a309e228-26e1-423e-a44c-cb00aa7378cb",
+        "oracle_closest_clearance_m": 0.7618000000000001,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 24,
+        "scene": "001_clipgt-a309e228-26e1-423e-a44c-cb00aa7378cb"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "evasive_right",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-804afc4a-fd1e-4f58-bd39-a4c486a916e5",
+        "oracle_closest_clearance_m": -0.33560000000000023,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 21,
+        "scene": "002_clipgt-804afc4a-fd1e-4f58-bd39-a4c486a916e5"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "maintain",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e",
+        "oracle_closest_clearance_m": -0.43000000000000005,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 18,
+        "scene": "004_clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "evasive_right",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e",
+        "oracle_closest_clearance_m": 2.7779000000000003,
+        "oracle_closest_is_rear": false,
+        "oracle_hazard_count_at_same_impact": 13,
+        "scene": "005_clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "evasive_right",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-8aaa1135-573f-4f6c-8ff8-7ac6bd6ea5d6",
+        "oracle_closest_clearance_m": 0.33470000000000033,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 24,
+        "scene": "007_clipgt-8aaa1135-573f-4f6c-8ff8-7ac6bd6ea5d6"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "lane_recover",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d",
+        "oracle_closest_clearance_m": -0.13140000000000007,
+        "oracle_closest_is_rear": false,
+        "oracle_hazard_count_at_same_impact": 21,
+        "scene": "008_clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "lane_recover",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e",
+        "oracle_closest_clearance_m": 0.39949999999999986,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 24,
+        "scene": "009_clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "lane_recover",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-9b6a51bd-cb54-4a68-8ed8-0e33a504c67e",
+        "oracle_closest_clearance_m": 1.2137999999999995,
+        "oracle_closest_is_rear": false,
+        "oracle_hazard_count_at_same_impact": 21,
+        "scene": "011_clipgt-9b6a51bd-cb54-4a68-8ed8-0e33a504c67e"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "slow_yield",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-89f2eeb8-f4e4-42a1-8e07-d60003d223dc",
+        "oracle_closest_clearance_m": -1.0493999999999999,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 24,
+        "scene": "013_clipgt-89f2eeb8-f4e4-42a1-8e07-d60003d223dc"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "maintain",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75",
+        "oracle_closest_clearance_m": 2.7106999999999997,
+        "oracle_closest_is_rear": false,
+        "oracle_hazard_count_at_same_impact": 10,
+        "scene": "014_clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "maintain",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-825dc886-0491-482a-abe3-e1743f5972b8",
+        "oracle_closest_clearance_m": 0.33909999999999985,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 24,
+        "scene": "018_clipgt-825dc886-0491-482a-abe3-e1743f5972b8"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "maintain",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-994977b5-4db6-43eb-950a-c0faaccc930b",
+        "oracle_closest_clearance_m": 0.3586999999999999,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 19,
+        "scene": "019_clipgt-994977b5-4db6-43eb-950a-c0faaccc930b"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "slow_yield",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30",
+        "oracle_closest_clearance_m": 0.12300000000000033,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 14,
+        "scene": "020_clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "maintain",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e",
+        "oracle_closest_clearance_m": -0.17120000000000013,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 10,
+        "scene": "021_clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "slow_yield",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b",
+        "oracle_closest_clearance_m": 0.2987000000000003,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 24,
+        "scene": "022_clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "slow_yield",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06",
+        "oracle_closest_clearance_m": -0.5588000000000001,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 24,
+        "scene": "023_clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "slow_yield",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888",
+        "oracle_closest_clearance_m": 0.30610000000000037,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 24,
+        "scene": "025_clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888"
+      },
+      {
+        "adapter_structured_hazard_count": 0,
+        "baseline_selected_token": "slow_yield",
+        "baseline_top_candidate": "maintain",
+        "clipgt_id": "clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc",
+        "oracle_closest_clearance_m": 0.48509999999999975,
+        "oracle_closest_is_rear": true,
+        "oracle_hazard_count_at_same_impact": 24,
+        "scene": "030_clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc"
+      }
+    ],
+    "scene_count": 18,
+    "top_candidate_maintain": 18
+  },
+  "frame_counts": {
+    "collision_actionable_frames": 1027,
+    "collision_impact_frames": 18,
+    "collision_preimpact_frames": 1117,
+    "terminal_matched_noncollision_control_frames": 12324
+  },
+  "inputs": {
+    "action_space_json": "/home/amdev/sota/minimal-shot-av/artifacts/alpasim_action_space_upper_bound_30scene.json",
+    "collision_surface_json": "/home/amdev/sota/minimal-shot-av/artifacts/alpasim_collision_surface_30scene_audit.json",
+    "internal_proxy_json": "/home/amdev/sota/minimal-shot-av/artifacts/internal_proxy_transfer_medium.json",
+    "oracle_proxy_json": "/home/amdev/sota/minimal-shot-av/artifacts/alpasim_oracle_actor_proxy_30scene.json"
+  },
+  "internal_perturbation_regimes": {
+    "clean": {
+      "clamped_delta_vs_raw": {
+        "collision": -0.02083333333333333,
+        "lane_violation_any": -0.14583333333333334,
+        "pass": 0.02083333333333337
+      },
+      "clamped_iter2": {
+        "collision": 0.0625,
+        "lane_violation_any": 0.16666666666666666,
+        "max_lane_error_m": 6.3323646783828735,
+        "min_clearance_m": 2.4050363091131053,
+        "pass": 0.9375
+      },
+      "hybrid_delta_vs_raw": {
+        "collision": -0.041666666666666664,
+        "lane_violation_any": -0.14583333333333334,
+        "pass": 0.04166666666666674
+      },
+      "hybrid_veto_iter2": {
+        "collision": 0.041666666666666664,
+        "lane_violation_any": 0.16666666666666666,
+        "max_lane_error_m": 5.286695142587026,
+        "min_clearance_m": 1.9511337798709671,
+        "pass": 0.9583333333333334
+      },
+      "raw_iter2": {
+        "collision": 0.08333333333333333,
+        "lane_violation_any": 0.3125,
+        "max_lane_error_m": 6.584757745265961,
+        "min_clearance_m": 2.3474646005779505,
+        "pass": 0.9166666666666666
+      }
+    },
+    "feature_noise_0.15": {
+      "clamped_delta_vs_raw": {
+        "collision": -0.02083333333333333,
+        "lane_violation_any": -0.7708333333333333,
+        "pass": 0.02083333333333337
+      },
+      "clamped_iter2": {
+        "collision": 0.0625,
+        "lane_violation_any": 0.14583333333333334,
+        "max_lane_error_m": 5.76429612437884,
+        "min_clearance_m": 2.4384036135549345,
+        "pass": 0.9375
+      },
+      "hybrid_delta_vs_raw": {
+        "collision": 0.0,
+        "lane_violation_any": -0.7916666666666666,
+        "pass": 0.0
+      },
+      "hybrid_veto_iter2": {
+        "collision": 0.08333333333333333,
+        "lane_violation_any": 0.125,
+        "max_lane_error_m": 5.2213354508082075,
+        "min_clearance_m": 1.8968987297266722,
+        "pass": 0.9166666666666666
+      },
+      "raw_iter2": {
+        "collision": 0.08333333333333333,
+        "lane_violation_any": 0.9166666666666666,
+        "max_lane_error_m": 9.77285740772883,
+        "min_clearance_m": 2.347575344455739,
+        "pass": 0.9166666666666666
+      }
+    },
+    "heading_bias_p12": {
+      "clamped_delta_vs_raw": {
+        "collision": -0.04166666666666667,
+        "lane_violation_any": -0.16666666666666669,
+        "pass": 0.04166666666666663
+      },
+      "clamped_iter2": {
+        "collision": 0.0625,
+        "lane_violation_any": 0.3958333333333333,
+        "max_lane_error_m": 7.104646076758702,
+        "min_clearance_m": 2.2504040538333356,
+        "pass": 0.9375
+      },
+      "hybrid_delta_vs_raw": {
+        "collision": -0.04166666666666667,
+        "lane_violation_any": -0.1875,
+        "pass": 0.04166666666666663
+      },
+      "hybrid_veto_iter2": {
+        "collision": 0.0625,
+        "lane_violation_any": 0.375,
+        "max_lane_error_m": 6.473830501238505,
+        "min_clearance_m": 1.9289374786118667,
+        "pass": 0.9375
+      },
+      "raw_iter2": {
+        "collision": 0.10416666666666667,
+        "lane_violation_any": 0.5625,
+        "max_lane_error_m": 8.4715307255586,
+        "min_clearance_m": 2.17755965993274,
+        "pass": 0.8958333333333334
+      }
+    },
+    "lane_error_x1.5": {
+      "clamped_delta_vs_raw": {
+        "collision": 0.08333333333333334,
+        "lane_violation_any": -0.1875,
+        "pass": -0.0625
+      },
+      "clamped_iter2": {
+        "collision": 0.125,
+        "lane_violation_any": 0.020833333333333332,
+        "max_lane_error_m": 5.181188225746155,
+        "min_clearance_m": 2.3223273215116933,
+        "pass": 0.875
+      },
+      "hybrid_delta_vs_raw": {
+        "collision": 0.0,
+        "lane_violation_any": -0.125,
+        "pass": 0.02083333333333337
+      },
+      "hybrid_veto_iter2": {
+        "collision": 0.041666666666666664,
+        "lane_violation_any": 0.08333333333333333,
+        "max_lane_error_m": 4.7979129155476885,
+        "min_clearance_m": 1.9609197134656522,
+        "pass": 0.9583333333333334
+      },
+      "raw_iter2": {
+        "collision": 0.041666666666666664,
+        "lane_violation_any": 0.20833333333333334,
+        "max_lane_error_m": 6.051716128985087,
+        "min_clearance_m": 2.2638059575110674,
+        "pass": 0.9375
+      }
+    },
+    "latency_3": {
+      "clamped_delta_vs_raw": {
+        "collision": 0.0,
+        "lane_violation_any": -0.35416666666666663,
+        "pass": 0.0
+      },
+      "clamped_iter2": {
+        "collision": 0.3958333333333333,
+        "lane_violation_any": 0.5208333333333334,
+        "max_lane_error_m": 6.9305752118428545,
+        "min_clearance_m": 0.8003230162818605,
+        "pass": 0.6041666666666666
+      },
+      "hybrid_delta_vs_raw": {
+        "collision": -0.24999999999999997,
+        "lane_violation_any": -0.6666666666666666,
+        "pass": 0.25
+      },
+      "hybrid_veto_iter2": {
+        "collision": 0.14583333333333334,
+        "lane_violation_any": 0.20833333333333334,
+        "max_lane_error_m": 5.634838223457336,
+        "min_clearance_m": 1.2729680406240125,
+        "pass": 0.8541666666666666
+      },
+      "raw_iter2": {
+        "collision": 0.3958333333333333,
+        "lane_violation_any": 0.875,
+        "max_lane_error_m": 9.508853475252787,
+        "min_clearance_m": 0.7202197280712426,
+        "pass": 0.6041666666666666
+      }
+    },
+    "route_offset_p1.5": {
+      "clamped_delta_vs_raw": {
+        "collision": 0.0625,
+        "lane_violation_any": -0.20833333333333331,
+        "pass": -0.0625
+      },
+      "clamped_iter2": {
+        "collision": 0.125,
+        "lane_violation_any": 0.020833333333333332,
+        "max_lane_error_m": 5.3234048585097,
+        "min_clearance_m": 2.295076737801234,
+        "pass": 0.875
+      },
+      "hybrid_delta_vs_raw": {
+        "collision": 0.04166666666666667,
+        "lane_violation_any": -0.16666666666666666,
+        "pass": -0.04166666666666663
+      },
+      "hybrid_veto_iter2": {
+        "collision": 0.10416666666666667,
+        "lane_violation_any": 0.0625,
+        "max_lane_error_m": 4.704817155996959,
+        "min_clearance_m": 1.8419646984354283,
+        "pass": 0.8958333333333334
+      },
+      "raw_iter2": {
+        "collision": 0.0625,
+        "lane_violation_any": 0.22916666666666666,
+        "max_lane_error_m": 5.885242561499278,
+        "min_clearance_m": 1.8682797067255403,
+        "pass": 0.9375
+      }
+    }
+  },
+  "limitations": {
+    "adapter_state_scope": "Committed audits preserve exact adapter-vs-oracle actor omission at first impact, but not full raw adapter alpasim_signal for every 30-scene frame.",
+    "preimpact_scope": "Actionable pre-impact frames are reconstructed for the 18 baseline collision clips. Non-collision controls use terminal-frame oracle-proxy actor load from the same 30-scene proxy."
+  },
+  "noncollision_terminal_oracle_load": {
+    "closest_clearance_m": {
+      "count": 8805,
+      "max": 85.09761528898078,
+      "mean": 26.653270478681684,
+      "median": 14.961128672279587,
+      "min": 0.5998334976615417,
+      "p10": 7.0746693425899,
+      "p25": 9.84608910230162,
+      "p75": 42.78430222090948,
+      "p90": 60.015476538653
+    },
+    "closest_distance_m": {
+      "count": 8805,
+      "max": 87.73901528898077,
+      "mean": 29.173186730811153,
+      "median": 17.73750767159806,
+      "min": 3.404433497661542,
+      "p10": 9.866964396915598,
+      "p25": 12.359681245080715,
+      "p75": 45.892136137360175,
+      "p90": 62.85572593169218
+    },
+    "closest_rear_rate": 0.0017039922103213243,
+    "count": 12324,
+    "hazard_count": {
+      "count": 12324,
+      "max": 24.0,
+      "mean": 3.8510223953261926,
+      "median": 4.0,
+      "min": 0.0,
+      "p10": 0.0,
+      "p25": 0.0,
+      "p75": 6.0,
+      "p90": 9.0
+    },
+    "lead_frames": {
+      "count": 12324,
+      "max": 172.0,
+      "mean": 47.77799415774099,
+      "median": 34.0,
+      "min": 5.0,
+      "p10": 10.0,
+      "p25": 19.0,
+      "p75": 68.0,
+      "p90": 111.0
+    },
+    "rear_lane_actor_count": {
+      "count": 12324,
+      "max": 1.0,
+      "mean": 0.0020285621551444336,
+      "median": 0.0,
+      "min": 0.0,
+      "p10": 0.0,
+      "p25": 0.0,
+      "p75": 0.0,
+      "p90": 0.0
+    },
+    "scene_count": 12
+  },
+  "scene_counts": {
+    "collision_scenes": 18,
+    "noncollision_scenes": 12
+  },
+  "schema": "alpasim_partial_bridge_preimpact_v1"
+}
