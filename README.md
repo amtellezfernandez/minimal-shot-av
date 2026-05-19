@@ -191,12 +191,12 @@ same learned selector for a controlled oracle-proxy ablation
 ([commands](docs/notes/alpasim-integration.md#oracle-actor-proxy-ablation)).
 Do not conflate the actor-aware numbers: the `0.70 -> 0.40` collision reduction is a
 score-cutoff world-frame oracle diagnostic, and the historical `0.70 -> 0.60` raw result
-was a 10-clip diagnostic. The canonical causal test is the matched `30/30` raw world-frame
+was a 10-clip diagnostic. The canonical matched raw diagnostic is the `30/30` world-frame
 oracle rerun in [`artifacts/alpasim_actor_blindness_30scene_raw_analysis.md`](artifacts/alpasim_actor_blindness_30scene_raw_analysis.md):
 collision stays `0.60 -> 0.60` with `better=0, worse=0`, offroad worsens
 `0.207 -> 0.310`, wrong-lane improves `0.241 -> 0.172`, and progress improves
 `0.170 -> 0.184`. That makes the actor-complete probe informative but still inconclusive
-for the collision-causality question. The follow-up collision-surface audit
+for the collision-causality probe. The follow-up collision-surface audit
 ([Markdown](artifacts/alpasim_collision_surface_30scene_audit.md),
 [JSON](artifacts/alpasim_collision_surface_30scene_audit.json)) shows why: the same
 `18/30` clips collide under baseline and oracle. At first impact, baseline logs show
