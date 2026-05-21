@@ -183,13 +183,26 @@ def _cluster_environment(cluster: str, rng: random.Random) -> dict[str, float | 
     weather = rng.choice(("clear", "rain", "mist", "low_sun", "night"))
     if cluster == "spotlight":
         weather = rng.choice(("night", "mist", "low_sun"))
-    return {
+    environment: dict[str, float | int | str | bool | list[dict[str, object]]] = {
         "weather": weather,
         "visibility": round(rng.uniform(0.35 if weather != "clear" else 0.75, 1.0), 3),
         "time_of_day": rng.choice(("morning", "midday", "dusk", "night")),
         "road_surface": "wet" if weather in {"rain", "mist"} else "dry",
         "severity": round(rng.uniform(0.35, 1.0), 3),
     }
+    if cluster == "spotlight":
+        environment["trigger_regions"] = [
+            {"actor_roles": ["spotlight_hazard"], "x_min": 36.0, "x_max": 56.0, "delay_ticks": 1.0}
+        ]
+    elif cluster == "pedestrian":
+        environment["trigger_regions"] = [
+            {"actor_roles": ["erratic_pedestrian"], "x_min": 40.0, "x_max": 54.0, "delay_ticks": 0.0}
+        ]
+    elif cluster == "cut-in":
+        environment["trigger_regions"] = [
+            {"actor_roles": ["cut_in_vehicle"], "x_min": 34.0, "x_max": 50.0, "delay_ticks": 0.0}
+        ]
+    return environment
 
 
 def _construction_obstacles(rng: random.Random, lane: list[tuple[float, float]], half_width: float) -> list[Obstacle]:

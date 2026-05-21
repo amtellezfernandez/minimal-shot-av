@@ -160,6 +160,18 @@ class WodScenarioGeneratorTests(unittest.TestCase):
         self.assertFalse(any(obstacle.label == "conflicting_vehicle" for obstacle in before_scenario.obstacles))
         self.assertTrue(any(obstacle.label == "conflicting_vehicle" for obstacle in after_scenario.obstacles))
 
+    def test_spotlight_hazard_uses_trigger_region_metadata(self) -> None:
+        scenario = generate_wod_scenario("spotlight", seed=3)
+        trigger_region = scenario.environment["trigger_regions"][0]
+        center_x = (float(trigger_region["x_min"]) + float(trigger_region["x_max"])) * 0.5
+        before_scenario, runtime = scenario_at_state(scenario, tick=10, position=(center_x - 12.0, scenario.start[1]), runtime_state={})
+        armed_scenario, runtime = scenario_at_state(scenario, tick=11, position=(center_x, scenario.start[1]), runtime_state=runtime)
+        after_scenario, _ = scenario_at_state(scenario, tick=12, position=(center_x, scenario.start[1]), runtime_state=runtime)
+
+        self.assertFalse(any(obstacle.label == "spotlight_hazard" for obstacle in before_scenario.obstacles))
+        self.assertFalse(any(obstacle.label == "spotlight_hazard" for obstacle in armed_scenario.obstacles))
+        self.assertTrue(any(obstacle.label == "spotlight_hazard" for obstacle in after_scenario.obstacles))
+
     def test_intersection_static_textures_do_not_overlap_conflict_pocket(self) -> None:
         scenario = generate_wod_scenario("intersection", seed=3)
         conflict_x, conflict_y = scenario.lane_center[3]

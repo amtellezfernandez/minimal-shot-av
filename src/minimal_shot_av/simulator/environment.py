@@ -215,9 +215,12 @@ def scenario_at_state(
     state = dict(runtime_state or {})
     actor_trigger_ticks = dict(state.get("actor_trigger_ticks", {}))
     actor_windows = _runtime_actor_windows(scenario, float(tick), position, actor_trigger_ticks)
+    triggered_actor_ids = _trigger_region_actor_ids(scenario)
     state["actor_trigger_ticks"] = actor_trigger_ticks
     obstacles = [obstacle for obstacle in scenario.obstacles if obstacle.kind != "ambient"]
     for actor in scenario.actors:
+        if actor.actor_id in triggered_actor_ids and actor.actor_id not in actor_windows:
+            continue
         active_from, active_until = actor_windows.get(actor.actor_id, (actor.active_from, actor.active_until))
         obstacle = actor_to_obstacle_at_time(actor, float(tick), dt, active_from=active_from, active_until=active_until)
         if obstacle is not None:
@@ -234,6 +237,12 @@ def _runtime_actor_windows(
     position: tuple[float, float],
     actor_trigger_ticks: dict[str, float],
 ) -> dict[str, tuple[float, float]]:
+    trigger_regions = scenario.environment.get("trigger_regions")
+    if isinstance(trigger_regions, list) and trigger_regions:
+        windows = _runtime_windows_from_regions(scenario, time_index, position, actor_trigger_ticks, trigger_regions)
+        if windows:
+            return windows
+
     if scenario.cluster != "intersection":
         return {}
     trigger_x = float(scenario.environment.get("intersection_trigger_x", scenario.lane_center[3][0] - 8.0))
@@ -241,6 +250,56 @@ def _runtime_actor_windows(
         return {}
 
     actors = [actor for actor in scenario.actors if actor.role in {"conflicting_vehicle", "occluded_vehicle"}]
+    return _activate_actor_group(time_index, actor_trigger_ticks, actors)
+
+
+def _runtime_windows_from_regions(
+    scenario: Scenario,
+    time_index: float,
+    position: tuple[float, float],
+    actor_trigger_ticks: dict[str, float],
+    trigger_regions: list[object],
+) -> dict[str, tuple[float, float]]:
+    windows: dict[str, tuple[float, float]] = {}
+    for raw_region in trigger_regions:
+        if not isinstance(raw_region, dict):
+            continue
+        actor_roles = tuple(str(role) for role in raw_region.get("actor_roles", ()))
+        actors = [actor for actor in scenario.actors if actor.role in actor_roles]
+        if not actors or not _position_matches_trigger(position, raw_region):
+            continue
+        delay_ticks = float(raw_region.get("delay_ticks", 0.0))
+        scoped = _activate_actor_group(time_index + delay_ticks, actor_trigger_ticks, actors)
+        windows.update(scoped)
+    return windows
+
+
+def _trigger_region_actor_ids(scenario: Scenario) -> set[str]:
+    trigger_regions = scenario.environment.get("trigger_regions")
+    if not isinstance(trigger_regions, list):
+        return set()
+    actor_ids: set[str] = set()
+    for raw_region in trigger_regions:
+        if not isinstance(raw_region, dict):
+            continue
+        actor_roles = {str(role) for role in raw_region.get("actor_roles", ())}
+        actor_ids.update(actor.actor_id for actor in scenario.actors if actor.role in actor_roles)
+    return actor_ids
+
+
+def _position_matches_trigger(position: tuple[float, float], region: dict[str, object]) -> bool:
+    x_min = float(region.get("x_min", -math.inf))
+    x_max = float(region.get("x_max", math.inf))
+    y_min = float(region.get("y_min", -math.inf))
+    y_max = float(region.get("y_max", math.inf))
+    return x_min <= position[0] <= x_max and y_min <= position[1] <= y_max
+
+
+def _activate_actor_group(
+    time_index: float,
+    actor_trigger_ticks: dict[str, float],
+    actors: list[Actor],
+) -> dict[str, tuple[float, float]]:
     if not actors:
         return {}
     base_active_from = min(actor.active_from for actor in actors)
