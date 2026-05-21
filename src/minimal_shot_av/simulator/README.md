@@ -9,7 +9,7 @@ Use it for:
 - simulator step/update rules
 - COMPASS and simulator-side evaluation
 - first-party AlpaSim integration adapters
-- simulator-scoped third-party AlpaSim overrides
+- simulator-scoped patched-upstream AlpaSim work
 
 ## Start Here
 
@@ -43,12 +43,13 @@ Reason:
 they are adapters from this repo's policy surface into AlpaSim execution, not vendored
 AlpaSim source.
 
-The simulator-scoped third-party override boundary is:
+The simulator-scoped patched-upstream boundary is:
 
 - [`third_party/alpasim_overrides/README.md`](../../../third_party/alpasim_overrides/README.md)
 
 Treat that directory as part of the simulation audit surface, not as a separate
-top-level subsystem.
+top-level subsystem. It contains upstream-derived AlpaSim work that was materially
+modified for this project.
 
 If you need the simulator write-up, go to:
 

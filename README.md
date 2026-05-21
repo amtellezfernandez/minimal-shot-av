@@ -93,7 +93,7 @@ This repo is intentionally split into three visible surfaces:
 | simulator / Spotlight Reflex | [`src/minimal_shot_av/simulator/README.md`](src/minimal_shot_av/simulator/README.md) |
 | simulator write-up | [`docs/simulation.md`](docs/simulation.md) |
 | AlpaSim integration / reproduction | [`docs/corl2027/AUDIT.md`](docs/corl2027/AUDIT.md) |
-| AlpaSim override boundary | [`third_party/alpasim_overrides/README.md`](third_party/alpasim_overrides/README.md) |
+| patched-upstream AlpaSim work | [`third_party/alpasim_overrides/README.md`](third_party/alpasim_overrides/README.md) |
 | Waymo / WOD-E2E stack | [`src/minimal_shot_av/model/README.md`](src/minimal_shot_av/model/README.md) |
 | WOD walkthrough | [`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md) |
 | report / comparison helpers | [`src/minimal_shot_av/neutral/README.md`](src/minimal_shot_av/neutral/README.md) |

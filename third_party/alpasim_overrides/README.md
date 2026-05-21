@@ -1,13 +1,32 @@
-# AlpaSim Override Boundary
+# Patched Upstream AlpaSim Work
 
-This directory is the explicit override zone for the AlpaSim part of the simulation
-stack.
+This directory is the explicit **patched upstream** zone for the AlpaSim part of the
+simulation stack.
 
 Use it when the question is:
 
 - what had to be patched outside the core repo code
 - what is first-party adapter code vs modified AlpaSim-side material
 - what belongs to the simulator audit surface but is not first-party source
+
+## What This Means
+
+These files are not being presented as untouched third-party source.
+
+They represent upstream AlpaSim surface area that required real project work:
+
+- bug fixes
+- bridge changes
+- deployment/runtime adjustments
+- integration-specific modifications needed to make the simulator transfer path work
+
+So the correct label is:
+
+- **patched upstream work**
+
+not:
+
+- "just external code"
 
 ## Contents
 
@@ -21,7 +40,7 @@ Use it when the question is:
 
 These files are not the main simulator implementation and not the WOD model stack.
 They still belong to the simulation audit surface because the AlpaSim reproduction path
-depends on them.
+depends on them, and because project-authored modifications were made here.
 
 The corresponding first-party integration code lives in:
 
