@@ -12,6 +12,7 @@ from minimal_shot_av.cli.commands.run_alpasim_local_external import (
     SCENE_PRESETS,
     _preflight_alpasim_base_image,
     _preflight_docker_access,
+    _preflight_nvidia_container_runtime,
     _preflight_platform_compatibility,
     _preflight_scene_artifacts,
     _resolve_alpasim_root,
@@ -65,6 +66,7 @@ def main() -> None:
     _preflight_platform_compatibility()
     if not args.skip_image:
         _preflight_alpasim_base_image()
+    _preflight_nvidia_container_runtime()
     if not args.skip_scene_artifacts:
         _preflight_scene_artifacts(alpasim_root=alpasim_root, scene_ids=scene_ids)
 
@@ -75,6 +77,7 @@ def main() -> None:
     print(f"  scene preset: {args.scene_preset}")
     print(f"  HF_TOKEN: {token_state}")
     print("  docker: accessible")
+    print("  gpu runtime: accessible")
     print(f"  image: {'skipped' if args.skip_image else 'alpasim-base:0.66.0'}")
     print(f"  scene artifacts: {'skipped' if args.skip_scene_artifacts else 'checked'}")
 

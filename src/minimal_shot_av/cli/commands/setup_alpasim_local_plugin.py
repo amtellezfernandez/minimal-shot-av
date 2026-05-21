@@ -252,21 +252,7 @@ def _bootstrap_alpasim_venv(alpasim_root: Path, *, uv_bin: str) -> None:
         cwd=alpasim_root,
     )
 
-    _run(
-        [
-            uv_bin,
-            "pip",
-            "install",
-            "--cache-dir",
-            str(ROOT / ".uv-cache"),
-            "--python",
-            str(venv_python),
-            "--index-url",
-            TORCH_INDEX_URL,
-            TORCH_PACKAGE,
-        ],
-        cwd=alpasim_root,
-    )
+    _install_torch_for_alpasim(uv_bin=uv_bin, venv_python=venv_python, cwd=alpasim_root)
 
     _compile_alpasim_protos(alpasim_root, venv_python=venv_python)
 
@@ -328,6 +314,68 @@ def _compile_alpasim_protos(alpasim_root: Path, *, venv_python: Path) -> None:
             "Failed to generate required AlpaSim protobuf modules: "
             + ", ".join(missing)
         )
+
+
+def _install_torch_for_alpasim(*, uv_bin: str, venv_python: Path, cwd: Path) -> None:
+    uv_cmd = [
+        uv_bin,
+        "pip",
+        "install",
+        "--cache-dir",
+        str(ROOT / ".uv-cache"),
+        "--python",
+        str(venv_python),
+        "--index-url",
+        TORCH_INDEX_URL,
+        TORCH_PACKAGE,
+    ]
+    result = subprocess.run(
+        uv_cmd,
+        cwd=cwd,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        if result.stdout:
+            sys.stdout.write(result.stdout)
+        if result.stderr:
+            sys.stderr.write(result.stderr)
+        return
+
+    if result.stdout:
+        sys.stdout.write(result.stdout)
+    if result.stderr:
+        sys.stderr.write(result.stderr)
+    sys.stderr.write(
+        "uv torch install failed inside AlpaSim env; retrying with pip in the same environment.\n"
+    )
+    _ensure_venv_pip(venv_python=venv_python, cwd=cwd)
+    _run(
+        [
+            str(venv_python),
+            "-m",
+            "pip",
+            "install",
+            "--index-url",
+            TORCH_INDEX_URL,
+            TORCH_PACKAGE,
+        ],
+        cwd=cwd,
+    )
+
+
+def _ensure_venv_pip(*, venv_python: Path, cwd: Path) -> None:
+    probe = subprocess.run(
+        [str(venv_python), "-m", "pip", "--version"],
+        cwd=cwd,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if probe.returncode == 0:
+        return
+    _run([str(venv_python), "-m", "ensurepip", "--upgrade"], cwd=cwd)
 
 
 def _plugin_names(venv_python: Path) -> list[str]:

@@ -15,6 +15,8 @@ class CheckAlpaSimReadinessTests(unittest.TestCase):
         ), patch.object(check_alpasim_readiness, "_validate_alpasim_checkout") as validate, patch.object(
             check_alpasim_readiness, "_preflight_docker_access"
         ) as docker, patch.object(
+            check_alpasim_readiness, "_preflight_nvidia_container_runtime"
+        ) as gpu_runtime, patch.object(
             check_alpasim_readiness, "_preflight_alpasim_base_image"
         ) as image, patch.object(
             check_alpasim_readiness, "_preflight_scene_artifacts"
@@ -29,6 +31,7 @@ class CheckAlpaSimReadinessTests(unittest.TestCase):
 
         validate.assert_called_once_with(Path("/tmp/alpasim"))
         docker.assert_called_once_with()
+        gpu_runtime.assert_called_once_with()
         image.assert_called_once_with()
         artifacts.assert_called_once_with(alpasim_root=Path("/tmp/alpasim"), scene_ids=["scene-1", "scene-2"])
         self.assertIn("AlpaSim readiness: OK", stdout.getvalue())
@@ -40,6 +43,8 @@ class CheckAlpaSimReadinessTests(unittest.TestCase):
             check_alpasim_readiness, "_preflight_docker_access"
         ), patch.object(
             check_alpasim_readiness, "_preflight_platform_compatibility"
+        ), patch.object(
+            check_alpasim_readiness, "_preflight_nvidia_container_runtime"
         ), patch.object(
             check_alpasim_readiness, "_preflight_alpasim_base_image"
         ) as image, patch.object(
@@ -56,5 +61,6 @@ class CheckAlpaSimReadinessTests(unittest.TestCase):
         image.assert_not_called()
         artifacts.assert_not_called()
         output = stdout.getvalue()
+        self.assertIn("gpu runtime: accessible", output)
         self.assertIn("image: skipped", output)
         self.assertIn("scene artifacts: skipped", output)

@@ -14,6 +14,7 @@ SCENE_PRESETS = _cmd.SCENE_PRESETS
 _parse_args = _cmd._parse_args
 _preflight_alpasim_base_image = _cmd._preflight_alpasim_base_image
 _preflight_docker_access = _cmd._preflight_docker_access
+_preflight_nvidia_container_runtime = _cmd._preflight_nvidia_container_runtime
 _preflight_platform_compatibility = _cmd._preflight_platform_compatibility
 _preflight_scene_artifacts = _cmd._preflight_scene_artifacts
 _resolve_alpasim_root = _cmd._resolve_alpasim_root
@@ -31,6 +32,7 @@ def main() -> None:
     _preflight_platform_compatibility()
     if not args.skip_image:
         _preflight_alpasim_base_image()
+    _preflight_nvidia_container_runtime()
     if not args.skip_scene_artifacts:
         _preflight_scene_artifacts(alpasim_root=alpasim_root, scene_ids=scene_ids)
 
@@ -41,6 +43,7 @@ def main() -> None:
     print(f"  scene preset: {args.scene_preset}")
     print(f"  HF_TOKEN: {token_state}")
     print("  docker: accessible")
+    print("  gpu runtime: accessible")
     print(f"  image: {'skipped' if args.skip_image else 'alpasim-base:0.66.0'}")
     print(f"  scene artifacts: {'skipped' if args.skip_scene_artifacts else 'checked'}")
 

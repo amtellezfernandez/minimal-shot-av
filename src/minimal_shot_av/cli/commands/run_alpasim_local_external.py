@@ -402,6 +402,7 @@ def main() -> None:
     _preflight_docker_access()
     _preflight_alpasim_base_image()
     _preflight_platform_compatibility()
+    _preflight_nvidia_container_runtime()
     _preflight_scene_artifacts(alpasim_root=alpasim_root, scene_ids=scene_ids)
     run_dir = _resolve_run_dir(args)
     _prepare_run_dir(run_dir, allow_existing=args.allow_existing_run_dir)
@@ -653,6 +654,38 @@ def _preflight_alpasim_base_image() -> None:
     raise SystemExit(
         f"Required local AlpaSim image is missing: {image_tag}. "
         "Build it first with ./scripts/build_alpasim_base_image.sh."
+    )
+
+
+def _preflight_nvidia_container_runtime() -> None:
+    if os.getenv("MSA_SKIP_ALPASIM_GPU_RUNTIME_CHECK", "").strip() == "1":
+        return
+
+    image_tag = os.getenv("ALPASIM_BASE_IMAGE_TAG", "alpasim-base:0.66.0")
+    result = subprocess.run(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "--gpus",
+            "all",
+            image_tag,
+            "nvidia-smi",
+            "-L",
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return
+
+    stderr = (result.stderr or "").strip()
+    raise SystemExit(
+        "AlpaSim sensorsim requires a working NVIDIA container runtime and a visible CUDA GPU. "
+        f"Probe command `docker run --rm --gpus all {image_tag} nvidia-smi -L` failed with code "
+        f"{result.returncode}. stderr: {stderr}"
     )
 
 
