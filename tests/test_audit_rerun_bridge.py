@@ -13,7 +13,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.audit import export_alpasim_audit_log, export_internal_audit_log, load_audit_log
+from minimal_shot_av.audit import critical_event_bundle, export_alpasim_audit_log, export_internal_audit_log, load_audit_log
 
 
 class AuditRerunBridgeTests(unittest.TestCase):
@@ -108,6 +108,7 @@ class AuditRerunBridgeTests(unittest.TestCase):
             payload = json.loads(result.stdout)
 
         self.assertEqual("internal", payload["manifest"]["source"])
+        self.assertEqual("internal:intersection", payload["severity_policy"]["profile"])
         self.assertGreater(payload["frame_count"], 0)
         self.assertIn("bookmark_count", payload)
         self.assertIn("bookmark_index", payload)
@@ -162,6 +163,7 @@ class AuditRerunBridgeTests(unittest.TestCase):
 
         self.assertEqual(str(output_path), payload["output"])
         self.assertEqual("medium", payload["min_severity"])
+        self.assertEqual("internal:intersection", bundle["severity_policy"]["profile"])
         self.assertGreater(bundle["bookmark_count"], 0)
         self.assertGreater(bundle["critical_frame_count"], 0)
         self.assertLessEqual(bundle["critical_frame_count"], bundle["manifest"]["frame_count"])
@@ -224,9 +226,28 @@ class AuditRerunBridgeTests(unittest.TestCase):
             bundle = json.loads((Path(temp_dir) / "critical_alpasim.json").read_text(encoding="utf-8"))
 
         self.assertEqual("high", payload["min_severity"])
+        self.assertEqual("alpasim:fresh_3scene", bundle["severity_policy"]["profile"])
         self.assertGreater(bundle["bookmark_count"], 0)
         self.assertTrue(all(item["severity"] == "high" for item in bundle["bookmarks"]))
         self.assertTrue(any(item["media"] and item["media"][0]["path"] == "frames/front_0001.jpg" for item in bundle["bookmarks"]))
+
+    def test_critical_event_bundle_uses_scenario_specific_policy(self) -> None:
+        manifest = {"source": "internal", "scenario_cluster": "intersection", "frame_count": 1}
+        frames = [
+            {
+                "frame_idx": 0,
+                "timestamp_s": 0.0,
+                "ego": {"speed": 1.0, "goal_distance": 10.0},
+                "step": {"min_obstacle_distance": 1.2, "collision_risk": 0.0, "lane_error": 0.0, "action_mode": "maintain"},
+                "trigger_state": {},
+                "media": [],
+            }
+        ]
+        bundle = critical_event_bundle(manifest, frames, min_severity="medium")
+
+        self.assertEqual("internal:intersection", bundle["severity_policy"]["profile"])
+        self.assertEqual(1, bundle["bookmark_count"])
+        self.assertEqual("near_miss", bundle["bookmarks"][0]["kind"])
 
     def test_export_alpasim_audit_log_from_selection_log(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

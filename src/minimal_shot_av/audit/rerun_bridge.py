@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .review import as_float, bookmarks_for_frame, frame_bookmarks
+from .review import as_float, bookmarks_for_frame, frame_bookmarks, severity_policy
 
 
 def load_audit_log(root: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -20,9 +20,10 @@ def load_audit_log(root: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
 
 def summarize_audit_log(root: Path) -> dict[str, Any]:
     manifest, frames = load_audit_log(root)
-    bookmarks = frame_bookmarks(frames)
+    bookmarks = frame_bookmarks(frames, manifest=manifest)
     return {
         "manifest": manifest,
+        "severity_policy": severity_policy(manifest),
         "frame_count": len(frames),
         "media_frame_count": sum(1 for frame in frames if frame.get("media")),
         "bookmark_count": len(bookmarks),
@@ -64,7 +65,7 @@ def view_audit_log_with_rerun(root: Path, *, spawn: bool = False) -> dict[str, A
         rr.log("metrics/collision_risk", rr.Scalars([float(step.get("collision_risk", 0.0))]))
         rr.log("metrics/lane_error", rr.Scalars([float(step.get("lane_error", 0.0))]))
         rr.log("planner/action_mode", rr.TextLog(str(step.get("action_mode", ""))))
-        for bookmark in bookmarks_for_frame(frame):
+        for bookmark in bookmarks_for_frame(frame, manifest=manifest):
             rr.log("events/bookmarks", rr.TextLog(f"{bookmark['kind']}: {json.dumps(bookmark['detail'], sort_keys=True)}"))
         _log_frame_media(rr, root, frame)
     return manifest

@@ -31,8 +31,8 @@ def compare_audit_logs(
     left_summary = _frame_summary(left_frames)
     right_summary = _frame_summary(right_frames)
     alignment_mode = _alignment_mode(left_frames, right_frames)
-    left_bookmarks = frame_bookmarks(left_frames)
-    right_bookmarks = frame_bookmarks(right_frames)
+    left_bookmarks = frame_bookmarks(left_frames, manifest=left_manifest)
+    right_bookmarks = frame_bookmarks(right_frames, manifest=right_manifest)
     return {
         "left": {
             "source": left_manifest.get("source"),
