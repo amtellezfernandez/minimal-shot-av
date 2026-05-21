@@ -44,7 +44,7 @@ except ImportError:
     PredictionInput = Any
 
 from .alpasim_signal import extract_alpasim_signal, scenario_from_command
-from .environment import Scenario, interpolate_lane, nearest_lane_point, scenario_at_tick
+from .environment import Scenario, nearest_lane_point, route_centerline, scenario_at_tick
 from .perception import perceive_scene
 from .spotlight_reflex import SpotlightSelection, evaluate_maneuver_candidates
 from .world_model import update_world_state
@@ -275,7 +275,7 @@ def _transfer_legality_violation(scenario: Scenario, evaluation: Any) -> str | N
         return "unsafe_action"
     if not evaluation.score.inside_5s_region:
         return "outside_route_region"
-    lane_points = interpolate_lane(scenario.lane_center)
+    lane_points = route_centerline(scenario)
     max_allowed = max(0.35, scenario.lane_half_width - SpotlightReflexAlpaSimModel._ROUTE_MARGIN_BUFFER_M)
     start_dev = _route_deviation(scenario.start, lane_points)
     final_dev = _route_deviation(evaluation.candidate.trajectory[-1], lane_points)

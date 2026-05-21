@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 import math
 from typing import Any, Callable
 
-from .environment import DEFAULT_EGO_RADIUS_M, Scenario, min_segment_clearance, min_time_swept_clearance, obstacle_axis_extent, scenario_at_tick
+from .environment import DEFAULT_EGO_RADIUS_M, Scenario, min_segment_clearance, min_time_swept_clearance, obstacle_axis_extent, route_centerline, scenario_at_tick
 from .perception import ScenePerception, perceive_scene
 from .planner import PlannedAction, plan_action
 from .safety import SafeAction, apply_safety_filter
@@ -713,9 +713,10 @@ def advance_ego_state(
 
 
 def _initial_heading(scenario: Scenario) -> float:
-    if len(scenario.lane_center) >= 2:
-        dx = scenario.lane_center[1][0] - scenario.start[0]
-        dy = scenario.lane_center[1][1] - scenario.start[1]
+    lane_points = route_centerline(scenario, samples_per_segment=4)
+    if len(lane_points) >= 2:
+        dx = lane_points[1][0] - scenario.start[0]
+        dy = lane_points[1][1] - scenario.start[1]
         if not math.isclose(dx, 0.0, abs_tol=1e-9) or not math.isclose(dy, 0.0, abs_tol=1e-9):
             return math.atan2(dy, dx)
     dx = scenario.goal[0] - scenario.start[0]

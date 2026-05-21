@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 
-from .environment import DEFAULT_EGO_RADIUS_M, Scenario, interpolate_lane, min_time_swept_clearance, nearest_lane_point, scenario_at_tick
+from .environment import DEFAULT_EGO_RADIUS_M, Scenario, min_time_swept_clearance, nearest_lane_point, route_centerline, scenario_at_tick
 from .perception import perceive_scene
 from .policy import EgoState, Rollout, RolloutConfig, StepRecord, advance_ego_state
 from .world_model import update_world_state
@@ -66,7 +66,7 @@ def run_oracle_policy(
         speed_mps=0.0,
         steering_rad=0.0,
     )
-    dense_lane = interpolate_lane(scenario.lane_center, samples_per_segment=config.lane_samples_per_segment)
+    dense_lane = route_centerline(scenario, samples_per_segment=config.lane_samples_per_segment)
     steps: list[StepRecord] = []
     collision = False
     reached_goal = False
@@ -265,9 +265,10 @@ def _rotate(vector: tuple[float, float], angle: float) -> tuple[float, float]:
 
 
 def _initial_heading(scenario: Scenario) -> float:
-    if len(scenario.lane_center) >= 2:
-        dx = scenario.lane_center[1][0] - scenario.start[0]
-        dy = scenario.lane_center[1][1] - scenario.start[1]
+    lane_points = route_centerline(scenario, samples_per_segment=4)
+    if len(lane_points) >= 2:
+        dx = lane_points[1][0] - scenario.start[0]
+        dy = lane_points[1][1] - scenario.start[1]
         if not math.isclose(dx, 0.0, abs_tol=1e-9) or not math.isclose(dy, 0.0, abs_tol=1e-9):
             return math.atan2(dy, dx)
     dx = scenario.goal[0] - scenario.start[0]

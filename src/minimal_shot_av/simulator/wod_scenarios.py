@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 import random
 
-from .environment import Actor, Obstacle, Scenario
+from .environment import Actor, Obstacle, Scenario, offset_centerline
 
 
 WOD_E2E_CLUSTERS = (
@@ -29,8 +29,6 @@ def generate_wod_scenario(cluster: str, seed: int, width: float = 120.0, height:
     rng = random.Random(seed)
     lane_half_width = _cluster_lane_half_width(cluster, rng)
     lane_center = _lane_center_for_cluster(cluster, rng, width, height)
-    start = (lane_center[0][0] - 4.0, lane_center[0][1])
-    goal = (lane_center[-1][0] + 4.0, lane_center[-1][1])
     obstacles = _repair_static_corridor(
         _cluster_obstacles(cluster, rng, lane_center, lane_half_width),
         lane_center,
@@ -39,6 +37,9 @@ def generate_wod_scenario(cluster: str, seed: int, width: float = 120.0, height:
     )
     actors = _cluster_actors(cluster, rng, lane_center, lane_half_width)
     map_features = _cluster_map_features(cluster, rng, lane_center, lane_half_width)
+    route_line = offset_centerline(lane_center, _travel_lane_offset(cluster, lane_half_width))
+    start = (route_line[0][0] - 4.0, route_line[0][1])
+    goal = (route_line[-1][0] + 4.0, route_line[-1][1])
     environment = _cluster_environment(cluster, rng)
     tags = _cluster_tags(cluster, rng)
 
@@ -151,7 +152,13 @@ def _cluster_map_features(
     half_width: float,
 ) -> list[dict[str, float | int | str | bool]]:
     features: list[dict[str, float | int | str | bool]] = [
-        {"kind": "route_corridor", "lane_half_width": round(half_width, 3), "lane_count": _lane_count(cluster)}
+        {
+            "kind": "route_corridor",
+            "lane_half_width": round(half_width, 3),
+            "lane_count": _lane_count(cluster),
+            "travel_lane_index": _travel_lane_index(cluster),
+            "travel_side": "right",
+        }
     ]
     if cluster == "construction":
         x, y = lane[3]
@@ -483,6 +490,21 @@ def _lane_count(cluster: str) -> int:
     if cluster in {"single-lane maneuver", "construction"}:
         return 1
     return 2
+
+
+def _travel_lane_index(cluster: str) -> int:
+    lane_count = _lane_count(cluster)
+    if lane_count <= 1:
+        return 0
+    return 0
+
+
+def _travel_lane_offset(cluster: str, half_width: float) -> float:
+    lane_count = _lane_count(cluster)
+    if lane_count <= 1:
+        return 0.0
+    lane_width = (half_width * 2.0) / lane_count
+    return -half_width + lane_width * (_travel_lane_index(cluster) + 0.5)
 
 
 def _repair_static_corridor(

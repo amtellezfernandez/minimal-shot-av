@@ -30,9 +30,9 @@ from .environment import (
     DEFAULT_EGO_RADIUS_M,
     SIM_TICK_DT_S,
     Scenario,
-    interpolate_lane,
     min_time_swept_clearance,
     nearest_lane_point,
+    route_centerline,
     scenario_at_tick,
 )
 
@@ -441,7 +441,7 @@ def _candidate_trajectory(
     for index in range(1, point_count + 1):
         t = index / point_count
         x = final_x * _smoothstep(t)
-        route_y = _route_y_at_x(scenario.lane_center, x)
+        route_y = _route_y_at_x(route_centerline(scenario, samples_per_segment=8), x)
         lateral_profile = _smoothstep(t)
         y = route_y + lateral_offset_m * lateral_profile
         points.append((x, y))
@@ -457,7 +457,7 @@ def _trajectory_cost(
     lateral_offset_m: float,
     config: DirectPlannerConfig,
 ) -> tuple[float, dict[str, Any]]:
-    lane_points = interpolate_lane(scenario.lane_center)
+    lane_points = route_centerline(scenario)
     min_clearance = math.inf
     route_sq = 0.0
     lane_violation_sq = 0.0

@@ -22,6 +22,7 @@ from minimal_shot_av.simulator.environment import (
     actor_to_obstacle,
     interpolate_lane,
     nearest_lane_point,
+    route_centerline,
     scenario_at_tick,
     scenario_to_dict,
 )
@@ -158,6 +159,13 @@ class WodScenarioGeneratorTests(unittest.TestCase):
             and abs(obstacle.y - conflict_y) < scenario.lane_half_width * 1.35
         ]
         self.assertEqual([], nearby_static)
+
+    def test_two_lane_scenarios_start_on_a_travel_lane_not_road_center(self) -> None:
+        for cluster in ("intersection", "spotlight", "foreign object debris"):
+            scenario = generate_wod_scenario(cluster, seed=3)
+            self.assertNotAlmostEqual(scenario.start[1], scenario.lane_center[0][1], places=3)
+            route_points = route_centerline(scenario)
+            self.assertAlmostEqual(scenario.start[1], route_points[0][1], places=3)
 
     def test_spotlight_lane_profile_is_smooth(self) -> None:
         for seed in (1, 2, 3, 7, 11):

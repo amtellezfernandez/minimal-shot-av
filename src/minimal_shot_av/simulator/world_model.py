@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 
-from .environment import Scenario, interpolate_lane
+from .environment import Scenario, route_centerline
 from .perception import ScenePerception, perceived_obstacle_axis_extent
 
 
@@ -30,7 +30,7 @@ def update_world_state(
     perception: ScenePerception,
     lookahead: int = 12,
 ) -> WorldState:
-    lane_points = interpolate_lane(scenario.lane_center)
+    lane_points = route_centerline(scenario)
     target_index = min(len(lane_points) - 1, perception.lane_index + lookahead)
     target_point = lane_points[target_index]
     progress_fraction = target_index / max(1, len(lane_points) - 1)

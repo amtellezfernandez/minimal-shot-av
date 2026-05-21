@@ -24,10 +24,10 @@ from .environment import (
     DEFAULT_EGO_RADIUS_M,
     SIM_TICK_DT_S,
     actor_to_obstacle_at_time,
-    interpolate_lane,
     min_time_swept_clearance,
     min_segment_clearance,
     nearest_lane_point,
+    route_centerline,
     scenario_at_tick,
     static_obstacles_at_time,
 )
@@ -550,7 +550,7 @@ def _candidate_axis_signals(
     config: Any,
 ) -> dict[str, dict[str, Any]]:
     static_obstacles = static_obstacles_at_time(scenario, float(scenario.environment.get("tick", 0.0)))
-    lane_points = interpolate_lane(scenario.lane_center)
+    lane_points = route_centerline(scenario)
     route_tangent = _route_tangent(position, lane_points)
     rear_flow_context = _rear_flow_context(
         scenario,

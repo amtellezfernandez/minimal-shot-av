@@ -518,6 +518,67 @@ def interpolate_lane(centerline: list[tuple[float, float]], samples_per_segment:
     return points
 
 
+def scenario_lane_count(scenario: Scenario) -> int:
+    for feature in scenario.map_features:
+        if str(feature.get("kind", "")) == "route_corridor":
+            try:
+                return max(1, int(feature.get("lane_count", 1)))
+            except (TypeError, ValueError):
+                return 1
+    return 1
+
+
+def scenario_travel_lane_index(scenario: Scenario) -> int:
+    lane_count = scenario_lane_count(scenario)
+    for feature in scenario.map_features:
+        if str(feature.get("kind", "")) == "route_corridor" and "travel_lane_index" in feature:
+            try:
+                return min(max(0, int(feature["travel_lane_index"])), lane_count - 1)
+            except (TypeError, ValueError):
+                return 0 if lane_count > 1 else 0
+    return 0 if lane_count > 1 else 0
+
+
+def route_lane_offset_m(scenario: Scenario) -> float:
+    lane_count = scenario_lane_count(scenario)
+    if lane_count <= 1:
+        return 0.0
+    lane_width = (scenario.lane_half_width * 2.0) / lane_count
+    lane_index = scenario_travel_lane_index(scenario)
+    return -scenario.lane_half_width + lane_width * (lane_index + 0.5)
+
+
+def offset_centerline(centerline: list[tuple[float, float]], offset_m: float) -> list[tuple[float, float]]:
+    if not centerline or abs(offset_m) <= 1e-9:
+        return list(centerline)
+    if len(centerline) == 1:
+        return list(centerline)
+    offset_points: list[tuple[float, float]] = []
+    for index, point in enumerate(centerline):
+        prev_point = centerline[index - 1] if index > 0 else point
+        next_point = centerline[index + 1] if index < len(centerline) - 1 else point
+        dx = next_point[0] - prev_point[0]
+        dy = next_point[1] - prev_point[1]
+        norm = math.hypot(dx, dy)
+        if norm <= 1e-9:
+            nx, ny = 0.0, 1.0
+        else:
+            nx, ny = -dy / norm, dx / norm
+        offset_points.append((point[0] + nx * offset_m, point[1] + ny * offset_m))
+    return offset_points
+
+
+def route_centerline(scenario: Scenario, samples_per_segment: int = 16) -> list[tuple[float, float]]:
+    points = interpolate_lane(offset_centerline(scenario.lane_center, route_lane_offset_m(scenario)), samples_per_segment=samples_per_segment)
+    if not points:
+        return [scenario.start, scenario.goal]
+    if math.dist(points[0], scenario.start) > 1e-6:
+        points = [scenario.start, *points]
+    if math.dist(points[-1], scenario.goal) > 1e-6:
+        points = [*points, scenario.goal]
+    return points
+
+
 def nearest_lane_point(point: tuple[float, float], lane_points: list[tuple[float, float]]) -> tuple[int, tuple[float, float], float]:
     best_index = 0
     best_point = lane_points[0]

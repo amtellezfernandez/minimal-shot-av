@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 
-from .environment import Obstacle, Scenario, interpolate_lane, nearest_lane_point, obstacle_signed_distance
+from .environment import Obstacle, Scenario, nearest_lane_point, obstacle_signed_distance, route_centerline
 
 
 @dataclass
@@ -64,7 +64,7 @@ def perceived_obstacle_axis_extent(
 
 
 def perceive_scene(scenario: Scenario, position: tuple[float, float], visibility_radius: float = 18.0) -> ScenePerception:
-    lane_points = interpolate_lane(scenario.lane_center)
+    lane_points = route_centerline(scenario)
     lane_index, lane_point, lane_error = nearest_lane_point(position, lane_points)
     next_index = min(len(lane_points) - 1, lane_index + 4)
     lane_heading = _normalize(
