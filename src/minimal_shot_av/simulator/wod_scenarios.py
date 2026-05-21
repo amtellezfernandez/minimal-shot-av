@@ -294,34 +294,38 @@ def _construction_actors(rng: random.Random, lane: list[tuple[float, float]], ha
 def _intersection_actors(rng: random.Random, lane: list[tuple[float, float]], half_width: float) -> list[Actor]:
     x, y = lane[3]
     trigger_tick = _intersection_trigger_tick(lane, trigger_index=3)
+    primary_side = rng.choice((-1.0, 1.0))
+    secondary_side = -primary_side
+    primary_speed = rng.uniform(3.0, 3.4)
+    secondary_speed = rng.uniform(0.9, 1.3)
     return [
         _actor(
             "cross_traffic_0",
             "vehicle",
-            x + 1.5,
-            y - half_width * 1.45,
+            x + rng.uniform(0.4, 1.2),
+            y + primary_side * half_width * 1.0,
             2.0,
             4.4,
-            math.pi / 2.0,
-            0.75,
+            -primary_side * math.pi / 2.0,
+            primary_speed,
             "crossing",
             "conflicting_vehicle",
-            active_from=max(0, trigger_tick - 1),
-            active_until=trigger_tick + 28,
+            active_from=max(0, trigger_tick),
+            active_until=trigger_tick + 18,
         ),
         _actor(
             "cross_traffic_1",
             "vehicle",
-            x + 9.5,
-            y + half_width * 1.55,
+            x + rng.uniform(5.5, 8.0),
+            y + secondary_side * half_width * 1.22,
             2.0,
             4.2,
-            -math.pi / 2.0,
-            0.45,
+            primary_side * math.pi / 2.0,
+            secondary_speed,
             "creeping",
             "occluded_vehicle",
-            active_from=trigger_tick + 6,
-            active_until=trigger_tick + 34,
+            active_from=trigger_tick + 7,
+            active_until=trigger_tick + 24,
         ),
     ]
 
@@ -428,7 +432,7 @@ def _intersection_trigger_tick(lane: list[tuple[float, float]], trigger_index: i
     conflict_x = lane[trigger_index][0]
     approach_distance = max(0.0, conflict_x - start_x)
     nominal_approach_speed_mps = 4.2
-    trigger_time_s = max(0.0, (approach_distance - 8.0) / nominal_approach_speed_mps)
+    trigger_time_s = max(0.0, (approach_distance - 11.0) / nominal_approach_speed_mps)
     return int(round(trigger_time_s / 0.25))
 
 

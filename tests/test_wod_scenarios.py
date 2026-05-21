@@ -135,8 +135,16 @@ class WodScenarioGeneratorTests(unittest.TestCase):
         crossing_actor = next(actor for actor in scenario.actors if actor.role == "conflicting_vehicle")
 
         self.assertGreaterEqual(crossing_actor.active_from, 24)
+        self.assertGreaterEqual(crossing_actor.speed, 2.6)
         self.assertFalse(any(obstacle.label == "conflicting_vehicle" for obstacle in scenario_at_tick(scenario, tick=0).obstacles))
         self.assertTrue(any(obstacle.label == "conflicting_vehicle" for obstacle in scenario_at_tick(scenario, tick=crossing_actor.active_from).obstacles))
+
+    def test_intersection_conflict_actor_starts_close_enough_to_force_a_decision(self) -> None:
+        scenario = generate_wod_scenario("intersection", seed=3)
+        crossing_actor = next(actor for actor in scenario.actors if actor.role == "conflicting_vehicle")
+        conflict_x, conflict_y = scenario.lane_center[3]
+        self.assertLess(abs(crossing_actor.y - conflict_y), scenario.lane_half_width * 1.2)
+        self.assertLess(abs(crossing_actor.x - conflict_x), 3.0)
 
     def test_intersection_static_textures_do_not_overlap_conflict_pocket(self) -> None:
         scenario = generate_wod_scenario("intersection", seed=3)
