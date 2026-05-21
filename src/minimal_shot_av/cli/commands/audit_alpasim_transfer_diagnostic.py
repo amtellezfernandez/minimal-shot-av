@@ -5,15 +5,11 @@ import json
 import math
 import random
 import statistics
-import sys
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[4]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 from minimal_shot_av.cli.commands.summarize_alpasim_episodes import summarize_run
 
 

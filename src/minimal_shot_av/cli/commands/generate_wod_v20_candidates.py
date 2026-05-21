@@ -5,14 +5,10 @@ import argparse
 from itertools import islice
 import json
 from pathlib import Path
-import sys
 from typing import Iterable
 
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.model.v20_planner import NeuralSystem2Planner, load_neural_planner_frame_cache  # noqa: E402
 from minimal_shot_av.model.wod_e2e import WodE2EPreferenceFrame, load_preference_frames  # noqa: E402

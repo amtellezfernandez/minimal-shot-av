@@ -6,13 +6,10 @@ import json
 import os
 from pathlib import Path
 import subprocess
-import sys
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[4]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 DEFAULT_DATA_ROOT = ROOT / "workspace" / "waymo_open_dataset_end_to_end_camera_v_1_0_0"
 DEFAULT_FRAME_LIST = ROOT / "data" / "waymo" / "e2e" / "submission_frames" / "test_frames.json"
 DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "wod_e2e_submission_matrix"

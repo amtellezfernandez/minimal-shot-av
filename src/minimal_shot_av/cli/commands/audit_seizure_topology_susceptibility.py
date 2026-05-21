@@ -6,18 +6,11 @@ import json
 import math
 from dataclasses import replace
 from pathlib import Path
-import sys
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
-if str(ROOT / "scripts") not in sys.path:
-    sys.path.insert(0, str(ROOT / "scripts"))
-
-from evaluate_scenarios import (
+from minimal_shot_av.cli.commands.evaluate_scenarios import (
     _max_intervention_rate,
     _min_avg_progress,
     _near_miss_clearance,

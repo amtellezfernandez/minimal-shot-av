@@ -2,15 +2,11 @@
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[4]
-if str(ROOT / "scripts") not in sys.path:
-    sys.path.insert(0, str(ROOT / "scripts"))
-
-from check_cuda_preflight import cuda_preflight_report  # noqa: E402
+from minimal_shot_av.cli.commands.check_cuda_preflight import cuda_preflight_report
 
 
 def main() -> int:

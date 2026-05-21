@@ -5,15 +5,11 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
-import sys
 import tarfile
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[4]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 from minimal_shot_av.cli.commands.audit_sota_judging_criteria import build_report
 from minimal_shot_av.cli.commands.audit_minimal_shot_claim import build_report as build_minimal_shot_report
 from minimal_shot_av.cli.commands.audit_production_av_readiness import (

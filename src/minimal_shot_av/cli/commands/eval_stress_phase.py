@@ -23,9 +23,6 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
 
 N_SEEDS   = 120          # per case per cell (6 cases → 720 rollouts/agent/cell)
 N_WORKERS = 20

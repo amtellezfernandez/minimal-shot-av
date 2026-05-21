@@ -3,13 +3,9 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-import sys
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.neutral.benchmark_compare import compare_reports, load_metric_report, parse_metric_report
 from minimal_shot_av.neutral.benchmark_reports import alpasim_metrics_report_to_metric_report

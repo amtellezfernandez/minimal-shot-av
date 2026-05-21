@@ -23,9 +23,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.simulator.compositional_scenarios import generate_compositional_scenario
 from minimal_shot_av.simulator.policy import RolloutConfig, run_spotlight_reflex_policy

@@ -11,7 +11,6 @@ import time
 
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
 TESTS = ROOT / "tests"
 SLOW_MODULES = frozenset({"tests.test_certification", "tests.test_compass"})
 

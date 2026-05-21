@@ -6,15 +6,11 @@ import json
 from pathlib import Path
 import platform
 import statistics
-import sys
 import time
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.model.learned_trajectory_model import (  # noqa: E402
     FEATURE_SET_BASE,

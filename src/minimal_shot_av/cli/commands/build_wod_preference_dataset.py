@@ -5,16 +5,12 @@ import argparse
 import importlib.util
 import json
 from pathlib import Path
-import sys
 
 import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
 WAYMO_SRC = ROOT / "workspace" / "waymo-open-dataset" / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.model.wod_e2e import load_preference_frames
 from minimal_shot_av.model.wod_preference import generate_preference_candidates

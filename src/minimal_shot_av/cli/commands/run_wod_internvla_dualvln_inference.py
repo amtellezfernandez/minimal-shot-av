@@ -14,11 +14,8 @@ from typing import Iterable
 
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
 WOD_PROTOS = ROOT / ".wod-protos"
-EXTERNAL_INTERNNAV = ROOT / "artifact" / "external" / "InternNav"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
+EXTERNAL_INTERNNAV = ROOT / "workspace" / "artifact" / "external" / "InternNav"
 if WOD_PROTOS.exists() and str(WOD_PROTOS) not in sys.path:
     sys.path.insert(0, str(WOD_PROTOS))
 

@@ -231,6 +231,14 @@ class ArchitectureBoundaryTests(unittest.TestCase):
         for path in sorted(SCRIPTS.glob("*.py")):
             self.assertEqual(_expected_wrapper_text(path.stem), path.read_text(encoding="utf-8"))
 
+    def test_cli_command_modules_do_not_mutate_sys_path(self) -> None:
+        violations = []
+        for path in sorted(CLI_COMMANDS_SRC.glob("*.py")):
+            text = path.read_text(encoding="utf-8")
+            if 'SRC = ROOT / "src"' in text or "if str(ROOT) not in sys.path:" in text:
+                violations.append(path.name)
+        self.assertEqual([], violations)
+
     def test_pyproject_entrypoints_target_boundary_packages(self) -> None:
         pyproject = load_string_tables(PYPROJECT)
         targets: list[str] = []
@@ -376,23 +384,16 @@ def _text_surface_violations(paths, forbidden_terms: list[str]) -> list[str]:
 def _expected_wrapper_text(module: str) -> str:
     return (
         "from __future__ import annotations\n\n"
-        "from importlib import import_module\n"
         "from pathlib import Path\n"
-        "import runpy\n"
         "import sys\n\n"
         "ROOT = Path(__file__).resolve().parents[1]\n"
         "SRC = ROOT / \"src\"\n"
         "if str(SRC) not in sys.path:\n"
         "    sys.path.insert(0, str(SRC))\n\n"
-        f"_TARGET_MODULE = \"minimal_shot_av.cli.commands.{module}\"\n"
-        "_target = import_module(_TARGET_MODULE)\n"
-        "for _name, _value in vars(_target).items():\n"
-        "    if _name not in {\"__name__\", \"__package__\", \"__loader__\", \"__spec__\"}:\n"
-        "        globals()[_name] = _value\n\n"
+        "from minimal_shot_av.cli.wrapper import export_command_namespace, run_command_module\n\n"
+        f"_target = export_command_namespace(globals(), \"{module}\")\n\n"
         "if __name__ == \"__main__\":\n"
-        "    if hasattr(_target, \"main\"):\n"
-        "        raise SystemExit(_target.main())\n"
-        "    runpy.run_module(_TARGET_MODULE, run_name=\"__main__\")\n"
+        "    run_command_module(_TARGET_MODULE, _target)\n"
     )
 
 

@@ -15,13 +15,9 @@ import math
 import multiprocessing
 from dataclasses import dataclass
 from pathlib import Path
-import sys
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
 
 from eval_heldout_latin_hypercube import build_lhs_profiles
 

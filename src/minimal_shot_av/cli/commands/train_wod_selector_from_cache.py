@@ -9,16 +9,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.model.learned_trajectory_model import RidgeTrajectoryModel
 from minimal_shot_av.model.rfs_metric import ManeuverCandidate, RfsReference, score_candidate

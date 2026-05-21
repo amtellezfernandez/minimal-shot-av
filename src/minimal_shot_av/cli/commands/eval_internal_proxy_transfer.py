@@ -25,17 +25,11 @@ import multiprocessing
 from pathlib import Path
 import random
 import statistics
-import sys
 from typing import Any
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.simulator.alpasim_token_bc import (  # noqa: E402
     _adapter_spotlight_config,

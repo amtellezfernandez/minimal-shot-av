@@ -5,7 +5,6 @@ import argparse
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-import sys
 from typing import Any
 
 

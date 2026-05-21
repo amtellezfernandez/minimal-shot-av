@@ -4,16 +4,10 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-import sys
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.simulator.compositional_scenarios import (  # noqa: E402
     COMPOSITIONAL_SUITES,

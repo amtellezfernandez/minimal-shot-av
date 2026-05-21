@@ -21,16 +21,12 @@ from dataclasses import dataclass
 import json
 import math
 import multiprocessing
-import sys
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
 
 DEFAULT_MODEL_DIR = ROOT / "artifacts" / "bc_models"
 DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "bc_dagger_data"

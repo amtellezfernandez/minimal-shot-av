@@ -17,20 +17,17 @@ import json
 import math
 import multiprocessing
 from pathlib import Path
-import sys
 from typing import Any
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-SCRIPT_DIR = Path(__file__).resolve().parent
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
-
-from eval_heldout_latin_hypercube import DEFAULT_SUITES, SUITE_CASES, TOKEN_ORDER, build_lhs_profiles
+from minimal_shot_av.cli.commands.eval_heldout_latin_hypercube import (
+    DEFAULT_SUITES,
+    SUITE_CASES,
+    TOKEN_ORDER,
+    build_lhs_profiles,
+)
 
 
 N_FEATURES = 10

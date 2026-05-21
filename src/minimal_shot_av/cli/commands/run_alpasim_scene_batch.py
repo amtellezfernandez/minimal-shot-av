@@ -4,14 +4,11 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[4]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 from minimal_shot_av.cli.commands.run_alpasim_local_external import DEFAULT_RUNS_ROOT, MODEL_PRESETS, SCENE_PRESETS, _scene_ids
 

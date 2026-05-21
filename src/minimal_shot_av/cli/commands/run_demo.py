@@ -2,12 +2,8 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-import sys
 
 ROOT = Path(__file__).resolve().parents[4]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.simulator.compositional_scenarios import COMPOSITIONAL_SUITES, generate_compositional_scenario
 from minimal_shot_av.simulator.environment import generate_scenario, scenario_to_dict, write_rollout
