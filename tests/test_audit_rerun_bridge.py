@@ -112,6 +112,57 @@ class AuditRerunBridgeTests(unittest.TestCase):
         self.assertIn("bookmark_count", payload)
         self.assertIn("bookmark_index", payload)
 
+    def test_export_critical_events_cli_writes_compact_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            rollout_dir = Path(temp_dir) / "rollout"
+            audit_dir = Path(temp_dir) / "audit"
+            output_path = Path(temp_dir) / "critical_events.json"
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "run_demo.py"),
+                    "--seed",
+                    "3",
+                    "--policy",
+                    "spotlight-reflex",
+                    "--scenario-cluster",
+                    "intersection",
+                    "--rollout-preset",
+                    "showcase-intersection",
+                    "--artifacts-dir",
+                    str(rollout_dir),
+                ],
+                cwd=ROOT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            export_internal_audit_log(rollout_dir / "latest_rollout.json", audit_dir)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "export_audit_critical_events.py"),
+                    str(audit_dir),
+                    "--output",
+                    str(output_path),
+                    "--context-radius",
+                    "1",
+                ],
+                cwd=ROOT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            payload = json.loads(result.stdout)
+            bundle = json.loads(output_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(str(output_path), payload["output"])
+        self.assertGreater(bundle["bookmark_count"], 0)
+        self.assertGreater(bundle["critical_frame_count"], 0)
+        self.assertLessEqual(bundle["critical_frame_count"], bundle["manifest"]["frame_count"])
+
     def test_export_alpasim_audit_log_from_selection_log(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             run_dir = Path(temp_dir) / "run"

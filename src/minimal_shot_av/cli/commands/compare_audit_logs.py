@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from minimal_shot_av.audit import load_audit_log
+from minimal_shot_av.audit.review import frame_bookmarks, paired_bookmarks
 
 
 def main() -> None:
@@ -30,23 +31,25 @@ def compare_audit_logs(
     left_summary = _frame_summary(left_frames)
     right_summary = _frame_summary(right_frames)
     alignment_mode = _alignment_mode(left_frames, right_frames)
+    left_bookmarks = frame_bookmarks(left_frames)
+    right_bookmarks = frame_bookmarks(right_frames)
     return {
         "left": {
             "source": left_manifest.get("source"),
             "frame_count": len(left_frames),
             "summary": left_summary,
-            "bookmarks": _frame_bookmarks(left_frames),
+            "bookmarks": left_bookmarks,
         },
         "right": {
             "source": right_manifest.get("source"),
             "frame_count": len(right_frames),
             "summary": right_summary,
-            "bookmarks": _frame_bookmarks(right_frames),
+            "bookmarks": right_bookmarks,
         },
         "delta": _summary_delta(left_summary, right_summary),
         "alignment_mode": alignment_mode,
         "aligned_samples": _aligned_samples(left_frames, right_frames, mode=alignment_mode),
-        "paired_bookmarks": _paired_bookmarks(_frame_bookmarks(left_frames), _frame_bookmarks(right_frames)),
+        "paired_bookmarks": paired_bookmarks(left_bookmarks, right_bookmarks),
     }
 
 
@@ -84,115 +87,6 @@ def _summary_delta(left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any
         "max_collision_risk_delta": float(left["max_collision_risk"]) - float(right["max_collision_risk"]),
         "avg_speed_delta": float(left["avg_speed"]) - float(right["avg_speed"]),
     }
-
-
-def _frame_bookmarks(frames: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    bookmarks: list[dict[str, Any]] = []
-    previous_trigger_keys: set[str] = set()
-    low_motion_streak = 0
-    for frame in frames:
-        step = frame.get("step", {})
-        trigger_state = frame.get("trigger_state", {})
-        active_trigger_keys = {
-            str(key)
-            for key, window in trigger_state.items()
-            if isinstance(window, dict) and window.get("active_from") is not None
-        }
-        new_trigger_keys = sorted(active_trigger_keys - previous_trigger_keys)
-        if new_trigger_keys:
-            bookmarks.append(
-                _bookmark(
-                    "trigger_activation",
-                    frame,
-                    {"trigger_regions": new_trigger_keys},
-                )
-            )
-        previous_trigger_keys = active_trigger_keys
-
-        min_clearance = float(step.get("min_obstacle_distance", math.inf) or math.inf)
-        if min_clearance <= 1.0:
-            bookmarks.append(
-                _bookmark(
-                    "near_miss",
-                    frame,
-                    {"min_clearance": min_clearance},
-                )
-            )
-
-        collision_risk = float(step.get("collision_risk", 0.0) or 0.0)
-        if collision_risk >= 0.7:
-            bookmarks.append(
-                _bookmark(
-                    "collision_risk_spike",
-                    frame,
-                    {"collision_risk": collision_risk},
-                )
-            )
-
-        lane_error = float(step.get("lane_error", 0.0) or 0.0)
-        if lane_error >= 1.0:
-            bookmarks.append(
-                _bookmark(
-                    "lane_violation",
-                    frame,
-                    {"lane_error": lane_error},
-                )
-            )
-
-        if _has_intervention(frame):
-            bookmarks.append(
-                _bookmark(
-                    "intervention",
-                    frame,
-                    {"action_mode": step.get("action_mode")},
-                )
-            )
-
-        if _is_low_motion(frame):
-            low_motion_streak += 1
-        else:
-            low_motion_streak = 0
-        if bool(step.get("stall")) or (low_motion_streak >= 4 and float(frame.get("ego", {}).get("goal_distance", 0.0) or 0.0) > 5.0):
-            bookmarks.append(
-                _bookmark(
-                    "stall_or_deadlock",
-                    frame,
-                    {
-                        "speed": float(frame.get("ego", {}).get("speed", 0.0) or 0.0),
-                        "goal_distance": float(frame.get("ego", {}).get("goal_distance", 0.0) or 0.0),
-                        "low_motion_streak": low_motion_streak,
-                    },
-                )
-            )
-    return bookmarks
-
-
-def _bookmark(kind: str, frame: dict[str, Any], detail: dict[str, Any]) -> dict[str, Any]:
-    step = frame.get("step", {})
-    return {
-        "kind": kind,
-        "frame_idx": int(frame.get("frame_idx", 0)),
-        "timestamp_s": float(frame.get("timestamp_s", 0.0) or 0.0),
-        "action_mode": step.get("action_mode"),
-        "detail": detail,
-    }
-
-
-def _has_intervention(frame: dict[str, Any]) -> bool:
-    step = frame.get("step", {})
-    planner = frame.get("planner", {})
-    if bool(step.get("intervention")):
-        return True
-    action_mode = str(step.get("action_mode", "") or "")
-    if action_mode and action_mode not in {"maintain", "direct_actor_planner"}:
-        return True
-    decision_type = str(step.get("decision_type", "") or "")
-    if decision_type and decision_type not in {"spotlight_wins", "maintain"}:
-        return True
-    selection_mode = str(planner.get("selection_mode", "") or "")
-    if selection_mode and selection_mode != "hybrid_veto":
-        return True
-    return False
 
 
 def _aligned_samples(
@@ -295,41 +189,6 @@ def _sample_frame(frame: dict[str, Any]) -> dict[str, Any]:
 
 def _finite(value: float) -> float:
     return value if math.isfinite(value) else 0.0
-
-
-def _is_low_motion(frame: dict[str, Any]) -> bool:
-    ego = frame.get("ego", {})
-    return float(ego.get("speed", 0.0) or 0.0) <= 0.1
-
-
-def _paired_bookmarks(
-    left_bookmarks: list[dict[str, Any]],
-    right_bookmarks: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    pairs: list[dict[str, Any]] = []
-    right_by_kind: dict[str, list[dict[str, Any]]] = {}
-    for bookmark in right_bookmarks:
-        right_by_kind.setdefault(str(bookmark.get("kind", "")), []).append(bookmark)
-    for kind, bookmarks in right_by_kind.items():
-        bookmarks.sort(key=lambda item: float(item.get("timestamp_s", 0.0) or 0.0))
-    for left in left_bookmarks:
-        kind = str(left.get("kind", ""))
-        candidates = right_by_kind.get(kind, [])
-        if not candidates:
-            continue
-        left_time = float(left.get("timestamp_s", 0.0) or 0.0)
-        right = min(candidates, key=lambda item: abs(float(item.get("timestamp_s", 0.0) or 0.0) - left_time))
-        pairs.append(
-            {
-                "kind": kind,
-                "left_frame_idx": int(left.get("frame_idx", 0)),
-                "right_frame_idx": int(right.get("frame_idx", 0)),
-                "left_timestamp_s": left_time,
-                "right_timestamp_s": float(right.get("timestamp_s", 0.0) or 0.0),
-                "timestamp_delta_s": round(abs(left_time - float(right.get("timestamp_s", 0.0) or 0.0)), 3),
-            }
-        )
-    return pairs
 
 
 if __name__ == "__main__":
