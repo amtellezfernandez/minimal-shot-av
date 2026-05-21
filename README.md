@@ -2,16 +2,33 @@
 
 > CoRL 2027 repository for Spotlight Reflex, long-tail simulation, AlpaSim transfer diagnostics, and a grounded WOD-E2E selector stack.
 
-| Spotlight vs baseline | Construction corridor |
-|---|---|
-| ![Spotlight vs baseline](docs/images/spotlight_vs_baseline.gif) | ![Construction corridor](docs/images/construction_success.gif) |
+### Spotlight vs Baseline
 
-| Intersection stress | AlpaSim transfer |
-|---|---|
-| ![Intersection stress](docs/images/intersection_stress.gif) | ![AlpaSim transfer](docs/images/alpasim_transfer.gif) |
+![Spotlight vs baseline](docs/images/spotlight_vs_baseline.gif)
 
-Reasoning panel:
+| Construction corridor | Intersection stress |
+|---|---|
+| ![Construction corridor](docs/images/construction_success.gif) | ![Intersection stress](docs/images/intersection_stress.gif) |
+
+| AlpaSim transfer | AlpaSim rollout |
+|---|---|
+| ![AlpaSim transfer](docs/images/alpasim_transfer.gif) | ![AlpaSim rollout](docs/images/alpasim_token_dagger_iter2_30scene.gif) |
+
+### What the AlpaSim panel is showing
+
 ![AlpaSim reasoning panel](docs/images/alpasim_reasoning_panel.png)
+
+- left: the external AlpaSim rollout under the transferred policy
+- right: the policy-side diagnostic view used to localize whether failure comes from
+  collision pressure, offroad drift, lane violation, or progress loss
+- point of the panel: the transfer result is not just a scalar collision number; it is
+  an axis-by-axis failure breakdown
+
+Taken together, the proof block above shows:
+
+- matched baseline comparison on the same seed
+- breadth across construction and intersection pressure
+- external transfer evidence with failure localization, not just one scalar score
 
 ## Why This Repo Pops
 
@@ -24,8 +41,8 @@ Reasoning panel:
 
 ## The AV Paradigm
 
-This README should sell one idea fast: this is a compact autonomy stack that does
-not hide behind scale-only rhetoric.
+This repository centers a compact autonomy stack with explicit geometry, closed-loop
+evaluation, and transfer diagnostics.
 
 - **Reason over geometry:** six world-state scalars and explicit maneuver choices.
 - **Act in closed loop:** success and failure are shown as full rollouts, not static metrics.
@@ -35,25 +52,22 @@ not hide behind scale-only rhetoric.
 That combination is what makes the project look like an autonomy paradigm rather than
 just another benchmark table.
 
-## Watch This Order
+## More Evidence
 
-If you only show four things, show them in this order:
+The first proof block above should do the heavy lifting. After that, go straight to:
 
-1. **Spotlight Reflex beats the baseline on the same seed.**
-2. **Construction corridor.**
-3. **Intersection stress.**
-4. **AlpaSim transfer clip plus reasoning panel.**
-
-That sequence tells the right story:
-
-- success in a rare hazard,
-- breadth across scene types,
-- pressure under multi-agent timing,
-- and then honest external transfer diagnostics.
-
-## Media Wall
-
-![Showcase grid](docs/images/readme_showcase_grid.png)
+- grand matched rollouts:
+  [`artifacts/sota_submission_bundles/grand_spotlight_demo/latest_rollout.svg`](artifacts/sota_submission_bundles/grand_spotlight_demo/latest_rollout.svg)
+  and
+  [`artifacts/sota_submission_bundles/grand_baseline_spotlight_demo/latest_rollout.svg`](artifacts/sota_submission_bundles/grand_baseline_spotlight_demo/latest_rollout.svg)
+- intersection stress rollout:
+  [`artifacts/sota_submission_bundles/grand_intersection_stress_seed3/latest_rollout.svg`](artifacts/sota_submission_bundles/grand_intersection_stress_seed3/latest_rollout.svg)
+- minor visual gallery:
+  [`artifacts/sota_submission_bundles/minor_visual_gallery/index.html`](artifacts/sota_submission_bundles/minor_visual_gallery/index.html)
+- full simulation write-up:
+  [`docs/simulation.md`](docs/simulation.md)
+- transfer audit path:
+  [`docs/corl2027/AUDIT.md`](docs/corl2027/AUDIT.md)
 
 ## Fast Facts
 
