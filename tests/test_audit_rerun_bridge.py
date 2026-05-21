@@ -129,6 +129,7 @@ class AuditRerunBridgeTests(unittest.TestCase):
                 "scene_id": "clipgt-test-scene",
                 "command": "straight",
                 "speed_mps": 6.0,
+                "front_camera_image_path": "frames/front_0001.jpg",
                 "selection_mode": "hybrid_veto",
                 "trajectory_mode": "clamped_lateral",
                 "hybrid_token": "maintain",
@@ -154,6 +155,7 @@ class AuditRerunBridgeTests(unittest.TestCase):
         self.assertEqual("maintain", frames[0]["step"]["selected_maneuver"])
         self.assertEqual("clipgt-test-scene", manifest["scene_ids"][0])
         self.assertEqual("spotlight_wins", frames[0]["step"]["decision_type"])
+        self.assertEqual("frames/front_0001.jpg", frames[0]["media"][0]["path"])
 
     def test_compare_audit_logs_cli_reports_summary_delta_and_bookmarks(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -238,9 +240,12 @@ class AuditRerunBridgeTests(unittest.TestCase):
 
         self.assertIn("delta", payload)
         self.assertIn("min_clearance_delta", payload["delta"])
+        self.assertIn(payload["alignment_mode"], {"timestamp", "progress"})
         self.assertIn("aligned_samples", payload)
         self.assertGreater(len(payload["aligned_samples"]), 0)
         self.assertIn("bookmarks", payload["left"])
         self.assertIn("bookmarks", payload["right"])
         self.assertGreater(len(payload["left"]["bookmarks"]), 0)
         self.assertIn(payload["left"]["bookmarks"][0]["kind"], {"trigger_activation", "near_miss", "collision_risk_spike", "intervention"})
+        if payload["alignment_mode"] == "timestamp":
+            self.assertIn("timestamp_delta_s", payload["aligned_samples"][0])

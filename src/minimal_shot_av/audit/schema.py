@@ -67,6 +67,7 @@ def build_audit_frames(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 },
                 "actors": [asdict(actor) for actor in scenario.actors],
                 "active_obstacles": [asdict(obstacle) for obstacle in active_scenario.obstacles],
+                "media": [],
                 "step": step,
                 "trigger_state": dict(active_scenario.environment.get("runtime_actor_windows", {})),
             }

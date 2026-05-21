@@ -79,6 +79,7 @@ def _frame_from_selection_row(row: dict[str, Any], controller_rows: list[dict[st
         },
         "actors": [row_actor for row_actor in signal.get("structured_hazards", []) if _is_moving_hazard(row_actor)],
         "active_obstacles": [row_actor for row_actor in signal.get("structured_hazards", []) if not _is_moving_hazard(row_actor)],
+        "media": _media_refs_from_row(row, signal),
         "step": {
             "action_mode": str(row.get("hybrid_token", row.get("spotlight_token", ""))),
             "decision_type": row.get("decision_type"),
@@ -124,6 +125,7 @@ def _frame_from_direct_row(row: dict[str, Any], controller_rows: list[dict[str, 
         },
         "actors": [row_actor for row_actor in signal.get("structured_hazards", []) if _is_moving_hazard(row_actor)],
         "active_obstacles": [row_actor for row_actor in signal.get("structured_hazards", []) if not _is_moving_hazard(row_actor)],
+        "media": _media_refs_from_row(row, signal),
         "step": {
             "action_mode": "direct_actor_planner",
             "collision_risk": float(signal.get("dynamics_risk", 0.0) or 0.0),
@@ -248,3 +250,36 @@ def _as_float(value: Any, default: float = 0.0) -> float:
         return float(value)
     except (TypeError, ValueError):
         return default
+
+
+def _media_refs_from_row(row: dict[str, Any], signal: dict[str, Any]) -> list[dict[str, Any]]:
+    refs: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    _append_media_ref(refs, seen, source="row", payload=row)
+    _append_media_ref(refs, seen, source="signal", payload=signal)
+    return refs
+
+
+def _append_media_ref(
+    refs: list[dict[str, Any]],
+    seen: set[tuple[str, str]],
+    *,
+    source: str,
+    payload: dict[str, Any],
+) -> None:
+    for key, value in payload.items():
+        lowered = str(key).lower()
+        if not any(token in lowered for token in ("image", "frame", "camera")):
+            continue
+        if not any(token in lowered for token in ("path", "file", "uri", "jpg", "jpeg", "png")):
+            continue
+        if not isinstance(value, str) or not value.strip():
+            continue
+        media_type = "image"
+        if lowered.endswith("_uri"):
+            media_type = "uri"
+        dedupe_key = (media_type, value)
+        if dedupe_key in seen:
+            continue
+        seen.add(dedupe_key)
+        refs.append({"source": source, "kind": media_type, "label": str(key), "path": value})
