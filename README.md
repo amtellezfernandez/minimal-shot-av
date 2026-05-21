@@ -1,6 +1,6 @@
-# Spotlight Reflex
+# Minimal-Shot Autonomous Driving
 
-> Minimal-shot autonomous driving with custom long-tail simulation, AlpaSim transfer diagnostics, and a grounded WOD-E2E selector stack.
+> CoRL 2027 repository for Spotlight Reflex, long-tail simulation, AlpaSim transfer diagnostics, and a grounded WOD-E2E selector stack.
 
 ![README hero](docs/images/readme_hero_banner.png)
 
@@ -35,13 +35,20 @@ just another benchmark table.
 If you only show four things, show them in this order:
 
 1. **Spotlight Reflex beats the baseline on the same seed.**
-   [`docs/videos/spotlight_vs_baseline.mp4`](docs/videos/spotlight_vs_baseline.mp4)
 2. **Construction corridor.**
-   [`docs/videos/construction_success.mp4`](docs/videos/construction_success.mp4)
 3. **Intersection stress.**
-   [`docs/videos/intersection_stress.mp4`](docs/videos/intersection_stress.mp4)
 4. **AlpaSim transfer clip plus reasoning panel.**
-   [`docs/videos/alpasim_transfer.mp4`](docs/videos/alpasim_transfer.mp4) and `docs/images/alpasim_reasoning_panel.png`
+
+| Spotlight vs baseline | Construction corridor |
+|---|---|
+| ![Spotlight vs baseline](docs/images/spotlight_vs_baseline.gif) | ![Construction corridor](docs/images/construction_success.gif) |
+
+| Intersection stress | AlpaSim transfer |
+|---|---|
+| ![Intersection stress](docs/images/intersection_stress.gif) | ![AlpaSim transfer](docs/images/alpasim_transfer.gif) |
+
+Reasoning panel:
+![AlpaSim reasoning panel](docs/images/alpasim_reasoning_panel.png)
 
 That sequence tells the right story:
 
@@ -112,7 +119,7 @@ This repo is intentionally split into three visible surfaces:
 | Grand spotlight rollout | [`artifacts/sota_submission_bundles/grand_spotlight_demo/latest_rollout.svg`](artifacts/sota_submission_bundles/grand_spotlight_demo/latest_rollout.svg) |
 | Grand baseline rollout | [`artifacts/sota_submission_bundles/grand_baseline_spotlight_demo/latest_rollout.svg`](artifacts/sota_submission_bundles/grand_baseline_spotlight_demo/latest_rollout.svg) |
 | Grand intersection rollout | [`artifacts/sota_submission_bundles/grand_intersection_stress_seed3/latest_rollout.svg`](artifacts/sota_submission_bundles/grand_intersection_stress_seed3/latest_rollout.svg) |
-| Video clips | [`docs/videos/`](docs/videos/) |
+| Embeddable GIFs | [`docs/images/`](docs/images/) |
 | Video reel plan | [`docs/video_reel_plan.md`](docs/video_reel_plan.md) |
 
 ## The Compact Pitch
