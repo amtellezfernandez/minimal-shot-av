@@ -100,6 +100,67 @@ def _actor_pos_at_t(actor: dict, t: float) -> tuple[float, float]:
     return ax, ay
 
 
+def _lane_count(scenario: dict) -> int:
+    for feature in scenario.get("map_features", []):
+        if feature.get("kind") == "route_corridor":
+            try:
+                return max(1, int(feature.get("lane_count", 1)))
+            except (TypeError, ValueError):
+                return 1
+    return 1
+
+
+def _offset_ribbon(points: list[tuple[float, float]], offset_m: float) -> list[tuple[float, float]]:
+    if not points:
+        return []
+    if len(points) == 1:
+        return [points[0]]
+    out: list[tuple[float, float]] = []
+    for index, point in enumerate(points):
+        prev_point = points[index - 1] if index > 0 else points[index]
+        next_point = points[index + 1] if index < len(points) - 1 else points[index]
+        dx = next_point[0] - prev_point[0]
+        dy = next_point[1] - prev_point[1]
+        norm = math.hypot(dx, dy)
+        if norm <= 1e-9:
+            nx, ny = 0.0, 1.0
+        else:
+            nx, ny = -dy / norm, dx / norm
+        out.append((point[0] + nx * offset_m, point[1] + ny * offset_m))
+    return out
+
+
+def _draw_road(draw: ImageDraw.ImageDraw, scenario: dict, lane: list[tuple[float, float]]) -> None:
+    half_width = float(scenario["lane_half_width"])
+    lane_count = _lane_count(scenario)
+    road_half_width = half_width * max(1.0, lane_count / 2.0)
+    left_edge = _offset_ribbon(lane, road_half_width)
+    right_edge = _offset_ribbon(lane, -road_half_width)
+    road_polygon = [_to_px(x, y) for x, y in left_edge] + [_to_px(x, y) for x, y in reversed(right_edge)]
+    draw.polygon(road_polygon, fill=(208, 195, 167))
+    edge_left = [_to_px(x, y) for x, y in left_edge]
+    edge_right = [_to_px(x, y) for x, y in right_edge]
+    if len(edge_left) >= 2:
+        draw.line(edge_left, fill=(75, 70, 63), width=3)
+    if len(edge_right) >= 2:
+        draw.line(edge_right, fill=(75, 70, 63), width=3)
+    if lane_count > 1:
+        lane_width = (road_half_width * 2.0) / lane_count
+        for divider in range(1, lane_count):
+            divider_points = _offset_ribbon(lane, -road_half_width + lane_width * divider)
+            divider_px = [_to_px(x, y) for x, y in divider_points]
+            for i in range(0, len(divider_px) - 1, 5):
+                a = divider_px[i]
+                b = divider_px[min(i + 2, len(divider_px) - 1)]
+                draw.line([a, b], fill=(241, 237, 226), width=2)
+    else:
+        center_px = [_to_px(x, y) for x, y in lane]
+        for i in range(0, len(center_px) - 1, 5):
+            a = center_px[i]
+            b = center_px[min(i + 2, len(center_px) - 1)]
+            draw.line([a, b], fill=(241, 237, 226), width=2)
+
+
 # ── per-frame renderer ────────────────────────────────────────────────────────
 
 def _draw_frame(
@@ -114,20 +175,7 @@ def _draw_frame(
     draw = ImageDraw.Draw(img, "RGBA")
 
     lane = _interp_lane(scenario["lane_center"])
-    hw   = float(scenario["lane_half_width"])
-
-    # lane fill (thick polyline via segment-by-segment rectangles)
-    if len(lane) >= 2:
-        thick = int(hw * 2 * SCALE)
-        for a, b in zip(lane, lane[1:]):
-            pa = _to_px(*a)
-            pb = _to_px(*b)
-            draw.line([pa, pb], fill=LANE_FILL, width=thick)
-        # dashed centre line
-        for i in range(0, len(lane) - 1, 6):
-            a = _to_px(*lane[i])
-            b = _to_px(*lane[min(i+3, len(lane)-1)])
-            draw.line([a, b], fill=LANE_EDGE, width=2)
+    _draw_road(draw, scenario, lane)
 
     # map features
     for feat in scenario.get("map_features", []):
@@ -320,18 +368,17 @@ def _build_gif(rollout_json: Path, out_path: Path, step_skip: int = 2) -> None:
 
 def build_all_gifs() -> None:
     specs = [
-        ("grand_spotlight_demo",        "spotlight_success.gif",    2),
-        ("grand_intersection_stress_seed3", "intersection_stress.gif", 2),
-        ("grand_baseline_spotlight_demo", "baseline_spotlight.gif",  2),
-        ("minor_construction_seed1",    "construction_success.gif", 2),
-        ("minor_fod_seed2",             "fod_success.gif",          2),
-        ("minor_spotlight_seed3",       "spotlight_minor.gif",      2),
+        (BUNDLES / "grand_spotlight_demo" / "latest_rollout.json", "spotlight_success.gif", 2),
+        (BUNDLES / "grand_intersection_stress_seed3" / "latest_rollout.json", "intersection_stress.gif", 2),
+        (BUNDLES / "grand_baseline_spotlight_demo" / "latest_rollout.json", "baseline_spotlight.gif", 2),
+        (BUNDLES / "minor_construction_seed1" / "latest_rollout.json", "construction_success.gif", 2),
+        (BUNDLES / "minor_fod_seed2" / "latest_rollout.json", "fod_success.gif", 2),
+        (BUNDLES / "minor_spotlight_seed3" / "latest_rollout.json", "spotlight_minor.gif", 2),
     ]
     print("Generating GIFs...")
-    for bundle_name, gif_name, skip in specs:
-        src = BUNDLES / bundle_name / "latest_rollout.json"
+    for src, gif_name, skip in specs:
         if not src.exists():
-            print(f"  skip {bundle_name} (no rollout JSON)")
+            print(f"  skip {src} (no rollout JSON)")
             continue
         _build_gif(src, OUT / gif_name, skip)
 

@@ -106,9 +106,10 @@ class SpotlightSelection:
     effective_score: float
     decision_reasons: tuple[str, ...]
     top_candidate_summaries: tuple[dict[str, object], ...]
+    extra_metadata: dict[str, object] = field(default_factory=dict)
 
     def to_metadata(self) -> dict[str, object]:
-        return {
+        metadata = {
             "candidate_count": self.candidate_count,
             "reference_count": self.reference_count,
             "selected_maneuver": self.candidate.name,
@@ -124,6 +125,8 @@ class SpotlightSelection:
             "decision_reasons": list(self.decision_reasons),
             "top_candidate_summaries": list(self.top_candidate_summaries),
         }
+        metadata.update(self.extra_metadata)
+        return metadata
 
 
 @dataclass(frozen=True)

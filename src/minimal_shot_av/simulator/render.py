@@ -1,9 +1,15 @@
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 from .environment import Actor, Scenario, actor_at_tick, interpolate_lane
 from .policy import Rollout
+
+
+def _polygon(points: list[tuple[float, float]], fill: str, opacity: float = 1.0) -> str:
+    joined = " ".join(f"{x:.2f},{y:.2f}" for x, y in points)
+    return f'<polygon points="{joined}" fill="{fill}" opacity="{opacity:.3f}" />'
 
 
 def _polyline(points: list[tuple[float, float]], color: str, width: float, dash: str = "") -> str:
@@ -62,6 +68,58 @@ def _map_feature_svg(feature: dict[str, float | int | str | bool]) -> str:
     return ""
 
 
+def _lane_count(scenario: Scenario) -> int:
+    for feature in scenario.map_features:
+        if str(feature.get("kind", "")) == "route_corridor":
+            try:
+                return max(1, int(feature.get("lane_count", 1)))
+            except (TypeError, ValueError):
+                return 1
+    return 1
+
+
+def _offset_ribbon(points: list[tuple[float, float]], offset_m: float) -> list[tuple[float, float]]:
+    if not points:
+        return []
+    if len(points) == 1:
+        return [points[0]]
+    normals: list[tuple[float, float]] = []
+    for index, point in enumerate(points):
+        prev_point = points[index - 1] if index > 0 else points[index]
+        next_point = points[index + 1] if index < len(points) - 1 else points[index]
+        dx = next_point[0] - prev_point[0]
+        dy = next_point[1] - prev_point[1]
+        norm = math.hypot(dx, dy)
+        if norm <= 1e-9:
+            normals.append((0.0, 1.0))
+            continue
+        normals.append((-dy / norm, dx / norm))
+    return [(point[0] + nx * offset_m, point[1] + ny * offset_m) for point, (nx, ny) in zip(points, normals)]
+
+
+def _road_surface_svg(scenario: Scenario, lane: list[tuple[float, float]]) -> list[str]:
+    lane_count = _lane_count(scenario)
+    half_width = float(scenario.lane_half_width)
+    road_half_width = half_width * max(1.0, lane_count / 2.0)
+    left_edge = _offset_ribbon(lane, road_half_width)
+    right_edge = _offset_ribbon(lane, -road_half_width)
+    svg = [
+        _polygon(left_edge + list(reversed(right_edge)), "#d2c3a5", opacity=1.0),
+        _polyline(left_edge, "#4b463f", 0.55),
+        _polyline(right_edge, "#4b463f", 0.55),
+    ]
+    if lane_count > 1:
+        lane_width = (road_half_width * 2.0) / lane_count
+        for divider in range(1, lane_count):
+            offset = -road_half_width + lane_width * divider
+            dash = "2.4 2.0"
+            color = "#f1ede2" if divider != lane_count // 2 or lane_count % 2 == 0 else "#d8d2c3"
+            svg.append(_polyline(_offset_ribbon(lane, offset), color, 0.35, dash=dash))
+    else:
+        svg.append(_polyline(lane, "#f1ede2", 0.3, dash="2.4 2.0"))
+    return svg
+
+
 def render_svg(path: Path, scenario: Scenario, rollout: Rollout) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -72,9 +130,8 @@ def render_svg(path: Path, scenario: Scenario, rollout: Rollout) -> None:
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {scenario.width} {scenario.height}">',
         '<rect width="100%" height="100%" fill="#f5f1e8" />',
         f'<text x="3" y="5" font-size="3.2" fill="#2b2d42">{scenario.cluster} seed={scenario.seed} success={rollout.success}</text>',
-        _polyline(lane, "#c8b99a", scenario.lane_half_width * 2.0),
-        _polyline(lane, "#3e3a36", 0.8, dash="2 2"),
     ]
+    svg.extend(_road_surface_svg(scenario, lane))
 
     for feature in scenario.map_features:
         feature_svg = _map_feature_svg(feature)

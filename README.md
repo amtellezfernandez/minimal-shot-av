@@ -2,9 +2,18 @@
 
 > CoRL 2027 repository for Spotlight Reflex, long-tail simulation, AlpaSim transfer diagnostics, and a grounded WOD-E2E selector stack.
 
-### Spotlight vs Baseline
+### Spotlight Reaches Goal
 
-![Spotlight vs baseline](docs/images/spotlight_vs_baseline.gif)
+![Spotlight reaches goal](docs/images/spotlight_success.gif)
+
+### Repo-Internal Reactive Baseline Stalls Near Goal
+
+![Baseline stalls near goal](docs/images/baseline_spotlight.gif)
+
+- The top demo GIFs use the strongest successful showcase preset for each scenario.
+- `Baseline` here means this repo's own potential-field reactive planner, not an external method.
+- The repo-internal reactive baseline looks smoother early, but it does not finish the rollout.
+- The rollout SVGs below are the same current demo artifacts used to generate these GIFs.
 
 | Construction corridor | Intersection stress |
 |---|---|
@@ -26,7 +35,7 @@
 
 Taken together, the proof block above shows:
 
-- matched baseline comparison on the same seed
+- matched comparison between a completed Spotlight rollout and the repo-internal reactive baseline, which does not finish
 - breadth across construction and intersection pressure
 - external transfer evidence with failure localization, not just one scalar score
 
@@ -35,7 +44,7 @@ Taken together, the proof block above shows:
 | Track | Claim | Signal |
 |---|---|---|
 | Closed-loop simulator | Geometry-first policy survives long-tail scenes | `350` rollouts, `0` collisions outside gauntlet |
-| Gauntlet match-up | World-state reasoning beats the baseline hard | `57.6%` vs `2.1%` pass |
+| Gauntlet match-up | World-state reasoning beats the repo-internal reactive baseline | `57.6%` vs `2.1%` pass |
 | WOD-E2E selector | Candidate grounding is real, measurable, improvable | `7.848` best tracked RFS |
 | AlpaSim transfer | Failures are localized per axis instead of hidden in one scalar | collision / offroad / lane / progress split |
 
@@ -84,7 +93,7 @@ The first proof block above should do the heavy lifting. After that, go straight
 | Primary simulator collision rate | `0.0` |
 | COMPASS | `9.137 / 10` |
 | Gauntlet pass, Spotlight Reflex | `57.6%` |
-| Gauntlet pass, baseline | `2.1%` |
+| Gauntlet pass, repo-internal reactive baseline | `2.1%` |
 | Best tracked WOD-E2E selector | `7.848 RFS` |
 | WOD oracle gap | `1.407 RFS` |
 | Canonical AlpaSim raw collision | `0.600` |

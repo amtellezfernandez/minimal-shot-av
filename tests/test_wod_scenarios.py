@@ -76,6 +76,36 @@ class WodScenarioGeneratorTests(unittest.TestCase):
         self.assertGreater(len(payload["scenario"]["actors"]), 0)
         self.assertEqual(payload["architecture"]["policy"], "spotlight-reflex")
 
+    def test_demo_cli_accepts_showcase_preset(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "run_demo.py"),
+                    "--seed",
+                    "3",
+                    "--policy",
+                    "spotlight-reflex",
+                    "--scenario-cluster",
+                    "spotlight",
+                    "--rollout-preset",
+                    "showcase-spotlight",
+                    "--artifacts-dir",
+                    temp_dir,
+                ],
+                cwd=ROOT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            payload = json.loads((Path(temp_dir) / "latest_rollout.json").read_text())
+
+        self.assertEqual(payload["architecture"]["rollout_preset"], "showcase-spotlight")
+        self.assertEqual(payload["architecture"]["policy"], "spotlight-reflex")
+        self.assertTrue(payload["rollout"]["success"])
+        self.assertTrue(payload["rollout"]["reached_goal"])
+
     def test_dynamic_actor_projection_updates_active_obstacles(self) -> None:
         scenario = generate_wod_scenario("cut-in", seed=2)
         actor = scenario.actors[0]
@@ -99,6 +129,27 @@ class WodScenarioGeneratorTests(unittest.TestCase):
                 self.assertGreaterEqual(len(scenario.lane_center), 2)
                 active = scenario_at_tick(scenario, tick=0)
                 self.assertFalse(any(obstacle.kind == "ambient" for obstacle in active.obstacles))
+
+    def test_intersection_crossing_is_delayed_until_ego_approach(self) -> None:
+        scenario = generate_wod_scenario("intersection", seed=3)
+        crossing_actor = next(actor for actor in scenario.actors if actor.role == "conflicting_vehicle")
+
+        self.assertGreaterEqual(crossing_actor.active_from, 24)
+        self.assertFalse(any(obstacle.label == "conflicting_vehicle" for obstacle in scenario_at_tick(scenario, tick=0).obstacles))
+        self.assertTrue(any(obstacle.label == "conflicting_vehicle" for obstacle in scenario_at_tick(scenario, tick=crossing_actor.active_from).obstacles))
+
+    def test_intersection_static_textures_do_not_overlap_conflict_pocket(self) -> None:
+        scenario = generate_wod_scenario("intersection", seed=3)
+        conflict_x, conflict_y = scenario.lane_center[3]
+
+        nearby_static = [
+            obstacle
+            for obstacle in scenario.obstacles
+            if obstacle.label == "cross_traffic_texture"
+            and abs(obstacle.x - conflict_x) < 6.0
+            and abs(obstacle.y - conflict_y) < scenario.lane_half_width * 1.35
+        ]
+        self.assertEqual([], nearby_static)
 
     def test_evaluation_script_writes_csv_and_json(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

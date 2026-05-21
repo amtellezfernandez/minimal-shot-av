@@ -30,11 +30,11 @@ from minimal_shot_av.cli.commands.build_minor_visual_gallery import build_galler
 GRAND_RUNS = (
     (
         "grand_spotlight_demo",
-        ("--policy", "spotlight-reflex", "--scenario-cluster", "spotlight", "--seed", "3"),
+        ("--policy", "spotlight-reflex", "--scenario-cluster", "spotlight", "--seed", "3", "--rollout-preset", "showcase-spotlight"),
     ),
     (
         "grand_intersection_stress_seed3",
-        ("--policy", "spotlight-reflex", "--scenario-cluster", "intersection", "--seed", "3"),
+        ("--policy", "spotlight-reflex", "--scenario-cluster", "intersection", "--seed", "3", "--rollout-preset", "showcase-intersection"),
     ),
     (
         "grand_baseline_spotlight_demo",
@@ -45,15 +45,15 @@ GRAND_RUNS = (
 MINOR_RUNS = (
     (
         "minor_construction_seed1",
-        ("--policy", "spotlight-reflex", "--scenario-cluster", "construction", "--seed", "1"),
+        ("--policy", "spotlight-reflex", "--scenario-cluster", "construction", "--seed", "1", "--rollout-preset", "showcase-construction"),
     ),
     (
         "minor_fod_seed2",
-        ("--policy", "spotlight-reflex", "--scenario-cluster", "foreign object debris", "--seed", "2"),
+        ("--policy", "spotlight-reflex", "--scenario-cluster", "foreign object debris", "--seed", "2", "--rollout-preset", "showcase-fod"),
     ),
     (
         "minor_spotlight_seed3",
-        ("--policy", "spotlight-reflex", "--scenario-cluster", "spotlight", "--seed", "3"),
+        ("--policy", "spotlight-reflex", "--scenario-cluster", "spotlight", "--seed", "3", "--rollout-preset", "showcase-spotlight"),
     ),
 )
 

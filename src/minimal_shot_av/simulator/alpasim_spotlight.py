@@ -44,9 +44,9 @@ except ImportError:
     PredictionInput = Any
 
 from .alpasim_signal import extract_alpasim_signal, scenario_from_command
-from .environment import Scenario, scenario_at_tick
+from .environment import Scenario, interpolate_lane, nearest_lane_point, scenario_at_tick
 from .perception import perceive_scene
-from .spotlight_reflex import select_maneuver
+from .spotlight_reflex import SpotlightSelection, evaluate_maneuver_candidates
 from .world_model import update_world_state
 
 
@@ -61,6 +61,9 @@ class SpotlightReflexAlpaSimModel(BaseTrajectoryModel):
 
     _DEFAULT_CAMERA_IDS = ["camera_front_wide_120fov"]
     _HORIZON_SECONDS = 5.0
+    _LEGAL_TOKENS = frozenset({"stop", "crawl", "maintain", "slow_yield", "lane_recover"})
+    _ROUTE_MARGIN_BUFFER_M = 0.45
+    _MAX_ROUTE_DEVIATION_M = 0.75
 
     @classmethod
     def from_config(
@@ -124,7 +127,7 @@ class SpotlightReflexAlpaSimModel(BaseTrajectoryModel):
         position = active_scenario.start
         perception = perceive_scene(active_scenario, position)
         world_state = update_world_state(active_scenario, position, perception)
-        selection = select_maneuver(
+        selection = _select_legal_transfer_maneuver(
             active_scenario,
             position,
             world_state,
@@ -154,6 +157,10 @@ class SpotlightReflexAlpaSimModel(BaseTrajectoryModel):
                 "selector_5s_reference": selection.score.reference_5s_label,
                 "decision_reason": selection_metadata["decision_reason"],
                 "decision_reasons": selection_metadata["decision_reasons"],
+                "transfer_legality_gate_applied": selection_metadata["transfer_legality_gate_applied"],
+                "transfer_legality_previous_maneuver": selection_metadata["transfer_legality_previous_maneuver"],
+                "transfer_legality_reason": selection_metadata["transfer_legality_reason"],
+                "transfer_legality_vetoed_tokens": selection_metadata["transfer_legality_vetoed_tokens"],
                 "top_candidate_summaries": selection_metadata["top_candidate_summaries"],
                 "obstacle_pressure": world_state.obstacle_pressure,
                 "route_blockage": world_state.route_blockage,
@@ -186,3 +193,114 @@ def _resample_to_frequency(
     x = np.interp(target_t, source_t, trajectory_xy[:, 0])
     y = np.interp(target_t, source_t, trajectory_xy[:, 1])
     return np.stack((x, y), axis=1).astype(np.float32)
+
+
+def _select_legal_transfer_maneuver(
+    scenario: Scenario,
+    position: tuple[float, float],
+    world_state: Any,
+    perception: Any,
+    *,
+    speed_mps: float,
+) -> SpotlightSelection:
+    evaluations, reference_count = evaluate_maneuver_candidates(
+        scenario,
+        position,
+        world_state,
+        perception,
+        speed_mps,
+    )
+    best = max(
+        evaluations,
+        key=lambda item: (item.explanation.effective_score, item.candidate.confidence),
+    )
+    vetoes: list[dict[str, str]] = []
+    safe_evaluations = []
+    for evaluation in evaluations:
+        violation = _transfer_legality_violation(scenario, evaluation)
+        if violation is None:
+            safe_evaluations.append(evaluation)
+        else:
+            vetoes.append({"token": evaluation.candidate.name, "reason": violation})
+
+    chosen = best
+    legality_applied = False
+    legality_reason = "not_required"
+    previous_maneuver = best.candidate.name
+    if _transfer_legality_violation(scenario, best) is not None:
+        legality_applied = True
+        legality_reason = "prefer_route_stable_candidate"
+        safe_pool = safe_evaluations or [
+            evaluation
+            for evaluation in evaluations
+            if evaluation.candidate.name in SpotlightReflexAlpaSimModel._LEGAL_TOKENS
+        ]
+        chosen = max(
+            safe_pool if safe_pool else evaluations,
+            key=_transfer_legality_key,
+        )
+        if not safe_evaluations:
+            legality_reason = "no_route_stable_candidate"
+
+    top_candidate_summaries = tuple(
+        {
+            **evaluation.explanation.to_summary(),
+            "transfer_legal": _transfer_legality_violation(scenario, evaluation) is None,
+        }
+        for evaluation in sorted(evaluations, key=lambda item: item.explanation.effective_score, reverse=True)[:3]
+    )
+    metadata = {
+        "transfer_legality_gate_applied": legality_applied,
+        "transfer_legality_previous_maneuver": previous_maneuver,
+        "transfer_legality_reason": legality_reason,
+        "transfer_legality_vetoed_tokens": vetoes,
+    }
+    return SpotlightSelection(
+        chosen.candidate,
+        chosen.score,
+        len(evaluations),
+        reference_count,
+        chosen.explanation.effective_score,
+        chosen.explanation.reasons,
+        top_candidate_summaries,
+        metadata,
+    )
+
+
+def _transfer_legality_violation(scenario: Scenario, evaluation: Any) -> str | None:
+    token = evaluation.candidate.name
+    if token not in SpotlightReflexAlpaSimModel._LEGAL_TOKENS:
+        return "forbidden_lateral_maneuver"
+    if evaluation.explanation.safety_penalty > 0.0:
+        return "unsafe_action"
+    if not evaluation.score.inside_5s_region:
+        return "outside_route_region"
+    lane_points = interpolate_lane(scenario.lane_center)
+    max_allowed = max(0.35, scenario.lane_half_width - SpotlightReflexAlpaSimModel._ROUTE_MARGIN_BUFFER_M)
+    start_dev = _route_deviation(scenario.start, lane_points)
+    final_dev = _route_deviation(evaluation.candidate.trajectory[-1], lane_points)
+    if final_dev > max_allowed:
+        return "lane_boundary_cross"
+    if final_dev > start_dev + SpotlightReflexAlpaSimModel._MAX_ROUTE_DEVIATION_M:
+        return "route_deviation_growth"
+    for point in evaluation.candidate.trajectory:
+        if _route_deviation(point, lane_points) > max_allowed:
+            return "lane_boundary_cross"
+    return None
+
+
+def _route_deviation(point: tuple[float, float], lane_points: list[tuple[float, float]]) -> float:
+    _, _, deviation = nearest_lane_point(point, lane_points)
+    return float(deviation)
+
+
+def _transfer_legality_key(evaluation: Any) -> tuple[float, ...]:
+    return (
+        1.0 if evaluation.score.inside_5s_region else 0.0,
+        1.0 if evaluation.score.inside_3s_region else 0.0,
+        1.0 if evaluation.candidate.name in SpotlightReflexAlpaSimModel._LEGAL_TOKENS else 0.0,
+        -float(evaluation.explanation.near_clearance_penalty),
+        float(evaluation.explanation.progress_bonus),
+        float(evaluation.explanation.effective_score),
+        float(evaluation.candidate.confidence),
+    )

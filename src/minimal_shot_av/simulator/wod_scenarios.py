@@ -198,8 +198,24 @@ def _construction_obstacles(rng: random.Random, lane: list[tuple[float, float]],
 def _intersection_obstacles(rng: random.Random, lane: list[tuple[float, float]], half_width: float) -> list[Obstacle]:
     obstacles = _ambient_obstacles(rng, lane, half_width, 3)
     cx, cy = lane[3]
-    for offset in (-8.0, -3.5, 3.5, 8.0):
-        obstacles.append(Obstacle(cx + rng.uniform(-1.0, 1.0), cy + offset, rng.uniform(0.9, 1.5), "vehicle", "cross_traffic_texture"))
+    # Keep static visual context away from the immediate crossing pocket so the live
+    # actor timing is the actual test signal instead of a cluttered overlap of textures.
+    textures = (
+        (-11.0, -half_width * 1.65),
+        (-7.0, -half_width * 1.15),
+        (7.5, half_width * 1.15),
+        (11.5, half_width * 1.65),
+    )
+    for dx, dy in textures:
+        obstacles.append(
+            Obstacle(
+                cx + dx + rng.uniform(-0.8, 0.8),
+                cy + dy + rng.uniform(-0.6, 0.6),
+                rng.uniform(0.9, 1.35),
+                "vehicle",
+                "cross_traffic_texture",
+            )
+        )
     return obstacles
 
 
@@ -270,9 +286,36 @@ def _construction_actors(rng: random.Random, lane: list[tuple[float, float]], ha
 
 def _intersection_actors(rng: random.Random, lane: list[tuple[float, float]], half_width: float) -> list[Actor]:
     x, y = lane[3]
+    trigger_tick = _intersection_trigger_tick(lane, trigger_index=3)
     return [
-        _actor("cross_traffic_0", "vehicle", x + 1.0, y - half_width * 1.2, 2.0, 4.4, math.pi / 2.0, 0.55, "crossing", "conflicting_vehicle"),
-        _actor("cross_traffic_1", "vehicle", x + 7.0, y + half_width * 1.3, 2.0, 4.2, -math.pi / 2.0, 0.35, "creeping", "occluded_vehicle"),
+        _actor(
+            "cross_traffic_0",
+            "vehicle",
+            x + 1.5,
+            y - half_width * 1.45,
+            2.0,
+            4.4,
+            math.pi / 2.0,
+            0.75,
+            "crossing",
+            "conflicting_vehicle",
+            active_from=max(0, trigger_tick - 1),
+            active_until=trigger_tick + 28,
+        ),
+        _actor(
+            "cross_traffic_1",
+            "vehicle",
+            x + 9.5,
+            y + half_width * 1.55,
+            2.0,
+            4.2,
+            -math.pi / 2.0,
+            0.45,
+            "creeping",
+            "occluded_vehicle",
+            active_from=trigger_tick + 6,
+            active_until=trigger_tick + 34,
+        ),
     ]
 
 
@@ -352,6 +395,8 @@ def _actor(
     speed: float,
     behavior: str,
     role: str,
+    active_from: int = 0,
+    active_until: int = 10_000,
 ) -> Actor:
     return Actor(
         actor_id=actor_id,
@@ -366,7 +411,18 @@ def _actor(
         vy=math.sin(heading) * speed,
         behavior=behavior,
         role=role,
+        active_from=active_from,
+        active_until=active_until,
     )
+
+
+def _intersection_trigger_tick(lane: list[tuple[float, float]], trigger_index: int) -> int:
+    start_x = lane[0][0] - 4.0
+    conflict_x = lane[trigger_index][0]
+    approach_distance = max(0.0, conflict_x - start_x)
+    nominal_approach_speed_mps = 4.2
+    trigger_time_s = max(0.0, (approach_distance - 8.0) / nominal_approach_speed_mps)
+    return int(round(trigger_time_s / 0.25))
 
 
 def _ambient_obstacles(
