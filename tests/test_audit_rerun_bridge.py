@@ -13,7 +13,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.audit import export_internal_audit_log, load_audit_log
+from minimal_shot_av.audit import export_alpasim_audit_log, export_internal_audit_log, load_audit_log
 
 
 class AuditRerunBridgeTests(unittest.TestCase):
@@ -109,3 +109,47 @@ class AuditRerunBridgeTests(unittest.TestCase):
 
         self.assertEqual("internal", payload["manifest"]["source"])
         self.assertGreater(payload["frame_count"], 0)
+
+    def test_export_alpasim_audit_log_from_selection_log(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            run_dir = Path(temp_dir) / "run"
+            audit_dir = Path(temp_dir) / "audit"
+            (run_dir / "driver").mkdir(parents=True)
+            (run_dir / "aggregate").mkdir(parents=True)
+            (run_dir / "launch-metadata.json").write_text(
+                json.dumps({"model": "token_dagger_iter2_hybrid_clamped", "scene_preset": "fresh_3scene", "scene_ids": ["clipgt-test-scene"]}),
+                encoding="utf-8",
+            )
+            (run_dir / "aggregate" / "metrics_results.json").write_text(
+                json.dumps({"run_count": 1, "collision_at_fault": 0.0, "offroad": 0.0, "dist_to_gt_trajectory": 1.2}),
+                encoding="utf-8",
+            )
+            selection_row = {
+                "frame_index": 1,
+                "scene_id": "clipgt-test-scene",
+                "command": "straight",
+                "speed_mps": 6.0,
+                "selection_mode": "hybrid_veto",
+                "trajectory_mode": "clamped_lateral",
+                "hybrid_token": "maintain",
+                "spotlight_token": "maintain",
+                "decision_type": "spotlight_wins",
+                "dagger_argmax_geo_gap": 2.5,
+                "top_logits": [{"token": "maintain", "logit": 5.0}],
+                "spotlight_top_candidates": [{"token": "maintain"}],
+                "alpasim_signal": {
+                    "route_waypoints": [{"x": 0.0, "y": 0.0}, {"x": 20.0, "y": 0.0}, {"x": 40.0, "y": 1.0}],
+                    "structured_hazards": [{"x": 8.0, "y": 1.0, "radius": 1.0, "kind": "vehicle", "label": "crossing_vehicle", "vx": -1.0, "vy": 0.0}],
+                    "dynamics_risk": 0.2,
+                },
+            }
+            (run_dir / "driver" / "selection-log.jsonl").write_text(json.dumps(selection_row) + "\n", encoding="utf-8")
+
+            manifest = export_alpasim_audit_log(run_dir, audit_dir)
+            loaded_manifest, frames = load_audit_log(audit_dir)
+
+        self.assertEqual("alpasim", manifest["source"])
+        self.assertEqual("alpasim", loaded_manifest["source"])
+        self.assertEqual(1, len(frames))
+        self.assertEqual("maintain", frames[0]["step"]["selected_maneuver"])
+        self.assertEqual("clipgt-test-scene", manifest["scene_ids"][0])
