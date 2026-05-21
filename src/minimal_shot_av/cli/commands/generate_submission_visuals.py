@@ -73,6 +73,7 @@ EGO_R     = 5        # ego radius px
 TRAIL_LEN = 30       # max trail steps to draw
 GIF_FPS   = 12       # frames per second
 FRAME_DUR = int(1000 / GIF_FPS)  # ms per frame
+SIM_TICK_DT_S = 0.25
 
 
 # ── geometry helpers ──────────────────────────────────────────────────────────
@@ -94,10 +95,38 @@ def _to_px(x: float, y: float, margin: int = MARGIN) -> tuple[int, int]:
     return (int(x * SCALE) + margin, int(y * SCALE) + margin)
 
 
-def _actor_pos_at_t(actor: dict, t: float) -> tuple[float, float]:
-    ax = float(actor["x"]) + float(actor.get("vx", 0.0)) * t
-    ay = float(actor["y"]) + float(actor.get("vy", 0.0)) * t
-    return ax, ay
+def _actor_pose_at_tick(actor: dict[str, Any], tick: float) -> tuple[float, float] | None:
+    active_from = float(actor.get("active_from", 0))
+    active_until = float(actor.get("active_until", 10_000))
+    if tick < active_from or tick > active_until:
+        return None
+
+    elapsed = max(0.0, tick - active_from) * SIM_TICK_DT_S
+    x = float(actor["x"])
+    y = float(actor["y"])
+    speed = float(actor.get("speed", 0.0))
+    vx = float(actor.get("vx", 0.0))
+    vy = float(actor.get("vy", 0.0))
+    heading = float(actor.get("heading", 0.0))
+    behavior = str(actor.get("behavior", "linear"))
+
+    if behavior in {"cut_in", "swerve"}:
+        longitudinal = speed * elapsed
+        lateral = min(4.5, 0.38 * elapsed * elapsed)
+        lateral *= -1.0 if vy < 0.0 else 1.0
+        return (x + math.cos(heading) * longitudinal, y + math.sin(heading) * longitudinal + lateral)
+    if behavior in {"darting", "erratic_pedestrian"}:
+        pause = 0.4 if int(elapsed * 2.0) % 3 == 0 else 1.0
+        wobble = math.sin(elapsed * 3.7) * 0.55
+        return (x + vx * elapsed * pause, y + vy * elapsed * pause + wobble)
+    if behavior in {"sudden_brake", "hesitating"}:
+        moving_time = min(elapsed, 1.2)
+        creep_time = max(0.0, elapsed - 1.2)
+        distance = speed * moving_time + speed * 0.15 * creep_time
+        return (x + math.cos(heading) * distance, y + math.sin(heading) * distance)
+    if behavior == "wrong_way":
+        return (x - abs(vx) * elapsed, y + vy * elapsed)
+    return (x + vx * elapsed, y + vy * elapsed)
 
 
 def _lane_count(scenario: dict) -> int:
@@ -134,31 +163,68 @@ def _draw_road(draw: ImageDraw.ImageDraw, scenario: dict, lane: list[tuple[float
     half_width = float(scenario["lane_half_width"])
     lane_count = _lane_count(scenario)
     road_half_width = half_width * max(1.0, lane_count / 2.0)
+    shoulder_half_width = road_half_width + 1.25
+    left_shoulder = _offset_ribbon(lane, shoulder_half_width)
+    right_shoulder = _offset_ribbon(lane, -shoulder_half_width)
     left_edge = _offset_ribbon(lane, road_half_width)
     right_edge = _offset_ribbon(lane, -road_half_width)
+    shoulder_polygon = [_to_px(x, y) for x, y in left_shoulder] + [_to_px(x, y) for x, y in reversed(right_shoulder)]
     road_polygon = [_to_px(x, y) for x, y in left_edge] + [_to_px(x, y) for x, y in reversed(right_edge)]
-    draw.polygon(road_polygon, fill=(208, 195, 167))
+    draw.polygon(shoulder_polygon, fill=(173, 184, 165))
+    draw.polygon(road_polygon, fill=(73, 81, 90))
     edge_left = [_to_px(x, y) for x, y in left_edge]
     edge_right = [_to_px(x, y) for x, y in right_edge]
     if len(edge_left) >= 2:
-        draw.line(edge_left, fill=(75, 70, 63), width=3)
+        draw.line(edge_left, fill=(246, 248, 250), width=2)
     if len(edge_right) >= 2:
-        draw.line(edge_right, fill=(75, 70, 63), width=3)
+        draw.line(edge_right, fill=(246, 248, 250), width=2)
     if lane_count > 1:
         lane_width = (road_half_width * 2.0) / lane_count
         for divider in range(1, lane_count):
             divider_points = _offset_ribbon(lane, -road_half_width + lane_width * divider)
             divider_px = [_to_px(x, y) for x, y in divider_points]
+            divider_color = (248, 250, 252) if lane_count != 2 else (250, 204, 21)
             for i in range(0, len(divider_px) - 1, 5):
                 a = divider_px[i]
                 b = divider_px[min(i + 2, len(divider_px) - 1)]
-                draw.line([a, b], fill=(241, 237, 226), width=2)
+                draw.line([a, b], fill=divider_color, width=2)
     else:
         center_px = [_to_px(x, y) for x, y in lane]
         for i in range(0, len(center_px) - 1, 5):
             a = center_px[i]
             b = center_px[min(i + 2, len(center_px) - 1)]
-            draw.line([a, b], fill=(241, 237, 226), width=2)
+            draw.line([a, b], fill=(250, 204, 21), width=2)
+
+
+def _draw_crosswalk(draw: ImageDraw.ImageDraw, px: int, py: int, width_px: int) -> None:
+    stripe_count = 7
+    stripe_h = max(4, int(width_px / (stripe_count * 2.3)))
+    gap = max(3, int(width_px / stripe_count) - stripe_h)
+    top = py - width_px // 2
+    for index in range(stripe_count):
+        y0 = top + index * (stripe_h + gap)
+        draw.rectangle([px - 8, y0, px + 8, y0 + stripe_h], fill=(248, 250, 252, 210))
+
+
+def _draw_cone(draw: ImageDraw.ImageDraw, px: int, py: int, r: int) -> None:
+    points = [(px, py - r), (px - int(r * 0.8), py + r), (px + int(r * 0.8), py + r)]
+    draw.polygon(points, fill=(249, 115, 22))
+    draw.line([points[1], points[0], points[2], points[1]], fill=(255, 247, 237), width=1)
+
+
+def _draw_vehicle_body(draw: ImageDraw.ImageDraw, px: int, py: int, length_px: int, width_px: int, fill: tuple[int, int, int]) -> None:
+    draw.rounded_rectangle(
+        [px - length_px // 2, py - width_px // 2, px + length_px // 2, py + width_px // 2],
+        radius=max(2, width_px // 4),
+        fill=fill,
+    )
+    window_w = max(3, int(length_px * 0.22))
+    window_h = max(2, int(width_px * 0.46))
+    draw.rounded_rectangle(
+        [px - window_w // 2, py - window_h // 2, px + window_w // 2, py + window_h // 2],
+        radius=2,
+        fill=(224, 242, 254),
+    )
 
 
 # ── per-frame renderer ────────────────────────────────────────────────────────
@@ -171,7 +237,7 @@ def _draw_frame(
     img_h: int,
     draw_trail: bool = True,
 ) -> Image.Image:
-    img = Image.new("RGB", (img_w, img_h + HUD_H), BG)
+    img = Image.new("RGB", (img_w, img_h + HUD_H), (223, 231, 212))
     draw = ImageDraw.Draw(img, "RGBA")
 
     lane = _interp_lane(scenario["lane_center"])
@@ -184,40 +250,57 @@ def _draw_frame(
         px, py = _to_px(fx, fy)
         if kind == "crosswalk":
             w = int(float(feat.get("width", 12)) * SCALE)
-            draw.rectangle([px-6, py-w//2, px+6, py+w//2], fill=(255,255,255,178))
+            _draw_crosswalk(draw, px, py, w)
         elif kind == "conflict_zone":
             r = int(float(feat.get("radius", 8)) * SCALE)
-            draw.ellipse([px-r, py-r, px+r, py+r], fill=(255,183,3,40))
+            draw.ellipse([px-r, py-r, px+r, py+r], outline=(245, 158, 11, 120), width=2, fill=(245, 158, 11, 30))
         elif kind == "lane_closure":
             l = int(float(feat.get("length", 20)) * SCALE)
-            draw.rectangle([px, py-8, px+l, py+8], fill=(232,93,4,56))
+            draw.rectangle([px, py-8, px+l, py+8], fill=(249, 115, 22, 42), outline=(251, 146, 60, 120), width=1)
+        elif kind in {"temporary_taper", "merge_taper"}:
+            l = int(float(feat.get("length", 18)) * SCALE)
+            draw.polygon([(px, py - 10), (px + l, py - 3), (px + l, py + 3), (px, py + 10)], fill=(249, 115, 22, 28), outline=(251, 146, 60, 110))
         elif kind == "merge_zone":
             l = int(float(feat.get("length", 20)) * SCALE)
-            draw.rectangle([px, py-12, px+l, py+12], fill=(0,180,216,30))
+            draw.rectangle([px, py-12, px+l, py+12], fill=(56, 189, 248, 24), outline=(2, 132, 199, 90), width=1)
+        elif kind == "avoidance_corridor":
+            w = int(float(feat.get("width", 10)) * SCALE)
+            draw.rectangle([px - 18, py - w // 2, px + 58, py + w // 2], fill=(34, 197, 94, 18), outline=(22, 163, 74, 80), width=1)
 
     # obstacles
     for obs in scenario.get("obstacles", []):
         ox, oy = float(obs["x"]), float(obs["y"])
         r  = max(2, int(float(obs.get("radius", 1.0)) * SCALE))
         px, py = _to_px(ox, oy)
-        col = AMB_COL if obs.get("kind") == "ambient" else OBS_COL
-        draw.ellipse([px-r, py-r, px+r, py+r], fill=col)
+        kind = str(obs.get("kind", "obstacle"))
+        if kind == "ambient":
+            draw.ellipse([px-r, py-r, px+r, py+r], fill=(148, 163, 184, 72))
+        elif kind == "cone":
+            _draw_cone(draw, px, py, max(3, int(r * 1.6)))
+        elif kind in {"vehicle", "special_vehicle"}:
+            _draw_vehicle_body(draw, px, py, max(12, int(r * 3.6)), max(7, int(r * 1.7)), (124, 45, 18))
+        else:
+            draw.ellipse([px-r, py-r, px+r, py+r], fill=OBS_COL)
 
     # actors at current time
-    t_sim = float(steps[idx]["t"]) if idx < len(steps) else 0.0
+    tick = float(steps[idx]["t"]) if idx < len(steps) else 0.0
     for actor in scenario.get("actors", []):
-        ax, ay = _actor_pos_at_t(actor, t_sim)
+        pose = _actor_pose_at_tick(actor, tick)
+        if pose is None:
+            continue
+        ax, ay = pose
         akind = actor.get("kind", "vehicle")
         acol  = ACTOR_COL.get(akind, (108, 117, 125))
         if akind in {"pedestrian", "animal", "debris", "worker"}:
             r = max(3, int(float(actor.get("width", 1.0)) * SCALE // 2))
             px, py = _to_px(ax, ay)
             draw.ellipse([px-r, py-r, px+r, py+r], fill=acol)
+            draw.ellipse([px-r-1, py-r-1, px+r+1, py+r+1], outline=(255, 247, 237), width=1)
         else:
             w = max(1, int(float(actor.get("width",  2.0)) * SCALE))
             l = max(1, int(float(actor.get("length", 4.0)) * SCALE))
             px, py = _to_px(ax, ay)
-            draw.rectangle([px-l//2, py-w//2, px+l//2, py+w//2], fill=acol)
+            _draw_vehicle_body(draw, px, py, l, w, acol)
 
     # ego trail
     trail_start = max(0, idx - TRAIL_LEN)
@@ -237,9 +320,8 @@ def _draw_frame(
     if idx < len(steps):
         step = steps[idx]
         ex, ey = _to_px(step["x"], step["y"])
-        draw.ellipse([ex-EGO_R, ey-EGO_R, ex+EGO_R, ey+EGO_R], fill=EGO_COL)
-        draw.ellipse([ex-EGO_R-2, ey-EGO_R-2, ex+EGO_R+2, ey+EGO_R+2],
-                     outline=(255,255,255), width=2)
+        _draw_vehicle_body(draw, ex, ey, 24, 12, EGO_COL)
+        draw.rounded_rectangle([ex - 14, ey - 8, ex + 14, ey + 8], radius=4, outline=(255, 255, 255), width=2)
 
     # ── HUD strip ─────────────────────────────────────────────────────────────
     hud_y = img_h
