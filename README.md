@@ -90,8 +90,6 @@ This repo is intentionally split into three visible surfaces:
 
 | If you need... | Go here |
 |---|---|
-| the main repo map | [`docs/repo_audit_map.md`](docs/repo_audit_map.md) |
-| the source tree map | [`src/minimal_shot_av/README.md`](src/minimal_shot_av/README.md) |
 | simulator / Spotlight Reflex | [`src/minimal_shot_av/simulator/README.md`](src/minimal_shot_av/simulator/README.md) |
 | simulator write-up | [`docs/simulation.md`](docs/simulation.md) |
 | AlpaSim integration / reproduction | [`docs/corl2027/AUDIT.md`](docs/corl2027/AUDIT.md) |

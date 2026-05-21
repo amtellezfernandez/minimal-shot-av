@@ -16,6 +16,8 @@ __pycache__/
 dist/
 build/
 artifacts/*
+!artifacts/corl2027/
+!artifacts/corl2027/**
 !artifacts/models_manifest.json
 !artifacts/sota_submission_bundles/
 !artifacts/sota_submission_bundles/**

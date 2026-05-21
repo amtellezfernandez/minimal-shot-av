@@ -23,10 +23,11 @@ Expected output:
 main
 ```
 
-If you need the subsystem split before reading the paper-specific audit, start with:
+If you need subsystem entry points before reading the paper-specific audit, use:
 
 ```text
-docs/repo_audit_map.md
+src/minimal_shot_av/simulator/README.md
+src/minimal_shot_av/model/README.md
 ```
 
 ## Fast Audit
@@ -45,9 +46,9 @@ This wrapper runs:
 
 Primary outputs:
 
-- `artifacts/corl_evidence_strength_audit.md`
-- `artifacts/transfer_predictor_analysis.md`
-- `artifacts/alpasim_transfer_matrix_partial.md` if matrix data is present
+- `artifacts/corl2027/corl_evidence_strength_audit.md`
+- `artifacts/corl2027/transfer_predictor_analysis.md`
+- `artifacts/corl2027/alpasim_transfer_matrix_partial.md` if matrix data is present
 
 ## Checkpoints
 
@@ -61,6 +62,12 @@ The tracked manifest is:
 
 ```text
 artifacts/models_manifest.json
+```
+
+Release packaging metadata is kept separate from the paper surface:
+
+```text
+release/hf/
 ```
 
 Fetch them with:
@@ -100,19 +107,21 @@ Refresh the paired analysis after runs complete:
 ./.venv/bin/python scripts/analyze_alpasim_transfer_matrix.py \
   runs/alpasim_transfer_matrix_30scene_axis \
   --scene-preset front_camera_30scene_merged \
-  --output-json artifacts/alpasim_transfer_matrix_partial.json \
-  --output-markdown artifacts/alpasim_transfer_matrix_partial.md
+  --output-json artifacts/corl2027/alpasim_transfer_matrix_partial.json \
+  --output-markdown artifacts/corl2027/alpasim_transfer_matrix_partial.md
 ```
 
 ## What To Read First
 
 If you only have five minutes:
 
-1. `docs/repo_audit_map.md`
-2. `docs/corl2027/paper.tex`
-3. `artifacts/corl_evidence_strength_audit.md`
-4. `artifacts/transfer_predictor_analysis.md`
-5. `artifacts/alpasim_transfer_matrix_partial.md` if present
+1. `README.md`
+2. `src/minimal_shot_av/simulator/README.md`
+3. `src/minimal_shot_av/model/README.md`
+4. `docs/corl2027/paper.tex`
+5. `artifacts/corl2027/corl_evidence_strength_audit.md`
+6. `artifacts/corl2027/transfer_predictor_analysis.md`
+7. `artifacts/corl2027/alpasim_transfer_matrix_partial.md` if present
 
 ## Known Boundaries
 

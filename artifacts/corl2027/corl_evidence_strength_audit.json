@@ -1,0 +1,599 @@
+{
+  "alpasim": {
+    "common_scene_count": 10,
+    "dominance_count": 0,
+    "model_outcomes_vs_raw": {
+      "token_dagger_iter2_clamped": {
+        "class": "tradeoff",
+        "improved_axes": [
+          "offroad",
+          "wrong_lane",
+          "progress",
+          "dist_to_gt"
+        ],
+        "signed_improvements": {
+          "collision": -0.09999999999999998,
+          "dist_to_gt": 8.651051040801232,
+          "offroad": 0.4,
+          "progress": 0.3495765166844698,
+          "wrong_lane": 0.49999999999999994
+        },
+        "unchanged_axes": [],
+        "worsened_axes": [
+          "collision"
+        ]
+      },
+      "token_dagger_iter2_hybrid_clamped": {
+        "class": "tradeoff",
+        "improved_axes": [
+          "offroad",
+          "progress"
+        ],
+        "signed_improvements": {
+          "collision": -0.20000000000000007,
+          "dist_to_gt": -8.854912780697342,
+          "offroad": 0.7,
+          "progress": 0.8023354766554008,
+          "wrong_lane": 0.0
+        },
+        "unchanged_axes": [
+          "wrong_lane"
+        ],
+        "worsened_axes": [
+          "collision",
+          "dist_to_gt"
+        ]
+      },
+      "token_dagger_srcdecay": {
+        "class": "tradeoff",
+        "improved_axes": [
+          "wrong_lane",
+          "progress"
+        ],
+        "signed_improvements": {
+          "collision": 0.0,
+          "dist_to_gt": -13.29831666342116,
+          "offroad": 0.0,
+          "progress": 0.14044884233879112,
+          "wrong_lane": 0.29999999999999993
+        },
+        "unchanged_axes": [
+          "collision",
+          "offroad"
+        ],
+        "worsened_axes": [
+          "dist_to_gt"
+        ]
+      }
+    },
+    "tradeoff_count": 3
+  },
+  "conclusion": {
+    "blockers": [
+      "best_paper_external_scale",
+      "positive_method_uniform_dominance",
+      "grounding_hidden_test_claim"
+    ],
+    "level": "strong_diagnostic",
+    "summary": "The evidence supports a strong diagnostic CoRL paper, but not a Best-Paper-level method claim. Blocking gates: best_paper_external_scale, positive_method_uniform_dominance, grounding_hidden_test_claim."
+  },
+  "gates": {
+    "best_paper_external_scale": {
+      "current": 10,
+      "pass": false,
+      "target": ">=30 matched scenes"
+    },
+    "diagnostic_internal_proxy_supported": {
+      "current": 288,
+      "pass": true,
+      "target": ">=288 cases with at least one controlled tradeoff"
+    },
+    "external_transfer_supported": {
+      "current": 10,
+      "pass": true,
+      "target": ">=10 matched scenes with at least one external tradeoff"
+    },
+    "grounding_hidden_test_claim": {
+      "current": false,
+      "pass": false,
+      "target": "true held-out or test-set grounding result"
+    },
+    "grounding_prior_signal": {
+      "current": 0.15025982353197698,
+      "pass": true,
+      "target": ">0 RFS over scalar-only selector"
+    },
+    "positive_method_uniform_dominance": {
+      "current": 0,
+      "pass": false,
+      "target": ">=1 external intervention that improves at least one axis without worsening another"
+    }
+  },
+  "internal_proxy": {
+    "dominance_count": 15,
+    "perturbation_count": 6,
+    "perturbation_outcomes_vs_raw": {
+      "clean": {
+        "clamped_iter2": {
+          "class": "dominates",
+          "improved_axes": [
+            "pass",
+            "collision",
+            "lane_violation_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.02083333333333333,
+            "lane_violation_any": 0.14583333333333334,
+            "offroad_proxy_any": 0.0,
+            "pass": 0.02083333333333337
+          },
+          "unchanged_axes": [
+            "offroad_proxy_any"
+          ],
+          "worsened_axes": []
+        },
+        "hybrid_veto_iter2": {
+          "class": "dominates",
+          "improved_axes": [
+            "pass",
+            "collision",
+            "lane_violation_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.041666666666666664,
+            "lane_violation_any": 0.14583333333333334,
+            "offroad_proxy_any": 0.0,
+            "pass": 0.04166666666666674
+          },
+          "unchanged_axes": [
+            "offroad_proxy_any"
+          ],
+          "worsened_axes": []
+        },
+        "oracle_token": {
+          "class": "dominates",
+          "improved_axes": [
+            "pass",
+            "collision",
+            "lane_violation_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.02083333333333333,
+            "lane_violation_any": 0.14583333333333334,
+            "offroad_proxy_any": 0.0,
+            "pass": 0.02083333333333337
+          },
+          "unchanged_axes": [
+            "offroad_proxy_any"
+          ],
+          "worsened_axes": []
+        },
+        "spotlight": {
+          "class": "dominates",
+          "improved_axes": [
+            "pass",
+            "collision",
+            "lane_violation_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.02083333333333333,
+            "lane_violation_any": 0.14583333333333334,
+            "offroad_proxy_any": 0.0,
+            "pass": 0.02083333333333337
+          },
+          "unchanged_axes": [
+            "offroad_proxy_any"
+          ],
+          "worsened_axes": []
+        }
+      },
+      "feature_noise_0.15": {
+        "clamped_iter2": {
+          "class": "dominates",
+          "improved_axes": [
+            "pass",
+            "collision",
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.02083333333333333,
+            "lane_violation_any": 0.7708333333333333,
+            "offroad_proxy_any": 0.3958333333333333,
+            "pass": 0.02083333333333337
+          },
+          "unchanged_axes": [],
+          "worsened_axes": []
+        },
+        "hybrid_veto_iter2": {
+          "class": "dominates",
+          "improved_axes": [
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.0,
+            "lane_violation_any": 0.7916666666666666,
+            "offroad_proxy_any": 0.375,
+            "pass": 0.0
+          },
+          "unchanged_axes": [
+            "pass",
+            "collision"
+          ],
+          "worsened_axes": []
+        },
+        "oracle_token": {
+          "class": "tradeoff",
+          "improved_axes": [
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": -0.020833333333333343,
+            "lane_violation_any": 0.8125,
+            "offroad_proxy_any": 0.3958333333333333,
+            "pass": -0.02083333333333326
+          },
+          "unchanged_axes": [],
+          "worsened_axes": [
+            "pass",
+            "collision"
+          ]
+        },
+        "spotlight": {
+          "class": "dominates",
+          "improved_axes": [
+            "pass",
+            "collision",
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.02083333333333333,
+            "lane_violation_any": 0.75,
+            "offroad_proxy_any": 0.3958333333333333,
+            "pass": 0.02083333333333337
+          },
+          "unchanged_axes": [],
+          "worsened_axes": []
+        }
+      },
+      "heading_bias_p12": {
+        "clamped_iter2": {
+          "class": "dominates",
+          "improved_axes": [
+            "pass",
+            "collision",
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.04166666666666667,
+            "lane_violation_any": 0.16666666666666669,
+            "offroad_proxy_any": 0.0625,
+            "pass": 0.04166666666666663
+          },
+          "unchanged_axes": [],
+          "worsened_axes": []
+        },
+        "hybrid_veto_iter2": {
+          "class": "dominates",
+          "improved_axes": [
+            "pass",
+            "collision",
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.04166666666666667,
+            "lane_violation_any": 0.1875,
+            "offroad_proxy_any": 0.041666666666666664,
+            "pass": 0.04166666666666663
+          },
+          "unchanged_axes": [],
+          "worsened_axes": []
+        },
+        "oracle_token": {
+          "class": "dominates",
+          "improved_axes": [
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.0,
+            "lane_violation_any": 0.2708333333333333,
+            "offroad_proxy_any": 0.08333333333333333,
+            "pass": 0.0
+          },
+          "unchanged_axes": [
+            "pass",
+            "collision"
+          ],
+          "worsened_axes": []
+        },
+        "spotlight": {
+          "class": "dominates",
+          "improved_axes": [
+            "pass",
+            "collision",
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.04166666666666667,
+            "lane_violation_any": 0.25,
+            "offroad_proxy_any": 0.08333333333333333,
+            "pass": 0.04166666666666663
+          },
+          "unchanged_axes": [],
+          "worsened_axes": []
+        }
+      },
+      "lane_error_x1.5": {
+        "clamped_iter2": {
+          "class": "tradeoff",
+          "improved_axes": [
+            "lane_violation_any"
+          ],
+          "signed_improvements": {
+            "collision": -0.08333333333333334,
+            "lane_violation_any": 0.1875,
+            "offroad_proxy_any": 0.0,
+            "pass": -0.0625
+          },
+          "unchanged_axes": [
+            "offroad_proxy_any"
+          ],
+          "worsened_axes": [
+            "pass",
+            "collision"
+          ]
+        },
+        "hybrid_veto_iter2": {
+          "class": "tradeoff",
+          "improved_axes": [
+            "pass",
+            "lane_violation_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.0,
+            "lane_violation_any": 0.125,
+            "offroad_proxy_any": -0.020833333333333332,
+            "pass": 0.02083333333333337
+          },
+          "unchanged_axes": [
+            "collision"
+          ],
+          "worsened_axes": [
+            "offroad_proxy_any"
+          ]
+        },
+        "oracle_token": {
+          "class": "tradeoff",
+          "improved_axes": [
+            "lane_violation_any"
+          ],
+          "signed_improvements": {
+            "collision": -0.020833333333333336,
+            "lane_violation_any": 0.14583333333333334,
+            "offroad_proxy_any": 0.0,
+            "pass": 0.0
+          },
+          "unchanged_axes": [
+            "pass",
+            "offroad_proxy_any"
+          ],
+          "worsened_axes": [
+            "collision"
+          ]
+        },
+        "spotlight": {
+          "class": "tradeoff",
+          "improved_axes": [
+            "pass",
+            "lane_violation_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.0,
+            "lane_violation_any": 0.10416666666666667,
+            "offroad_proxy_any": -0.020833333333333332,
+            "pass": 0.02083333333333337
+          },
+          "unchanged_axes": [
+            "collision"
+          ],
+          "worsened_axes": [
+            "offroad_proxy_any"
+          ]
+        }
+      },
+      "latency_3": {
+        "clamped_iter2": {
+          "class": "dominates",
+          "improved_axes": [
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.0,
+            "lane_violation_any": 0.35416666666666663,
+            "offroad_proxy_any": 0.2916666666666667,
+            "pass": 0.0
+          },
+          "unchanged_axes": [
+            "pass",
+            "collision"
+          ],
+          "worsened_axes": []
+        },
+        "hybrid_veto_iter2": {
+          "class": "dominates",
+          "improved_axes": [
+            "pass",
+            "collision",
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.24999999999999997,
+            "lane_violation_any": 0.6666666666666666,
+            "offroad_proxy_any": 0.22916666666666669,
+            "pass": 0.25
+          },
+          "unchanged_axes": [],
+          "worsened_axes": []
+        },
+        "oracle_token": {
+          "class": "dominates",
+          "improved_axes": [
+            "pass",
+            "collision",
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.22916666666666666,
+            "lane_violation_any": 0.6041666666666667,
+            "offroad_proxy_any": 0.27083333333333337,
+            "pass": 0.22916666666666674
+          },
+          "unchanged_axes": [],
+          "worsened_axes": []
+        },
+        "spotlight": {
+          "class": "tradeoff",
+          "improved_axes": [
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": -0.02083333333333337,
+            "lane_violation_any": 0.625,
+            "offroad_proxy_any": 0.20833333333333337,
+            "pass": -0.02083333333333326
+          },
+          "unchanged_axes": [],
+          "worsened_axes": [
+            "pass",
+            "collision"
+          ]
+        }
+      },
+      "route_offset_p1.5": {
+        "clamped_iter2": {
+          "class": "tradeoff",
+          "improved_axes": [
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": -0.0625,
+            "lane_violation_any": 0.20833333333333331,
+            "offroad_proxy_any": 0.020833333333333332,
+            "pass": -0.0625
+          },
+          "unchanged_axes": [],
+          "worsened_axes": [
+            "pass",
+            "collision"
+          ]
+        },
+        "hybrid_veto_iter2": {
+          "class": "tradeoff",
+          "improved_axes": [
+            "lane_violation_any",
+            "offroad_proxy_any"
+          ],
+          "signed_improvements": {
+            "collision": -0.04166666666666667,
+            "lane_violation_any": 0.16666666666666666,
+            "offroad_proxy_any": 0.020833333333333332,
+            "pass": -0.04166666666666663
+          },
+          "unchanged_axes": [],
+          "worsened_axes": [
+            "pass",
+            "collision"
+          ]
+        },
+        "oracle_token": {
+          "class": "dominates",
+          "improved_axes": [
+            "collision",
+            "lane_violation_any"
+          ],
+          "signed_improvements": {
+            "collision": 0.020833333333333336,
+            "lane_violation_any": 0.10416666666666666,
+            "offroad_proxy_any": 0.0,
+            "pass": 0.0
+          },
+          "unchanged_axes": [
+            "pass",
+            "offroad_proxy_any"
+          ],
+          "worsened_axes": []
+        },
+        "spotlight": {
+          "class": "tradeoff",
+          "improved_axes": [
+            "lane_violation_any"
+          ],
+          "signed_improvements": {
+            "collision": -0.02083333333333333,
+            "lane_violation_any": 0.14583333333333331,
+            "offroad_proxy_any": 0.0,
+            "pass": -0.02083333333333337
+          },
+          "unchanged_axes": [
+            "offroad_proxy_any"
+          ],
+          "worsened_axes": [
+            "pass",
+            "collision"
+          ]
+        }
+      }
+    },
+    "task_count": 288,
+    "tradeoff_count": 9,
+    "variant_outcomes_vs_raw": {
+      "clamped_iter2": {
+        "dominates": 4,
+        "regresses": 0,
+        "tradeoff": 2,
+        "unchanged": 0
+      },
+      "hybrid_veto_iter2": {
+        "dominates": 4,
+        "regresses": 0,
+        "tradeoff": 2,
+        "unchanged": 0
+      },
+      "oracle_token": {
+        "dominates": 4,
+        "regresses": 0,
+        "tradeoff": 2,
+        "unchanged": 0
+      },
+      "spotlight": {
+        "dominates": 3,
+        "regresses": 0,
+        "tradeoff": 3,
+        "unchanged": 0
+      }
+    }
+  },
+  "schema": "corl_evidence_strength_audit_v1",
+  "wod_grounding": {
+    "best_gain_over_scalar": 0.15025982353197698,
+    "best_name": "Cosmos 64d nonlinear head",
+    "best_rfs": 7.845399730047434,
+    "grounding_head_sensitive": true,
+    "heldout_test_claim": false,
+    "internvla_only_rfs": 7.671561766156881,
+    "row_count": 4,
+    "scalar_rfs": 7.695139906515457
+  }
+}

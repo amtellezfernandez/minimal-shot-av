@@ -37,8 +37,8 @@ DEFAULT_CANDIDATE = (
     / "token_dagger_iter2_axis_constrained_oracle_actor_clamped__front_camera_30scene_merged"
 )
 DEFAULT_ORACLE_PROXY = ROOT / "artifacts" / "alpasim_oracle_actor_proxy_30scene.json"
-DEFAULT_JSON = ROOT / "artifacts" / "alpasim_candidate_counterfactual_30scene.json"
-DEFAULT_MD = ROOT / "artifacts" / "alpasim_candidate_counterfactual_30scene.md"
+DEFAULT_JSON = ROOT / "artifacts" / "corl2027" / "alpasim_candidate_counterfactual_30scene.json"
+DEFAULT_MD = ROOT / "artifacts" / "corl2027" / "alpasim_candidate_counterfactual_30scene.md"
 
 COLLISION_COMPONENTS = ("collision_front", "collision_lateral", "collision_rear")
 DEFAULT_LEAD_FRAMES = (20, 10, 5, 2, 1, 0)

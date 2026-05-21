@@ -21,8 +21,8 @@ DEFAULT_CANDIDATE = (
     / "alpasim_actor_blindness_30scene_raw"
     / "token_dagger_iter2_axis_constrained_oracle_actor_clamped__front_camera_30scene_merged"
 )
-DEFAULT_JSON = ROOT / "artifacts" / "alpasim_collision_surface_30scene_audit.json"
-DEFAULT_MD = ROOT / "artifacts" / "alpasim_collision_surface_30scene_audit.md"
+DEFAULT_JSON = ROOT / "artifacts" / "corl2027" / "alpasim_collision_surface_30scene_audit.json"
+DEFAULT_MD = ROOT / "artifacts" / "corl2027" / "alpasim_collision_surface_30scene_audit.md"
 
 COLLISION_COMPONENTS = ("collision_front", "collision_lateral", "collision_rear")
 

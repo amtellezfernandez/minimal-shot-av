@@ -1,0 +1,2336 @@
+{
+  "scenes": [
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -0.9185371573580531,
+        "front_steering_angle": -0.4102219573500832,
+        "timestamp_us": 2753674646209.0,
+        "u_longitudinal_actuation": -0.784463199943827,
+        "vx": 1.3702544586863443,
+        "vy": -0.40002713098980686,
+        "x": 35.53211212158203,
+        "y": 1.4103034734725952
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 37,
+        "timestamp_us": 2753674646209
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "maintain",
+        "frame_index": 37,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "maintain",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": "inf",
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": "inf"
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -1.8490272995915218,
+        "front_steering_angle": -0.25201162019518764,
+        "timestamp_us": 2753674646209.0,
+        "u_longitudinal_actuation": -2.2560589419583374,
+        "vx": 1.6584077856825543,
+        "vy": -0.35404778782299834,
+        "x": 35.19840621948242,
+        "y": 1.9950474500656128
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 37,
+        "timestamp_us": 2753674646209
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 36,
+        "rear_lane_hazard": 10,
+        "top_clearance_lt_1m": 16
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "crawl",
+        "frame_index": 37,
+        "oracle_actor_proxy_count": 24,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 1,
+        "selected_token": "evasive_left",
+        "spotlight_token": "nudge_left",
+        "structured_hazard_count": 24,
+        "top_action_clearance_m": -0.084,
+        "top_candidate": "nudge_left",
+        "top_horizon_clearance_m": -0.084
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": -0.9304901422334687,
+        "front_steering_angle": 0.15821033715489558,
+        "speed": 0.2683270207566284,
+        "u_longitudinal_actuation": -1.4715957420145105,
+        "vx": 0.28815332699621,
+        "vy": 0.04597934316680852,
+        "x": -0.3337059020996094,
+        "y": 0.5847439765930176
+      },
+      "scene": "001_clipgt-a309e228-26e1-423e-a44c-cb00aa7378cb"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -0.8179532246529843,
+        "front_steering_angle": -0.1470905022752279,
+        "timestamp_us": 1567444283200.0,
+        "u_longitudinal_actuation": -0.7890484026299007,
+        "vx": 2.2314886509701037,
+        "vy": -0.19514794376672337,
+        "x": 42.22364044189453,
+        "y": -0.28505486249923706
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 43,
+        "timestamp_us": 1567444283200
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_right",
+        "frame_index": 43,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "evasive_right",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": "inf",
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": "inf"
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -1.2594942060139382,
+        "front_steering_angle": 0.11337469789763942,
+        "timestamp_us": 1567444683200.0,
+        "u_longitudinal_actuation": -1.2171042049812346,
+        "vx": 3.182799759247125,
+        "vy": 0.21632657894537421,
+        "x": 48.061798095703125,
+        "y": -0.37418538331985474
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 47,
+        "timestamp_us": 1567444683200
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 46,
+        "rear_lane_hazard": 11,
+        "top_clearance_lt_1m": 46
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_left",
+        "frame_index": 47,
+        "oracle_actor_proxy_count": 22,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 1,
+        "selected_token": "nudge_left",
+        "spotlight_token": "nudge_left",
+        "structured_hazard_count": 22,
+        "top_action_clearance_m": -0.867,
+        "top_candidate": "nudge_left",
+        "top_horizon_clearance_m": -0.867
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": -0.441540981360954,
+        "front_steering_angle": 0.26046520017286734,
+        "speed": 0.9501374361242001,
+        "u_longitudinal_actuation": -0.4280558023513339,
+        "vx": 0.9513111082770211,
+        "vy": 0.4114745227120976,
+        "x": 5.838157653808594,
+        "y": -0.08913052082061768
+      },
+      "scene": "002_clipgt-804afc4a-fd1e-4f58-bd39-a4c486a916e5"
+    },
+    {
+      "baseline_collision": false,
+      "baseline_controller_at_first_collision": null,
+      "baseline_first_collision": null,
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": false,
+      "candidate_controller_at_first_collision": null,
+      "candidate_first_collision": null,
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": null,
+      "scene": "003_clipgt-81b0e06d-96e6-4832-99c1-a4084b54ca97"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -0.2343576589581309,
+        "front_steering_angle": 0.13298873749938048,
+        "timestamp_us": 2054181437002.0,
+        "u_longitudinal_actuation": -0.05236660242702805,
+        "vx": 1.7760356476428245,
+        "vy": -0.002535376649081031,
+        "x": 43.720489501953125,
+        "y": -0.646854043006897
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 51,
+        "timestamp_us": 2054181437002
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "maintain",
+        "frame_index": 51,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "maintain",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": "inf",
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": "inf"
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 1,
+        "exists": true,
+        "good_json_lines": 357
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -0.9849531493579226,
+        "front_steering_angle": 0.2820139554847181,
+        "timestamp_us": 2054181637002.0,
+        "u_longitudinal_actuation": -1.0890438685253667,
+        "vx": 2.2676561638480033,
+        "vy": 0.3310606770436571,
+        "x": 47.80384826660156,
+        "y": -0.7395420074462891
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 53,
+        "timestamp_us": 2054181637002
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 52,
+        "rear_lane_hazard": 18,
+        "top_clearance_lt_1m": 52
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "crawl",
+        "frame_index": 53,
+        "oracle_actor_proxy_count": 18,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 1,
+        "selected_token": "nudge_right",
+        "spotlight_token": "nudge_right",
+        "structured_hazard_count": 18,
+        "top_action_clearance_m": -0.556,
+        "top_candidate": "nudge_right",
+        "top_horizon_clearance_m": -0.556
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": -0.7505954903997917,
+        "front_steering_angle": 0.1490252179853376,
+        "speed": 0.5156574720466598,
+        "u_longitudinal_actuation": -1.0366772660983388,
+        "vx": 0.49162051620517877,
+        "vy": 0.33359605369273815,
+        "x": 4.0833587646484375,
+        "y": -0.09268796443939209
+      },
+      "scene": "004_clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -3.9675169287928735,
+        "front_steering_angle": -0.5296616616898847,
+        "timestamp_us": 2156805631113.0,
+        "u_longitudinal_actuation": -3.796387665715245,
+        "vx": 3.4431582965703806,
+        "vy": -0.8741165458081461,
+        "x": 26.965518951416016,
+        "y": 2.4870777130126953
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_front"
+        ],
+        "frame": 30,
+        "timestamp_us": 2156805631113
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_right",
+        "frame_index": 30,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "evasive_right",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": 15.15,
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": 15.15
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": 0.1395313102429863,
+        "front_steering_angle": 0.029675647855514003,
+        "timestamp_us": 2156807131113.0,
+        "u_longitudinal_actuation": 0.1318836030589467,
+        "vx": 0.8307904567484858,
+        "vy": 0.013188601946527517,
+        "x": 29.010910034179688,
+        "y": 0.841949462890625
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 45,
+        "timestamp_us": 2156807131113
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 44,
+        "rear_lane_hazard": 22,
+        "top_clearance_lt_1m": 34
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_right",
+        "frame_index": 45,
+        "oracle_actor_proxy_count": 16,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 2,
+        "selected_token": "nudge_right",
+        "spotlight_token": "nudge_right",
+        "structured_hazard_count": 16,
+        "top_action_clearance_m": 0.686,
+        "top_candidate": "nudge_right",
+        "top_horizon_clearance_m": 0.686
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": 4.10704823903586,
+        "front_steering_angle": 0.5593373095453987,
+        "speed": -2.7214869959426244,
+        "u_longitudinal_actuation": 3.9282712687741914,
+        "vx": -2.6123678398218946,
+        "vy": 0.8873051477546736,
+        "x": 2.045391082763672,
+        "y": -1.6451282501220703
+      },
+      "scene": "005_clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e"
+    },
+    {
+      "baseline_collision": false,
+      "baseline_controller_at_first_collision": null,
+      "baseline_first_collision": null,
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": false,
+      "candidate_controller_at_first_collision": null,
+      "candidate_first_collision": null,
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": null,
+      "scene": "006_clipgt-88d1e61e-d4a6-443a-8b3f-ad0f1de4d0f5"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -0.6627789735216733,
+        "front_steering_angle": -0.11843143835056495,
+        "timestamp_us": 2053959337002.0,
+        "u_longitudinal_actuation": -0.6397895063930609,
+        "vx": 1.995635215574331,
+        "vy": -0.14146264663644545,
+        "x": 25.058908462524414,
+        "y": -0.18495728075504303
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 40,
+        "timestamp_us": 2053959337002
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_right",
+        "frame_index": 40,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "evasive_right",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": "inf",
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": "inf"
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -2.0184234900412217,
+        "front_steering_angle": -0.5632905124208653,
+        "timestamp_us": 2053959537002.0,
+        "u_longitudinal_actuation": -1.859460646463722,
+        "vx": 1.9837464784909518,
+        "vy": -0.6508655690962323,
+        "x": 26.51749038696289,
+        "y": 0.6489322185516357
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 42,
+        "timestamp_us": 2053959537002
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 41,
+        "rear_lane_hazard": 14,
+        "top_clearance_lt_1m": 41
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_left",
+        "frame_index": 42,
+        "oracle_actor_proxy_count": 24,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 1,
+        "selected_token": "evasive_left",
+        "spotlight_token": "nudge_left",
+        "structured_hazard_count": 24,
+        "top_action_clearance_m": -0.418,
+        "top_candidate": "nudge_left",
+        "top_horizon_clearance_m": -0.418
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": -1.3556445165195483,
+        "front_steering_angle": -0.4448590740703003,
+        "speed": 0.08714935918462485,
+        "u_longitudinal_actuation": -1.2196711400706612,
+        "vx": -0.011888737083379342,
+        "vy": -0.5094029224597868,
+        "x": 1.4585819244384766,
+        "y": 0.8338894993066788
+      },
+      "scene": "007_clipgt-8aaa1135-573f-4f6c-8ff8-7ac6bd6ea5d6"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -2.1170431471797917,
+        "front_steering_angle": 0.5901584056160831,
+        "timestamp_us": 681858216131.0,
+        "u_longitudinal_actuation": -2.2398875934284552,
+        "vx": 1.4406014012849495,
+        "vy": 0.4165818169015763,
+        "x": 40.814613342285156,
+        "y": -0.5249937772750854
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 54,
+        "timestamp_us": 681858216131
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "lane_recover",
+        "frame_index": 54,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "lane_recover",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": "inf",
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": "inf"
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -0.5985445087236181,
+        "front_steering_angle": 0.11174006849495063,
+        "timestamp_us": 681858616131.0,
+        "u_longitudinal_actuation": -0.5770292494791796,
+        "vx": 1.881202407446631,
+        "vy": 0.12697546855600067,
+        "x": 46.52598190307617,
+        "y": 0.19307462871074677
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 58,
+        "timestamp_us": 681858616131
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 57,
+        "rear_lane_hazard": 33,
+        "top_clearance_lt_1m": 57
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_left",
+        "frame_index": 58,
+        "oracle_actor_proxy_count": 19,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 1,
+        "selected_token": "nudge_left",
+        "spotlight_token": "nudge_left",
+        "structured_hazard_count": 19,
+        "top_action_clearance_m": -0.729,
+        "top_candidate": "nudge_left",
+        "top_horizon_clearance_m": -0.729
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": 1.5184986384561736,
+        "front_steering_angle": -0.47841833712113246,
+        "speed": 0.38585854561162214,
+        "u_longitudinal_actuation": 1.6628583439492757,
+        "vx": 0.4406010061616814,
+        "vy": -0.28960634834557564,
+        "x": 5.711368560791016,
+        "y": 0.7180684059858322
+      },
+      "scene": "008_clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -1.982332769374194,
+        "front_steering_angle": 0.5737972021570155,
+        "timestamp_us": 2056914916206.0,
+        "u_longitudinal_actuation": -2.10215197955874,
+        "vx": 1.4332009939407007,
+        "vy": 0.40048829956288545,
+        "x": 20.464441299438477,
+        "y": -0.4831412136554718
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 49,
+        "timestamp_us": 2056914916206
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "lane_recover",
+        "frame_index": 49,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "lane_recover",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": "inf",
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": "inf"
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -0.390645440793479,
+        "front_steering_angle": -0.045164483928714805,
+        "timestamp_us": 2056914916206.0,
+        "u_longitudinal_actuation": -0.33911573567674697,
+        "vx": 0.2275972225196077,
+        "vy": -0.011193934366968304,
+        "x": 20.59181785583496,
+        "y": 0.7664111256599426
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 49,
+        "timestamp_us": 2056914916206
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 48,
+        "rear_lane_hazard": 14,
+        "top_clearance_lt_1m": 12
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "crawl",
+        "frame_index": 49,
+        "oracle_actor_proxy_count": 24,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 1,
+        "selected_token": "evasive_left",
+        "spotlight_token": "nudge_left",
+        "structured_hazard_count": 24,
+        "top_action_clearance_m": 0.027,
+        "top_candidate": "nudge_left",
+        "top_horizon_clearance_m": 0.027
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": 1.591687328580715,
+        "front_steering_angle": -0.6189616860857303,
+        "speed": -1.2602324915867713,
+        "u_longitudinal_actuation": 1.763036243881993,
+        "vx": -1.205603771421093,
+        "vy": -0.41168223392985376,
+        "x": 0.12737655639648438,
+        "y": 1.2495523393154144
+      },
+      "scene": "009_clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e"
+    },
+    {
+      "baseline_collision": false,
+      "baseline_controller_at_first_collision": null,
+      "baseline_first_collision": null,
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": false,
+      "candidate_controller_at_first_collision": null,
+      "candidate_first_collision": null,
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": null,
+      "scene": "010_clipgt-93982b71-92af-4cf6-8447-00d619f50ad3"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -0.9339595853012101,
+        "front_steering_angle": -0.40678983630139304,
+        "timestamp_us": 1975545460122.0,
+        "u_longitudinal_actuation": -0.8394044620176222,
+        "vx": 1.3402892102788422,
+        "vy": -0.38390594429332037,
+        "x": 16.455310821533203,
+        "y": -0.8101208209991455
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_front"
+        ],
+        "frame": 29,
+        "timestamp_us": 1975545460122
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "lane_recover",
+        "frame_index": 29,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "lane_recover",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": "inf",
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": "inf"
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -2.131521301524905,
+        "front_steering_angle": -0.49540124170142635,
+        "timestamp_us": 1975545360122.0,
+        "u_longitudinal_actuation": -1.9284703434309793,
+        "vx": 1.36203326521673,
+        "vy": -0.4986589925999491,
+        "x": 16.429336547851562,
+        "y": -0.8304519653320312
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_front"
+        ],
+        "frame": 28,
+        "timestamp_us": 1975545360122
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 27,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": 27
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_right",
+        "frame_index": 28,
+        "oracle_actor_proxy_count": 21,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "evasive_right",
+        "spotlight_token": "evasive_right",
+        "structured_hazard_count": 21,
+        "top_action_clearance_m": 1.633,
+        "top_candidate": "evasive_right",
+        "top_horizon_clearance_m": 1.007
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": -1.1975617162236947,
+        "front_steering_angle": -0.08861140540003332,
+        "speed": 0.05625906711698003,
+        "u_longitudinal_actuation": -1.0890658814133571,
+        "vx": 0.02174405493788778,
+        "vy": -0.11475304830662875,
+        "x": -0.025974273681640625,
+        "y": -0.020331144332885742
+      },
+      "scene": "011_clipgt-9b6a51bd-cb54-4a68-8ed8-0e33a504c67e"
+    },
+    {
+      "baseline_collision": false,
+      "baseline_controller_at_first_collision": null,
+      "baseline_first_collision": null,
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": false,
+      "candidate_controller_at_first_collision": null,
+      "candidate_first_collision": null,
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 398
+      },
+      "controller_delta_at_first_collision": null,
+      "scene": "012_clipgt-9b314680-02be-48fe-bd6d-162a00a743d1"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -7.406321118078295e-09,
+        "front_steering_angle": 3.6636948556047136e-06,
+        "timestamp_us": 226984463812.0,
+        "u_longitudinal_actuation": -1.1311777362843322e-08,
+        "vx": 2.2996652907155097e-05,
+        "vy": 4.700479389490131e-11,
+        "x": 40.29585266113281,
+        "y": -0.04785020649433136
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 94,
+        "timestamp_us": 226984463812
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "slow_yield",
+        "frame_index": 94,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "slow_yield",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": 15.15,
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": 15.15
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -0.12737967499821884,
+        "front_steering_angle": 0.03185131593844373,
+        "timestamp_us": 226984463812.0,
+        "u_longitudinal_actuation": -0.1858497122129198,
+        "vx": 0.33496180379776974,
+        "vy": 0.003973400734634698,
+        "x": 40.95988464355469,
+        "y": 1.1765893697738647
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 94,
+        "timestamp_us": 226984463812
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": false,
+        "good_json_lines": 0
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": -0.12737966759189773,
+        "front_steering_angle": 0.031847652243588126,
+        "speed": 0.3349623730527765,
+        "u_longitudinal_actuation": -0.18584970090114242,
+        "vx": 0.33493880714486257,
+        "vy": 0.003973400687629904,
+        "x": 0.664031982421875,
+        "y": 1.224439576268196
+      },
+      "scene": "013_clipgt-89f2eeb8-f4e4-42a1-8e07-d60003d223dc"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -1.1639683744013263,
+        "front_steering_angle": -0.4835302350749169,
+        "timestamp_us": 2188623096459.0,
+        "u_longitudinal_actuation": -0.8619116804995915,
+        "vx": 1.484190916443268,
+        "vy": -0.5100761078591036,
+        "x": 16.69918441772461,
+        "y": -1.1903042793273926
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_front"
+        ],
+        "frame": 28,
+        "timestamp_us": 2188623096459
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "maintain",
+        "frame_index": 28,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "maintain",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": "inf",
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": "inf"
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -2.7936514557713465,
+        "front_steering_angle": -0.617022480101677,
+        "timestamp_us": 2188623096459.0,
+        "u_longitudinal_actuation": -2.5833733834513244,
+        "vx": 1.9777892490066742,
+        "vy": -0.7695297056525496,
+        "x": 17.061494827270508,
+        "y": -1.3537880182266235
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_front"
+        ],
+        "frame": 28,
+        "timestamp_us": 2188623096459
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 27,
+        "rear_lane_hazard": 7,
+        "top_clearance_lt_1m": 25
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_right",
+        "frame_index": 28,
+        "oracle_actor_proxy_count": 10,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "evasive_right",
+        "spotlight_token": "evasive_right",
+        "structured_hazard_count": 10,
+        "top_action_clearance_m": 2.608,
+        "top_candidate": "evasive_right",
+        "top_horizon_clearance_m": 2.491
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": -1.6296830813700203,
+        "front_steering_angle": -0.13349224502676016,
+        "speed": 0.5528271278053487,
+        "u_longitudinal_actuation": -1.721461702951733,
+        "vx": 0.49359833256340613,
+        "vy": -0.259453597793446,
+        "x": 0.36231040954589844,
+        "y": -0.16348373889923096
+      },
+      "scene": "014_clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75"
+    },
+    {
+      "baseline_collision": false,
+      "baseline_controller_at_first_collision": null,
+      "baseline_first_collision": null,
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": false,
+      "candidate_controller_at_first_collision": null,
+      "candidate_first_collision": null,
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": null,
+      "scene": "015_clipgt-9ea70552-6dcb-4ee8-a368-9a906a333f6e"
+    },
+    {
+      "baseline_collision": false,
+      "baseline_controller_at_first_collision": null,
+      "baseline_first_collision": null,
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": false,
+      "candidate_controller_at_first_collision": null,
+      "candidate_first_collision": null,
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": null,
+      "scene": "016_clipgt-895e3736-398f-459a-b511-5781e8120c6c"
+    },
+    {
+      "baseline_collision": false,
+      "baseline_controller_at_first_collision": null,
+      "baseline_first_collision": null,
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": false,
+      "candidate_controller_at_first_collision": null,
+      "candidate_first_collision": null,
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": null,
+      "scene": "017_clipgt-9f20476f-6ef6-46f4-a77c-ac511fde19a1"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -0.10325272502832511,
+        "front_steering_angle": 0.16916731510869093,
+        "timestamp_us": 269972671585.0,
+        "u_longitudinal_actuation": -0.10243443285547867,
+        "vx": 1.7168646627776811,
+        "vy": 0.16324550267954668,
+        "x": 15.358617782592773,
+        "y": -0.9315956234931946
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 45,
+        "timestamp_us": 269972671585
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "maintain",
+        "frame_index": 45,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "maintain",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": "inf",
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": "inf"
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -0.1306060255207905,
+        "front_steering_angle": 0.17419435340288913,
+        "timestamp_us": 269972671585.0,
+        "u_longitudinal_actuation": -0.11704300656805385,
+        "vx": 1.5913855265842425,
+        "vy": 0.13326289672306343,
+        "x": 15.255029678344727,
+        "y": -0.9355886578559875
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 45,
+        "timestamp_us": 269972671585
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 44,
+        "rear_lane_hazard": 44,
+        "top_clearance_lt_1m": 1
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_right",
+        "frame_index": 45,
+        "oracle_actor_proxy_count": 24,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 2,
+        "selected_token": "evasive_right",
+        "spotlight_token": "nudge_right",
+        "structured_hazard_count": 24,
+        "top_action_clearance_m": -0.108,
+        "top_candidate": "nudge_right",
+        "top_horizon_clearance_m": -0.108
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": -0.0273533004924654,
+        "front_steering_angle": 0.005027038294198205,
+        "speed": -0.12765266928544405,
+        "u_longitudinal_actuation": -0.014608573712575179,
+        "vx": -0.12547913619343865,
+        "vy": -0.02998260595648325,
+        "x": -0.10358810424804688,
+        "y": -0.003993034362792969
+      },
+      "scene": "018_clipgt-825dc886-0491-482a-abe3-e1743f5972b8"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -1.874216633383341,
+        "front_steering_angle": 0.5414469615403528,
+        "timestamp_us": 1414068106232.0,
+        "u_longitudinal_actuation": -2.9114382651466255,
+        "vx": 1.6378450344526503,
+        "vy": 0.2950047948217385,
+        "x": 19.376392364501953,
+        "y": -0.4776133894920349
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 44,
+        "timestamp_us": 1414068106232
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "maintain",
+        "frame_index": 44,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "maintain",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": "inf",
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": "inf"
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -0.10072369828234227,
+        "front_steering_angle": -0.11785321862428493,
+        "timestamp_us": 1414068106232.0,
+        "u_longitudinal_actuation": -0.014855737644423783,
+        "vx": 0.7396822298756637,
+        "vy": -0.07278089843426179,
+        "x": 19.22311782836914,
+        "y": 0.7127079963684082
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 44,
+        "timestamp_us": 1414068106232
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 43,
+        "rear_lane_hazard": 39,
+        "top_clearance_lt_1m": 43
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_right",
+        "frame_index": 44,
+        "oracle_actor_proxy_count": 18,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 1,
+        "selected_token": "evasive_left",
+        "spotlight_token": "nudge_left",
+        "structured_hazard_count": 18,
+        "top_action_clearance_m": 0.166,
+        "top_candidate": "nudge_left",
+        "top_horizon_clearance_m": 0.166
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": 1.7734929351009987,
+        "front_steering_angle": -0.6593001801646377,
+        "speed": -0.9209465281877512,
+        "u_longitudinal_actuation": 2.896582527502202,
+        "vx": -0.8981628045769866,
+        "vy": -0.3677856932560003,
+        "x": -0.1532745361328125,
+        "y": 1.1903213858604431
+      },
+      "scene": "019_clipgt-994977b5-4db6-43eb-950a-c0faaccc930b"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -3.792165722620506e-10,
+        "front_steering_angle": 4.226450425177938e-06,
+        "timestamp_us": 2108058744559.0,
+        "u_longitudinal_actuation": -1.6593560688497167e-09,
+        "vx": 2.572160294861081e-05,
+        "vy": 6.064919638208864e-11,
+        "x": 14.768596649169922,
+        "y": 0.23473675549030304
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_lateral"
+        ],
+        "frame": 173,
+        "timestamp_us": 2108058744559
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "slow_yield",
+        "frame_index": 173,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "slow_yield",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": 15.15,
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": 15.15
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": 0.3074689075713479,
+        "front_steering_angle": 2.6320127072300563e-06,
+        "timestamp_us": 2108058744559.0,
+        "u_longitudinal_actuation": 0.4869182338323351,
+        "vx": 0.017964633293276043,
+        "vy": 7.701909491284325e-09,
+        "x": 14.675045013427734,
+        "y": 0.26861900091171265
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_lateral"
+        ],
+        "frame": 173,
+        "timestamp_us": 2108058744559
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 172,
+        "rear_lane_hazard": 172,
+        "top_clearance_lt_1m": 172
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "crawl",
+        "frame_index": 173,
+        "oracle_actor_proxy_count": 14,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "stop",
+        "spotlight_token": "evasive_left",
+        "structured_hazard_count": 14,
+        "top_action_clearance_m": 0.553,
+        "top_candidate": "evasive_left",
+        "top_horizon_clearance_m": 0.553
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": 0.3074689079505645,
+        "front_steering_angle": -1.5944377179478818e-06,
+        "speed": 0.01793891169032901,
+        "u_longitudinal_actuation": 0.48691823549169116,
+        "vx": 0.017938911690327432,
+        "vy": 7.641260294902235e-09,
+        "x": -0.0935516357421875,
+        "y": 0.03388224542140961
+      },
+      "scene": "020_clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -0.06201615591956999,
+        "front_steering_angle": 0.13178391556119473,
+        "timestamp_us": 1975321776662.0,
+        "u_longitudinal_actuation": -0.061197926027216895,
+        "vx": 1.7321055833082128,
+        "vy": 0.12784021886226957,
+        "x": 28.417085647583008,
+        "y": -0.11659950017929077
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 50,
+        "timestamp_us": 1975321776662
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "maintain",
+        "frame_index": 50,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "maintain",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": "inf",
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": "inf"
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -0.029580593543241898,
+        "front_steering_angle": -0.07240797594838169,
+        "timestamp_us": 1975322176662.0,
+        "u_longitudinal_actuation": -0.028454384975566467,
+        "vx": 1.3941763833794985,
+        "vy": -0.049244091611441186,
+        "x": 32.62571716308594,
+        "y": 0.14105124771595
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 54,
+        "timestamp_us": 1975322176662
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 53,
+        "rear_lane_hazard": 43,
+        "top_clearance_lt_1m": 1
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_right",
+        "frame_index": 54,
+        "oracle_actor_proxy_count": 10,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 1,
+        "selected_token": "nudge_left",
+        "spotlight_token": "nudge_left",
+        "structured_hazard_count": 10,
+        "top_action_clearance_m": -0.335,
+        "top_candidate": "nudge_left",
+        "top_horizon_clearance_m": -0.335
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": 0.032435562376328095,
+        "front_steering_angle": -0.20419189150957642,
+        "speed": -0.34177108518553134,
+        "u_longitudinal_actuation": 0.03274354105165043,
+        "vx": -0.3379291999287144,
+        "vy": -0.17708431047371076,
+        "x": 4.20863151550293,
+        "y": 0.2576507478952408
+      },
+      "scene": "021_clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -0.45503183423908017,
+        "front_steering_angle": -0.06633382044448123,
+        "timestamp_us": 4819865906000.0,
+        "u_longitudinal_actuation": -0.4122117280087404,
+        "vx": 0.4255837731266654,
+        "vy": -0.021185387656237748,
+        "x": 5.149397850036621,
+        "y": -0.10174011439085007
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 32,
+        "timestamp_us": 4819865906000
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "slow_yield",
+        "frame_index": 32,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "slow_yield",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": 13.282,
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": 12.809
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": -0.034882864826405874,
+        "front_steering_angle": -0.08131848265887089,
+        "timestamp_us": 4819866006000.0,
+        "u_longitudinal_actuation": 0.1291926358602794,
+        "vx": 0.7996807603427566,
+        "vy": -0.049853462662173026,
+        "x": 5.676392078399658,
+        "y": -0.1372746229171753
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 33,
+        "timestamp_us": 4819866006000
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 32,
+        "rear_lane_hazard": 32,
+        "top_clearance_lt_1m": 1
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_right",
+        "frame_index": 33,
+        "oracle_actor_proxy_count": 24,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 1,
+        "selected_token": "evasive_left",
+        "spotlight_token": "evasive_left",
+        "structured_hazard_count": 24,
+        "top_action_clearance_m": 0.819,
+        "top_candidate": "evasive_left",
+        "top_horizon_clearance_m": 0.819
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": 0.4201489694126743,
+        "front_steering_angle": -0.014984662214389655,
+        "speed": 0.37512248147262167,
+        "u_longitudinal_actuation": 0.5414043638690198,
+        "vx": 0.3740969872160912,
+        "vy": -0.028668075005935278,
+        "x": 0.5269942283630371,
+        "y": -0.035534508526325226
+      },
+      "scene": "022_clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -1.0996750395924479e-06,
+        "front_steering_angle": 0.00021686786155477003,
+        "timestamp_us": 2057415988291.0,
+        "u_longitudinal_actuation": -1.8068246799734863e-06,
+        "vx": 0.0017912677732528281,
+        "vy": 2.1674854492970526e-07,
+        "x": 31.927709579467773,
+        "y": -0.7275366187095642
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 142,
+        "timestamp_us": 2057415988291
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "slow_yield",
+        "frame_index": 142,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "slow_yield",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": 15.142,
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": 15.142
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": 9.141560895468612e-10,
+        "front_steering_angle": -7.437851672819331e-07,
+        "timestamp_us": 2057416788291.0,
+        "u_longitudinal_actuation": 2.6796637725220334e-09,
+        "vx": 5.603482998384582e-06,
+        "vy": -2.333670203858008e-12,
+        "x": 41.51601791381836,
+        "y": -0.3577326834201813
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 150,
+        "timestamp_us": 2057416788291
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 149,
+        "rear_lane_hazard": 79,
+        "top_clearance_lt_1m": 1
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_left",
+        "frame_index": 150,
+        "oracle_actor_proxy_count": 22,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 1,
+        "selected_token": "evasive_left",
+        "spotlight_token": "nudge_left",
+        "structured_hazard_count": 22,
+        "top_action_clearance_m": -0.441,
+        "top_candidate": "nudge_left",
+        "top_horizon_clearance_m": -0.441
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": 1.1005891956819947e-06,
+        "front_steering_angle": -0.00021761164672205196,
+        "speed": -0.0017856643033680411,
+        "u_longitudinal_actuation": 1.8095043437460084e-06,
+        "vx": -0.0017856642902544435,
+        "vy": -2.1675087859990911e-07,
+        "x": 9.588308334350586,
+        "y": 0.36980393528938293
+      },
+      "scene": "023_clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06"
+    },
+    {
+      "baseline_collision": false,
+      "baseline_controller_at_first_collision": null,
+      "baseline_first_collision": null,
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": false,
+      "candidate_controller_at_first_collision": null,
+      "candidate_first_collision": null,
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": null,
+      "scene": "024_clipgt-8a97e5f9-a699-48ff-acc3-0a3c28253d9d"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -2.0984576397166912e-05,
+        "front_steering_angle": -0.0014817212879376198,
+        "timestamp_us": 2053066637002.0,
+        "u_longitudinal_actuation": -2.094339885249256e-05,
+        "vx": 0.44978034832045777,
+        "vy": -0.0003702215420088809,
+        "x": 4.470313549041748,
+        "y": 0.00029412307776510715
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 123,
+        "timestamp_us": 2053066637002
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "slow_yield",
+        "frame_index": 123,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "slow_yield",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": 12.451,
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": 9.453
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": 0.15971124226750083,
+        "front_steering_angle": 0.043639715327568405,
+        "timestamp_us": 2053066737002.0,
+        "u_longitudinal_actuation": 0.1452534106554855,
+        "vx": 0.5367745535449812,
+        "vy": 0.011895155455353868,
+        "x": 4.796166896820068,
+        "y": 0.1194261908531189
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 124,
+        "timestamp_us": 2053066737002
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 123,
+        "rear_lane_hazard": 123,
+        "top_clearance_lt_1m": 2
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_left",
+        "frame_index": 124,
+        "oracle_actor_proxy_count": 23,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 1,
+        "selected_token": "nudge_right",
+        "spotlight_token": "nudge_right",
+        "structured_hazard_count": 23,
+        "top_action_clearance_m": 0.096,
+        "top_candidate": "nudge_right",
+        "top_horizon_clearance_m": 0.096
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": 0.15973222684389798,
+        "front_steering_angle": 0.04512143661550602,
+        "speed": 0.08712583756531606,
+        "u_longitudinal_actuation": 0.145274354054338,
+        "vx": 0.08699420522452339,
+        "vy": 0.01226537699736275,
+        "x": 0.3258533477783203,
+        "y": 0.11913206777535379
+      },
+      "scene": "025_clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888"
+    },
+    {
+      "baseline_collision": false,
+      "baseline_controller_at_first_collision": null,
+      "baseline_first_collision": null,
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": false,
+      "candidate_controller_at_first_collision": null,
+      "candidate_first_collision": null,
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": null,
+      "scene": "026_clipgt-7d994ed3-d15f-4c0d-a0ff-fd36ba005726"
+    },
+    {
+      "baseline_collision": false,
+      "baseline_controller_at_first_collision": null,
+      "baseline_first_collision": null,
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": false,
+      "candidate_controller_at_first_collision": null,
+      "candidate_first_collision": null,
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": null,
+      "scene": "027_clipgt-a206d733-17d2-407f-85a2-5db9f57705ea"
+    },
+    {
+      "baseline_collision": false,
+      "baseline_controller_at_first_collision": null,
+      "baseline_first_collision": null,
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": false,
+      "candidate_controller_at_first_collision": null,
+      "candidate_first_collision": null,
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": null,
+      "scene": "028_clipgt-7b3070bd-8d4d-4394-bced-f89b0467a107"
+    },
+    {
+      "baseline_collision": false,
+      "baseline_controller_at_first_collision": null,
+      "baseline_first_collision": null,
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": false,
+      "candidate_controller_at_first_collision": null,
+      "candidate_first_collision": null,
+      "candidate_lead_frames": {
+        "nonmaintain_selection": null,
+        "rear_lane_hazard": null,
+        "top_clearance_lt_1m": null
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": null,
+        "frame_index": null,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": null,
+        "selected_token": null,
+        "spotlight_token": null,
+        "structured_hazard_count": null,
+        "top_action_clearance_m": null,
+        "top_candidate": null,
+        "top_horizon_clearance_m": null
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": null,
+      "scene": "029_clipgt-83b78681-e1a3-458f-8d93-0413ab1c4523"
+    },
+    {
+      "baseline_collision": true,
+      "baseline_controller_at_first_collision": {
+        "acceleration": -0.000561015714330844,
+        "front_steering_angle": -0.0029329091785858198,
+        "timestamp_us": 1482604331791.0,
+        "u_longitudinal_actuation": -0.0005000918956828929,
+        "vx": 0.4495144593172521,
+        "vy": -0.000737165057976983,
+        "x": 1.9701327085494995,
+        "y": -0.005841332953423262
+      },
+      "baseline_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 53,
+        "timestamp_us": 1482604331791
+      },
+      "baseline_selection_at_first_collision": {
+        "dagger_argmax_token": "slow_yield",
+        "frame_index": 53,
+        "oracle_actor_proxy_count": null,
+        "oracle_actor_proxy_hit": null,
+        "rear_lane_hazard_count": 0,
+        "selected_token": "slow_yield",
+        "spotlight_token": "maintain",
+        "structured_hazard_count": 0,
+        "top_action_clearance_m": 12.454,
+        "top_candidate": "maintain",
+        "top_horizon_clearance_m": 9.462
+      },
+      "baseline_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "candidate_collision": true,
+      "candidate_controller_at_first_collision": {
+        "acceleration": 0.035748949587793566,
+        "front_steering_angle": 0.056782588859838556,
+        "timestamp_us": 1482604431791.0,
+        "u_longitudinal_actuation": 0.033058745855440434,
+        "vx": 0.5901499066611134,
+        "vy": 0.018372406718108684,
+        "x": 2.1934733390808105,
+        "y": 0.004925442859530449
+      },
+      "candidate_first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame": 54,
+        "timestamp_us": 1482604431791
+      },
+      "candidate_lead_frames": {
+        "nonmaintain_selection": 53,
+        "rear_lane_hazard": 53,
+        "top_clearance_lt_1m": 53
+      },
+      "candidate_selection_at_first_collision": {
+        "dagger_argmax_token": "evasive_left",
+        "frame_index": 54,
+        "oracle_actor_proxy_count": 22,
+        "oracle_actor_proxy_hit": true,
+        "rear_lane_hazard_count": 1,
+        "selected_token": "nudge_left",
+        "spotlight_token": "nudge_left",
+        "structured_hazard_count": 22,
+        "top_action_clearance_m": 0.308,
+        "top_candidate": "nudge_left",
+        "top_horizon_clearance_m": 0.308
+      },
+      "candidate_selection_log": {
+        "bad_json_lines": 0,
+        "exists": true,
+        "good_json_lines": 199
+      },
+      "controller_delta_at_first_collision": {
+        "acceleration": 0.03630996530212441,
+        "front_steering_angle": 0.059715498038424374,
+        "speed": 0.14092075634253154,
+        "u_longitudinal_actuation": 0.033558837751123324,
+        "vx": 0.14063544734386135,
+        "vy": 0.019109571776085667,
+        "x": 0.22334063053131104,
+        "y": 0.01076677581295371
+      },
+      "scene": "030_clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc"
+    }
+  ],
+  "schema": "alpasim_collision_surface_audit_v1",
+  "summary": {
+    "baseline_collision_logs": {
+      "available": 18,
+      "bad_json_lines": 1,
+      "good_json_lines": 3740,
+      "total": 18
+    },
+    "baseline_first_collision": {
+      "component_counts": {
+        "collision_front": 3,
+        "collision_lateral": 1,
+        "collision_rear": 14
+      },
+      "structured_hazards_zero": 18,
+      "top_candidate_maintain": 18
+    },
+    "baseline_label": "axis_constrained_clamped",
+    "baseline_raw_collision_count": 18,
+    "baseline_run_dir": "/home/amdev/sota/minimal-shot-av/runs/alpasim_axis_constrained_30scene_eval",
+    "candidate_first_collision": {
+      "component_counts": {
+        "collision_front": 2,
+        "collision_lateral": 1,
+        "collision_rear": 15
+      },
+      "lead_frames": {
+        "nonmaintain_selection": {
+          "max": 172.0,
+          "mean": 61.588235294117645,
+          "median": 46.0,
+          "min": 27.0,
+          "n": 17
+        },
+        "rear_lane_hazard": {
+          "max": 172.0,
+          "mean": 44.625,
+          "median": 32.5,
+          "min": 7.0,
+          "n": 16
+        },
+        "top_clearance_lt_1m": {
+          "max": 172.0,
+          "mean": 34.35294117647059,
+          "median": 27.0,
+          "min": 1.0,
+          "n": 17
+        }
+      },
+      "logged_at_impact": 17,
+      "proxy_hits": 17,
+      "rear_lane_hazard_positive_for_logged_rear_collisions": {
+        "positive": 14,
+        "total": 14
+      },
+      "same_first_component_as_baseline": 17,
+      "selected_token_not_maintain": 17,
+      "structured_hazards_positive": 17,
+      "timing_delta_seconds": {
+        "max": 1.5,
+        "mean": 0.22777777777777777,
+        "median": 0.1,
+        "min": -0.1,
+        "n": 18
+      },
+      "top_candidate_not_maintain": 17,
+      "top_clearance": {
+        "lt_1m": 15,
+        "negative": 8
+      }
+    },
+    "candidate_label": "world_frame_oracle_actor_completion",
+    "candidate_raw_collision_count": 18,
+    "candidate_run_dir": "/home/amdev/sota/minimal-shot-av/runs/alpasim_actor_blindness_30scene_raw/token_dagger_iter2_axis_constrained_oracle_actor_clamped__front_camera_30scene_merged",
+    "common_scene_count": 30,
+    "controller_at_first_collision": {
+      "candidate_slower_count": 6,
+      "lateral_delta_m": {
+        "max": 1.2495523393154144,
+        "mean": 0.2523312107789227,
+        "median": 0.0765071565983817,
+        "min": -1.6451282501220703,
+        "n": 18
+      },
+      "paired_controller_rows": 18,
+      "speed_delta_mps": {
+        "max": 0.9501374361242001,
+        "mean": -0.08897716920676954,
+        "median": 0.08713759837497045,
+        "min": -2.7214869959426244,
+        "n": 18
+      }
+    },
+    "paired_collision": {
+      "baseline_only_collision": 0,
+      "candidate_only_collision": 0,
+      "common_scene_count": 30,
+      "same_collision_binary": 30
+    }
+  }
+}

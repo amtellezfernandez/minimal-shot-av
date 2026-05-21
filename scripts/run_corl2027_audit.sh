@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+CORL_ARTIFACTS_DIR="$ROOT/artifacts/corl2027"
 
 if [[ ! -x "$ROOT/.venv/bin/python" ]]; then
   echo "Missing repo venv: $ROOT/.venv/bin/python" >&2
@@ -23,8 +24,8 @@ if [[ -d "$MATRIX_DIR" ]]; then
   "$ROOT/.venv/bin/python" "$ROOT/scripts/analyze_alpasim_transfer_matrix.py" \
     "$MATRIX_DIR" \
     --scene-preset front_camera_30scene_merged \
-    --output-json "$ROOT/artifacts/alpasim_transfer_matrix_partial.json" \
-    --output-markdown "$ROOT/artifacts/alpasim_transfer_matrix_partial.md"
+    --output-json "$CORL_ARTIFACTS_DIR/alpasim_transfer_matrix_partial.json" \
+    --output-markdown "$CORL_ARTIFACTS_DIR/alpasim_transfer_matrix_partial.md"
 else
   echo
   echo "[3/3] Skipped paired AlpaSim transfer analysis (no matrix dir at $MATRIX_DIR)"
@@ -32,6 +33,6 @@ fi
 
 echo
 echo "Primary audit outputs:"
-echo "  - artifacts/corl_evidence_strength_audit.md"
-echo "  - artifacts/transfer_predictor_analysis.md"
-echo "  - artifacts/alpasim_transfer_matrix_partial.md (if matrix data exists)"
+echo "  - artifacts/corl2027/corl_evidence_strength_audit.md"
+echo "  - artifacts/corl2027/transfer_predictor_analysis.md"
+echo "  - artifacts/corl2027/alpasim_transfer_matrix_partial.md (if matrix data exists)"

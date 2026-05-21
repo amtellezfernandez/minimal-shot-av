@@ -9,10 +9,10 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INTERNAL_PROXY = ROOT / "artifacts" / "internal_proxy_transfer_medium.json"
-DEFAULT_ALPASIM = ROOT / "artifacts" / "alpasim_matrix10_analysis.json"
+DEFAULT_ALPASIM = ROOT / "artifacts" / "corl2027" / "alpasim_matrix10_analysis.json"
 DEFAULT_WOD = ROOT / "artifacts" / "wod_grounding_ablation_table.json"
-DEFAULT_OUTPUT_JSON = ROOT / "artifacts" / "corl_evidence_strength_audit.json"
-DEFAULT_OUTPUT_MARKDOWN = ROOT / "artifacts" / "corl_evidence_strength_audit.md"
+DEFAULT_OUTPUT_JSON = ROOT / "artifacts" / "corl2027" / "corl_evidence_strength_audit.json"
+DEFAULT_OUTPUT_MARKDOWN = ROOT / "artifacts" / "corl2027" / "corl_evidence_strength_audit.md"
 
 INTERNAL_BASELINE = "raw_iter2"
 ALPASIM_BASELINE = "token_dagger_iter2"

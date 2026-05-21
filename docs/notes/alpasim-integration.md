@@ -327,9 +327,9 @@ python3 scripts/analyze_alpasim_partial_bridge.py
 
 The output is:
 
-- `artifacts/alpasim_partial_bridge_preimpact.json`
-- `artifacts/alpasim_partial_bridge_preimpact.md`
-- `artifacts/alpasim_partial_bridge_preimpact.svg`
+- `artifacts/corl2027/alpasim_partial_bridge_preimpact.json`
+- `artifacts/corl2027/alpasim_partial_bridge_preimpact.md`
+- `artifacts/corl2027/alpasim_partial_bridge_preimpact.svg`
 
 Current result: at first impact, baseline adapter logs contain `0/18` structured hazards,
 while the world-frame oracle proxy has positive actor hazards in `18/18` same-frame

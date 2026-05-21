@@ -9,9 +9,9 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INTERNAL_PROXY = ROOT / "artifacts" / "internal_proxy_transfer_axis_smoke.json"
-DEFAULT_ALPASIM = ROOT / "artifacts" / "alpasim_matrix10_analysis.json"
-DEFAULT_OUTPUT_JSON = ROOT / "artifacts" / "transfer_predictor_analysis.json"
-DEFAULT_OUTPUT_MARKDOWN = ROOT / "artifacts" / "transfer_predictor_analysis.md"
+DEFAULT_ALPASIM = ROOT / "artifacts" / "corl2027" / "alpasim_matrix10_analysis.json"
+DEFAULT_OUTPUT_JSON = ROOT / "artifacts" / "corl2027" / "transfer_predictor_analysis.json"
+DEFAULT_OUTPUT_MARKDOWN = ROOT / "artifacts" / "corl2027" / "transfer_predictor_analysis.md"
 
 VARIANT_TO_ALPASIM_MODEL = {
     "clamped_iter2": "token_dagger_iter2_clamped",

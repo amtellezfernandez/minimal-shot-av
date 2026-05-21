@@ -1,0 +1,533 @@
+{
+  "rows": [
+    {
+      "alpasim_model": "token_dagger_iter2_clamped",
+      "external_outcome": {
+        "class": "tradeoff",
+        "improved_axes": [
+          "offroad",
+          "wrong_lane",
+          "progress",
+          "dist_to_gt"
+        ],
+        "signed_improvements": {
+          "collision": -0.09999999999999998,
+          "dist_to_gt": 8.651051040801232,
+          "offroad": 0.4,
+          "progress": 0.3495765166844698,
+          "wrong_lane": 0.49999999999999994
+        },
+        "unchanged_axes": [],
+        "worsened_axes": [
+          "collision"
+        ]
+      },
+      "internal_signature": {
+        "class_counts": {
+          "dominates": 4,
+          "regresses": 0,
+          "tradeoff": 2,
+          "unchanged": 0
+        },
+        "dominance_rate": 0.6666666666666666,
+        "improved_axes": {
+          "collision": 1,
+          "lane_violation_any": 5,
+          "offroad_proxy_any": 5,
+          "pass": 1,
+          "total_progress_m": 4
+        },
+        "per_perturbation": [
+          {
+            "class": "dominates",
+            "improved_axes": [
+              "pass",
+              "collision",
+              "total_progress_m"
+            ],
+            "perturbation": "clean",
+            "signed_improvements": {
+              "collision": 0.08333333333333333,
+              "lane_violation_any": 0.0,
+              "offroad_proxy_any": 0.0,
+              "pass": 0.08333333333333337,
+              "total_progress_m": 2.6754188537597656
+            },
+            "unchanged_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any"
+            ],
+            "worsened_axes": []
+          },
+          {
+            "class": "tradeoff",
+            "improved_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any"
+            ],
+            "perturbation": "feature_noise_0.15",
+            "signed_improvements": {
+              "collision": 0.0,
+              "lane_violation_any": 0.75,
+              "offroad_proxy_any": 0.16666666666666666,
+              "pass": 0.0,
+              "total_progress_m": -0.2573140462239678
+            },
+            "unchanged_axes": [
+              "pass",
+              "collision"
+            ],
+            "worsened_axes": [
+              "total_progress_m"
+            ]
+          },
+          {
+            "class": "dominates",
+            "improved_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any",
+              "total_progress_m"
+            ],
+            "perturbation": "heading_bias_p12",
+            "signed_improvements": {
+              "collision": 0.0,
+              "lane_violation_any": 0.16666666666666669,
+              "offroad_proxy_any": 0.08333333333333333,
+              "pass": 0.0,
+              "total_progress_m": 0.15012550354003906
+            },
+            "unchanged_axes": [
+              "pass",
+              "collision"
+            ],
+            "worsened_axes": []
+          },
+          {
+            "class": "tradeoff",
+            "improved_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any"
+            ],
+            "perturbation": "lane_error_x1.5",
+            "signed_improvements": {
+              "collision": 0.0,
+              "lane_violation_any": 0.16666666666666666,
+              "offroad_proxy_any": 0.16666666666666666,
+              "pass": 0.0,
+              "total_progress_m": -0.08155059814453125
+            },
+            "unchanged_axes": [
+              "pass",
+              "collision"
+            ],
+            "worsened_axes": [
+              "total_progress_m"
+            ]
+          },
+          {
+            "class": "dominates",
+            "improved_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any",
+              "total_progress_m"
+            ],
+            "perturbation": "latency_3",
+            "signed_improvements": {
+              "collision": 0.0,
+              "lane_violation_any": 0.49999999999999994,
+              "offroad_proxy_any": 0.08333333333333333,
+              "pass": 0.0,
+              "total_progress_m": 0.3782981236775669
+            },
+            "unchanged_axes": [
+              "pass",
+              "collision"
+            ],
+            "worsened_axes": []
+          },
+          {
+            "class": "dominates",
+            "improved_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any",
+              "total_progress_m"
+            ],
+            "perturbation": "route_offset_p1.5",
+            "signed_improvements": {
+              "collision": 0.0,
+              "lane_violation_any": 0.08333333333333333,
+              "offroad_proxy_any": 0.08333333333333333,
+              "pass": 0.0,
+              "total_progress_m": 0.13661400477091945
+            },
+            "unchanged_axes": [
+              "pass",
+              "collision"
+            ],
+            "worsened_axes": []
+          }
+        ],
+        "perturbation_count": 6,
+        "tradeoff_rate": 0.3333333333333333,
+        "worsened_axes": {
+          "total_progress_m": 2
+        }
+      },
+      "internal_variant": "clamped_iter2",
+      "prediction": {
+        "predicted_class": "not_uniform_dominance",
+        "reason": "internal proxy sweep contains non-co-monotone tradeoffs"
+      },
+      "status": "confirmed"
+    },
+    {
+      "alpasim_model": "token_dagger_iter2_hybrid_clamped",
+      "external_outcome": {
+        "class": "tradeoff",
+        "improved_axes": [
+          "offroad",
+          "progress"
+        ],
+        "signed_improvements": {
+          "collision": -0.20000000000000007,
+          "dist_to_gt": -8.854912780697342,
+          "offroad": 0.7,
+          "progress": 0.8023354766554008,
+          "wrong_lane": 0.0
+        },
+        "unchanged_axes": [
+          "wrong_lane"
+        ],
+        "worsened_axes": [
+          "collision",
+          "dist_to_gt"
+        ]
+      },
+      "internal_signature": {
+        "class_counts": {
+          "dominates": 4,
+          "regresses": 0,
+          "tradeoff": 2,
+          "unchanged": 0
+        },
+        "dominance_rate": 0.6666666666666666,
+        "improved_axes": {
+          "collision": 3,
+          "lane_violation_any": 6,
+          "offroad_proxy_any": 6,
+          "pass": 3,
+          "total_progress_m": 4
+        },
+        "per_perturbation": [
+          {
+            "class": "dominates",
+            "improved_axes": [
+              "pass",
+              "collision",
+              "lane_violation_any",
+              "offroad_proxy_any",
+              "total_progress_m"
+            ],
+            "perturbation": "clean",
+            "signed_improvements": {
+              "collision": 0.08333333333333333,
+              "lane_violation_any": 0.16666666666666666,
+              "offroad_proxy_any": 0.08333333333333333,
+              "pass": 0.08333333333333337,
+              "total_progress_m": 2.7202180226643975
+            },
+            "unchanged_axes": [],
+            "worsened_axes": []
+          },
+          {
+            "class": "dominates",
+            "improved_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any",
+              "total_progress_m"
+            ],
+            "perturbation": "feature_noise_0.15",
+            "signed_improvements": {
+              "collision": 0.0,
+              "lane_violation_any": 0.75,
+              "offroad_proxy_any": 0.08333333333333333,
+              "pass": 0.0,
+              "total_progress_m": 4.337896347045898
+            },
+            "unchanged_axes": [
+              "pass",
+              "collision"
+            ],
+            "worsened_axes": []
+          },
+          {
+            "class": "tradeoff",
+            "improved_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any"
+            ],
+            "perturbation": "heading_bias_p12",
+            "signed_improvements": {
+              "collision": -0.08333333333333334,
+              "lane_violation_any": 0.25,
+              "offroad_proxy_any": 0.08333333333333333,
+              "pass": -0.08333333333333337,
+              "total_progress_m": -4.142928441365569
+            },
+            "unchanged_axes": [],
+            "worsened_axes": [
+              "pass",
+              "collision",
+              "total_progress_m"
+            ]
+          },
+          {
+            "class": "tradeoff",
+            "improved_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any"
+            ],
+            "perturbation": "lane_error_x1.5",
+            "signed_improvements": {
+              "collision": -0.08333333333333333,
+              "lane_violation_any": 0.16666666666666666,
+              "offroad_proxy_any": 0.16666666666666666,
+              "pass": -0.08333333333333337,
+              "total_progress_m": -3.2079505920410156
+            },
+            "unchanged_axes": [],
+            "worsened_axes": [
+              "pass",
+              "collision",
+              "total_progress_m"
+            ]
+          },
+          {
+            "class": "dominates",
+            "improved_axes": [
+              "pass",
+              "collision",
+              "lane_violation_any",
+              "offroad_proxy_any",
+              "total_progress_m"
+            ],
+            "perturbation": "latency_3",
+            "signed_improvements": {
+              "collision": 0.25,
+              "lane_violation_any": 0.8333333333333333,
+              "offroad_proxy_any": 0.08333333333333333,
+              "pass": 0.25,
+              "total_progress_m": 14.123751004536942
+            },
+            "unchanged_axes": [],
+            "worsened_axes": []
+          },
+          {
+            "class": "dominates",
+            "improved_axes": [
+              "pass",
+              "collision",
+              "lane_violation_any",
+              "offroad_proxy_any",
+              "total_progress_m"
+            ],
+            "perturbation": "route_offset_p1.5",
+            "signed_improvements": {
+              "collision": 0.08333333333333333,
+              "lane_violation_any": 0.08333333333333333,
+              "offroad_proxy_any": 0.08333333333333333,
+              "pass": 0.08333333333333326,
+              "total_progress_m": 7.443654855092362
+            },
+            "unchanged_axes": [],
+            "worsened_axes": []
+          }
+        ],
+        "perturbation_count": 6,
+        "tradeoff_rate": 0.3333333333333333,
+        "worsened_axes": {
+          "collision": 2,
+          "pass": 2,
+          "total_progress_m": 2
+        }
+      },
+      "internal_variant": "hybrid_veto_iter2",
+      "prediction": {
+        "predicted_class": "not_uniform_dominance",
+        "reason": "internal proxy sweep contains non-co-monotone tradeoffs"
+      },
+      "status": "confirmed"
+    },
+    {
+      "alpasim_model": "token_dagger_iter2_axis_constrained_clamped",
+      "external_outcome": null,
+      "internal_signature": {
+        "class_counts": {
+          "dominates": 3,
+          "regresses": 0,
+          "tradeoff": 3,
+          "unchanged": 0
+        },
+        "dominance_rate": 0.5,
+        "improved_axes": {
+          "collision": 2,
+          "lane_violation_any": 5,
+          "offroad_proxy_any": 4,
+          "pass": 1,
+          "total_progress_m": 3
+        },
+        "per_perturbation": [
+          {
+            "class": "dominates",
+            "improved_axes": [
+              "collision",
+              "total_progress_m"
+            ],
+            "perturbation": "clean",
+            "signed_improvements": {
+              "collision": 0.08333333333333333,
+              "lane_violation_any": 0.0,
+              "offroad_proxy_any": 0.0,
+              "pass": 0.0,
+              "total_progress_m": 0.5867691040039062
+            },
+            "unchanged_axes": [
+              "pass",
+              "lane_violation_any",
+              "offroad_proxy_any"
+            ],
+            "worsened_axes": []
+          },
+          {
+            "class": "tradeoff",
+            "improved_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any"
+            ],
+            "perturbation": "feature_noise_0.15",
+            "signed_improvements": {
+              "collision": 0.0,
+              "lane_violation_any": 0.75,
+              "offroad_proxy_any": 0.16666666666666666,
+              "pass": 0.0,
+              "total_progress_m": -0.33660252888998343
+            },
+            "unchanged_axes": [
+              "pass",
+              "collision"
+            ],
+            "worsened_axes": [
+              "total_progress_m"
+            ]
+          },
+          {
+            "class": "tradeoff",
+            "improved_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any"
+            ],
+            "perturbation": "heading_bias_p12",
+            "signed_improvements": {
+              "collision": -0.08333333333333334,
+              "lane_violation_any": 0.16666666666666669,
+              "offroad_proxy_any": 0.08333333333333333,
+              "pass": -0.08333333333333337,
+              "total_progress_m": -2.6367524464925225
+            },
+            "unchanged_axes": [],
+            "worsened_axes": [
+              "pass",
+              "collision",
+              "total_progress_m"
+            ]
+          },
+          {
+            "class": "tradeoff",
+            "improved_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any"
+            ],
+            "perturbation": "lane_error_x1.5",
+            "signed_improvements": {
+              "collision": 0.0,
+              "lane_violation_any": 0.16666666666666666,
+              "offroad_proxy_any": 0.16666666666666666,
+              "pass": 0.0,
+              "total_progress_m": -0.09024874369302438
+            },
+            "unchanged_axes": [
+              "pass",
+              "collision"
+            ],
+            "worsened_axes": [
+              "total_progress_m"
+            ]
+          },
+          {
+            "class": "dominates",
+            "improved_axes": [
+              "pass",
+              "collision",
+              "lane_violation_any",
+              "total_progress_m"
+            ],
+            "perturbation": "latency_3",
+            "signed_improvements": {
+              "collision": 0.25,
+              "lane_violation_any": 0.16666666666666663,
+              "offroad_proxy_any": 0.0,
+              "pass": 0.25,
+              "total_progress_m": 20.589801152547196
+            },
+            "unchanged_axes": [
+              "offroad_proxy_any"
+            ],
+            "worsened_axes": []
+          },
+          {
+            "class": "dominates",
+            "improved_axes": [
+              "lane_violation_any",
+              "offroad_proxy_any",
+              "total_progress_m"
+            ],
+            "perturbation": "route_offset_p1.5",
+            "signed_improvements": {
+              "collision": 0.0,
+              "lane_violation_any": 0.08333333333333333,
+              "offroad_proxy_any": 0.08333333333333333,
+              "pass": 0.0,
+              "total_progress_m": 0.1732986768086704
+            },
+            "unchanged_axes": [
+              "pass",
+              "collision"
+            ],
+            "worsened_axes": []
+          }
+        ],
+        "perturbation_count": 6,
+        "tradeoff_rate": 0.5,
+        "worsened_axes": {
+          "collision": 1,
+          "pass": 1,
+          "total_progress_m": 3
+        }
+      },
+      "internal_variant": "axis_constrained_iter2",
+      "prediction": {
+        "predicted_class": "not_uniform_dominance",
+        "reason": "internal proxy sweep contains non-co-monotone tradeoffs"
+      },
+      "status": "needs_external_run"
+    }
+  ],
+  "schema": "transfer_predictor_analysis_v1",
+  "summary": {
+    "confirmed_predictions": 2,
+    "contradicted_predictions": 0,
+    "mapped_interventions": 3,
+    "missing_external_runs": 1,
+    "ready_for_claim": false
+  }
+}

@@ -12,12 +12,12 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ACTION_SPACE = ROOT / "artifacts" / "alpasim_action_space_upper_bound_30scene.json"
-DEFAULT_COLLISION_SURFACE = ROOT / "artifacts" / "alpasim_collision_surface_30scene_audit.json"
+DEFAULT_COLLISION_SURFACE = ROOT / "artifacts" / "corl2027" / "alpasim_collision_surface_30scene_audit.json"
 DEFAULT_ORACLE_PROXY = ROOT / "artifacts" / "alpasim_oracle_actor_proxy_30scene.json"
 DEFAULT_INTERNAL = ROOT / "artifacts" / "internal_proxy_transfer_medium.json"
-DEFAULT_JSON = ROOT / "artifacts" / "alpasim_partial_bridge_preimpact.json"
-DEFAULT_MD = ROOT / "artifacts" / "alpasim_partial_bridge_preimpact.md"
-DEFAULT_SVG = ROOT / "artifacts" / "alpasim_partial_bridge_preimpact.svg"
+DEFAULT_JSON = ROOT / "artifacts" / "corl2027" / "alpasim_partial_bridge_preimpact.json"
+DEFAULT_MD = ROOT / "artifacts" / "corl2027" / "alpasim_partial_bridge_preimpact.md"
+DEFAULT_SVG = ROOT / "artifacts" / "corl2027" / "alpasim_partial_bridge_preimpact.svg"
 
 EGO_RADIUS_M = 0.35
 ACTIONABLE_LEAD_FRAMES = 5
