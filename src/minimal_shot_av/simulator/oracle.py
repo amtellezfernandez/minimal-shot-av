@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 
-from .environment import DEFAULT_EGO_RADIUS_M, Scenario, min_time_swept_clearance, nearest_lane_point, route_centerline, scenario_at_tick
+from .environment import DEFAULT_EGO_RADIUS_M, Scenario, min_time_swept_clearance, nearest_lane_point, route_centerline, scenario_at_state
 from .perception import perceive_scene
 from .policy import EgoState, Rollout, RolloutConfig, StepRecord, advance_ego_state
 from .world_model import update_world_state
@@ -70,11 +70,12 @@ def run_oracle_policy(
     steps: list[StepRecord] = []
     collision = False
     reached_goal = False
+    runtime_state: dict[str, object] = {}
 
     for tick in range(config.max_steps):
-        active_scenario = scenario_at_tick(scenario, tick)
         position = (ego_state.x, ego_state.y)
         previous_position = position
+        active_scenario, runtime_state = scenario_at_state(scenario, tick, position, runtime_state)
         direction, target_step_distance, mode = _choose_privileged_action(scenario, position, tick, dense_lane, config, ego_state)
         ego_state = advance_ego_state(ego_state, direction, target_step_distance, dynamics)
         position = (ego_state.x, ego_state.y)

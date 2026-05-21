@@ -96,10 +96,16 @@ def generate_scenario(seed: int, width: float = 120.0, height: float = 80.0) -> 
     return Scenario(width, height, lane_center, lane_half_width, obstacles, start, goal, seed)
 
 
-def actor_at_time_index(actor: Actor, time_index: float, dt: float = SIM_TICK_DT_S) -> Actor:
-    if time_index < actor.active_from:
+def actor_at_time_index(
+    actor: Actor,
+    time_index: float,
+    dt: float = SIM_TICK_DT_S,
+    active_from: float | None = None,
+) -> Actor:
+    effective_active_from = float(actor.active_from if active_from is None else active_from)
+    if time_index < effective_active_from:
         return actor
-    elapsed = max(0.0, time_index - actor.active_from) * dt
+    elapsed = max(0.0, time_index - effective_active_from) * dt
     if actor.behavior in {"cut_in", "swerve"}:
         longitudinal = actor.speed * elapsed
         lateral = min(4.5, 0.38 * elapsed * elapsed)
@@ -127,10 +133,18 @@ def actor_at_tick(actor: Actor, tick: int, dt: float = SIM_TICK_DT_S) -> Actor:
     return actor_at_time_index(actor, float(tick), dt)
 
 
-def actor_to_obstacle_at_time(actor: Actor, time_index: float, dt: float = SIM_TICK_DT_S) -> Obstacle | None:
-    if time_index < actor.active_from or time_index > actor.active_until:
+def actor_to_obstacle_at_time(
+    actor: Actor,
+    time_index: float,
+    dt: float = SIM_TICK_DT_S,
+    active_from: float | None = None,
+    active_until: float | None = None,
+) -> Obstacle | None:
+    effective_active_from = float(actor.active_from if active_from is None else active_from)
+    effective_active_until = float(actor.active_until if active_until is None else active_until)
+    if time_index < effective_active_from or time_index > effective_active_until:
         return None
-    projected = actor_at_time_index(actor, time_index, dt)
+    projected = actor_at_time_index(actor, time_index, dt, active_from=effective_active_from)
     return Obstacle(
         projected.x,
         projected.y,
@@ -189,6 +203,55 @@ def obstacles_at_tick(scenario: Scenario, tick: int, dt: float = SIM_TICK_DT_S) 
 
 def scenario_at_tick(scenario: Scenario, tick: int, dt: float = SIM_TICK_DT_S) -> Scenario:
     return replace(scenario, obstacles=obstacles_at_time(scenario, float(tick), dt), environment={**scenario.environment, "tick": tick})
+
+
+def scenario_at_state(
+    scenario: Scenario,
+    tick: int,
+    position: tuple[float, float],
+    runtime_state: dict[str, object] | None = None,
+    dt: float = SIM_TICK_DT_S,
+) -> tuple[Scenario, dict[str, object]]:
+    state = dict(runtime_state or {})
+    actor_trigger_ticks = dict(state.get("actor_trigger_ticks", {}))
+    actor_windows = _runtime_actor_windows(scenario, float(tick), position, actor_trigger_ticks)
+    state["actor_trigger_ticks"] = actor_trigger_ticks
+    obstacles = [obstacle for obstacle in scenario.obstacles if obstacle.kind != "ambient"]
+    for actor in scenario.actors:
+        active_from, active_until = actor_windows.get(actor.actor_id, (actor.active_from, actor.active_until))
+        obstacle = actor_to_obstacle_at_time(actor, float(tick), dt, active_from=active_from, active_until=active_until)
+        if obstacle is not None:
+            obstacles.append(obstacle)
+    return (
+        replace(scenario, obstacles=obstacles, environment={**scenario.environment, "tick": tick, "runtime_actor_windows": actor_windows}),
+        state,
+    )
+
+
+def _runtime_actor_windows(
+    scenario: Scenario,
+    time_index: float,
+    position: tuple[float, float],
+    actor_trigger_ticks: dict[str, float],
+) -> dict[str, tuple[float, float]]:
+    if scenario.cluster != "intersection":
+        return {}
+    trigger_x = float(scenario.environment.get("intersection_trigger_x", scenario.lane_center[3][0] - 8.0))
+    if position[0] < trigger_x:
+        return {}
+
+    actors = [actor for actor in scenario.actors if actor.role in {"conflicting_vehicle", "occluded_vehicle"}]
+    if not actors:
+        return {}
+    base_active_from = min(actor.active_from for actor in actors)
+    windows: dict[str, tuple[float, float]] = {}
+    for actor in actors:
+        if actor.actor_id not in actor_trigger_ticks:
+            actor_trigger_ticks[actor.actor_id] = time_index + max(0.0, actor.active_from - base_active_from)
+        effective_active_from = float(actor_trigger_ticks[actor.actor_id])
+        duration = max(1.0, float(actor.active_until - actor.active_from))
+        windows[actor.actor_id] = (effective_active_from, effective_active_from + duration)
+    return windows
 
 
 def point_clearance(point: tuple[float, float], obstacle: Obstacle) -> float:

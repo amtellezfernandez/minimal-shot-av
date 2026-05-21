@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 import math
 from typing import Any, Callable
 
-from .environment import DEFAULT_EGO_RADIUS_M, Scenario, min_segment_clearance, min_time_swept_clearance, obstacle_axis_extent, route_centerline, scenario_at_tick
+from .environment import DEFAULT_EGO_RADIUS_M, Scenario, min_segment_clearance, min_time_swept_clearance, obstacle_axis_extent, route_centerline, scenario_at_state
 from .perception import ScenePerception, perceive_scene
 from .planner import PlannedAction, plan_action
 from .safety import SafeAction, apply_safety_filter
@@ -190,11 +190,12 @@ def _run_rollout(
     steps: list[StepRecord] = []
     collision = False
     reached_goal = False
+    runtime_state: dict[str, object] = {}
 
     for tick in range(config.max_steps):
-        active_scenario = scenario_at_tick(scenario, tick)
         position = (ego_state.x, ego_state.y)
         previous_position = position
+        active_scenario, runtime_state = scenario_at_state(scenario, tick, position, runtime_state)
         perception = perceive_scene(active_scenario, position)
         world_state = update_world_state(active_scenario, position, perception)
         planned_action, metadata = planner(active_scenario, position, world_state, perception, config)

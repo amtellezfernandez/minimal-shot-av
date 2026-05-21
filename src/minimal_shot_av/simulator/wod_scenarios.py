@@ -41,6 +41,9 @@ def generate_wod_scenario(cluster: str, seed: int, width: float = 120.0, height:
     start = (route_line[0][0] - 4.0, route_line[0][1])
     goal = (route_line[-1][0] + 4.0, route_line[-1][1])
     environment = _cluster_environment(cluster, rng)
+    if cluster == "intersection":
+        conflict_x = lane_center[3][0]
+        environment["intersection_trigger_x"] = round(conflict_x - 9.0, 3)
     tags = _cluster_tags(cluster, rng)
 
     return Scenario(
@@ -230,6 +233,21 @@ def _intersection_obstacles(rng: random.Random, lane: list[tuple[float, float]],
                 "cross_traffic_texture",
             )
         )
+    pocket_narrowing = (
+        (-2.8, -half_width * 0.82),
+        (1.6, half_width * 0.76),
+        (5.0, -half_width * 0.72),
+    )
+    for dx, dy in pocket_narrowing:
+        obstacles.append(
+            Obstacle(
+                cx + dx + rng.uniform(-0.45, 0.45),
+                cy + dy + rng.uniform(-0.35, 0.35),
+                rng.uniform(1.0, 1.25),
+                "vehicle",
+                "intersection_occluder",
+            )
+        )
     return obstacles
 
 
@@ -303,14 +321,14 @@ def _intersection_actors(rng: random.Random, lane: list[tuple[float, float]], ha
     trigger_tick = _intersection_trigger_tick(lane, trigger_index=3)
     primary_side = rng.choice((-1.0, 1.0))
     secondary_side = -primary_side
-    primary_speed = rng.uniform(3.0, 3.4)
+    primary_speed = rng.uniform(2.55, 2.9)
     secondary_speed = rng.uniform(0.9, 1.3)
     return [
         _actor(
             "cross_traffic_0",
             "vehicle",
             x + rng.uniform(0.4, 1.2),
-            y + primary_side * half_width * 1.0,
+            y + primary_side * half_width * 1.14,
             2.0,
             4.4,
             -primary_side * math.pi / 2.0,

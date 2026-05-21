@@ -23,6 +23,7 @@ from minimal_shot_av.simulator.environment import (
     interpolate_lane,
     nearest_lane_point,
     route_centerline,
+    scenario_at_state,
     scenario_at_tick,
     scenario_to_dict,
 )
@@ -146,6 +147,18 @@ class WodScenarioGeneratorTests(unittest.TestCase):
         conflict_x, conflict_y = scenario.lane_center[3]
         self.assertLess(abs(crossing_actor.y - conflict_y), scenario.lane_half_width * 1.2)
         self.assertLess(abs(crossing_actor.x - conflict_x), 3.0)
+
+    def test_intersection_actor_triggers_from_ego_position(self) -> None:
+        scenario = generate_wod_scenario("intersection", seed=3)
+        trigger_x = float(scenario.environment["intersection_trigger_x"])
+        before_position = (trigger_x - 1.0, scenario.start[1])
+        after_position = (trigger_x + 0.5, scenario.start[1])
+
+        before_scenario, runtime = scenario_at_state(scenario, tick=20, position=before_position, runtime_state={})
+        after_scenario, _ = scenario_at_state(scenario, tick=21, position=after_position, runtime_state=runtime)
+
+        self.assertFalse(any(obstacle.label == "conflicting_vehicle" for obstacle in before_scenario.obstacles))
+        self.assertTrue(any(obstacle.label == "conflicting_vehicle" for obstacle in after_scenario.obstacles))
 
     def test_intersection_static_textures_do_not_overlap_conflict_pocket(self) -> None:
         scenario = generate_wod_scenario("intersection", seed=3)
