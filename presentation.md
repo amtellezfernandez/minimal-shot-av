@@ -1,37 +1,50 @@
 ---
-title: Spotlight Reflex Presentation
-description: Canonical presentation entry point for the CoRL-2027 branch
+title: Spotlight Reflex Showcase
+description: Flashy front-door index for the main branch
 ---
 
-# Spotlight Reflex Presentation
+# Spotlight Reflex Showcase
 
-The canonical deck for this branch is the Beamer presentation:
+> A compact autonomy stack with closed-loop long-tail rollouts, AlpaSim transfer diagnostics, and a grounded WOD-E2E selector path.
 
-- [`presentation.pdf`](presentation.pdf)
+![Showcase hero](docs/images/readme_hero_banner.png)
+
+## Open This First
+
+| Surface | Why it exists |
+|---|---|
+| [`README.md`](README.md) | fastest visual pitch |
+| [`docs/corl2027/paper.pdf`](docs/corl2027/paper.pdf) | strongest current paper line |
+| [`docs/simulation.md`](docs/simulation.md) | closed-loop simulator and Spotlight Reflex policy |
+| [`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md) | Waymo candidate stack and selector grounding |
+| [`docs/video_reel_plan.md`](docs/video_reel_plan.md) | exact media order for demos and uploads |
+
+## Visual Surface
+
+![Showcase grid](docs/images/readme_showcase_grid.png)
+
+## What the Repo Is Selling
+
+- **Closed-loop autonomy, not static path pictures.**
+- **Geometry-first decisions, not label-memorized behavior.**
+- **Transfer honesty, not one scalar score hiding failure modes.**
+- **Auditability across simulator, AlpaSim, and Waymo candidate selection.**
+
+## Strongest Story Order
+
+1. Spotlight Reflex vs baseline on the same wrong-way actor seed.
+2. Construction corridor and intersection stress to show breadth.
+3. AlpaSim transfer diagnostics to show the repo does not stop at internal simulation.
+4. The CoRL paper for the full "collision survives actor completion" argument.
+
+## Decks and PDFs
+
+If you need the deck artifacts directly:
+
 - [`presentation-sota.pdf`](presentation-sota.pdf)
+- [`presentation.pdf`](presentation.pdf)
 - [`docs/presentation.pdf`](docs/presentation.pdf)
 - [`docs/presentation.tex`](docs/presentation.tex)
 
-This root Markdown file is intentionally only an index. The slide deck follows
-the main-branch presentation format and keeps the story compact:
-
-1. who built it, what was built, and what this is not
-2. motivation and failure case
-3. grounded reasoning context
-4. why the custom simulator exists and why AlpaSim was added after it
-5. core idea: reason from geometry, not memory
-6. six geometry scalars, nine ManeuverTokens, and the decision-flow diagram
-7. simulation and AlpaSim transfer results
-8. WOD-E2E selector results
-9. oracle-gap and next-step analysis
-
-Supporting artifacts:
-
-- [`README.md`](README.md)
-- [`docs/simulation.md`](docs/simulation.md)
-- [`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md)
-- [`docs/corl2027/paper.pdf`](docs/corl2027/paper.pdf)
-
-For a more technical view of the experiment logs, AlpaSim transfer harness, and
-ongoing paper work, use the
-[`CoRL-2027` branch](https://github.com/amtellezfernandez/minimal-shot-av/tree/CoRL-2027).
+Those are outputs. The actual entry surface for this branch should be the README,
+paper, simulator walkthrough, and WOD walkthrough above.

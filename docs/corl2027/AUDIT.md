@@ -11,7 +11,7 @@ The branch contains three things that matter for audit:
 2. the reproducibility path for the AlpaSim transfer diagnostic
 3. the published checkpoint manifest used to fetch learned-policy artifacts
 
-Current branch:
+Canonical branch for this audit surface:
 
 ```bash
 git branch --show-current
@@ -20,7 +20,13 @@ git branch --show-current
 Expected output:
 
 ```text
-CoRL-2027
+main
+```
+
+If you need the subsystem split before reading the paper-specific audit, start with:
+
+```text
+docs/repo_audit_map.md
 ```
 
 ## Fast Audit
@@ -102,10 +108,11 @@ Refresh the paired analysis after runs complete:
 
 If you only have five minutes:
 
-1. `docs/corl2027/paper.tex`
-2. `artifacts/corl_evidence_strength_audit.md`
-3. `artifacts/transfer_predictor_analysis.md`
-4. `artifacts/alpasim_transfer_matrix_partial.md` if present
+1. `docs/repo_audit_map.md`
+2. `docs/corl2027/paper.tex`
+3. `artifacts/corl_evidence_strength_audit.md`
+4. `artifacts/transfer_predictor_analysis.md`
+5. `artifacts/alpasim_transfer_matrix_partial.md` if present
 
 ## Known Boundaries
 
