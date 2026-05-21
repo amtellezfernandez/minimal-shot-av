@@ -46,6 +46,7 @@ def compare_audit_logs(
         "delta": _summary_delta(left_summary, right_summary),
         "alignment_mode": alignment_mode,
         "aligned_samples": _aligned_samples(left_frames, right_frames, mode=alignment_mode),
+        "paired_bookmarks": _paired_bookmarks(_frame_bookmarks(left_frames), _frame_bookmarks(right_frames)),
     }
 
 
@@ -299,6 +300,36 @@ def _finite(value: float) -> float:
 def _is_low_motion(frame: dict[str, Any]) -> bool:
     ego = frame.get("ego", {})
     return float(ego.get("speed", 0.0) or 0.0) <= 0.1
+
+
+def _paired_bookmarks(
+    left_bookmarks: list[dict[str, Any]],
+    right_bookmarks: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    pairs: list[dict[str, Any]] = []
+    right_by_kind: dict[str, list[dict[str, Any]]] = {}
+    for bookmark in right_bookmarks:
+        right_by_kind.setdefault(str(bookmark.get("kind", "")), []).append(bookmark)
+    for kind, bookmarks in right_by_kind.items():
+        bookmarks.sort(key=lambda item: float(item.get("timestamp_s", 0.0) or 0.0))
+    for left in left_bookmarks:
+        kind = str(left.get("kind", ""))
+        candidates = right_by_kind.get(kind, [])
+        if not candidates:
+            continue
+        left_time = float(left.get("timestamp_s", 0.0) or 0.0)
+        right = min(candidates, key=lambda item: abs(float(item.get("timestamp_s", 0.0) or 0.0) - left_time))
+        pairs.append(
+            {
+                "kind": kind,
+                "left_frame_idx": int(left.get("frame_idx", 0)),
+                "right_frame_idx": int(right.get("frame_idx", 0)),
+                "left_timestamp_s": left_time,
+                "right_timestamp_s": float(right.get("timestamp_s", 0.0) or 0.0),
+                "timestamp_delta_s": round(abs(left_time - float(right.get("timestamp_s", 0.0) or 0.0)), 3),
+            }
+        )
+    return pairs
 
 
 if __name__ == "__main__":

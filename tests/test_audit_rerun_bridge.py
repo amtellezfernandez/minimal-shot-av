@@ -109,6 +109,8 @@ class AuditRerunBridgeTests(unittest.TestCase):
 
         self.assertEqual("internal", payload["manifest"]["source"])
         self.assertGreater(payload["frame_count"], 0)
+        self.assertIn("bookmark_count", payload)
+        self.assertIn("bookmark_index", payload)
 
     def test_export_alpasim_audit_log_from_selection_log(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -245,6 +247,7 @@ class AuditRerunBridgeTests(unittest.TestCase):
         self.assertGreater(len(payload["aligned_samples"]), 0)
         self.assertIn("bookmarks", payload["left"])
         self.assertIn("bookmarks", payload["right"])
+        self.assertIn("paired_bookmarks", payload)
         self.assertGreater(len(payload["left"]["bookmarks"]), 0)
         self.assertIn(payload["left"]["bookmarks"][0]["kind"], {"trigger_activation", "near_miss", "collision_risk_spike", "intervention"})
         if payload["alignment_mode"] == "timestamp":

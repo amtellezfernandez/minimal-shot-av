@@ -1,6 +1,6 @@
 from .alpasim_export import export_alpasim_audit_log
 from .internal_export import export_internal_audit_log
-from .rerun_bridge import load_audit_log, view_audit_log_with_rerun
+from .rerun_bridge import load_audit_log, summarize_audit_log, view_audit_log_with_rerun
 from .schema import build_audit_frames, load_rollout_payload, reconstruct_scenario
 
 __all__ = [
@@ -10,5 +10,6 @@ __all__ = [
     "load_audit_log",
     "load_rollout_payload",
     "reconstruct_scenario",
+    "summarize_audit_log",
     "view_audit_log_with_rerun",
 ]

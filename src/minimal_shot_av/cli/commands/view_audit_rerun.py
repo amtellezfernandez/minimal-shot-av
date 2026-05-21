@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from minimal_shot_av.audit import load_audit_log, view_audit_log_with_rerun
+from minimal_shot_av.audit import summarize_audit_log, view_audit_log_with_rerun
 
 
 def main() -> None:
@@ -15,8 +15,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.summary_only:
-        manifest, frames = load_audit_log(args.audit_root)
-        print(json.dumps({"manifest": manifest, "frame_count": len(frames)}, indent=2))
+        print(json.dumps(summarize_audit_log(args.audit_root), indent=2))
         return
     manifest = view_audit_log_with_rerun(args.audit_root, spawn=args.spawn)
     print(f"Opened Rerun view for {manifest['scenario_cluster']} seed={manifest['seed']}")
