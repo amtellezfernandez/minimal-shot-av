@@ -153,3 +153,88 @@ class AuditRerunBridgeTests(unittest.TestCase):
         self.assertEqual(1, len(frames))
         self.assertEqual("maintain", frames[0]["step"]["selected_maneuver"])
         self.assertEqual("clipgt-test-scene", manifest["scene_ids"][0])
+        self.assertEqual("spotlight_wins", frames[0]["step"]["decision_type"])
+
+    def test_compare_audit_logs_cli_reports_summary_delta(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            rollout_dir = Path(temp_dir) / "rollout"
+            internal_dir = Path(temp_dir) / "internal_audit"
+            alpasim_run_dir = Path(temp_dir) / "alpasim_run"
+            alpasim_audit_dir = Path(temp_dir) / "alpasim_audit"
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "run_demo.py"),
+                    "--seed",
+                    "3",
+                    "--policy",
+                    "spotlight-reflex",
+                    "--scenario-cluster",
+                    "spotlight",
+                    "--rollout-preset",
+                    "showcase-spotlight",
+                    "--artifacts-dir",
+                    str(rollout_dir),
+                ],
+                cwd=ROOT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            export_internal_audit_log(rollout_dir / "latest_rollout.json", internal_dir)
+
+            (alpasim_run_dir / "driver").mkdir(parents=True)
+            (alpasim_run_dir / "aggregate").mkdir(parents=True)
+            (alpasim_run_dir / "launch-metadata.json").write_text(
+                json.dumps({"model": "token_dagger_iter2_hybrid_clamped", "scene_preset": "fresh_3scene", "scene_ids": ["clipgt-test-scene"]}),
+                encoding="utf-8",
+            )
+            (alpasim_run_dir / "aggregate" / "metrics_results.json").write_text(
+                json.dumps({"run_count": 1, "collision_at_fault": 0.0, "offroad": 0.0, "dist_to_gt_trajectory": 1.2}),
+                encoding="utf-8",
+            )
+            (alpasim_run_dir / "driver" / "selection-log.jsonl").write_text(
+                json.dumps(
+                    {
+                        "frame_index": 1,
+                        "scene_id": "clipgt-test-scene",
+                        "command": "straight",
+                        "speed_mps": 6.0,
+                        "selection_mode": "hybrid_veto",
+                        "trajectory_mode": "clamped_lateral",
+                        "hybrid_token": "maintain",
+                        "spotlight_token": "maintain",
+                        "decision_type": "spotlight_wins",
+                        "dagger_argmax_geo_gap": 2.5,
+                        "top_logits": [{"token": "maintain", "logit": 5.0}],
+                        "spotlight_top_candidates": [{"token": "maintain"}],
+                        "alpasim_signal": {
+                            "route_waypoints": [{"x": 0.0, "y": 0.0}, {"x": 20.0, "y": 0.0}],
+                            "structured_hazards": [],
+                            "dynamics_risk": 0.2,
+                        },
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            export_alpasim_audit_log(alpasim_run_dir, alpasim_audit_dir)
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "compare_audit_logs.py"),
+                    str(internal_dir),
+                    str(alpasim_audit_dir),
+                ],
+                cwd=ROOT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            payload = json.loads(result.stdout)
+
+        self.assertIn("delta", payload)
+        self.assertIn("min_clearance_delta", payload["delta"])

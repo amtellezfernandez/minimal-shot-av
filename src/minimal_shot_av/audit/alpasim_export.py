@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import csv
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +18,8 @@ def export_alpasim_audit_log(run_dir: Path, output_dir: Path) -> dict[str, Any]:
     launch_metadata = _load_json_if_exists(run_dir / "launch-metadata.json")
     selection_rows = _load_jsonl_if_exists(run_dir / "driver" / "selection-log.jsonl")
     direct_rows = _load_jsonl_if_exists(run_dir / "driver" / "direct-planner-log.jsonl")
-    frames = _build_alpasim_frames(selection_rows, direct_rows)
+    controller_rows = _load_controller_rows(run_dir / "controller")
+    frames = _build_alpasim_frames(selection_rows, direct_rows, controller_rows)
     metrics_evidence = _safe_metrics_evidence(run_dir)
 
     manifest = {
@@ -43,26 +46,29 @@ def export_alpasim_audit_log(run_dir: Path, output_dir: Path) -> dict[str, Any]:
     return manifest
 
 
-def _build_alpasim_frames(selection_rows: list[dict[str, Any]], direct_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _build_alpasim_frames(
+    selection_rows: list[dict[str, Any]],
+    direct_rows: list[dict[str, Any]],
+    controller_rows: list[dict[str, float | int]],
+) -> list[dict[str, Any]]:
     if direct_rows:
-        return [_frame_from_direct_row(row) for row in direct_rows]
-    return [_frame_from_selection_row(row) for row in selection_rows]
+        return [_frame_from_direct_row(row, controller_rows) for row in direct_rows]
+    return [_frame_from_selection_row(row, controller_rows) for row in selection_rows]
 
 
-def _frame_from_selection_row(row: dict[str, Any]) -> dict[str, Any]:
+def _frame_from_selection_row(row: dict[str, Any], controller_rows: list[dict[str, float | int]]) -> dict[str, Any]:
     command = str(row.get("command", "straight"))
     signal = row.get("alpasim_signal", {}) if isinstance(row.get("alpasim_signal"), dict) else {}
     scenario = scenario_from_command(command, signal)
-    ego_pose = signal.get("oracle_actor_proxy_current_ego_pose") if isinstance(signal.get("oracle_actor_proxy_current_ego_pose"), dict) else {}
-    ego_x = float(ego_pose.get("x", scenario.start[0]))
-    ego_y = float(ego_pose.get("y", scenario.start[1]))
+    controller_row = _nearest_controller_row(controller_rows, _signal_timestamp_us(signal))
+    ego_x, ego_y, ego_speed = _ego_state_from_sources(controller_row, signal, scenario)
     return {
         "frame_idx": int(row.get("frame_index", 0)),
         "timestamp_s": round((int(row.get("frame_index", 0)) - 1) * 0.25, 3),
         "ego": {
             "x": ego_x,
             "y": ego_y,
-            "speed": float(row.get("speed_mps", 0.0)),
+            "speed": ego_speed if ego_speed is not None else float(row.get("speed_mps", 0.0)),
         },
         "route": {
             "start": list(scenario.start),
@@ -88,23 +94,26 @@ def _frame_from_selection_row(row: dict[str, Any]) -> dict[str, Any]:
             "selection_trace": {k: v for k, v in row.items() if k not in {"alpasim_signal", "top_logits", "spotlight_top_candidates"}},
             "spotlight_top_candidates": row.get("spotlight_top_candidates", []),
         },
+        "controller": controller_row,
         "trigger_state": {},
         "signal": signal,
     }
 
 
-def _frame_from_direct_row(row: dict[str, Any]) -> dict[str, Any]:
+def _frame_from_direct_row(row: dict[str, Any], controller_rows: list[dict[str, float | int]]) -> dict[str, Any]:
     command = str(row.get("command", "straight"))
     signal = row.get("alpasim_signal", {}) if isinstance(row.get("alpasim_signal"), dict) else {}
     scenario = scenario_from_command(command, signal)
     plan = row.get("plan", {}) if isinstance(row.get("plan"), dict) else {}
+    controller_row = _nearest_controller_row(controller_rows, _signal_timestamp_us(signal))
+    ego_x, ego_y, ego_speed = _ego_state_from_sources(controller_row, signal, scenario)
     return {
         "frame_idx": int(row.get("frame_index", 0)),
         "timestamp_s": round((int(row.get("frame_index", 0)) - 1) * 0.25, 3),
         "ego": {
-            "x": float(scenario.start[0]),
-            "y": float(scenario.start[1]),
-            "speed": float(row.get("speed_mps", 0.0)),
+            "x": ego_x,
+            "y": ego_y,
+            "speed": ego_speed if ego_speed is not None else float(row.get("speed_mps", 0.0)),
         },
         "route": {
             "start": list(scenario.start),
@@ -127,6 +136,7 @@ def _frame_from_direct_row(row: dict[str, Any]) -> dict[str, Any]:
             "latency_ms": row.get("planner_latency_ms"),
             "plan": plan,
         },
+        "controller": controller_row,
         "trigger_state": {},
         "signal": signal,
     }
@@ -164,3 +174,77 @@ def _is_moving_hazard(hazard: dict[str, Any]) -> bool:
     vx = float(hazard.get("vx", 0.0) or 0.0)
     vy = float(hazard.get("vy", 0.0) or 0.0)
     return abs(vx) > 1e-6 or abs(vy) > 1e-6
+
+
+def _load_controller_rows(controller_dir: Path) -> list[dict[str, float | int]]:
+    csv_paths = sorted(controller_dir.glob("*.csv"))
+    if not csv_paths:
+        return []
+    rows: list[dict[str, float | int]] = []
+    with csv_paths[0].open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for item in reader:
+            timestamp = item.get("timestamp_us")
+            if timestamp is None:
+                continue
+            qx = _as_float(item.get("qx"), default=0.0)
+            qy = _as_float(item.get("qy"), default=0.0)
+            qz = _as_float(item.get("qz"), default=0.0)
+            qw = _as_float(item.get("qw"), default=1.0)
+            yaw = math.atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz))
+            rows.append(
+                {
+                    "timestamp_us": int(float(timestamp)),
+                    "world_x": _as_float(item.get("x"), default=0.0),
+                    "world_y": _as_float(item.get("y"), default=0.0),
+                    "world_heading": yaw,
+                    "world_vx": _as_float(item.get("vx"), default=0.0),
+                    "world_vy": _as_float(item.get("vy"), default=0.0),
+                }
+            )
+    rows.sort(key=lambda row: int(row["timestamp_us"]))
+    return rows
+
+
+def _nearest_controller_row(rows: list[dict[str, float | int]], timestamp_us: int | None) -> dict[str, float | int] | None:
+    if timestamp_us is None or not rows:
+        return None
+    return min(rows, key=lambda row: abs(int(row["timestamp_us"]) - int(timestamp_us)))
+
+
+def _signal_timestamp_us(signal: dict[str, Any]) -> int | None:
+    for key in ("oracle_actor_proxy_timestamp_us", "oracle_actor_proxy_matched_timestamp_us"):
+        value = signal.get(key)
+        if value is not None:
+            return int(value)
+    return None
+
+
+def _ego_state_from_sources(
+    controller_row: dict[str, float | int] | None,
+    signal: dict[str, Any],
+    scenario: Any,
+) -> tuple[float, float, float | None]:
+    if controller_row is not None:
+        vx = float(controller_row.get("world_vx", 0.0))
+        vy = float(controller_row.get("world_vy", 0.0))
+        return (
+            float(controller_row["world_x"]),
+            float(controller_row["world_y"]),
+            math.hypot(vx, vy),
+        )
+    ego_pose = signal.get("oracle_actor_proxy_current_ego_pose") if isinstance(signal.get("oracle_actor_proxy_current_ego_pose"), dict) else {}
+    if ego_pose:
+        x = float(ego_pose.get("world_x", scenario.start[0]))
+        y = float(ego_pose.get("world_y", scenario.start[1]))
+        vx = float(ego_pose.get("world_vx", 0.0) or 0.0)
+        vy = float(ego_pose.get("world_vy", 0.0) or 0.0)
+        return (x, y, math.hypot(vx, vy) if vx or vy else None)
+    return (float(scenario.start[0]), float(scenario.start[1]), None)
+
+
+def _as_float(value: Any, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
