@@ -477,13 +477,43 @@ def min_time_swept_clearance(
 
 
 def interpolate_lane(centerline: list[tuple[float, float]], samples_per_segment: int = 16) -> list[tuple[float, float]]:
+    if len(centerline) < 3:
+        return list(centerline)
+
+    def catmull_rom(
+        p0: tuple[float, float],
+        p1: tuple[float, float],
+        p2: tuple[float, float],
+        p3: tuple[float, float],
+        t: float,
+    ) -> tuple[float, float]:
+        t2 = t * t
+        t3 = t2 * t
+        x = 0.5 * (
+            (2.0 * p1[0])
+            + (-p0[0] + p2[0]) * t
+            + (2.0 * p0[0] - 5.0 * p1[0] + 4.0 * p2[0] - p3[0]) * t2
+            + (-p0[0] + 3.0 * p1[0] - 3.0 * p2[0] + p3[0]) * t3
+        )
+        y = 0.5 * (
+            (2.0 * p1[1])
+            + (-p0[1] + p2[1]) * t
+            + (2.0 * p0[1] - 5.0 * p1[1] + 4.0 * p2[1] - p3[1]) * t2
+            + (-p0[1] + 3.0 * p1[1] - 3.0 * p2[1] + p3[1]) * t3
+        )
+        return (x, y)
+
     points: list[tuple[float, float]] = []
-    for first, second in zip(centerline, centerline[1:]):
+    for index in range(len(centerline) - 1):
+        first = centerline[index]
+        second = centerline[index + 1]
+        p0 = centerline[index - 1] if index > 0 else first
+        p1 = first
+        p2 = second
+        p3 = centerline[index + 2] if index + 2 < len(centerline) else second
         for sample in range(samples_per_segment):
             t = sample / samples_per_segment
-            x = first[0] + (second[0] - first[0]) * t
-            y = first[1] + (second[1] - first[1]) * t
-            points.append((x, y))
+            points.append(catmull_rom(p0, p1, p2, p3, t))
     points.append(centerline[-1])
     return points
 

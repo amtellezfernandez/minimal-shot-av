@@ -79,15 +79,47 @@ SIM_TICK_DT_S = 0.25
 # ── geometry helpers ──────────────────────────────────────────────────────────
 
 def _interp_lane(points: list) -> list[tuple[float, float]]:
-    """Interpolate lane centre at 2 m spacing."""
+    """Interpolate lane centre with a smooth spline at roughly 2 m spacing."""
     pts = [(float(p[0]), float(p[1])) for p in points]
+    if len(pts) < 3:
+        return pts
+
+    def catmull_rom(
+        p0: tuple[float, float],
+        p1: tuple[float, float],
+        p2: tuple[float, float],
+        p3: tuple[float, float],
+        t: float,
+    ) -> tuple[float, float]:
+        t2 = t * t
+        t3 = t2 * t
+        x = 0.5 * (
+            (2.0 * p1[0])
+            + (-p0[0] + p2[0]) * t
+            + (2.0 * p0[0] - 5.0 * p1[0] + 4.0 * p2[0] - p3[0]) * t2
+            + (-p0[0] + 3.0 * p1[0] - 3.0 * p2[0] + p3[0]) * t3
+        )
+        y = 0.5 * (
+            (2.0 * p1[1])
+            + (-p0[1] + p2[1]) * t
+            + (2.0 * p0[1] - 5.0 * p1[1] + 4.0 * p2[1] - p3[1]) * t2
+            + (-p0[1] + 3.0 * p1[1] - 3.0 * p2[1] + p3[1]) * t3
+        )
+        return (x, y)
+
     out: list[tuple[float, float]] = [pts[0]]
-    for a, b in zip(pts, pts[1:]):
-        dist = math.hypot(b[0]-a[0], b[1]-a[1])
+    for index in range(len(pts) - 1):
+        a = pts[index]
+        b = pts[index + 1]
+        p0 = pts[index - 1] if index > 0 else a
+        p1 = a
+        p2 = b
+        p3 = pts[index + 2] if index + 2 < len(pts) else b
+        dist = math.hypot(b[0] - a[0], b[1] - a[1])
         steps = max(1, int(dist / 2.0))
         for i in range(1, steps + 1):
             t = i / steps
-            out.append((a[0] + t*(b[0]-a[0]), a[1] + t*(b[1]-a[1])))
+            out.append(catmull_rom(p0, p1, p2, p3, t))
     return out
 
 
@@ -175,9 +207,9 @@ def _draw_road(draw: ImageDraw.ImageDraw, scenario: dict, lane: list[tuple[float
     edge_left = [_to_px(x, y) for x, y in left_edge]
     edge_right = [_to_px(x, y) for x, y in right_edge]
     if len(edge_left) >= 2:
-        draw.line(edge_left, fill=(246, 248, 250), width=2)
+        draw.line(edge_left, fill=(186, 193, 201), width=1)
     if len(edge_right) >= 2:
-        draw.line(edge_right, fill=(246, 248, 250), width=2)
+        draw.line(edge_right, fill=(186, 193, 201), width=1)
     if lane_count > 1:
         lane_width = (road_half_width * 2.0) / lane_count
         for divider in range(1, lane_count):

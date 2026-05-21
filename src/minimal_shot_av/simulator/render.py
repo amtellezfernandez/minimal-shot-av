@@ -133,8 +133,8 @@ def _road_surface_svg(scenario: Scenario, lane: list[tuple[float, float]]) -> li
     svg = [
         _polygon(left_shoulder + list(reversed(right_shoulder)), "#a6b09a", opacity=0.45),
         _polygon(left_edge + list(reversed(right_edge)), "#46515a", opacity=1.0),
-        _polyline(left_edge, "#f8fafc", 0.34),
-        _polyline(right_edge, "#f8fafc", 0.34),
+        _polyline(left_edge, "#cbd5e1", 0.22, opacity=0.65),
+        _polyline(right_edge, "#cbd5e1", 0.22, opacity=0.65),
     ]
     if lane_count > 1:
         lane_width = (road_half_width * 2.0) / lane_count

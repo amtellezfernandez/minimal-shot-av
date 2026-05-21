@@ -151,6 +151,13 @@ class WodScenarioGeneratorTests(unittest.TestCase):
         ]
         self.assertEqual([], nearby_static)
 
+    def test_spotlight_lane_profile_is_smooth(self) -> None:
+        for seed in (1, 2, 3, 7, 11):
+            scenario = generate_wod_scenario("spotlight", seed=seed)
+            y_values = [point[1] for point in scenario.lane_center]
+            deltas = [abs(b - a) for a, b in zip(y_values, y_values[1:])]
+            self.assertLess(max(deltas), 4.5, f"spotlight seed {seed} regressed to jagged lane geometry")
+
     def test_evaluation_script_writes_csv_and_json(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             subprocess.run(

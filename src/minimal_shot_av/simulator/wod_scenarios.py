@@ -76,17 +76,24 @@ def _lane_center_for_cluster(
     control_points = 8
     center_y = height * 0.5
     lane_center: list[tuple[float, float]] = []
+    spotlight_curve_amp = rng.uniform(-2.8, 2.8)
+    spotlight_drift = rng.uniform(-1.8, 1.8)
+    spotlight_phase = rng.uniform(-0.2, 0.2)
     for index in range(control_points):
         x = 10.0 + index * (width - 20.0) / (control_points - 1)
+        progress = index / (control_points - 1)
         if cluster == "intersection":
             y = center_y + (index - 3.5) * rng.uniform(-1.0, 1.0)
         elif cluster == "construction":
-            lane_shift = 8.0 * math.sin(index / (control_points - 1) * math.pi)
+            lane_shift = 8.0 * math.sin(progress * math.pi)
             y = center_y + lane_shift + rng.uniform(-1.5, 1.5)
         elif cluster == "single-lane maneuver":
             y = center_y + rng.uniform(-height * 0.12, height * 0.12)
         elif cluster == "multi-lane maneuver":
-            y = center_y + (index / (control_points - 1) - 0.5) * rng.uniform(-10.0, 10.0)
+            y = center_y + (progress - 0.5) * rng.uniform(-10.0, 10.0)
+        elif cluster == "spotlight":
+            lane_arc = math.sin((progress + spotlight_phase) * math.pi)
+            y = center_y + lane_arc * spotlight_curve_amp + (progress - 0.5) * spotlight_drift + rng.uniform(-0.45, 0.45)
         else:
             y = center_y + rng.uniform(-height * 0.18, height * 0.18)
         lane_center.append((x, y))
