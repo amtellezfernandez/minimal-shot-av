@@ -5,11 +5,19 @@ hidden setup steps.
 
 ## Scope
 
-The branch contains three things that matter for audit:
+The branch contains three CoRL-facing audit surfaces:
 
 1. the paper source: `docs/corl2027/paper.tex`
 2. the reproducibility path for the AlpaSim transfer diagnostic
 3. the published checkpoint manifest used to fetch learned-policy artifacts
+
+The internal 2D simulator, COMPASS reports, README GIFs, and submission-demo bundles are
+not CoRL evidence. They are development/debug artifacts for exercising policy code and
+visualizing failure modes.
+
+Legacy drafts under `docs/archive/` and exploratory notes under `docs/notes/` are not part
+of the CoRL evidence surface. Use this audit guide, the paper source/PDF, and the
+`artifacts/corl2027/` analyses as the authoritative review path.
 
 Canonical branch for this audit surface:
 
@@ -26,9 +34,11 @@ main
 If you need subsystem entry points before reading the paper-specific audit, use:
 
 ```text
-src/minimal_shot_av/simulator/README.md
 src/minimal_shot_av/model/README.md
+src/minimal_shot_av/simulator/README.md
 ```
+
+Read the simulator entry as an internal-code map, not as a benchmark claim.
 
 ## Fast Audit
 
@@ -117,8 +127,8 @@ Refresh the paired analysis after runs complete:
 If you only have five minutes:
 
 1. `README.md`
-2. `src/minimal_shot_av/simulator/README.md`
-3. `src/minimal_shot_av/model/README.md`
+2. `src/minimal_shot_av/model/README.md`
+3. `src/minimal_shot_av/simulator/README.md`
 4. `docs/corl2027/paper.tex`
 5. `artifacts/corl2027/corl_evidence_strength_audit.md`
 6. `artifacts/corl2027/transfer_predictor_analysis.md`
@@ -130,3 +140,5 @@ If you only have five minutes:
 - The AlpaSim analyzer now marks invalid `offroad`/`wrong_lane` scenes explicitly.
 - Current evidence supports a strong diagnostic paper; the positive-method claim depends
   on the remaining external matrix rows.
+- Internal simulator pass/collision/COMPASS numbers are excluded from the CoRL evidence
+  contract and should not be used as paper headline results.

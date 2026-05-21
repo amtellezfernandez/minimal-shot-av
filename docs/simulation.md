@@ -1,7 +1,11 @@
 # Simulation: Spotlight Reflex Policy and Environment
 
+**CoRL boundary:** this document describes an internal 2D debugging harness. It is not a
+realistic AV simulator, not an external benchmark, and not a source of CoRL headline
+results. Use it to understand policy mechanics and local failure probes only.
+
 This document covers the closed-loop driving policy (Spotlight Reflex) and the
-simulation infrastructure we built to evaluate it. For the WOD-E2E benchmark
+internal simulation infrastructure used to debug it. For the WOD-E2E benchmark
 harness, candidate generation, and selector models, see
 [`wod-e2e-system-walkthrough.md`](wod-e2e-system-walkthrough.md).
 
@@ -413,26 +417,28 @@ If an upstream AlpaSim layer attaches structured hazard positions to the
 
 The policy then receives the same obstacle field it would see in the 2D simulator.
 
-### 3.3 AlpaSim Results
+### 3.3 AlpaSim Evidence Boundary
 
-30 scenes from the WOD-E2E validation set, sensor-realistic:
+Do not use this simulator document as the source for AlpaSim claims. Current CoRL-facing
+AlpaSim evidence lives in:
 
-| Metric | Value |
-|--------|-------|
-| `collision_at_fault` | **0.0** |
-| `dist_to_gt_trajectory` | 0.42 m |
-| `collision_any` (hit by other vehicles) | 0.37 |
+- `docs/corl2027/paper.tex`
+- `docs/corl2027/AUDIT.md`
+- `artifacts/corl2027/`
 
-The policy contains zero AlpaSim imports. It runs identically in the 2D simulator
-and in AlpaSim with no code changes — the adapter is the only AlpaSim-specific
-code. This confirms the world-state abstraction is at the right level of
-representation for cross-environment transfer.
+The policy contains zero AlpaSim imports. The adapter is the AlpaSim-specific boundary.
+Current AlpaSim results are multi-axis diagnostics; they are not summarized here as a
+single safety number.
 
 ---
 
-## 4. Simulation Results
+## 4. Internal Debug Outputs
 
-### 4.1 Primary Benchmark (Seeds 1–10, 350 Rollouts)
+The tables below are retained only to document historical local regression outputs for
+the internal harness. They are not CoRL evidence, not an external benchmark, and not a
+realistic AV safety claim.
+
+### 4.1 Historical Local Run (Seeds 1–10, 350 Rollouts)
 
 All deterministic. Each seed × scenario-type pair is a fixed scenario instance.
 
@@ -463,8 +469,8 @@ Source: `benchmarks/current/spotlight_reflex_procedural_wod.json`
 
 The collision rate rise from 0% (seeds 1–10) to 6.7% (seeds 1–40) for
 compositional OOD reflects harder geometry configurations encountered at seeds 11–40.
-The policy is not perfect at all seeds; the primary claim is zero collisions in the
-controlled 350-run evaluation, not at all possible seeds.
+The policy is not perfect at all seeds. These are internal debug outputs and should not
+be cited as CoRL performance claims.
 
 ### 4.3 Gauntlet Comparison: Baseline vs Spotlight Reflex
 
@@ -476,7 +482,7 @@ actors, identical timing for both policies. The only variable is the policy.
 | Baseline (trajectory extrapolation, no world-state) | 2.1% (9/420) | **20.5%** (86/420) |
 | Spotlight Reflex | **57.6%** (242/420) | **7.9%** (33/420) |
 
-**27× more passes. 2.6× fewer collisions.**
+This is a repo-internal planner comparison only.
 
 The baseline has no obstacle awareness — it extrapolates the most likely trajectory
 from kinematics without computing obstacle pressure or clearances. It collides in 1

@@ -1,7 +1,7 @@
-# README / Demo Reel Plan
+# README / GIF Reel Plan
 
-This repo already has the right media story. The goal is not to look like a generic
-"cool robotics video" page. The goal is to sell a compact autonomy paradigm:
+The README media should use embedded GIFs and static diagnostic panels. The GIFs are
+internal visual debugging artifacts; they are not CoRL evidence.
 
 1. same hazard, better decision
 2. breadth across long-tail scene families
@@ -12,7 +12,7 @@ This repo already has the right media story. The goal is not to look like a gene
 
 1. **Spotlight Reflex vs baseline**
    Assets:
-   `docs/videos/spotlight_vs_baseline.mp4`
+   `docs/images/spotlight_vs_baseline.gif`
    Caption:
    Same seed, same wrong-way actor, different decision surface.
    Why it works:
@@ -20,7 +20,7 @@ This repo already has the right media story. The goal is not to look like a gene
 
 2. **Construction corridor**
    Asset:
-   `docs/videos/construction_success.mp4`
+   `docs/images/construction_success.gif`
    Caption:
    Narrow lane closure, explicit maneuver adaptation, closed-loop recovery.
    Why it works:
@@ -28,7 +28,7 @@ This repo already has the right media story. The goal is not to look like a gene
 
 3. **Intersection stress**
    Asset:
-   `docs/videos/intersection_stress.mp4`
+   `docs/images/intersection_stress.gif`
    Caption:
    Multi-agent timing pressure instead of single-obstacle geometry.
    Why it works:
@@ -36,7 +36,7 @@ This repo already has the right media story. The goal is not to look like a gene
 
 4. **Foreign object debris**
    Asset:
-   `docs/videos/fod_success.mp4`
+   `docs/images/fod_success.gif`
    Caption:
    Long-tail obstacle avoidance without collapsing route progress.
    Why it works:
@@ -44,7 +44,7 @@ This repo already has the right media story. The goal is not to look like a gene
 
 5. **AlpaSim transfer clip**
    Asset:
-   `docs/videos/alpasim_transfer.mp4`
+   `docs/images/alpasim_transfer.gif`
    Caption:
    The same repo also runs a sensor-realistic transfer diagnostic stack.
    Why it works:
@@ -68,21 +68,21 @@ Use these titles if you upload clips externally:
 - `Spotlight Reflex: Foreign Object Debris Avoidance`
 - `AlpaSim Transfer Diagnostic: Front-Camera Rollout`
 
-## Generated Local Clips
+## Embedded Local GIFs
 
-- `docs/videos/spotlight_vs_baseline.mp4`
-- `docs/videos/spotlight_success.mp4`
-- `docs/videos/baseline_spotlight.mp4`
-- `docs/videos/construction_success.mp4`
-- `docs/videos/intersection_stress.mp4`
-- `docs/videos/fod_success.mp4`
-- `docs/videos/alpasim_transfer.mp4`
+- `docs/images/spotlight_vs_baseline.gif`
+- `docs/images/spotlight_success.gif`
+- `docs/images/baseline_spotlight.gif`
+- `docs/images/construction_success.gif`
+- `docs/images/intersection_stress.gif`
+- `docs/images/fod_success.gif`
+- `docs/images/alpasim_transfer.gif`
 
 ## Best One-Line Captions
 
 - `Geometry-first action selection under rare-hazard pressure.`
 - `Closed-loop rollouts, not static path overlays.`
-- `Same policy interface across internal simulation and AlpaSim transfer diagnostics.`
+- `Same candidate interface audited through AlpaSim transfer diagnostics.`
 - `Failure is measured per axis, not hidden in a single scalar score.`
 
 ## If You Only Show Three Things

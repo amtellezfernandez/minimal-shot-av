@@ -1,15 +1,18 @@
 # WOD-E2E System Walkthrough: Operation and Failure Analysis
 
+**CoRL boundary:** WOD-E2E selector results in this document are dataset-backed evidence.
+The GIFs and simulator/COMPASS commands are internal debug material only and are not CoRL
+performance claims.
+
 ![Spotlight success](images/spotlight_success.gif)
-*Spotlight Reflex — wrong-way actor, night, no training data. Selects `evasive_right`,
-clears the actor, recovers to lane centre.*
+*Internal debug GIF: Spotlight Reflex selects `evasive_right` in a synthetic wrong-way
+actor scene.*
 
 ![Baseline failure](images/baseline_spotlight.gif)
-*Baseline policy on the same scenario — trajectory extrapolation without scene
-understanding, continues into the actor.*
+*Internal debug GIF: repo-local baseline on the same synthetic scenario.*
 
 ![Intersection stress](images/intersection_stress.gif)
-*Intersection stress — conflict zone, two crossing actors, 207 steps. 0 collisions.*
+*Internal debug GIF: synthetic intersection stress scene.*
 
 ---
 
@@ -621,9 +624,10 @@ The **1.419 RFS oracle gap** (9.264 − 7.845) is frames where the right candida
 exists in the pool but the selector doesn't pick it. Root cause: trajectory statistics
 cannot discriminate "good for this specific scene" without visual scene features.
 
-### 6.4 Known Failure Modes in Simulation (Gauntlet)
+### 6.4 Internal Simulator Notes (Not CoRL Evidence)
 
-From the gauntlet suite (60 rollouts, 36/60 pass, 0 collisions):
+The gauntlet notes below describe the internal 2D harness only. They should not be cited
+as CoRL benchmark evidence.
 
 **Over-stopping under cumulative pressure**: In narrow corridors with multiple
 background obstacles, obstacle pressure accumulates and pushes the selector toward
@@ -638,9 +642,10 @@ defaults to `slow_yield`, avoids collision but also avoids the goal.
 
 ---
 
-## Part 8: Gauntlet Comparison
+## Part 8: Internal Harness Comparison
 
-Same 120 gauntlet scenarios (4 topologies × 30 seeds). Two policies.
+Same internal 120 gauntlet scenarios (4 topologies × 30 seeds). Two repo-local policies.
+This is a debug comparison, not an external AV benchmark.
 
 | Policy | Pass rate | Collisions |
 |--------|-----------|-----------|
@@ -649,14 +654,25 @@ Same 120 gauntlet scenarios (4 topologies × 30 seeds). Two policies.
 
 Source: `artifacts/score_baseline_gauntlet_20260425/scenario_eval.json`
 
-The baseline collides in 45% of the hardest scenarios and passes zero.
-The geometric reasoning approach maintains near-zero collisions under the same load.
+These values are useful for local regression checks only.
 
 ---
 
-## Part 9: Reproducing Results
+## Part 9: Reproducing Local Artifacts
 
-### Full 350-run evaluation
+### CoRL-facing WOD-E2E selector check
+
+```bash
+uv run --no-sync python scripts/evaluate_wod_e2e.py \
+  --selector hgb \
+  --candidates artifacts/wod_e2e_submission_matrix/hgb_selector_v3.tar.gz \
+  --output artifacts/eval_hgb_champion.json
+```
+
+Expected: WOD-E2E validation-frame RFS only. This does not establish closed-loop driving
+quality.
+
+### Internal 350-run harness check
 
 ```bash
 uv run --no-sync python scripts/evaluate_scenarios.py \
@@ -667,10 +683,10 @@ uv run --no-sync python scripts/evaluate_scenarios.py \
   --output-dir artifacts/eval_full_350
 ```
 
-This reproduces: `artifacts/minor_ood_eval/scenario_eval.json`  
-Expected: 326/350 (93.1%) pass, 0 collisions
+This reproduces an internal debug artifact: `artifacts/minor_ood_eval/scenario_eval.json`.
+Do not use it as CoRL evidence.
 
-### WOD cluster sweep (110 runs)
+### Internal WOD-inspired cluster sweep
 
 ```bash
 uv run --no-sync python scripts/evaluate_scenarios.py \
@@ -681,8 +697,9 @@ uv run --no-sync python scripts/evaluate_scenarios.py \
   --output-dir artifacts/eval_wod_110
 ```
 
-This reproduces: `artifacts/agnostic_sim_eval_wod_1_10/scenario_eval.json`  
-Expected: 110/110 (100%) pass, 0 collisions, mean min clearance 2.96 m
+This reproduces an internal debug artifact:
+`artifacts/agnostic_sim_eval_wod_1_10/scenario_eval.json`.
+Do not use it as CoRL evidence.
 
 ### Gauntlet comparison (baseline vs Spotlight)
 
@@ -704,8 +721,8 @@ uv run --no-sync python scripts/evaluate_scenarios.py \
   --output-dir artifacts/eval_spotlight_gauntlet
 ```
 
-This reproduces: `artifacts/score_baseline_gauntlet_20260425/scenario_eval.json`  
-Expected: baseline 0/120 + 55 collisions, Spotlight 72/120 + 1 collision
+This reproduces an internal debug artifact:
+`artifacts/score_baseline_gauntlet_20260425/scenario_eval.json`.
 
 ### COMPASS evidence package
 
@@ -715,19 +732,7 @@ uv run --no-sync python scripts/run_compass_evidence.py \
   --output artifacts/compass_evidence_report_new.json
 ```
 
-This reproduces: `artifacts/compass_evidence_report.json`  
-Expected: COMPASS 9.137/10, 700 ranked runs, success CI [0.9945, 1.0]
-
-### WOD-E2E champion (HGB selector)
-
-```bash
-uv run --no-sync python scripts/evaluate_wod_e2e.py \
-  --selector hgb \
-  --candidates artifacts/wod_e2e_submission_matrix/hgb_selector_v3.tar.gz \
-  --output artifacts/eval_hgb_champion.json
-```
-
-Expected: ~7.880 RFS on 479 validation frames (2-fold evaluation; 5-fold champion is GPU MLP + Cosmos 64d at 7.845)
+This reproduces an internal COMPASS artifact. COMPASS is not a CoRL evidence surface.
 
 ### Single demo rollout
 

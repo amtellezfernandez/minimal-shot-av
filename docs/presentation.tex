@@ -1,776 +1,150 @@
-% Spotlight Reflex — Beamer Presentation
-% Compile: pdflatex presentation.tex  (twice for cross-references)
+\documentclass[aspectratio=169]{beamer}
 
-\documentclass[aspectratio=169,10pt]{beamer}
-
-% ── Theme ─────────────────────────────────────────────────────────────────────
-\usetheme{metropolis}
-
-% ── Packages ──────────────────────────────────────────────────────────────────
-\usepackage{amsmath,amssymb}
-\usepackage{graphicx}
+\usetheme{Madrid}
+\usecolortheme{default}
 \usepackage{booktabs}
-\usepackage{colortbl}
+\usepackage{array}
 \usepackage{xcolor}
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
-\usepackage[expansion=false]{microtype}
-\usepackage{hyperref}
 
-% ── Colour palette ────────────────────────────────────────────────────────────
-\definecolor{spotBlue}{HTML}{005F73}
-\definecolor{spotTeal}{HTML}{0A9396}
-\definecolor{spotGold}{HTML}{EE9B00}
-\definecolor{spotRed}{HTML}{AE2012}
-\definecolor{spotGreen}{HTML}{28A745}
-\definecolor{spotPurple}{HTML}{6F42C1}
-\definecolor{spotGray}{HTML}{6C757D}
+\definecolor{spotBlue}{HTML}{1E3A8A}
+\definecolor{spotTeal}{HTML}{0F766E}
+\definecolor{spotRed}{HTML}{B91C1C}
+\definecolor{spotGreen}{HTML}{047857}
 
-\setbeamercolor{frametitle}{bg=spotBlue, fg=white}
-\setbeamercolor{progress bar}{fg=spotGold}
-\setbeamercolor{alerted text}{fg=spotGold}
-\setbeamercolor{example text}{fg=spotTeal}
+\setbeamercolor{structure}{fg=spotBlue}
+\setbeamercolor{frametitle}{fg=white,bg=spotBlue}
+\setbeamercolor{block title}{fg=white,bg=spotTeal}
+\setbeamercolor{block body}{fg=black,bg=spotTeal!6}
+\setbeamercolor{alertblock title}{fg=white,bg=spotRed}
+\setbeamercolor{alertblock body}{fg=black,bg=spotRed!7}
 
-% ── Helpers ───────────────────────────────────────────────────────────────────
-\newcommand{\highlight}[1]{\textcolor{spotGold}{\textbf{#1}}}
-\newcommand{\good}[1]{\textcolor{spotGreen}{\textbf{#1}}}
-\newcommand{\bad}[1]{\textcolor{spotRed}{\textbf{#1}}}
-\newcommand{\code}[1]{\texttt{#1}}
-\arrayrulecolor{spotBlue!40}
-
-% ── Meta ──────────────────────────────────────────────────────────────────────
-\title{Spotlight Reflex}
-\subtitle{Minimal-Shot Autonomous Driving via Grounded ManeuverTokens}
+\title{Minimal-Shot AV: External Transfer Diagnostic}
+\subtitle{Actor completion and selector removal do not erase the AlpaSim collision surface}
 \author{Alba Maria Tellez Fernandez}
-\institute{amtellezfernandez@gmail.com · Waymo Open Dataset E2E Challenge}
-\date{May 2026}
+\date{CoRL 2027 audit deck}
 
-% ══════════════════════════════════════════════════════════════════════════════
 \begin{document}
-% ══════════════════════════════════════════════════════════════════════════════
 
-% ── SLIDE 1: Title ────────────────────────────────────────────────────────────
-\maketitle
-
-% ── SLIDE 2: Who I am ─────────────────────────────────────────────────────────
-\begin{frame}{Who I Am \& What I Built}
-  \begin{columns}[T]
-    \begin{column}{0.52\textwidth}
-      \textbf{Alba Maria Tellez Fernandez} \\[0.25em]
-      \footnotesize AI / robotics builder focused on autonomy systems that can operate
-      outside heavily curated training distributions.
-
-      \vspace{0.3em}
-      \textbf{Question behind this project:}
-      \begin{itemize}\footnotesize
-        \item Can a compact geometric representation replace memorized scene priors?
-        \item Does \emph{``avoid occupied space, preserve route''} survive new geometry?
-        \item What breaks when the same policy enters AlpaSim?
-      \end{itemize}
-
-      \vspace{0.25em}
-      \textbf{Built from scratch:}
-      \begin{itemize}\footnotesize
-        \item custom long-tail simulator + evaluation suites
-        \item Spotlight Reflex token policy runtime
-        \item DAgger, scorer, and hybrid policy experiments
-        \item AlpaSim bridge for WOD-E2E scenes
-        \item WOD-E2E selector with Cosmos features
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.45\textwidth}
-      \begin{alertblock}{Main Claim}
-        \footnotesize Minimal-shot autonomy needs \textbf{grounded action interfaces}:
-        bounded maneuver candidates, explicit route/occupancy geometry, and
-        transfer metrics separated by axis.
-      \end{alertblock}
-      \vspace{0.15em}
-      \begin{block}{\small What this is}
-        \begin{itemize}\footnotesize
-          \item a runnable simulator and transfer harness
-          \item grounded token-selection experiments
-          \item reproducible artifacts and audit paths
-        \end{itemize}
-      \end{block}
-      \vspace{0.15em}
-      \begin{block}{\small What this is not}
-        \begin{itemize}\footnotesize
-          \item not a production AV stack
-          \item not a LaST-VLA reproduction
-          \item not a final Waymo hidden-test claim
-        \end{itemize}
-      \end{block}
-    \end{column}
-  \end{columns}
+\begin{frame}
+  \titlepage
 \end{frame}
 
-% ── SLIDE 3: Motivation ───────────────────────────────────────────────────────
-\begin{frame}{The Problem — Continuous Policy Collapse in Long-Tail}
-  \begin{columns}[T]
-    \begin{column}{0.50\textwidth}
-      \textbf{Imitation learning} minimises:
-      $\;\min_{f}\;\mathbb{E}_{(x,y)\sim\mathcal{D}}\bigl[\mathcal{L}(f(x),y)\bigr]$
-
-      \vspace{0.3em}
-      Works on the common driving distribution $\mathcal{D}$.
-      \textbf{Fails when $P_\text{test}\neq P_\text{train}$}: continuous distributions
-      spread — the policy assigns probability mass to unsafe intermediate states
-      that never appeared in training.
-
-      \vspace{0.3em}
-      \textbf{WOD-E2E} targets \textbf{11 scenario types} occurring
-      $<$0.03\% of driving time: wrong-way actors, animals, debris,
-      construction, cut-ins, cyclists.
-
-      \vspace{0.3em}
-      \begin{alertblock}{}
-        \small Continuous baseline: no world-state reasoning.
-        Drives directly into the actor. Gauntlet pass rate: \bad{2.1\%}, collision: \bad{20.5\%}.
-      \end{alertblock}
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \includegraphics[width=\linewidth]{images/kf_baseline_spotlight.png}
-      \vspace{0.1em}
-      \small\textit{Wrong-way actor, night. Continuous baseline: no awareness the path is
-      occupied. Policy variance under OOD → collision.}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ── SLIDE 3: Grounded reasoning context ───────────────────────────────────────
-\begin{frame}{Motivation: Grounded Decisions, Not Language Plans}
-  \begin{columns}[T]
-    \begin{column}{0.50\textwidth}
-      Recent VLA work gives a useful direction: driving decisions need physical
-      grounding, because language is a lossy interface for meter-level geometry,
-      timing, clearance, and acceleration.
-
-      \vspace{0.3em}
-      \begin{block}{\small Related context: LaST-VLA (arXiv:2603.01928)}
-        \small Xiaomi EV + Tsinghua align latent states with \textbf{world-model
-        dynamics} and \textbf{3D geometric priors}. That is a foundation-model
-        path to physical grounding.
-      \end{block}
-
-      \vspace{0.2em}
-      \small That leaves our complementary question: after actions are grounded,
-      \textbf{what transfers across simulators?} Our stack exposes route blockage,
-      clearance, actor motion, and fixed maneuver tokens, so failures separate into
-      collision, lane, route, and progress axes.
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \begin{center}
-      \begin{tikzpicture}[
-        node distance=0.22cm,
-        box/.style={rectangle, rounded corners=3pt, draw=spotBlue!70,
-                    fill=spotBlue!8, minimum width=3.6cm, minimum height=0.65cm,
-                    font=\small\bfseries, align=center},
-        warn/.style={rectangle, rounded corners=3pt, draw=spotRed!70,
-                    fill=spotRed!8, minimum width=3.6cm, minimum height=0.65cm,
-                    font=\small\bfseries, align=center},
-        goodbox/.style={rectangle, rounded corners=3pt, draw=spotGreen!70,
-                    fill=spotGreen!10, minimum width=3.6cm, minimum height=0.65cm,
-                    font=\small\bfseries, align=center},
-        arr/.style={-Stealth, thick, color=spotTeal}
-      ]
-        \node[warn] (text) {Language Interface\\[-2pt]\scriptsize image $\to$ words $\to$ action};
-        \node[box, below=of text] (latent) {Foundation-Model Route\\[-2pt]\scriptsize physical latents $\to$ trajectory};
-        \node[goodbox, below=of latent] (ours) {This Project\\[-2pt]\scriptsize geometry scalars $\to$ 9 tokens};
-        \draw[arr] (text) -- node[right,font=\scriptsize] {remove text bottleneck} (latent);
-        \draw[arr] (latent) -- node[right,font=\scriptsize] {test transfer axes} (ours);
-      \end{tikzpicture}
-      \end{center}
-
-      \vspace{0.2em}
-      \footnotesize
-      \textbf{Positioning:} LaST-VLA is a large latent VLA planner. This project
-      is not a smaller copy: it is a minimal-shot transfer stack that exposes
-      when grounded token selection helps, when it breaks, and which metric axis
-      caused the break.
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ── SLIDE 4: Three Claims ─────────────────────────────────────────────────────
-\begin{frame}{Three Claims}
+\begin{frame}{Evidence Boundary}
   \begin{columns}[T]
     \begin{column}{0.48\textwidth}
-      \begin{block}{\small \textbf{Claim 1 — Discrete Bottleneck Hypothesis}}
-        \small Quantizing the action space to \textbf{9 ManeuverTokens} is a
-        structural robustness prior. Fixed geometric semantics prevent policy
-        variance from spreading to unsafe intermediate states.\\
-        \footnotesize\textit{Evidence: 0 collisions / 350 rollouts; 27$\times$ gauntlet pass.}
-      \end{block}
-
-      \vspace{0.2em}
-
-      \begin{block}{\small \textbf{Claim 2 — Geometric Grounding of Visual Latents}}
-        \small Cosmos 64d embeddings carry preference signal inaccessible to
-        linear models but extractable by a GPU MLP.
-        Generation-oriented VLAs fail on discrimination tasks.\\
-        \footnotesize\textit{Evidence: linear head $\to$ no gain; GPU MLP $\to$ +0.042 RFS.}
+      \begin{block}{CoRL-facing evidence}
+        \begin{itemize}
+          \item Waymo AlpaSim matched transfer diagnostics
+          \item WOD-E2E candidate-selection validation
+          \item Per-axis logs: collision, offroad, wrong lane, progress, tracking
+        \end{itemize}
       \end{block}
     \end{column}
     \begin{column}{0.48\textwidth}
-      \begin{block}{\small \textbf{Claim 3 — Causal Bottleneck Analysis}}
-        \small ManeuverToken selection is causally determined by geometric
-        pressure scalars — no demonstration data, no spurious correlations.
-        This precisely localizes the 1.419 RFS oracle gap to the
-        visual-to-geometric bridge.\\
-        \footnotesize\textit{Evidence: failure modes trace to scalar interactions;
-        oracle gap not in action space or ranker.}
-      \end{block}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ── SLIDE 5: What was built ───────────────────────────────────────────────────
-\begin{frame}{What I Built: Simulator First, AlpaSim Second}
-  \begin{columns}[T]
-    \begin{column}{0.47\textwidth}
-      \begin{block}{\small 1. Controlled simulator}
-        \small I built a lightweight closed-loop 2D AV simulator because it gives
-        exact ground truth and controllable long-tail stress tests.
-        \begin{itemize}\footnotesize
-          \item 11 WOD-inspired scenario clusters
-          \item compositional OOD, hidden, adversarial, gauntlet suites
-          \item paired seeds and continuous metrics: collision, clearance, progress, jerk
-        \end{itemize}
-      \end{block}
-      \vspace{0.2em}
-      \footnotesize\textbf{Purpose:} isolate whether the policy really follows
-      route/occupancy geometry when the world state is known.
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \begin{block}{\small 2. AlpaSim transfer bridge}
-        \small Then I ported the \textbf{same token-policy API} into AlpaSim, using
-        WOD-E2E front-camera scenes and a route/ego adapter.
-        \begin{itemize}\footnotesize
-          \item camera + route + ego dynamics $\to$ proxy geometry
-          \item same tokens, same policy call, different execution stack
-          \item per-frame logs for token choice and transfer failure axes
-        \end{itemize}
-      \end{block}
-      \vspace{0.2em}
-      \footnotesize\textbf{Purpose:} test whether the internal simulator result
-      survives sensor-realistic execution and proxy-state reconstruction.
-    \end{column}
-  \end{columns}
-
-  \vspace{0.45em}
-  \begin{center}
-  \begin{tikzpicture}[
-    node distance=0.7cm,
-    stage/.style={rectangle, rounded corners=3pt, draw=spotBlue!70,
-      fill=spotBlue!8, minimum width=3.2cm, minimum height=0.72cm,
-      align=center, font=\small\bfseries},
-    api/.style={rectangle, rounded corners=3pt, draw=spotGold!85,
-      fill=spotGold!12, minimum width=2.7cm, minimum height=0.72cm,
-      align=center, font=\small\bfseries},
-    arr/.style={-Stealth, thick, color=spotTeal}
-  ]
-    \node[stage] (sim) {Custom simulator\\[-2pt]\scriptsize controlled mechanism test};
-    \node[api, right=of sim] (policy) {Same token API\\[-2pt]\scriptsize 6 scalars $\to$ 9 tokens};
-    \node[stage, right=of policy] (alpa) {AlpaSim\\[-2pt]\scriptsize external transfer test};
-    \draw[arr] (sim) -- (policy);
-    \draw[arr] (policy) -- (alpa);
-  \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-% ── SLIDE 6: Core idea ────────────────────────────────────────────────────────
-\begin{frame}{Core Idea: Reason from Geometry, Not Memory}
-  \begin{columns}[T]
-    \begin{column}{0.50\textwidth}
-      \textit{``A trajectory that avoids occupied space and respects route
-      geometry is correct \textbf{regardless of what the obstacle is called}.''}
-
-      \vspace{0.5em}
-      \textbf{Formal invariance:} let $T$ be any relabelling of object identities,
-      scenario names, or cluster tags that leaves occupancy $G$ and route $R$ unchanged.
-      \[
-        \boxed{M(s) = M(T(s)) \quad \forall\,s,\;\forall\,T}
-      \]
-      \code{"sheep"} $\to$ \code{"debris"} changes nothing.
-
-      \vspace{0.3em}
-      \small\textbf{Regression-tested:} relabel all objects in every scene and assert
-      maneuver, score, and reason stay identical.
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \includegraphics[width=\linewidth]{images/kf_spotlight_success.png}
-      \vspace{0.1em}
-      \small\textit{Same wrong-way actor, night. Spotlight Reflex selects
-      \code{evasive\_right}, clears the actor, and returns to lane. Geometry resolved
-      the decision.}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ── SLIDE 7: 6 World-State Scalars ───────────────────────────────────────────
-\begin{frame}{Architecture: Six World-State Scalars}
-  All signals computed from raw obstacle positions and route geometry.
-  \textbf{Nothing is learned; nothing is scene-specific.}
-
-  \vspace{0.4em}
-  \begin{center}
-  \small
-  \begin{tabular}{llc}
-    \toprule
-    \textbf{Signal} & \textbf{Definition} & \textbf{Range} \\
-    \midrule
-    \code{obstacle\_pressure}      & $p = \mathrm{clip}\!\left(\tfrac{10-d_{\min}}{10},0,1\right)$
-                                   & $[0,1]$ \\[4pt]
-    \code{route\_blockage}         & fraction of forward corridor occupied & $[0,1]$ \\[4pt]
-    \code{corridor\_blocked}       & hard blockage within stopping distance & bool \\[4pt]
-    \code{left\_clearance}         & free lateral space to the left (m) & ${\geq}0$ \\[4pt]
-    \code{right\_clearance}        & free lateral space to the right (m) & ${\geq}0$ \\[4pt]
-    \code{preferred\_escape\_side} & $\arg\max(\mathrm{left},\mathrm{right})$ & L / R \\
-    \bottomrule
-  \end{tabular}
-  \end{center}
-
-  \vspace{0.2em}
-  \small $d_{\min}$ = distance to nearest obstacle. Pressure = 1.0 at contact, 0 beyond 10\,m.
-  No object identity, no semantic labels, no history. All O(1) to compute.
-  Formal invariance tested: $M(s)=M(T(s))$ for any object-identity relabelling $T$.
-\end{frame}
-
-% ── SLIDE 8: 9 ManeuverTokens (Discrete Bottleneck) ──────────────────────────
-\begin{frame}{Architecture: Nine ManeuverTokens — The Discrete Bottleneck}
-  Each token: \textbf{20-point, 5\,s trajectory at 4\,Hz} via Hermite smoothstep.
-  Evasive maneuvers apply the lateral offset in the first third for fast separation.
-
-  \vspace{0.2em}
-  \begin{columns}[T]
-    \begin{column}{0.62\textwidth}
-      \footnotesize
-      \begin{tabular}{p{2.5cm}p{3.0cm}cc}
-        \toprule
-        \textbf{Maneuver} & \textbf{Intent} & \textbf{Speed} & \textbf{Lateral} \\
-        \midrule
-        \code{stop}           & Emergency stop      & 0.00$\times$ & 0.0\,m \\
-        \code{crawl}          & Very slow progress  & 0.15$\times$ & 0.0\,m \\
-        \code{maintain}       & Hold current speed  & 1.00$\times$ & 0.0\,m \\
-        \code{slow\_yield}    & Decelerate \& yield & 0.50$\times$ & 0.0\,m \\
-        \code{nudge\_left}    & Minor left shift    & 0.80$\times$ & $+$0.9\,m \\
-        \code{nudge\_right}   & Minor right shift   & 0.80$\times$ & $-$0.9\,m \\
-        \code{evasive\_left}  & Strong left evasion & 0.70$\times$ & $+$2.2\,m \\
-        \code{evasive\_right} & Strong right evasion& 0.70$\times$ & $-$2.2\,m \\
-        \code{lane\_recover}  & Return to centre    & 0.90$\times$ & 0.0\,m \\
-        \bottomrule
-      \end{tabular}
-    \end{column}
-    \begin{column}{0.35\textwidth}
-      \begin{block}{\small Why discrete?}
-        \small A continuous policy assigns mass to unsafe \emph{intermediate states}
-        between tokens. The token constraint eliminates those states by construction —
-        uncertainty changes \textbf{scores}, not physical footprints.
-      \end{block}
-      \vspace{0.2em}
-      \small Coverage: 5 longitudinal $\times$ 4 lateral directions covers all
-      safety-critical responses in the Waymo long-tail taxonomy. Nothing missing;
-      nothing extra.
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ── SLIDE 9: Trust-Region Scoring ────────────────────────────────────────────
-\begin{frame}{Architecture: Trust-Region Scoring \& Decision Flow}
-  \begin{columns}[T]
-    \begin{column}{0.44\textwidth}
-      \textbf{Speed-scaled tolerance:}
-      \vspace{-0.2em}
-      \[
-        s(v)=\mathrm{clip}\!\left(\tfrac{v-1.4}{9.6},0,1\right)\!\times 0.5+0.5
-      \]
-      \vspace{-0.5em}
-      \footnotesize
-      \begin{tabular}{lcc}
-        \toprule
-        Horizon & Lateral & Longitudinal \\
-        \midrule
-        3\,s & $1.0{\times}s(v)$\,m & $4.0{\times}s(v)$\,m \\
-        5\,s & $1.8{\times}s(v)$\,m & $7.2{\times}s(v)$\,m \\
-        \bottomrule
-      \end{tabular}
-      \vspace{0.1em}
-      \[
-        S(\tau)=0.5\cdot\max_r\,\text{score}_{3s}+0.5\cdot\max_r\,\text{score}_{5s}
-      \]
-      \small Scores $\leq50$ = unsafe floor. Clearance $<0.55$\,m: $-$1000 penalty.
-    \end{column}
-    \begin{column}{0.53\textwidth}
-      \small\textbf{Decision pipeline (4 steps):}
-      \begin{enumerate}\small
-        \item Scene $\to$ compute 6 world-state scalars
-        \item Reference rule engine maps scalars to expected tokens + scores (76–94)
-        \item Each of the 9 tokens scored against references at 3\,s and 5\,s
-        \item Token with highest combined score is selected
-      \end{enumerate}
-      \vspace{0.3em}
-      \small Every step emits a full log: maneuver, scores, decision reason,
-      all scalar values. In AlpaSim: serialised as \code{reasoning\_text} JSON.
-      \textbf{Identical policy binary} in 2D simulator and AlpaSim.
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ── SLIDE 10: Decision flow ──────────────────────────────────────────────────
-\begin{frame}{Policy Architecture — Decision Flow}
-  \begin{center}
-  \begin{tikzpicture}[
-    node distance=0.3cm and 0.5cm,
-    box/.style={rectangle, rounded corners=3pt,
-                draw=spotBlue!70, fill=spotBlue!10,
-                minimum width=1.9cm, minimum height=0.72cm,
-                font=\small\bfseries, align=center},
-    arr/.style={-Stealth, thick, color=spotTeal}
-  ]
-    \node[box] (scene) {Scene Input\\[-2pt]\scriptsize obstacles · lane};
-    \node[box, right=of scene]  (perc)  {6 World-State\\[-2pt]\scriptsize Scalars};
-    \node[box, right=of perc]   (cands) {9 Maneuver\\[-2pt]\scriptsize Candidates};
-    \node[box, below=0.45cm of perc] (refs) {Ref Rules\\[-2pt]\scriptsize thresholds};
-    \node[box, right=of cands]  (score) {Trust-Region\\[-2pt]\scriptsize Scorer};
-    \node[box, fill=spotGold!25, right=of score] (sel) {Selected\\[-2pt]\scriptsize Maneuver};
-
-    \draw[arr] (scene) -- (perc);
-    \draw[arr] (perc)  -- (cands);
-    \draw[arr] (perc)  -- (refs);
-    \draw[arr] (refs.east) to[out=0,in=240] (score.south);
-    \draw[arr] (cands) -- (score);
-    \draw[arr] (score) -- (sel);
-  \end{tikzpicture}
-  \end{center}
-
-  \vspace{0.35em}
-  \small
-  \begin{columns}[T]
-    \begin{column}{0.32\textwidth}
-      \textbf{6 Scalars:} pressure, blockage, corridor blocked, left/right
-      clearance, preferred escape side.
-    \end{column}
-    \begin{column}{0.32\textwidth}
-      \textbf{Ref Rules:} world-state thresholds $\to$ expected maneuver + score.
-      Scores $\leq50$ are unsafe.
-    \end{column}
-    \begin{column}{0.32\textwidth}
-      \textbf{Scorer:} 3\,s + 5\,s horizons, speed-scaled tolerance, full log
-      emitted every step.
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ── SLIDE 11: Gauntlet comparison ─────────────────────────────────────────────
-\begin{frame}{Simulation: Gauntlet — The Bottleneck Test}
-  \textbf{Gauntlet:} 4 simultaneous hazards, 3.5\,m corridor, 420 matched scenarios (seeds 1–80).
-
-  \vspace{0.2em}
-  \begin{columns}[T]
-    \begin{column}{0.50\textwidth}
-      \begin{center}
-      \small
-      \begin{tabular}{lcc}
-        \toprule
-        \textbf{Policy} & \textbf{Pass} & \textbf{Collision} \\
-        \midrule
-        Continuous baseline        & \bad{2.1\%}  & \bad{20.5\%} \\
-        \textbf{Spotlight Reflex}  & \good{\textbf{57.6\%}} & \good{\textbf{7.9\%}} \\
-        \midrule
-        \textit{Improvement} & \textit{27$\times$} & \textit{2.6$\times$ fewer} \\
-        \bottomrule
-      \end{tabular}
-      \end{center}
-      \vspace{0.2em}
-      \small Token constraint eliminates unsafe intermediate states. Baseline
-      spreads mass across trajectory space; collision rate: \bad{20.5\%}.
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \includegraphics[height=4.8cm]{images/kf_spotlight_success.png}
-      \vspace{0.05em}
-      \small\textit{\code{evasive\_right}, clears wrong-way actor, recovers lane centre.}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ── SLIDE 8: All simulation suites ───────────────────────────────────────────
-\begin{frame}{Simulation: 350 Rollouts — Zero Collisions}
-  \textbf{Primary benchmark — seeds 1–10, deterministic. Same policy binary across all suites.}
-
-  \vspace{0.2em}
-  \begin{columns}[T]
-    \begin{column}{0.54\textwidth}
-      \footnotesize
-      \begin{tabular}{lrrr}
-        \toprule
-        \textbf{Suite} & \textbf{Runs} & \textbf{Coll.} & \textbf{Pass} \\
-        \midrule
-        WOD-style (11 clusters)    & 110 & \good{0} & \good{100\%} \\
-        Compositional OOD          &  60 & \good{0} & \good{100\%} \\
-        Adversarial (2–3 hazards)  &  60 & \good{0} & \good{100\%} \\
-        Hidden holdout             &  60 & \good{0} & \good{100\%} \\
-        Gauntlet (4h, 3.5\,m)     &  60 & \good{0} &       60\% \\
-        \midrule
-        \textbf{Total}     & \textbf{350} & \good{\textbf{0}} & \textbf{93.1\%} \\
-        \bottomrule
-      \end{tabular}\\[0.3em]
-      \scriptsize
-      COMPASS \highlight{9.137/10} over 700 ranked runs\\
-      95\% CI collision rate: \highlight{[0.0, 0.0053]}\\
-      Mean minimum clearance: 2.96\,m
-
-      \vspace{0.3em}
-      \small\textbf{OOD robustness:} compositional generator samples
-      topology $\times$ hazard $\times$ weather independently.
-      8 topologies $\times$ 11 hazards $\times$ 4 weather modes.
-    \end{column}
-    \begin{column}{0.43\textwidth}
-      \includegraphics[width=\linewidth]{images/kf_construction.png}
-      \vspace{0.15em}
-      \small\textit{Construction zone — 5.2\,m corridor, cone field, lane closure.
-      Token: \code{nudge\_right}. Policy selects from geometry, not scenario label.}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ── SLIDE 10: AlpaSim bridge ─────────────────────────────────────────────────
-\begin{frame}{AlpaSim: What We Built}
-  \begin{columns}[T]
-    \begin{column}{0.56\textwidth}
-      \includegraphics[width=\linewidth]{images/alpasim_reasoning_panel.png}
-      \vspace{0.1em}
-      \small\textit{Real Waymo front-camera frames alongside adapter output.
-      The policy API is fixed; the adapter reconstructs proxy geometry.}
-    \end{column}
-    \begin{column}{0.41\textwidth}
-      \footnotesize\textbf{Engineering work completed:}
-      \begin{itemize}\footnotesize
-        \item Local AlpaSim plugin wrapping the same token policy API
-        \item Front-camera + route + ego-dynamics adapter
-        \item Proxy-state reconstruction into Spotlight/DAgger features
-        \item Docker/runtime bootstrap scripts
-        \item Scene presets and paired matrix runner
-        \item Per-frame token, adapter, collision, offroad, lane, progress logs
-      \end{itemize}
-      \vspace{0.1em}
-      \begin{alertblock}{}
-        \footnotesize This made the simulator result auditable in a second execution stack,
-        instead of staying as a closed internal demo.
+      \begin{alertblock}{Excluded}
+        Internal 2D simulator pass rates, COMPASS scores, and GIF rollouts are development
+        artifacts only. They are not used as CoRL results in this deck or paper.
       \end{alertblock}
     \end{column}
   \end{columns}
 \end{frame}
 
-% ── SLIDE 11: AlpaSim transfer diagnosis ─────────────────────────────────────
-\begin{frame}{AlpaSim: External Transfer Matrix}
-  \begin{columns}[T]
-    \begin{column}{0.44\textwidth}
-      \includegraphics[width=\linewidth]{images/alpasim_reasoning_panel.png}
-      \vspace{0.1em}
-      \small\textit{Same AlpaSim bridge, now used to run paired learned-policy
-      transfer matrices over shared WOD-E2E clips.}
-    \end{column}
-    \begin{column}{0.53\textwidth}
-      \small\textbf{10 shared WOD-E2E clips, paired by scene:}
+\begin{frame}{Main Result}
+  \Large
+  Collision persists after the two easiest explanations are supplied:
 
-      \vspace{0.15em}
-      \scriptsize
-      \begin{tabular}{lrrrr}
-        \toprule
-        \textbf{Variant} & \textbf{Coll.} & \textbf{Offroad} & \textbf{Lane} & \textbf{Prog.} \\
-        \midrule
-        Raw DAgger iter2  & 0.60 & 0.90 & 0.70 & 0.034 \\
-        Clamped DAgger    & 0.70 & \good{0.50} & \good{0.20} & 0.384 \\
-        Hard-veto hybrid  & 0.80 & \good{0.20} & 0.70 & \good{0.837} \\
-        Source decay      & 0.60 & 0.90 & 0.40 & 0.175 \\
-        \bottomrule
-      \end{tabular}
+  \vspace{0.7em}
+  \begin{itemize}
+    \item \textbf{Actor visibility:} world-frame actor completion leaves raw collision unchanged.
+    \item \textbf{Learned ranking:} learned-selector-free direct-grid replay improves only two collision clips.
+  \end{itemize}
 
-      \vspace{0.2em}
-      \small\textbf{Interpretation:} each intervention fixes a different axis.
-      Clamping improves route geometry; hard-veto recovers progress/offroad;
-      source decay helps lane behavior. No single learned variant dominates all axes.
-
-      \vspace{0.15em}
-      \begin{alertblock}{}
-        \small This is the transfer finding: internal success is not enough unless
-        the selector is grounded at execution time.
-      \end{alertblock}
-    \end{column}
-  \end{columns}
+  \vspace{0.7em}
+  \normalsize
+  The result is a localization result, not a positive safety claim.
 \end{frame}
 
-% ── SLIDE 12: WOD-E2E Results ─────────────────────────────────────────────────
-\begin{frame}{WOD-E2E Benchmark: Trajectory Selector}
-  \textbf{479 preference-labeled Waymo frames · segment-grouped 5-fold CV · RFS = preference alignment}
-
-  \vspace{0.2em}
-  \begin{columns}[T]
-    \begin{column}{0.50\textwidth}
-      \small
-      \begin{tabular}{p{3.8cm}cr}
-        \toprule
-        \textbf{Selector} & \textbf{Folds} & \textbf{RFS} \\
-        \midrule
-        Official Waymo baseline  & — & 7.022 \\
-        Local CV baseline        & — & 7.131 \\
-        Gate only (HGB)          & 5 & 7.803 \\
-        RFF direct policy        & 5 & 7.834 \\
-        \textbf{GPU MLP + Cosmos 64d} & \textbf{5} & \good{\textbf{7.845}} \\
-        HGB Optuna peak$^\dagger$ & 2 & 7.880 \\
-        \midrule
-        Oracle (perfect)         & 5 & \highlight{9.264} \\
-        \bottomrule
-      \end{tabular}
-      \vspace{0.15em}\\
-      \scriptsize $^\dagger$ 2-fold; not comparable to 5-fold results.
-
-      \vspace{0.3em}
-      \small\textbf{Pipeline:} kinematic + ridge + temporal candidates $\to$
-      HGB gate (137 features) $\to$ GPU MLP override (4.2\% of frames, precision 0.60).
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \textbf{Visual embedding results:}
-
-      \vspace{0.2em}
-      \footnotesize
-      \begin{tabular}{p{2.3cm}p{1.7cm}r}
-        \toprule
-        \textbf{Config} & \textbf{Head} & \textbf{RFS} \\
-        \midrule
-        No embedding    & Ridge    & 7.803 \\
-        Cosmos 64d      & Ridge    & $\approx$7.803 \\
-        InternVLA 128d  & Ridge    & $\approx$7.803 \\
-        RFF gate        & non-lin. & 7.834 \\
-        \textbf{Cosmos 64d} & \textbf{GPU MLP} & \good{\textbf{7.845}} \\
-        \bottomrule
-      \end{tabular}
-      \vspace{0.2em}
-      \small Cosmos embeddings carry signal — only a non-linear model extracts it.
-      InternVLA fails: generation $\neq$ discrimination.
-
-      \vspace{0.3em}
-      \small\textbf{GPU MLP} — h=64, lr=0.003866, batch=512, 10 epochs, Optuna TPE.
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ── SLIDE 11: Oracle Gap Analysis ─────────────────────────────────────────────
-\begin{frame}{Oracle Gap: Causal Localization of the Bottleneck}
-  \begin{columns}[T]
-    \begin{column}{0.50\textwidth}
-      \textbf{Oracle gap: \highlight{1.419 RFS}} (9.264 $-$ 7.845)\\
-      The right candidate exists in the pool. Where does the gap live?
-
-      \vspace{0.3em}
-      \small
-      \begin{tabular}{lcc}
-        \toprule
-        \textbf{Slice} & \textbf{Sel.} & \textbf{Regret} \\
-        \midrule
-        GO\_STRAIGHT ($n$=427) & 7.959 & 1.377 \\
-        GO\_LEFT ($n$=23)      & 7.107 & \bad{1.614} \\
-        GO\_RIGHT ($n$=29)     & 6.574 & \bad{\textbf{2.063}} \\
-        \midrule
-        speed:urban ($n$=136)  & 8.132 & 1.285 \\
-        speed:slow ($n$=133)   & 7.564 & \bad{1.632} \\
-        speed:fast ($n$=44)    & 7.957 & 1.479 \\
-        \bottomrule
-      \end{tabular}
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \textbf{Causal elimination:}
-      \begin{itemize}\small
-        \item \textbf{Not the action space} — oracle 9.264; preferred candidate exists in pool.
-        \item \textbf{Not the ranker} — gate 7.803 + GPU MLP 7.845 exhaust
-          trajectory + visual feature information.
-        \item \textbf{The missing bridge:} model that infers geometric context
-          from camera would resolve the $\sim$15\% of frames where gate and
-          direct policy both fail.
-      \end{itemize}
-      \vspace{0.2em}
-      \small GO\_RIGHT (2.063 regret, $n$=29): temporal gate over-selects.
-      Rightward intent requires lateral clearance checks absent from ego-history —
-      a geometry-aware camera model would catch this.
-    \end{column}
-  \end{columns}
-\end{frame}
-
-% ── SLIDE 12: Three Contributions Revisited ────────────────────────────────────
-\begin{frame}{Three Contributions — Backed by Evidence}
-  \footnotesize
-  \begin{tabular}{p{3.5cm}p{8.3cm}}
+\begin{frame}{AlpaSim Transfer Matrix}
+  \small
+  \begin{tabular}{lrrrr}
     \toprule
-    \textbf{Contribution} & \textbf{Evidence} \\
+    Policy & Collision & Offroad & Wrong lane & Progress \\
     \midrule
-    \textbf{1. Discrete Bottleneck} &
-      27$\times$ gauntlet pass (57.6\% vs 2.1\%). 0 collisions / 350 rollouts.
-      COMPASS 9.137/10. Collision: 7.9\% vs 20.5\% baseline under 4 hazards. \\[0.2em]
-    \textbf{2. Geometric Grounding} &
-      Linear head on Cosmos 64d: no gain. GPU MLP: $+$0.042 RFS.
-      InternVLA: no gain (generation $\neq$ discrimination). \\[0.2em]
-    \textbf{3. Causal Localization} &
-      Failure modes trace to scalar interactions, not object labels.
-      1.419 RFS oracle gap $\to$ visual-geometric bridge missing. \\[0.2em]
-    \midrule
-    \textbf{AlpaSim bridge} &
-      Same token-policy API runs through a front-camera/route/ego adapter with
-      paired scene matrices and per-frame axis logs. \\[0.1em]
-    \textbf{AlpaSim finding} &
-      10 paired WOD-E2E clips expose axis-specific transfer: clamping helps route
-      geometry, veto helps progress, source decay helps lane behavior. \\[0.1em]
-    \textbf{WOD-E2E champion} &
-      \good{7.845 RFS} (5-fold), $+$0.823 vs official Waymo baseline. \\
+    Token-DAgger & 0.600 & 0.900 & 0.700 & 0.034 \\
+    Clamped lateral & 0.700 & 0.500 & 0.200 & 0.384 \\
+    Axis-constrained clamped & 0.700 & 0.200 & 0.200 & 0.358 \\
+    Hard veto & 0.800 & 0.200 & 0.700 & 0.837 \\
+    Source decay & 0.600 & 0.900 & 0.400 & 0.175 \\
     \bottomrule
   \end{tabular}
+
+  \vspace{0.8em}
+  Each intervention repairs a different axis and leaves or worsens another. A single
+  aggregate score would hide the failure mechanism.
 \end{frame}
 
-% ── SLIDE 13: Conclusion + Future Work ────────────────────────────────────────
-\begin{frame}{Conclusion \& Next Steps}
-  \begin{columns}[T]
-    \begin{column}{0.50\textwidth}
-      \textbf{What we showed:}
-      \begin{itemize}\footnotesize
-        \item \textbf{Discrete bottleneck:} 9 tokens, 0 collisions, 27$\times$
-          gauntlet gain.
-        \item \textbf{Grounded visual signal:} Cosmos helps only with a nonlinear
-          readout.
-        \item \textbf{Bottleneck localized:} 1.419 RFS oracle gap points to the
-          visual-to-geometric bridge.
-        \item \textbf{AlpaSim bridge:} same policy API, second execution stack,
-          paired WOD-E2E scenes, per-axis logs.
-      \end{itemize}
-
-      \vspace{0.15em}
-      \textbf{General principle:}\\
-      \footnotesize\textit{Grounded action interfaces make transfer failures
-      measurable instead of hidden inside one aggregate score.}
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \textbf{Next steps:}
-      \begin{enumerate}\footnotesize
-        \item \textbf{Preference-aligned visual encoder}\\
-          Fine-tune on triplets (frame, win, loss) to close the oracle gap.
-
-        \item \textbf{Intent calibration}\\
-          Stratified reweighting by intent; GO\_RIGHT regret is 2.063.
-
-        \item \textbf{Test-set run}\\
-          Pipeline complete; missing gated Waymo test TFRecords.
-
-        \item \textbf{Physical deployment path}\\
-          Obstacle sensors + route command $\to$ Spotlight Reflex.
-      \end{enumerate}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\begin{frame}[standout]
-  \Large Alba Maria Tellez Fernandez \\[0.5em]
-  \normalsize\href{mailto:amtellezfernandez@gmail.com}{amtellezfernandez@gmail.com} \\[0.6em]
+\begin{frame}{Actor Completion Is Not Enough}
   \small
-  \texttt{docs/simulation.md} · \texttt{docs/wod-e2e-system-walkthrough.md}\\
-  \texttt{docs/corl2027/paper.pdf} · \texttt{docs/corl2027/paper.txt}
+  \begin{tabular}{lrrrrr}
+    \toprule
+    Policy & Collision & Offroad & Wrong lane & Progress & Dist.-GT \\
+    \midrule
+    Axis-constrained clamped & 0.600 & 0.207 & 0.241 & 0.170 & 1.54 \\
+    World-frame actor completion & 0.600 & 0.310 & 0.172 & 0.184 & 1.42 \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.8em}
+  Actor completion changes lane, offroad, progress, and tracking behavior, but does not
+  reduce raw collision on the matched 30-scene rerun.
+\end{frame}
+
+\begin{frame}{Selector Removal Is Not Enough}
+  \small
+  \begin{tabular}{lrrrr}
+    \toprule
+    Policy & Collision & Offroad & Wrong lane & Progress \\
+    \midrule
+    Clamped collision subset & 1.000 & 0.118 & 0.235 & 0.167 \\
+    Direct grid, cost-ranked & 0.889 & 0.125 & 0.312 & 0.246 \\
+    Direct grid, max-clearance & 0.889 & 0.059 & 0.176 & 0.174 \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.8em}
+  On the 18 baseline collision clips, bypassing the learned selector improves only two
+  paired clips. The residual boundary is not just learned-ranking error.
+\end{frame}
+
+\begin{frame}{WOD-E2E Grounding Placement}
+  \small
+  \begin{tabular}{lrrr}
+    \toprule
+    Ablation & RFS & Oracle & Regret \\
+    \midrule
+    Scalar geometry & 7.695 & 9.068 & 1.373 \\
+    InternVLA only & 7.672 & 9.225 & 1.554 \\
+    Cosmos + InternVLA linear & 7.728 & 9.208 & 1.480 \\
+    Cosmos nonlinear head & 7.845 & 9.264 & 1.419 \\
+    Cosmos + world prior + direct selector & \textbf{7.848} & 9.254 & \textbf{1.407} \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.8em}
+  Frozen world priors help when they act at the candidate selector, not when appended as
+  generic latent features.
+\end{frame}
+
+\begin{frame}{Takeaway}
+  \Large
+  The CoRL claim is narrow and auditable:
+
+  \vspace{0.8em}
+  \begin{itemize}
+    \item Bounded candidate interfaces make transfer failures inspectable.
+    \item Actor visibility and learned-selector removal are not sufficient.
+    \item External diagnostics must report collision, offroad, lane, progress, and tracking separately.
+  \end{itemize}
 \end{frame}
 
 \end{document}

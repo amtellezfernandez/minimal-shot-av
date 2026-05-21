@@ -1,6 +1,23 @@
 # Minimal-Shot Autonomous Driving
 
-> CoRL 2027 repository for Spotlight Reflex, long-tail simulation, AlpaSim transfer diagnostics, and a grounded WOD-E2E selector stack.
+> CoRL 2027 repository for AlpaSim transfer diagnostics, WOD-E2E selector evidence, and the Spotlight Reflex code used to generate diagnostic candidates.
+
+## CoRL Evidence Boundary
+
+The 2D simulator in this repo is **not** a CoRL result surface. It is an internal
+debugging harness for exercising candidate generation, rendering rollouts, and checking
+failure modes before running external diagnostics.
+
+CoRL-facing evidence is limited to:
+
+| Evidence surface | Status |
+|---|---|
+| AlpaSim transfer diagnostics | External diagnostic evidence; collision/offroad/wrong-lane axes are reported directly. |
+| WOD-E2E selector stack | Dataset-backed candidate-ranking evidence. |
+| 2D simulator / COMPASS / GIF demos | Internal debug artifacts only; not benchmark evidence and not a simulator realism claim. |
+
+The simulator GIFs below are visual debugging artifacts. They should not be cited as
+evidence that the method works in realistic autonomous driving.
 
 ### Spotlight Reaches Goal
 
@@ -35,53 +52,43 @@
 
 Taken together, the proof block above shows:
 
-- matched comparison between a completed Spotlight rollout and the repo-internal reactive baseline, which does not finish
-- breadth across construction and intersection pressure
+- internal visual debugging for candidate behavior
 - external transfer evidence with failure localization, not just one scalar score
 
-## Why This Repo Pops
+## CoRL-Facing Results
 
 | Track | Claim | Signal |
 |---|---|---|
-| Closed-loop simulator | Geometry-first policy survives long-tail scenes | `350` rollouts, `0` collisions outside gauntlet |
-| Gauntlet match-up | World-state reasoning beats the repo-internal reactive baseline | `57.6%` vs `2.1%` pass |
-| WOD-E2E selector | Candidate grounding is real, measurable, improvable | `7.848` best tracked RFS |
-| AlpaSim transfer | Failures are localized per axis instead of hidden in one scalar | collision / offroad / lane / progress split |
+| AlpaSim transfer | Failure survives actor completion and selector removal | collision / offroad / wrong-lane / progress split |
+| WOD-E2E selector | Candidate grounding is measurable on dataset-backed ranking | `7.848` best tracked RFS |
+| Internal simulator | Debug-only harness, not a paper result | visual rollouts and local regression checks only |
 
-## The AV Paradigm
+## Technical Scope
 
-This repository centers a compact autonomy stack with explicit geometry, closed-loop
-evaluation, and transfer diagnostics.
+This repository centers a compact autonomy stack with explicit geometry and transfer
+diagnostics.
 
 - **Reason over geometry:** six world-state scalars and explicit maneuver choices.
-- **Act in closed loop:** success and failure are shown as full rollouts, not static metrics.
 - **Transfer honestly:** AlpaSim is used to expose what breaks under a sensor-realistic adapter.
-- **Audit the boundary:** the paper line is not "everything works"; it is "we can localize what still fails."
-
-That combination is what makes the project look like an autonomy paradigm rather than
-just another benchmark table.
+- **Audit the boundary:** the paper line is not "the simulator works"; it is "we can localize what still fails externally."
 
 ## More Evidence
 
-The first proof block above should do the heavy lifting. After that, go straight to:
+For CoRL, go straight to:
 
-- grand matched rollouts:
-  [`artifacts/sota_submission_bundles/grand_spotlight_demo/latest_rollout.svg`](artifacts/sota_submission_bundles/grand_spotlight_demo/latest_rollout.svg)
-  and
-  [`artifacts/sota_submission_bundles/grand_baseline_spotlight_demo/latest_rollout.svg`](artifacts/sota_submission_bundles/grand_baseline_spotlight_demo/latest_rollout.svg)
-- intersection stress rollout:
-  [`artifacts/sota_submission_bundles/grand_intersection_stress_seed3/latest_rollout.svg`](artifacts/sota_submission_bundles/grand_intersection_stress_seed3/latest_rollout.svg)
-- minor visual gallery:
-  [`artifacts/sota_submission_bundles/minor_visual_gallery/index.html`](artifacts/sota_submission_bundles/minor_visual_gallery/index.html)
-- full simulation write-up:
-  [`docs/simulation.md`](docs/simulation.md)
 - transfer audit path:
   [`docs/corl2027/AUDIT.md`](docs/corl2027/AUDIT.md)
+- AlpaSim result analyses:
+  [`artifacts/corl2027/`](artifacts/corl2027/)
+- WOD-E2E walkthrough:
+  [`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md)
+- internal debug simulator write-up:
+  [`docs/simulation.md`](docs/simulation.md)
 
 ## Fast Facts
 
 - **Spotlight Reflex:** six geometric world-state scalars, nine maneuver tokens, trust-region scoring, no object-identity dependence.
-- **Custom simulator:** randomized WOD-style clusters, compositional OOD stress, matched baselines, full closed-loop measurement.
+- **Internal debug simulator:** randomized WOD-style clusters and matched baselines for development only.
 - **AlpaSim harness:** same token-policy API forced through a sensor-realistic adapter so transfer failures can be isolated.
 - **WOD-E2E stack:** candidate generation plus a learned selector over preference-labeled Waymo validation frames.
 
@@ -89,15 +96,11 @@ The first proof block above should do the heavy lifting. After that, go straight
 
 | Result | Number |
 |---|---:|
-| Primary simulator runs | `350` |
-| Primary simulator collision rate | `0.0` |
-| COMPASS | `9.137 / 10` |
-| Gauntlet pass, Spotlight Reflex | `57.6%` |
-| Gauntlet pass, repo-internal reactive baseline | `2.1%` |
 | Best tracked WOD-E2E selector | `7.848 RFS` |
 | WOD oracle gap | `1.407 RFS` |
 | Canonical AlpaSim raw collision | `0.600` |
 | World-frame actor-complete rerun collision | `0.600` |
+| Internal simulator / COMPASS | debug-only, not CoRL evidence |
 
 ## Architecture
 
@@ -106,7 +109,7 @@ The first proof block above should do the heavy lifting. After that, go straight
 This repo is intentionally split into three visible surfaces:
 
 1. `Simulation stack`:
-   Spotlight Reflex, scenarios, simulator eval, and AlpaSim integration.
+   Spotlight Reflex, internal debug scenarios, and AlpaSim integration.
 2. `WOD-E2E stack`:
    Waymo parsing, candidates, selector training, and submission writing.
 3. `Reporting`:
@@ -116,8 +119,8 @@ This repo is intentionally split into three visible surfaces:
 
 | If you need... | Go here |
 |---|---|
-| simulator / Spotlight Reflex | [`src/minimal_shot_av/simulator/README.md`](src/minimal_shot_av/simulator/README.md) |
-| simulator write-up | [`docs/simulation.md`](docs/simulation.md) |
+| Spotlight Reflex / internal debug simulator | [`src/minimal_shot_av/simulator/README.md`](src/minimal_shot_av/simulator/README.md) |
+| internal simulator write-up | [`docs/simulation.md`](docs/simulation.md) |
 | AlpaSim integration / reproduction | [`docs/corl2027/AUDIT.md`](docs/corl2027/AUDIT.md) |
 | patched-upstream AlpaSim work | [`third_party/alpasim_overrides/README.md`](third_party/alpasim_overrides/README.md) |
 | Waymo / WOD-E2E stack | [`src/minimal_shot_av/model/README.md`](src/minimal_shot_av/model/README.md) |
@@ -126,9 +129,11 @@ This repo is intentionally split into three visible surfaces:
 | command entrypoints | [`src/minimal_shot_av/cli/README.md`](src/minimal_shot_av/cli/README.md) |
 | local upstream checkouts / datasets | [`workspace/README.md`](workspace/README.md) |
 | current paper | [`docs/corl2027/paper.pdf`](docs/corl2027/paper.pdf) |
-| branch presentation PDF | [`docs/presentations/presentation-sota.pdf`](docs/presentations/presentation-sota.pdf) |
+| audit presentation PDF | [`docs/presentation.pdf`](docs/presentation.pdf) |
 
 ## Demo Artifacts
+
+These are internal visual/debug artifacts, not CoRL benchmark evidence.
 
 | Bundle | Path |
 |---|---|
@@ -143,10 +148,8 @@ This repo is intentionally split into three visible surfaces:
 
 ## The Compact Pitch
 
-This is not a generic AV repo and not a single-metric benchmark dump. It is a tightly
-auditable stack for showing:
+This is not a simulator-realism paper. It is a diagnostic repo for showing:
 
-- a geometry-grounded policy that works in custom long-tail closed-loop simulation,
 - a benchmark selector that gets real lift on WOD-E2E candidate ranking,
 - and an external AlpaSim diagnostic path that makes transfer failure visible instead of vague.
 

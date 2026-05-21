@@ -37,16 +37,10 @@ AlpaSim rollouts, collision persists after actor visibility is restored with a
 world-frame actor-completion proxy and after the learned selector is bypassed by direct
 grid replay. The discovery is not that one policy fails, but that two common sufficiency
 stories fail in this matched diagnostic---missing actors alone and learned-selector
-ranking alone. Our controlled substrate is a discrete autonomous-driving token
-library with a geometry-driven expert, Spotlight Reflex. On a 1080-rollout held-out
-Latin-hypercube generator sweep, plain continuous, token, and recurrent BC reach only
-77--78\% pass rate with 3.0--4.3\% Proximity Violations, while two DAgger-style relabeling
-iterations nearly close the internal frontier at 94.54\% pass and 0.19\% PV. The discovery
-is what happens after that internal success. In a controlled proxy-perturbation sweep
-(288 matched scenario-perturbation cases, 1440 agent rollouts), grounded vetoing repairs
-three-step actor latency (collision 0.396 to 0.146; lane violation 0.875 to 0.208), but
-under route-offset corruption it improves lane adherence while degrading pass/collision.
-Waymo AlpaSim validation exposes the same non-co-monotone structure externally: clamping,
+ranking alone. The CoRL-facing substrate is the bounded action-candidate interface
+evaluated through two external/data-backed surfaces: Waymo AlpaSim transfer diagnostics
+and WOD-E2E candidate selection. Waymo AlpaSim validation exposes a non-co-monotone
+transfer structure: clamping,
 hard vetoing, source decay, world-frame actor completion, actor-axis scoring, and
 learned-selector-free direct-grid replay improve different axes but leave collision
 largely unresolved. The canonical 30-scene world-frame actor-completion rerun leaves collision unchanged
@@ -60,16 +54,17 @@ Matched non-collision controls have far lower actor load (median actor-proxy haz
 vs.\ 22, median closest clearance 14.96\,m vs.\ 5.59\,m). Yet once actor visibility is
 restored, the same collision surface remains. The diagnostic ladder therefore localizes
 the residual boundary to components not isolated by actor completion or learned-selector
-removal: candidate feasibility, controller execution, proxy-simulator mismatch, or
+removal: candidate feasibility, controller execution, proxy-execution mismatch, or
 per-axis safety definitions. Frozen world/VLA priors on
 the Waymo E2E candidate-selection track reinforce the same placement thesis: scalar-only
 selection reaches 7.695 RFS, generic latent fusion remains weak, a nonlinear Cosmos head
 reaches 7.845 RFS, and adding a latent world-prior plus direct selector reaches 7.848 RFS.
-Internal closed-loop success and offline accuracy are therefore weak transfer indicators
-unless geometric disagreement is instrumented at the candidate-ranking interface.
+Single-surface rollout metrics and offline accuracy are therefore weak transfer indicators
+unless geometric disagreement is instrumented at the candidate-ranking interface and
+audited on external/data-backed surfaces.
 \end{abstract}
 
-\keywords{autonomous driving, imitation learning, DAgger, simulator transfer,
+\keywords{autonomous driving, imitation learning, DAgger, external transfer,
 discrete action space, calibration, ManeuverToken, geometric world-state}
 
 % =====================================================================
@@ -82,8 +77,8 @@ scenario compositions that matter most: wrong-way actors, construction corridors
 multi-hazard interactions~\citep{dauner2023parting,hu2023planning}. The dominant response
 is scale---more data, more modalities, larger
 models~\citep{chitta2022transfuser,brohan2023rt2}. This paper reports a sharper
-falsification result: a learned policy can look strong inside its training simulator, but
-its external collision surface can survive both a world-frame actor-completion proxy and
+falsification result: a learned policy can look plausible under one evaluation surface,
+but its external collision surface can survive both a world-frame actor-completion proxy and
 learned-selector-free direct-grid replay. The question is therefore not only how to make
 the state more grounded, but how to determine which transfer boundary remains load-bearing
 after actor visibility and learned-selector removal have already been supplied.
@@ -163,7 +158,7 @@ No learning occurs inside the policy; the adapter is the only sensor-specific co
 \label{fig:pipeline}
 \end{figure}
 
-We make six contributions (Fig.~\ref{fig:pipeline}):
+We make four contributions (Fig.~\ref{fig:pipeline}):
 
 \begin{enumerate}
   \item \textbf{Non-interpolation theorem (Sec.~\ref{sec:method:topology}).}
@@ -175,16 +170,7 @@ We make six contributions (Fig.~\ref{fig:pipeline}):
   \item \textbf{Geometric World-State Encoding (Sec.~\ref{sec:method:wstate}).}
     Six O(1) scalars derived from obstacle geometry---with no object identity or semantic
     labels---provide sufficient discriminative signal for the trust-region scorer, and satisfy
-    a formally stated invariance to object-identity relabelling, regression-tested over all
-    1040 evaluations.
-
-  \item \textbf{Held-out generator evidence with strong learned baselines
-    (Sec.~\ref{sec:exp:lhs}).}
-    Fixed-suite evaluations show that plain BC fails even with the same tokens and state
-    features. A held-out Latin-hypercube generator sweep then shows the sharper frontier:
-    two-step DAgger matches Spotlight Reflex on pass rate and improves PV rate, while
-    one-step DAgger is weaker, three-step DAgger regresses, and trajectory scorers over
-    token candidates do not close the stress-suite gap.
+    a formally stated invariance to object-identity relabelling.
 
   \item \textbf{Collision survives actor completion and learned-selector-free replay
     (Sec.~\ref{sec:exp:alpasim}).}
@@ -206,16 +192,6 @@ We make six contributions (Fig.~\ref{fig:pipeline}):
     wrong-lane, collision, progress, and distance-to-ground-truth expose distinct
     mechanisms.
 
-  \item \textbf{Controlled proxy-perturbation mechanism study
-    (Sec.~\ref{sec:exp:proxy}).}
-    Inside the internal simulator, we perturb only the planner-visible proxy state while
-    keeping dynamics fixed. A 288-case matched sweep (1440 agent rollouts) shows that
-    latency, heading-bias, route-offset, lane-scale, and feature-noise corruption induce
-    different intervention effects. The AlpaSim bridge specifically supports the
-    actor-latency/dropout part of this mechanism family; route-offset, heading-bias,
-    lane-scale, and feature-noise residuals remain unmeasured in the external adapter
-    logs.
-
   \item \textbf{Grounded selection evidence from frozen visual/world priors.}
     In the Waymo E2E candidate-selection track, scalar-only selectors plateau at 7.695
     RFS, InternVLA-only grounding does not help, and linear fusion of InternVLA with
@@ -229,16 +205,13 @@ We make six contributions (Fig.~\ref{fig:pipeline}):
 Taken together, these contributions form a diagnostic ladder that tests increasingly
 tempting explanations: matched external reruns test actor visibility, first-impact audits
 test what the scorer believes at collision time, selector-side counterfactuals test token
-availability, learned-selector-free replay tests ranking sufficiency, and controlled
-proxy perturbations isolate the internal mechanisms those external residuals resemble.
+availability, and learned-selector-free replay tests ranking sufficiency.
 Across the learned-policy variants, the token library, low-level controller, and AlpaSim
 scene set are held fixed; clamping, vetoing, source decay, and axis constraints change
-only the selection interface. In the proxy-perturbation sweep, simulator dynamics and
-collision evaluation are held fixed while only the planner-visible reconstructed state is
-corrupted. In the WOD grounding ablation, the candidate pool and validation frames are
-held fixed while the latent prior and selector head vary. These controls let us localize
-failure to action ranking under reconstructed geometry, rather than to token availability,
-vehicle control, or a single simulator idiosyncrasy.
+only the selection interface. In the WOD grounding ablation, the candidate pool and
+validation frames are held fixed while the latent prior and selector head vary. The CoRL
+evidence claim is therefore made from AlpaSim and WOD-E2E, not from internal simulator
+rollouts.
 
 % =====================================================================
 \section{Related Work}
@@ -290,9 +263,9 @@ proxy-state transfer. Without that placement test, aggregate planning scores can
 non-co-monotone failures across collision, route geometry, lane adherence, and progress.
 
 \paragraph{Transfer diagnostics and mechanism localization.}
-Most simulator-transfer evaluations report whether a policy improves under a target
+Most external-transfer evaluations report whether a policy improves under a target
 benchmark. Our goal is narrower: identify which interface changes are load-bearing when
-the same token policy is moved from known simulator state to reconstructed external
+the same token policy is moved from a source proxy state to reconstructed external
 geometry. This requires paired interventions rather than a single leaderboard row. The
 world-frame actor-completion tests actor visibility, first-impact audits test what the scorer
 believes at collision time, selector-side counterfactuals test whether a safe token was
@@ -367,9 +340,9 @@ $R(s)$ satisfy $M(s) = M(T(s))$, $S(s) = S(T(s))$, $R(s) = R(T(s))$.
 \end{proposition}
 
 The geometry-invariance proposition follows from the encoding in
-Sec.~\ref{sec:method:wstate}: no token score depends on object labels. We regression-test
-it over all 1040 evaluations by relabelling all obstacles in every scene and asserting
-equality of outputs.
+Sec.~\ref{sec:method:wstate}: no token score depends on object labels. The implementation
+tests this directly by relabelling obstacles and asserting equality of token, score, and
+reason outputs.
 
 \subsection{Topological Safety Through Non-Interpolation}
 \label{sec:method:topology}
@@ -422,8 +395,8 @@ classes, not from continuous interpolation through the action manifold.
 \subsection{Metric-Ordering Limits Under Transfer}
 \label{sec:method:ordering}
 
-The external diagnostic requires a second formal distinction. Let $z=\phi(x)$ be the
-internal simulator state representation and $z'=\phi'(x)$ be a transferred proxy
+The external diagnostic requires a second formal distinction. Let $z=\phi(x)$ be a
+source proxy-state representation and $z'=\phi'(x)$ be a transferred proxy
 representation of the same underlying driving scene. For a candidate token $\tau$, define
 axis-specific costs $c_j(z',\tau)$ for collision risk, offroad risk, wrong-lane risk,
 progress loss, and tracking error, with lower values preferred. A selector intervention is
@@ -553,194 +526,10 @@ geometric scalar interface via four channels:
 \label{sec:experiments}
 % =====================================================================
 
-\subsection{Simulation Benchmark}
-\label{sec:exp:sim}
-
-\paragraph{Setup.}
-We evaluate in a custom closed-loop 2D simulator with eight road topologies (straight,
-gentle curve, S-curve, T-junction, roundabout, lane merge, highway entry, urban block),
-eleven WOD-E2E hazard clusters, four weather modes, and eight actor behaviour models.
-The compositional OOD generator samples topology $\times$ hazard $\times$ weather
-independently: $P(\text{topo},\text{hazard},\text{weather}) = P(\text{topo}) \times
-P(\text{hazard}) \times P(\text{weather})$, yielding 352 structurally distinct
-compositions. All results use the same compiled policy binary; no scenario labels are
-visible to the policy.
-
-\paragraph{Baseline.}
-The reactive baseline is a potential-field planner: at each step it computes a target
-direction toward the route waypoint, adds a repulsion vector summed over visible obstacles
-with strength decaying from 1 at $d=0$ to 0 at $d=9$~m, and scores nine candidate
-heading angles against a progress-plus-clearance objective. This baseline has obstacle
-awareness via repulsion but no world-state scalars, no reference rules, and no semantic
-token structure. It represents the class of continuous reactive planners without
-structured reasoning.
-
-\paragraph{Safety metric definition.}
-We define a \textbf{Proximity Violation} as any evaluation in which the rollout does not
-reach the goal \emph{and} at least one step has
-$C > 0.90$, where $C = \max(0, \min(1, (5 - d_\text{min}) / 5))$
-and $d_\text{min}$ is the minimum signed clearance (metres) between the ego-vehicle centre
-and any visible obstacle surface.
-$C > 0.90$ corresponds to $d_\text{min} < 0.25$~m.
-The metric is proximity-based rather than fault-based: it does not distinguish whether the
-ego vehicle moved into an obstacle or an obstacle moved into the ego vehicle.
-However, the simulator's actor behaviour models (crossing, cut-in, head-on approach,
-sudden braking) do not include rear-approach scenarios; every proximity violation
-therefore represents a failure of the ego policy to maintain safe separation,
-not an unavoidable passive impact.
-Rollouts that \emph{reach the goal} with momentarily high $C$ (close pass) are not
-flagged; only failed rollouts with proximity violations count.
-
-\begin{table}[t]
-\centering
-\caption{Simulation results across four suites, seeds 1--80 (matched). Pass = scenario
-completion. ``PV'' = Proximity Violation ($C>0.90$, $d<0.25$~m, failed rollout only).
-Spotlight Reflex has 0 observed PVs across all 1040 evaluations (Wilson 95\% upper
-bound 0.37\%), including stall failures where the goal was not reached. BC agents record
-PVs on Gauntlet and Adversarial.}
-\label{tab:sim_main}
-\footnotesize
-\begin{tabular}{lrrcc}
-\toprule
-Suite & Runs & Pass (SR) & PV rate (SR) & PV rate (BC) \\
-\midrule
-Compositional OOD (5 cases)  & 400 & 92.2\% & 0\% & 1.0--1.2\% \\
-Adversarial (2 cases)        & 160 & 91.9\% & 0\% & 3.1--3.8\% \\
-Gauntlet (6 cases, 4-hazard) & 480 & 94.2\% & 0\% & 3.8--4.4\% \\
-Hidden holdout               &  80 & 91.2\% & 0\% & --- \\
-\midrule
-\textbf{Total (SR)}  & \textbf{1040} & \textbf{93.3\%} & \textbf{0 PVs} & \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[t]
-\centering
-\caption{Three-agent comparison on matched Gauntlet and Adversarial stress suites,
-seeds 1--80. All agents use the identical 10-feature geometric input. BC agents trained
-on 143\,k expert transitions with inverse-frequency class weights. ``PV'' = Proximity Violation
-($C>0.90$, $d<0.25$~m, failed rollout only); Wilson 95\% CI shown.
-Spotlight Reflex has 0 observed PVs in both suites---including stall failures
-where the goal was not reached but safe separation was maintained throughout.}
-\label{tab:bc_comparison}
-\footnotesize
-\begin{tabular}{lcccc}
-\toprule
- & \multicolumn{2}{c}{Gauntlet ($n$=480)} & \multicolumn{2}{c}{Adversarial ($n$=160)} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}
-Agent & Pass & PV rate [95\% CI] & Pass & PV rate [95\% CI] \\
-\midrule
-Continuous-BC (A) & 77.7\% & 4.4\% [2.9, 6.6] & 76.2\% & 3.8\% [1.7, 7.9] \\
-Token-BC (B)      & 77.7\% & 3.8\% [2.4, 5.8] & 76.9\% & 3.1\% [1.3, 7.1] \\
-\textbf{Spotlight Reflex (C)} & \textbf{94.2\%} & \textbf{0.0\% [0.0, 0.8]} & \textbf{91.9\%} & \textbf{0.0\% [0.0, 2.3]} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\paragraph{Fixed-suite diagnostic.}
-Table~\ref{tab:sim_main} shows Spotlight Reflex has 0 observed Proximity Violations (PVs)
-across all 1040 evaluations, corresponding to a Wilson 95\% upper bound of 0.37\%. This
-includes the 5.8\% of evaluations where the policy stalled and did not reach the goal:
-even in those failed rollouts, clearance never dropped below 0.25~m. BC agents record PV
-rates of 3.8--4.4\% on Gauntlet and 3.1--3.8\% on Adversarial.
-
-Table~\ref{tab:bc_comparison} shows the three-agent comparison with Wilson 95\% CI.
-The Spotlight Reflex PV CI [0.0, 0.8\%] on Gauntlet is statistically disjoint from
-both BC agents ([2.4, 5.8\%] and [2.9, 6.6\%]).
-Critically, \textbf{Continuous-BC and Token-BC produce near-identical PV rates}:
-providing the 9-token vocabulary to a learned policy does not prevent proximity violations.
-Only the geometric reference rules---enforcing that pressure $\ge 0.35$ triggers
-\token{evasive} over \token{nudge}---keep the observed PV count at zero.
-This supports the non-interpolation mechanism in Theorem~\ref{thm:noninterp}: gradient
-descent on the same features approximates the escape rule, but does not enforce the
-margin-separated maneuver class.
-
-\begin{figure}[t]
-\centering
-\begin{subfigure}[t]{0.48\linewidth}
-  \includegraphics[width=\linewidth]{../images/kf_spotlight_success.png}
-  \caption{Spotlight Reflex: wrong-way actor, night. Policy selects
-  \token{evasive\_right} from geometry, clears actor, recovers lane centre.}
-\end{subfigure}
-\hfill
-\begin{subfigure}[t]{0.48\linewidth}
-  \includegraphics[width=\linewidth]{../images/kf_construction.png}
-  \caption{Construction zone: 5.2~m corridor, cone field, lane closure.
-  Policy selects \token{nudge\_right}. No training data for this composition.}
-\end{subfigure}
-\caption{Qualitative rollout key frames. Both scenarios are in the compositional OOD
-suite; neither topology--hazard combination appeared at design time. Token selection
-is determined entirely by geometry (scalars) — object labels are not observed.}
-\label{fig:qualitative}
-\end{figure}
-
-\subsection{Held-Out Latin-Hypercube Sweep}
-\label{sec:exp:lhs}
-
-The fixed suites above are useful diagnostics, but they are hand-authored stress tests.
-For the primary OOD result we sample 12 held-out generator profiles with Latin-hypercube
-coverage over nine scenario axes: lane-width range, gauntlet pressure, adversarial
-pressure, hidden-suite pressure, visibility, actor intrusion scale, ambient obstacle
-count, and hidden hazard count. Each profile is evaluated on matched seeds 1--10 across
-Gauntlet, Adversarial, and Hidden suites, for 1080 closed-loop rollouts per agent.
-
-We compare five agents using the same 10-feature geometric state: Continuous-BC,
-Token-BC, Token-RNN-BC, Token-DAgger-BC, and Spotlight Reflex. Token-DAgger-BC uses
-two rounds of on-policy relabeling: first rolling out Token-BC and relabeling visited
-states with Spotlight, then rolling out the resulting DAgger policy and relabeling again.
-
-\begin{table}[t]
-\centering
-\caption{Held-out Latin-hypercube generator sweep, 12 profiles $\times$ matched seeds
-1--10, Gauntlet/Adversarial/Hidden suites ($n=1080$ per agent). Entries are pass/PV
-percentages. Two-step Token-DAgger-BC is the strongest learned baseline.}
-\label{tab:lhs_main}
-\footnotesize
-\begin{tabular}{lcccc}
-\toprule
-Agent & Overall & Gauntlet & Adversarial & Hidden \\
-\midrule
-Continuous-BC & 77.69 / 3.52 & 77.50 / 4.31 & 75.42 / 2.08 & 83.33 / 1.67 \\
-Token-BC & 76.85 / 4.26 & 77.64 / 4.86 & 71.67 / 2.92 & 82.50 / 3.33 \\
-Token-RNN-BC & 78.43 / 2.96 & 79.17 / 2.92 & 74.58 / 2.50 & 81.67 / 4.17 \\
-\textbf{Token-DAgger-BC (2-step)} & \textbf{94.54 / 0.19} & 96.25 / 0.28 & \textbf{90.83 / 0.00} & \textbf{91.67 / 0.00} \\
-Spotlight Reflex & 94.44 / 0.65 & \textbf{96.67 / 0.28} & 90.00 / 0.83 & 90.00 / 2.50 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:lhs_main} changes the interpretation of the fixed-suite result. Plain BC
-and recurrent BC still fail under held-out generator shift, but two-step DAgger closes the
-gap to Spotlight Reflex: the paired overall pass delta is +0.09 percentage points and the
-PV delta is $-0.46$ percentage points relative to Spotlight. The learned policy is not
-uniformly better---Spotlight still has the best Gauntlet pass rate---but the frontier is no
-longer ``rules beat learning.'' The correct conclusion is that on-policy correction can
-learn most of the geometric rule, while plain expert-state imitation cannot.
-
-\begin{table}[t]
-\centering
-\caption{DAgger iteration study on the same held-out LHS sweep. Iteration 2 is best;
-iteration 3 regresses despite adding more relabeled states.}
-\label{tab:dagger_iters}
-\footnotesize
-\begin{tabular}{lcccc}
-\toprule
-Policy & Overall & Gauntlet & Adversarial & Hidden \\
-\midrule
-Token-DAgger (1-step) & 93.98 / 0.46 & 96.81 / 0.56 & 87.50 / 0.42 & 90.00 / 0.00 \\
-\textbf{Token-DAgger (2-step)} & \textbf{94.54 / 0.19} & 96.25 / 0.28 & \textbf{90.83 / 0.00} & \textbf{91.67 / 0.00} \\
-Token-DAgger (3-step) & 92.50 / 0.46 & 94.31 / 0.28 & 87.92 / 0.42 & 90.83 / 1.67 \\
-Spotlight Reflex & 94.44 / 0.65 & 96.67 / 0.28 & 90.00 / 0.83 & 90.00 / 2.50 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:dagger_iters} shows the DAgger frontier is not monotonic. Iteration 2
-improves the adversarial suite from 87.50\% pass / 0.42\% PV to 90.83\% pass / 0.00\% PV,
-but iteration 3 falls back to 87.92\% pass / 0.42\% PV and introduces hidden-suite PVs.
-This suggests that additional aggregation changes the selector in a harmful way, but not
-yet \emph{why}. We therefore run targeted counter-ablations to distinguish token-frequency
-bias from late-pool aggregation pressure.
+\paragraph{Evidence boundary.}
+We do not report internal simulator metrics as CoRL evidence. The experimental claims
+below use only external/data-backed surfaces: AlpaSim transfer diagnostics and WOD-E2E
+candidate selection.
 
 \subsection{AlpaSim External Diagnostic}
 \label{sec:exp:alpasim}
@@ -756,8 +545,8 @@ processing occurs inside the policy binary.}
 \end{figure}
 
 We use AlpaSim as an external diagnostic, not as a statistically powered safety benchmark.
-The purpose is to ask whether the internally strong learned selector remains calibrated
-when its 10-dimensional simulator state is reconstructed from a front-camera, route
+The purpose is to ask whether the learned selector remains calibrated
+when its 10-dimensional proxy state is reconstructed from a front-camera, route
 command, ego dynamics, and sparse hazard primitives. We evaluate matched 10-clip WOD-E2E
 matrices for which all compared policies complete the same AlpaSim launch path. Unless
 otherwise stated, AlpaSim numbers below are raw summaries from
@@ -770,7 +559,7 @@ or distance-to-ground-truth cutoffs.
 \centering
 \caption{AlpaSim external diagnostic on 10 matched WOD-E2E clips. Rates are fractions of
 episodes; progress and distances are means. Each intervention repairs a different
-transfer axis and leaves or worsens another, exposing non-co-monotone simulator-transfer
+transfer axis and leaves or worsens another, exposing non-co-monotone external-transfer
 failure rather than a single scalar robustness gap.}
 \label{tab:alpasim_diag}
 \scriptsize
@@ -829,7 +618,7 @@ Canonical matched diagnostic: actor completion changes other axes but yields no 
 \end{table}
 
 Table~\ref{tab:alpasim_diag} falsifies the stronger methods claim that one inference-time
-patch can convert the internally strong DAgger policy into a robust external policy. The
+patch can convert the learned selector into a robust external policy. The
 unmodified two-step DAgger run fails on all major axes: 0.600 collision rate, 0.900
 offroad rate, 0.700 wrong-lane rate, and only 0.034 mean progress. Lateral clamping directly repairs geometry,
 reducing offroad by 0.400 and wrong-lane by 0.500 while improving distance-to-ground-truth
@@ -974,26 +763,19 @@ Closest actor rear-lane rate & 0.092 & 0.002 \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:alpasim_partial_bridge} provides a partial bridge between the external
-AlpaSim diagnostic and the controlled proxy-state perturbation in
-Section~\ref{sec:exp:proxy}. It is deliberately partial because the committed artifacts
-do not preserve the full raw adapter state on every frame. The part they do preserve is
+Table~\ref{tab:alpasim_partial_bridge} connects the external collision clips to matched
+non-collision controls. It is deliberately partial because the committed artifacts do not
+preserve the full raw adapter state on every frame. The part they do preserve is
 load-bearing for the collision claim: at first impact, the baseline adapter records zero
-structured hazards in all 18 collision clips, while the world-frame actor-completion proxy contains
-actors in all 18 same-frame reconstructions. Here ``structured hazards'' refers to the
-logged adapter field itself, not a downstream score threshold. Those collision windows are
-also much more actor-dense than terminal-matched non-collision controls sampled at the
-same lead-to-terminal frame offsets: median actor-proxy hazard count is 22 rather than 4, and
-median closest clearance is 5.59\,m rather than 14.96\,m. This supports a narrower claim
-than full residual-distribution recovery: the external collision surface exhibits
-systematic collision-window hazard dropout, a residual class consistent with the
-actor-latency/dropout family studied by the controlled latency experiment, where raw
-DAgger collision rises to 0.396 and hybrid grounding reduces it to 0.146. The bridge does
-not claim that the AlpaSim failure is fully explained by the synthetic perturbation:
-route-offset, heading-bias, lane-scale, scene-class, ego-speed, and feature-noise
-residuals require regenerating full adapter logs. It justifies using the controlled
-perturbation sweep as mechanistic context for the structured-hazard dropout part of the
-external failure, not as a complete explanation of AlpaSim collision.
+structured hazards in all 18 collision clips, while the world-frame actor-completion proxy
+contains actors in all 18 same-frame reconstructions. Here ``structured hazards'' refers
+to the logged adapter field itself, not a downstream score threshold. Those collision
+windows are also much more actor-dense than terminal-matched non-collision controls
+sampled at the same lead-to-terminal frame offsets: median actor-proxy hazard count is 22
+rather than 4, and median closest clearance is 5.59\,m rather than 14.96\,m. This supports
+a narrow external claim: the collision windows exhibit systematic structured-hazard
+dropout, but restoring actor visibility still does not remove the residual collision
+surface.
 
 \begin{table}[t]
 \centering
@@ -1014,7 +796,7 @@ Direct grid, max-clearance & 0.889 & 0.059 & 0.176 & 0.174 & 26.78 & 0.74 & 2/0 
 \end{tabular}
 \end{table}
 
-We then run the missing closed-loop replay directly. Before simulation, an open-loop
+We then run the missing closed-loop replay directly. Before closed-loop replay, an open-loop
 action-space upper-bound audit found proxy-safe direct-grid actions in 962/1027 actionable
 pre-impact frames, and the direct-grid cost selected proxy-safe actions in all 962 such
 frames. If cost ranking were the main bottleneck, a learned-selector-free closed-loop replay
@@ -1028,7 +810,7 @@ learned selector alone, nor by the direct-grid cost preferring unsafe candidates
 remains unresolved is whether the closed-loop controller cannot execute the proxy-safe
 trajectories under AlpaSim dynamics, whether receding-horizon replanning erodes the
 open-loop clearance, or whether the proxy clearance model is still mismatched to the
-simulator collision surface.
+AlpaSim collision surface.
 
 \begin{table}[t]
 \centering
@@ -1053,67 +835,10 @@ instantiate Proposition~\ref{prop:noncomonotone}: under the AlpaSim proxy-state 
 geometry, safety, progress, and lane adherence are not co-monotone. External transfer
 failure must be diagnosed per axis; a single aggregate pass rate would hide the mechanism.
 
-\subsection{Controlled Proxy-State Perturbation}
-\label{sec:exp:proxy}
-
-The AlpaSim diagnostic is external and sensor-mediated. To isolate whether the same
-phenomenon exists without an adapter confound, we run a controlled proxy-transfer
-experiment inside the internal simulator: physics, scenario dynamics, and token library
-are held fixed, while only the planner-visible proxy state is perturbed. The safety stack
-also consumes this perturbed proxy stream, while dynamics and collision evaluation remain
-true-state. We evaluate lane-scale error, heading bias, actor latency, route offset, and
-feature noise. The result is a 288-case matched diagnostic (1440 agent rollouts) over
-adversarial and hidden suites, not a population-level simulator benchmark.
-
-\begin{table}[t]
-\centering
-\caption{Controlled internal proxy-state perturbation. Each entry is
-pass / collision / lane-violation rate. The hybrid is helpful under delayed actors, but
-route and lane proxy errors expose non-co-monotone tradeoffs.}
-\label{tab:proxy_transfer}
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{lccccc}
-\toprule
-Perturbation & Raw DAgger & Clamped & Hard veto hybrid & Oracle token & Spotlight \\
-\midrule
-Clean & 0.917 / 0.083 / 0.312 & 0.938 / 0.062 / 0.167 & 0.958 / 0.042 / 0.167 & 0.938 / 0.062 / 0.167 & 0.938 / 0.062 / 0.167 \\
-Heading bias & 0.896 / 0.104 / 0.562 & 0.938 / 0.062 / 0.396 & 0.938 / 0.062 / 0.375 & 0.896 / 0.104 / 0.292 & 0.938 / 0.062 / 0.312 \\
-Actor latency & 0.604 / 0.396 / 0.875 & 0.604 / 0.396 / 0.521 & 0.854 / 0.146 / 0.208 & 0.833 / 0.167 / 0.271 & 0.583 / 0.417 / 0.250 \\
-Route offset & 0.938 / 0.062 / 0.229 & 0.875 / 0.125 / 0.021 & 0.896 / 0.104 / 0.062 & 0.938 / 0.042 / 0.125 & 0.917 / 0.083 / 0.083 \\
-Lane-scale error & 0.938 / 0.042 / 0.208 & 0.875 / 0.125 / 0.021 & 0.958 / 0.042 / 0.083 & 0.938 / 0.062 / 0.062 & 0.958 / 0.042 / 0.104 \\
-Feature noise & 0.917 / 0.083 / 0.917 & 0.938 / 0.062 / 0.146 & 0.917 / 0.083 / 0.125 & 0.896 / 0.104 / 0.104 & 0.938 / 0.062 / 0.167 \\
-\bottomrule
-\end{tabular}
-}
-\end{table}
-
-Two cases are especially diagnostic. Under a three-step actor-latency perturbation, raw
-two-step DAgger falls to 0.604 pass / 0.396 collision / 0.875 lane-violation rate, while
-the hard-veto hybrid recovers to 0.854 / 0.146 / 0.208 and Spotlight reaches
-0.583 / 0.417 / 0.250. This is the clean positive case for grounded suppression: the
-learned prior and geometric veto together outperform either raw DAgger or Spotlight under
-delayed actor updates. Route-offset corruption shows the opposite pattern. The same
-hybrid reduces lane violations from 0.229 to 0.062, but pass rate falls from 0.938 to
-0.896 and collision rises from 0.062 to 0.104. Lateral clamping under lane-scale error
-behaves similarly: lane violations drop from 0.208 to 0.021, while pass rate drops from
-0.938 to 0.875 and collision rises from 0.042 to 0.125.
-
-This control is intentionally limited: it is \emph{not} the full simulator oracle. It
-selects from the same clamped discrete maneuver library as the learned policies, but
-scores those candidates with privileged short-horizon future-actor forecasts. Its role is
-to separate token-library insufficiency from token-ordering failure. When oracle-token
-ordering repairs a perturbation that raw or hybrid selection does not, the candidate set
-was sufficient and the failure lay in selection under proxy error. The route-offset and
-lane-scale results provide controlled instances of Proposition~\ref{prop:noncomonotone}:
-an intervention can improve lane adherence while worsening pass or collision, so proxy
-transfer must be evaluated per axis.
-
 \subsection{WOD-E2E Grounding Placement}
 \label{sec:exp:wod_grounding}
 
-The AlpaSim and proxy experiments identify the failing interface: action selection under
+The AlpaSim diagnostics identify the failing interface: action selection under
 reconstructed geometry. We therefore test whether frozen latent grounding helps when it is
 attached to the same interface on the WOD-E2E candidate-selection track. The leverage in
 this ablation is that all rows evaluate the same 479 validation frames and candidate pool;
@@ -1191,294 +916,45 @@ separate the axes:
 \end{itemize}
 
 This decomposition is the paper's external-transfer claim. The learned policy is not
-simply ``bad'' outside its simulator, and the rule-based scorer is not simply ``better.''
-Instead, each correction reveals one latent incompatibility between the internal training
-geometry and the external proxy-state interface. A robust transfer evaluation must expose
+simply ``bad'' under the external adapter, and the rule-based scorer is not simply
+``better.'' Instead, each correction reveals one latent incompatibility between the
+candidate-ranking geometry and the external proxy-state interface. A robust transfer evaluation must expose
 these axes separately; otherwise an intervention can appear to improve by moving along
 one metric while silently degrading another.
-
-\subsection{What the Strong Baselines Change}
-\label{sec:analysis:discrete}
-
-The BC comparison in Table~\ref{tab:bc_comparison} isolates what the token vocabulary
-does \emph{not} provide. Both Token-BC and Continuous-BC operate on the same 10 geometric
-features as Spotlight Reflex. Token-BC even uses the identical 9-token vocabulary. Yet
-both BC agents produce PVs on 3.8--4.4\% of Gauntlet scenarios while Spotlight has none
-observed. Table~\ref{tab:lhs_main} then shows that recurrent memory alone is not enough:
-Token-RNN-BC improves PV rate relative to Token-BC, but remains far below Spotlight and
-two-step DAgger on pass rate.
-
-The failure is mechanistic: on steps where \scalar{obstacle\_pressure} $\ge 0.35$,
-Spotlight Reflex enforces a hard reference rule—\token{evasive}$_\text{escape}$ is scored
-94 while \token{nudge}$_\text{escape}$ is not offered---committing to full lateral
-displacement before force cancellation can occur. Token-BC, trained on expert transitions
-in which \token{maintain} appears 91\% of the time, assigns insufficient probability mass
-to \token{evasive} in high-pressure states: even with inverse-frequency class weights,
-the learned boundary is an approximation that admits errors.
-Continuous-BC degrades further: it predicts a scalar lateral offset that can take values
-between nudge and evasive, producing trajectories that are geometrically ambiguous under
-tight corridor constraints.
-
-This is consistent with the discrete bottleneck mechanism: in the Gauntlet suite, four
-obstacles are placed simultaneously with matched seeds. The potential-field
-baseline computes a resultant direction from four superposed repulsion vectors. When obstacles
-are placed symmetrically or in opposition, the resultant can cancel---a known failure mode
-of potential-field planners~\citep{khatib1986potential}. Token-BC inherits a softer version
-of the same failure: it \emph{learns} an approximation of when to evade, rather than
-\emph{computing} it from clearance geometry. Spotlight Reflex's explicit escape-side
-computation prevents this: $\scalar{escape} = \arg\max(\scalar{left\_clr},\, \scalar{right\_clr})$
-is always defined and always selects the geometrically correct side.
-
-Two-step DAgger changes the conclusion. Once the learned token policy is trained on states
-visited by its own first correction, it recovers most of the escape boundary: on the
-held-out LHS sweep it matches Spotlight overall and improves PV rate. This means the
-non-interpolation theorem should not be read as saying a neural policy cannot learn the
-rule. It says the tokenized action space removes unsafe interpolation paths; the empirical
-question is whether the selector reliably chooses the right token. Plain BC does not.
-Two-step DAgger mostly does. Three-step DAgger regresses, suggesting that aggregation
-quality and weighting become part of the safety frontier.
-
-\subsection{Deconstructing the Aggregation Collapse}
-\label{sec:analysis:dagger-collapse}
-
-The three-step regression admits at least three plausible explanations: a takeover by
-late recovery states, a class-frequency optimization bias, or a true calibration failure
-inside the lightweight token classifier. We tested all three directly.
-
-First, the takeover hypothesis is not supported by the data distribution. The expert BC
-pool is 91.10\% \token{maintain}; DAgger-2 and DAgger-3 remain 92.14\% and 91.97\%
-\token{maintain} respectively. The token Jensen--Shannon divergence is only 0.00056
-(expert vs.\ DAgger-2) and 0.00115 (expert vs.\ DAgger-3). Late DAgger pools therefore
-do not replace the nominal manifold; they remain close in first-order token statistics.
-
-Second, class-frequency weighting is not the trivial culprit. Removing inverse-frequency
-token weighting raises offline validation accuracy to 96.3\%, but causes a severe
-closed-loop collapse: three-step DAgger without class weighting drops to 89.35\% pass
-and 2.50\% PV overall, with only 82.50\% pass and 3.75\% PV on Adversarial. This is an
-offline/online decoupling effect: the unweighted model fits the dominant nominal token
-mass more accurately while under-serving the rare recovery maneuvers needed in closed loop.
-
-Third, source-dependent weighting partially repairs the failure. We assign loss weights
-$\alpha=\{1.0, 1.0, 0.5, 0.25\}$ to the expert, first DAgger pool, second DAgger pool,
-and third DAgger pool respectively, preserving inverse-frequency token weights. The
-result is a large recovery over the naive three-step model: overall pass improves from
-92.50\% / 0.46\% PV to 93.06\% / 0.28\% PV, Adversarial recovers from
-87.92\% / 0.42\% PV to 89.17\% / 0.00\% PV, and Hidden recovers from
-90.83\% / 1.67\% PV to 90.00\% / 0.00\% PV. Yet this still does not exceed the two-step
-frontier of 94.54\% / 0.19\% PV.
-
-\begin{table}[t]
-\centering
-\caption{Three-step DAgger counter-ablations on the same held-out LHS sweep. Removing
-inverse-frequency token weighting improves offline validation accuracy but breaks
-closed-loop recovery. Source-decaying later DAgger pools partially restores the frontier
-without surpassing the two-step policy.}
-\label{tab:dagger_counter}
-\footnotesize
-\begin{tabular}{lcccc}
-\toprule
-Policy & Overall & Gauntlet & Adversarial & Hidden \\
-\midrule
-\textbf{Token-DAgger (2-step)} & \textbf{94.54 / 0.19} & \textbf{96.25 / 0.28} & \textbf{90.83 / 0.00} & \textbf{91.67 / 0.00} \\
-Token-DAgger (3-step) & 92.50 / 0.46 & 94.31 / 0.28 & 87.92 / 0.42 & 90.83 / 1.67 \\
-Token-DAgger (3-step, source decay) & 93.06 / 0.28 & 94.86 / 0.42 & 89.17 / 0.00 & 90.00 / 0.00 \\
-Token-DAgger (3-step, no inv.\ freq.) & 89.35 / 2.50 & 92.08 / 2.08 & 82.50 / 3.75 & 86.67 / 2.50 \\
-Spotlight Reflex & 94.44 / 0.65 & 96.67 / 0.28 & 90.00 / 0.83 & 90.00 / 2.50 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-These ablations rule out the simplest stories. The three-step failure is not caused by a
-gross takeover of rare recovery tokens, and it is not fixed by removing class weighting.
-The evidence instead points to a \emph{late-pool aggregation pressure}: once overlapping
-nominal and recovery pools are mixed uniformly, later recovery states flatten the
-classifier's boundary. Down-weighting those late pools mitigates the effect, but only
-partially, consistent with a calibration problem under limited model capacity rather than
-with a pure data-distribution shift.
-
-\paragraph{Token-count coverage bound.}
-Removing a response class creates a maneuver gap: \token{stop} handles hard blockage within
-braking distance; \token{crawl}/\token{maintain} handle low/high-speed forward progress;
-\token{slow\_yield} handles yield-without-stopping; \token{nudge}$_{\text{L/R}}$ handles
-corridor bias without full lane departure; \token{evasive}$_{\text{L/R}}$ handles head-on
-and cut-in scenarios requiring larger lateral displacement; \token{lane\_recover} handles
-post-evasion re-centering. Table~\ref{tab:ablation} reports a nested token-count ablation.
-It supports the claim that the full token set closes observed PV gaps in this simulator,
-but it does not prove global optimality of nine tokens.
-
-\begin{table}[t]
-\centering
-\caption{Nested token-count ablation over Gauntlet, Adversarial, and Compositional suites.
-Each row uses seeds 1--80; PV uses the same failed-rollout $C>0.90$ criterion as
-Table~\ref{tab:sim_main}. The full 9-token set removes observed PVs across the three
-suites, while reduced sets leave at least one suite with nonzero PVs.}
-\label{tab:ablation}
-\footnotesize
-\begin{tabular}{lrrrrrr}
-\toprule
-Token set & \multicolumn{2}{c}{Gauntlet} & \multicolumn{2}{c}{Adversarial} &
-\multicolumn{2}{c}{Compositional} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
- & Pass & PV & Pass & PV & Pass & PV \\
-\midrule
-4-token  & 89.8\% & 0.6\% & 90.6\% & 0.6\% & 94.2\% & 0.2\% \\
-5-token  & 94.6\% & 0.0\% & 87.5\% & 0.6\% & 92.2\% & 0.2\% \\
-7-token  & 94.0\% & 0.0\% & 88.1\% & 0.0\% & 91.8\% & 0.2\% \\
-9-token  & 94.2\% & 0.0\% & 91.9\% & 0.0\% & 92.2\% & 0.0\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Trajectory-Scorer Ablation}
-\label{sec:analysis:scorer}
-
-A natural alternative to hard-coded scoring is to learn a utility function over the same
-candidate trajectories. We tested trajectory-informed scorers that evaluate each token's
-short-horizon ego rollout, augmented with kinematic invariants (curvature, heading deltas,
-path length, lateral-acceleration and jerk proxies) and explicit interaction features
-(minimum dynamic clearance, time to closest approach, signed longitudinal/lateral miss
-distances, relative speed, and crossing relation). These models are trained contrastively:
-the Spotlight-selected candidate is the positive and the other token candidates are
-negatives.
-
-\begin{table}[t]
-\centering
-\caption{Interaction-aware trajectory-scorer ablation on the same held-out LHS sweep.
-Entries are pass/PV percentages. Scorers evaluate candidate futures directly, but still trail
-two-step DAgger on targeted stress suites.}
-\label{tab:scorer}
-\footnotesize
-\begin{tabular}{lccc}
-\toprule
-Policy & Gauntlet & Adversarial & Hidden \\
-\midrule
-Interaction Scorer (learner states) & 86.81 / 1.94 & 85.00 / 1.67 & 89.17 / 1.67 \\
-Interaction Scorer (merged states) & 88.75 / 1.67 & 82.92 / 2.50 & 90.00 / 2.50 \\
-\textbf{Token-DAgger-BC (2-step)} & 96.25 / 0.28 & \textbf{90.83 / 0.00} & \textbf{91.67 / 0.00} \\
-Spotlight Reflex & 96.67 / 0.28 & 90.00 / 0.83 & 90.00 / 2.50 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:scorer} weakens a simpler explanation: in this setup, the remaining gap is
-not closed by replacing the flat token head with a candidate utility scorer over ego
-trajectories plus lightweight interaction features. The scorer sees the candidate futures,
-but it is still an offline selector. In closed loop it trails the two-step DAgger policy on
-Gauntlet and Adversarial and does not preserve the zero-PV hidden result. This points to
-closed-loop state coverage as the dominant ingredient in the current simulator, rather
-than a need for the tested per-candidate scalar scorers.
-
-\subsection{Failure Mode Taxonomy}
-\label{sec:analysis:failures}
-
-The 28 Gauntlet non-passes by Spotlight Reflex (Table~\ref{tab:sim_main}; 480 scenarios,
-94.2\% pass rate) decompose into three mechanistically distinct classes, each traceable to
-a specific scalar interaction rather than to object-label ambiguity:
-
-\paragraph{Over-stopping under cumulative pressure (46\% of failures).}
-Multiple background obstacles accumulate \scalar{pressure} individually below the evasion
-threshold; combined they exceed the forward-progress reference score. The policy selects
-\token{crawl} or \token{stop} when the forward path is geometrically open.
-Fix: decompose \scalar{pressure} by source to suppress background accumulation.
-
-\paragraph{Slow re-entry after evasion (30\% of failures).}
-\token{evasive\_right} succeeds in lateral separation, but the subsequent
-\token{lane\_recover} overlaps temporally with a lingering hazard in the progress zone.
-The progress gate penalizes re-entry, causing a stall.
-Fix: widen the progress gate temporal window post-evasion.
-
-\paragraph{Synchronized hazard overload (24\% of failures).}
-Multiple actors reach closest-point simultaneously: \scalar{left\_clr} $\approx$
-\scalar{right\_clr}, so \scalar{escape} is uninformative. Policy defaults to
-\token{slow\_yield}; with four simultaneous obstacles, yield is insufficient.
-Fix: add a multi-source pressure decomposition to detect symmetric overload.
-
-In all three cases the failure is traceable to a scalar computation, not to an object
-label---consistent with the geometry-invariance property. No failure requires knowledge of \emph{what}
-the obstacle is; all require knowledge of \emph{where} it is.
 
 % =====================================================================
 \section{Limitations and Future Work}
 \label{sec:limitations}
 % =====================================================================
 
-\paragraph{2D abstract simulation.}
-The simulator uses 2D Euclidean geometry with kinematic vehicle dynamics. The AlpaSim
-diagnostic (Sec.~\ref{sec:exp:alpasim}) shows that internal simulator success is not a
-transfer guarantee: the learned selector's calibration can fail when the same token
-vocabulary is driven by reconstructed external geometry. The 10-clip AlpaSim matrix is
-mechanistic evidence from matched external clips and selection logs, not a population
-estimate. A full physics
-simulation (e.g., CARLA, nuPlan with dynamics) or real-vehicle evaluation is needed before
-making broad vehicle-dynamics claims.
+\paragraph{Evidence boundary.}
+This paper intentionally does not use internal 2D simulator metrics as CoRL evidence.
+Simulator pass rates, proximity-violation rates, COMPASS scores, and GIF rollouts are
+development artifacts and are excluded from the claims in Sec.~\ref{sec:experiments}.
 
-\paragraph{Token-count optimality is not established.}
-Table~\ref{tab:ablation} is a nested removal study, not a search over all token libraries.
-The stronger claim that nine is near-minimal requires random token libraries, learned token
-sets, parameter perturbations of offsets and speed scales, and larger token counts (e.g.,
-12-token variants) to test whether extra classes induce token-flip instability.
+\paragraph{External sample size.}
+The AlpaSim matrices are matched diagnostic probes, not population estimates. The 10-clip
+and 30-scene reruns are sufficient to falsify the simple claims tested here---that actor
+completion or learned-selector removal alone resolves collision---but they do not support
+broad safety-rate claims. Larger external reruns with fixed scene lists, paired
+statistics, and at-fault/rear-impact separation are needed before making deployment-level
+claims.
 
-\paragraph{Stress-test operating envelope (empirical).}
-To quantify the \emph{operating boundary} of geometric reflex vs.\ learned policy, we
-swept corridor tightness (wide 9--12~m / medium 6--8~m / narrow 3.6--5~m / extreme
-2.2--3.6~m) $\times$ obstacle-actor pressure (1.0$\times$ / 1.5$\times$ / 2.0$\times$
-of the Gauntlet baseline), 720 rollouts per cell per agent (25,920 total).
-Table~\ref{tab:phase} summarises the PV rates.
+\paragraph{Proxy-state calibration.}
+The policy consumes route, ego dynamics, and structured hazards through an adapter rather
+than through a full perception stack. This is useful for localizing the action-selection
+boundary, but it leaves perception, tracking, and controller-execution errors only
+partially separated. Future work should run the same candidate-interface audits across
+multiple external simulators and log per-frame disagreement with geometric constraints.
 
-\begin{table}[h]
-\centering
-\caption{Phase diagram: worst-case Proximity Violation (PV) rate per corridor level
-(max over 3 pressure settings, 720 rollouts each). Spotlight Reflex $\le$0.4\% PV
-across all 12 conditions; BC peaks at 6.5\% in narrow/extreme corridors.
-Full 12-cell results in the artifact.}
-\label{tab:phase}
-\footnotesize
-\begin{tabular}{l|rr|rr}
-\toprule
-Corridor & ContBC & TokBC & \textbf{Spotlight} & $\Delta$Tok--SR \\
-\midrule
-Wide (9--12~m)       & 4.3\% & 3.9\% & \textbf{0.4\%} & $+$3.9~pp \\
-Medium (6--8~m)      & 4.2\% & 3.6\% & \textbf{0.1\%} & $+$3.5~pp \\
-Narrow (3.6--5~m)    & 5.6\% & 6.5\% & \textbf{0.3\%} & $+$6.4~pp \\
-Extreme (2.2--3.6~m) & 4.4\% & 6.4\% & \textbf{0.3\%} & $+$6.4~pp \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Spotlight Reflex holds $\le$0.4\% PV rate in all 12 cells. BC agents degrade as corridors
-narrow: the Token-BC delta grows from $+$2.2~pp (wide, 2.0$\times$) to $+$6.4~pp
-(narrow/extreme, 1.0$\times$/1.5$\times$). BC agents were trained on compositional and
-adversarial suites with default wide-lane topologies (6--9~m half-widths); the narrow
-and extreme cells push \scalar{left\_clearance} and \scalar{right\_clearance} outside the
-training distribution, and the learned boundary degrades. Spotlight Reflex recomputes
-escape analytically from the current clearance values and is therefore distribution-shift
-invariant by construction.
-
-This phase diagram should be read as an operating-envelope visualization, not as the
-primary environment proof. The stronger evidence is the held-out Latin-hypercube sweep in
-Sec.~\ref{sec:exp:lhs}, which independently samples generator parameters and includes
-recurrent BC plus DAgger-style on-policy correction.
-
-Notably, Token-BC \emph{exceeds} Continuous-BC at extreme OOD (4.4\% vs 6.1--6.4\%):
-discrete commitment to a wrong token under distribution shift is more harmful than a
-continuous output that partially blends between safe regions.
-
-\paragraph{Temporal scalar history and joint interaction.}
-The strongest learned model in this paper is still a token classifier over 10 scalar
-features. Token-RNN-BC adds scalar history but remains weak, and interaction-aware
-trajectory scorers do not close the stress-suite gap. A richer joint future encoder over
-ego and actor rollouts may be needed to distinguish coordinated interaction from static
-clearance geometry.
-
-\paragraph{DAgger aggregation is not solved.}
-Two-step DAgger is the strongest baseline, but three-step DAgger regresses. This suggests
-that blindly adding recovery-state data can distort the training distribution. Future work
-should study aggregation schedules, loss weighting by rollout source, validation splits by
-closed-loop profile, and safety-constrained selection among DAgger checkpoints.
+\paragraph{WOD-E2E scope.}
+The WOD-E2E grounding experiment is a validation-frame candidate-selection study. RFS
+improvements show that frozen world priors help when attached to the selector, but they do
+not establish closed-loop driving quality or hidden-test performance.
 
 \paragraph{External calibration is not solved.}
-The AlpaSim hard-veto experiment shows that a learned selector can be internally strong
-and externally invalid: 1987/1990 DAgger argmax decisions are rejected by the geometric
+The AlpaSim hard-veto experiment shows that a learned selector can be externally
+miscalibrated: 1987/1990 DAgger argmax decisions are rejected by the geometric
 suppression layer. This is not a threshold-tuning problem; it indicates that proxy-state
 reconstruction changes the decision geometry. The 10-clip matrix further shows that
 interventions are not co-monotone across collision, offroad, wrong-lane, progress, and
@@ -1486,19 +962,17 @@ tracking error. The actor-aware external result is also limited: even the matche
 30-scene world-frame actor-completion rerun leaves collision unchanged while worsening offroad,
 improving wrong-lane, and slightly increasing progress. Future work should validate token
 policies under multiple independent
-simulators, log per-frame disagreement with geometric constraints, separate rear/at-fault
+external simulators, log per-frame disagreement with geometric constraints, separate rear/at-fault
 collisions, and report per-axis failure metrics rather than tuning one aggregate score.
 
 % =====================================================================
 \section{Conclusion}
 % =====================================================================
 
-We have argued that discrete maneuver tokens are useful, but not sufficient. Internally,
-tokens remove unsafe interpolation paths, geometric rules provide an interpretable expert,
-and two-step DAgger can learn most of that expert's closed-loop boundary on a held-out
-Latin-hypercube generator sweep. That internal result alone would support a conventional
-methods story: on-policy correction repairs plain BC and nearly matches the geometric
-policy.
+We have argued that discrete maneuver tokens are useful, but not sufficient. The important
+question is not whether a token interface can be made to look strong in a development
+harness; it is whether the selected token remains valid when the state is reconstructed
+through external geometry and evaluated per failure axis.
 
 The AlpaSim diagnostic changes the conclusion. When the learned selector is driven by a
 front-camera proxy adapter, its token calibration no longer matches the external geometry,
@@ -1519,13 +993,13 @@ defensible. Matched world-frame actor completion tests actor visibility; first-i
 collision audits show what the scorer believes at the collision frame; selector-side
 counterfactuals test whether an actor-axis-safe token exists in the logged candidate set;
 learned-selector-free replay tests whether learned ranking is the bottleneck; and the
-matched-control bridge ties the external hazard-dropout signal to controlled proxy
-perturbations. Together these controls show why offline accuracy and internal closed-loop
-performance can be structurally misleading transfer indicators.
+matched non-collision controls show whether the actor-completion signal is specific to
+collision-critical frames. Together these controls show why offline accuracy and
+single-surface rollout metrics can be structurally misleading transfer indicators.
 
 The practical implication is that token policies should be audited at the decision level
 and per failure axis, not only by aggregate rollout metrics. A learned policy that passes
-an internal simulator may still be selecting tokens that an external geometric scorer
+one evaluation surface may still be selecting tokens that an external geometric scorer
 rejects almost every frame. For safety-critical imitation learning, per-frame constraint
 disagreement, external proxy-state validation, and separate geometry/safety/progress/lane
 metrics should be treated as first-class diagnostics alongside pass rate and offline

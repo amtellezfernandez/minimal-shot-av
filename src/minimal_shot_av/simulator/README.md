@@ -1,13 +1,17 @@
 # Simulator Surface
 
-This subtree is the simulation stack of the repo.
+This subtree is the internal simulation/debug stack of the repo.
+
+It is **not** a CoRL benchmark surface. Do not treat its pass rates, COMPASS scores, or
+GIF rollouts as paper evidence for realistic autonomous driving. Its role is to exercise
+policy logic, produce local visual debugging artifacts, and support AlpaSim adapter code.
 
 Use it for:
 
 - Spotlight Reflex policy logic
-- long-tail scenario generation
-- simulator step/update rules
-- COMPASS and simulator-side evaluation
+- debug scenario generation
+- simulator step/update rules for local development
+- COMPASS-style internal checks
 - first-party AlpaSim integration adapters
 - simulator-scoped patched-upstream AlpaSim work
 
