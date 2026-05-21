@@ -155,7 +155,7 @@ class AuditRerunBridgeTests(unittest.TestCase):
         self.assertEqual("clipgt-test-scene", manifest["scene_ids"][0])
         self.assertEqual("spotlight_wins", frames[0]["step"]["decision_type"])
 
-    def test_compare_audit_logs_cli_reports_summary_delta(self) -> None:
+    def test_compare_audit_logs_cli_reports_summary_delta_and_bookmarks(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             rollout_dir = Path(temp_dir) / "rollout"
             internal_dir = Path(temp_dir) / "internal_audit"
@@ -238,3 +238,9 @@ class AuditRerunBridgeTests(unittest.TestCase):
 
         self.assertIn("delta", payload)
         self.assertIn("min_clearance_delta", payload["delta"])
+        self.assertIn("aligned_samples", payload)
+        self.assertGreater(len(payload["aligned_samples"]), 0)
+        self.assertIn("bookmarks", payload["left"])
+        self.assertIn("bookmarks", payload["right"])
+        self.assertGreater(len(payload["left"]["bookmarks"]), 0)
+        self.assertIn(payload["left"]["bookmarks"][0]["kind"], {"trigger_activation", "near_miss", "collision_risk_spike", "intervention"})

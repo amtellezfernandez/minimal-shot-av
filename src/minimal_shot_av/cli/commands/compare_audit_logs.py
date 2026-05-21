@@ -27,18 +27,23 @@ def compare_audit_logs(
     right_manifest: dict[str, Any],
     right_frames: list[dict[str, Any]],
 ) -> dict[str, Any]:
+    left_summary = _frame_summary(left_frames)
+    right_summary = _frame_summary(right_frames)
     return {
         "left": {
             "source": left_manifest.get("source"),
             "frame_count": len(left_frames),
-            "summary": _frame_summary(left_frames),
+            "summary": left_summary,
+            "bookmarks": _frame_bookmarks(left_frames),
         },
         "right": {
             "source": right_manifest.get("source"),
             "frame_count": len(right_frames),
-            "summary": _frame_summary(right_frames),
+            "summary": right_summary,
+            "bookmarks": _frame_bookmarks(right_frames),
         },
-        "delta": _summary_delta(_frame_summary(left_frames), _frame_summary(right_frames)),
+        "delta": _summary_delta(left_summary, right_summary),
+        "aligned_samples": _aligned_samples(left_frames, right_frames),
     }
 
 
@@ -75,6 +80,130 @@ def _summary_delta(left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any
         "min_clearance_delta": _finite(left["min_clearance"]) - _finite(right["min_clearance"]),
         "max_collision_risk_delta": float(left["max_collision_risk"]) - float(right["max_collision_risk"]),
         "avg_speed_delta": float(left["avg_speed"]) - float(right["avg_speed"]),
+    }
+
+
+def _frame_bookmarks(frames: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    bookmarks: list[dict[str, Any]] = []
+    previous_trigger_keys: set[str] = set()
+    for frame in frames:
+        step = frame.get("step", {})
+        trigger_state = frame.get("trigger_state", {})
+        active_trigger_keys = {
+            str(key)
+            for key, window in trigger_state.items()
+            if isinstance(window, dict) and window.get("active_from") is not None
+        }
+        new_trigger_keys = sorted(active_trigger_keys - previous_trigger_keys)
+        if new_trigger_keys:
+            bookmarks.append(
+                _bookmark(
+                    "trigger_activation",
+                    frame,
+                    {"trigger_regions": new_trigger_keys},
+                )
+            )
+        previous_trigger_keys = active_trigger_keys
+
+        min_clearance = float(step.get("min_obstacle_distance", math.inf) or math.inf)
+        if min_clearance <= 1.0:
+            bookmarks.append(
+                _bookmark(
+                    "near_miss",
+                    frame,
+                    {"min_clearance": min_clearance},
+                )
+            )
+
+        collision_risk = float(step.get("collision_risk", 0.0) or 0.0)
+        if collision_risk >= 0.7:
+            bookmarks.append(
+                _bookmark(
+                    "collision_risk_spike",
+                    frame,
+                    {"collision_risk": collision_risk},
+                )
+            )
+
+        if _has_intervention(frame):
+            bookmarks.append(
+                _bookmark(
+                    "intervention",
+                    frame,
+                    {"action_mode": step.get("action_mode")},
+                )
+            )
+    return bookmarks
+
+
+def _bookmark(kind: str, frame: dict[str, Any], detail: dict[str, Any]) -> dict[str, Any]:
+    step = frame.get("step", {})
+    return {
+        "kind": kind,
+        "frame_idx": int(frame.get("frame_idx", 0)),
+        "timestamp_s": float(frame.get("timestamp_s", 0.0) or 0.0),
+        "action_mode": step.get("action_mode"),
+        "detail": detail,
+    }
+
+
+def _has_intervention(frame: dict[str, Any]) -> bool:
+    step = frame.get("step", {})
+    planner = frame.get("planner", {})
+    if bool(step.get("intervention")):
+        return True
+    action_mode = str(step.get("action_mode", "") or "")
+    if action_mode and action_mode not in {"maintain", "direct_actor_planner"}:
+        return True
+    decision_type = str(step.get("decision_type", "") or "")
+    if decision_type and decision_type not in {"spotlight_wins", "maintain"}:
+        return True
+    selection_mode = str(planner.get("selection_mode", "") or "")
+    if selection_mode and selection_mode != "hybrid_veto":
+        return True
+    return False
+
+
+def _aligned_samples(
+    left_frames: list[dict[str, Any]],
+    right_frames: list[dict[str, Any]],
+    sample_count: int = 8,
+) -> list[dict[str, Any]]:
+    if not left_frames or not right_frames:
+        return []
+    target_count = min(sample_count, max(len(left_frames), len(right_frames)))
+    samples: list[dict[str, Any]] = []
+    for sample_idx in range(target_count):
+        fraction = sample_idx / max(target_count - 1, 1)
+        left_frame = left_frames[_fractional_index(len(left_frames), fraction)]
+        right_frame = right_frames[_fractional_index(len(right_frames), fraction)]
+        samples.append(
+            {
+                "sample_idx": sample_idx,
+                "progress": round(fraction, 3),
+                "left": _sample_frame(left_frame),
+                "right": _sample_frame(right_frame),
+            }
+        )
+    return samples
+
+
+def _fractional_index(length: int, fraction: float) -> int:
+    if length <= 1:
+        return 0
+    return min(length - 1, max(0, int(round(fraction * (length - 1)))))
+
+
+def _sample_frame(frame: dict[str, Any]) -> dict[str, Any]:
+    step = frame.get("step", {})
+    ego = frame.get("ego", {})
+    return {
+        "frame_idx": int(frame.get("frame_idx", 0)),
+        "timestamp_s": float(frame.get("timestamp_s", 0.0) or 0.0),
+        "speed": float(ego.get("speed", 0.0) or 0.0),
+        "action_mode": step.get("action_mode"),
+        "min_clearance": _finite(float(step.get("min_obstacle_distance", math.inf) or math.inf)),
+        "collision_risk": float(step.get("collision_risk", 0.0) or 0.0),
     }
 
 
