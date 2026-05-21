@@ -1,0 +1,195 @@
+{
+  "repo_commit": "745294aa84d156a9594aa937cb91a6415cb609f3",
+  "results": [
+    {
+      "hf_path": "results/bc_vs_spotlight.json",
+      "local_path": "artifacts/bc_vs_spotlight.json",
+      "description": "Main internal benchmark comparison between BC-family baselines and Spotlight Reflex."
+    },
+    {
+      "hf_path": "results/stress_phase_results.json",
+      "local_path": "artifacts/stress_phase/results.json",
+      "description": "Stress-phase matched-suite evaluation outputs used in the paper tables and narrative."
+    },
+    {
+      "hf_path": "results/dagger_representation_audit.json",
+      "local_path": "artifacts/dagger_representation_audit.json",
+      "description": "Representation and calibration audit diagnosing late-pool aggregation pressure."
+    },
+    {
+      "hf_path": "results/heldout_latin_hypercube/results_mid.json",
+      "local_path": "artifacts/heldout_latin_hypercube/results_mid.json",
+      "description": "Held-out Latin-hypercube sweep for the main learned baseline set."
+    },
+    {
+      "hf_path": "results/heldout_latin_hypercube/results_dagger_iter2_mid.json",
+      "local_path": "artifacts/heldout_latin_hypercube/results_dagger_iter2_mid.json",
+      "description": "Held-out Latin-hypercube sweep for the 2-step DAgger frontier."
+    },
+    {
+      "hf_path": "results/heldout_latin_hypercube/results_dagger_iter3_srcdecay_mid.json",
+      "local_path": "artifacts/heldout_latin_hypercube/results_dagger_iter3_srcdecay_mid.json",
+      "description": "Held-out Latin-hypercube sweep for the 3-step source-decayed DAgger ablation."
+    },
+    {
+      "hf_path": "results/heldout_latin_hypercube/results_iter2_transformer_mid.json",
+      "local_path": "artifacts/heldout_latin_hypercube/results_iter2_transformer_mid.json",
+      "description": "Held-out Latin-hypercube sweep for the 2-step transformer DAgger baseline."
+    },
+    {
+      "hf_path": "results/heldout_latin_hypercube/results_iter3_srcdecay_transformer_mid.json",
+      "local_path": "artifacts/heldout_latin_hypercube/results_iter3_srcdecay_transformer_mid.json",
+      "description": "Held-out Latin-hypercube sweep for the 3-step source-decayed transformer DAgger baseline."
+    },
+    {
+      "hf_path": "results/score_vs_spotlight_merged_mid.json",
+      "local_path": "artifacts/score_vs_spotlight_merged_mid.json",
+      "description": "Mid-sized scorer-versus-Spotlight evaluation for the merged geometric trajectory scorer."
+    },
+    {
+      "hf_path": "results/score_vs_spotlight_interaction_merged_mid.json",
+      "local_path": "artifacts/score_vs_spotlight_interaction_merged_mid.json",
+      "description": "Mid-sized scorer-versus-Spotlight evaluation for the merged interaction-aware trajectory scorer."
+    },
+    {
+      "hf_path": "results/alpasim_hardveto_diagnostic.json",
+      "local_path": "artifacts/alpasim_hardveto_diagnostic.json",
+      "description": "Two-scene AlpaSim hard-veto diagnostic showing that geometric suppression rejects nearly all DAgger argmax decisions under proxy-state reconstruction."
+    },
+    {
+      "hf_path": "results/alpasim_actor_axis_worldframe_10scene_summary.json",
+      "local_path": "artifacts/alpasim_actor_axis_worldframe_10scene_summary.json",
+      "description": "Superseded diagnostic 10-scene AlpaSim artifact covering matched baseline, world-frame oracle actor proxy, and legacy actor-axis proxy metrics."
+    },
+    {
+      "hf_path": "results/alpasim_rear_flow_actor_axis_10scene_analysis.json",
+      "local_path": "artifacts/alpasim_rear_flow_actor_axis_10scene_analysis.json",
+      "description": "Matched raw 10-scene AlpaSim rear-risk actor-axis analysis showing full oracle-proxy coverage, unchanged collision/offroad, worse wrong-lane, and higher progress."
+    },
+    {
+      "hf_path": "results/alpasim_rear_flow_actor_axis_10scene_analysis.md",
+      "local_path": "artifacts/alpasim_rear_flow_actor_axis_10scene_analysis.md",
+      "description": "Human-readable paired summary for the matched raw 10-scene rear-risk actor-axis AlpaSim rerun."
+    },
+    {
+      "hf_path": "results/alpasim_oracle_actor_proxy_10scene.json",
+      "local_path": "artifacts/alpasim_oracle_actor_proxy_10scene.json",
+      "description": "World-frame 10-scene oracle actor proxy used by the AlpaSim oracle and actor-axis reruns."
+    },
+    {
+      "hf_path": "results/alpasim_actor_blindness_30scene_raw_analysis.json",
+      "local_path": "artifacts/alpasim_actor_blindness_30scene_raw_analysis.json",
+      "description": "Canonical matched 30-scene raw paired analysis for the world-frame oracle actor-completion rerun."
+    },
+    {
+      "hf_path": "results/alpasim_actor_blindness_30scene_raw_analysis.md",
+      "local_path": "artifacts/alpasim_actor_blindness_30scene_raw_analysis.md",
+      "description": "Human-readable paired summary for the canonical matched 30-scene world-frame oracle rerun."
+    },
+    {
+      "hf_path": "results/alpasim_oracle_actor_proxy_30scene.json",
+      "local_path": "artifacts/alpasim_oracle_actor_proxy_30scene.json",
+      "description": "World-frame 30-scene oracle actor proxy built from the matched axis-constrained baseline rerun."
+    },
+    {
+      "hf_path": "results/alpasim_collision_surface_30scene_audit.json",
+      "local_path": "artifacts/alpasim_collision_surface_30scene_audit.json",
+      "description": "First-impact collision-surface audit aligning raw collision frames, selector logs, oracle proxy hits, and controller traces for the matched 30-scene baseline and world-frame oracle reruns."
+    },
+    {
+      "hf_path": "results/alpasim_collision_surface_30scene_audit.md",
+      "local_path": "artifacts/alpasim_collision_surface_30scene_audit.md",
+      "description": "Human-readable first-impact audit showing that actor completion changes awareness and action choice but leaves the 30-scene raw collision surface unchanged."
+    },
+    {
+      "hf_path": "results/alpasim_candidate_counterfactual_30scene.json",
+      "local_path": "artifacts/alpasim_candidate_counterfactual_30scene.json",
+      "description": "Selector-side candidate counterfactual that injects the world-frame oracle actor proxy into the baseline collision timeline and audits axis versus actor-axis candidate feasibility."
+    },
+    {
+      "hf_path": "results/alpasim_candidate_counterfactual_30scene.md",
+      "local_path": "artifacts/alpasim_candidate_counterfactual_30scene.md",
+      "description": "Human-readable selector-side candidate counterfactual showing that actor-axis selector misses are a minority explanation and that controller-level replay is still required."
+    },
+    {
+      "hf_path": "results/alpasim_action_space_upper_bound_30scene.json",
+      "local_path": "artifacts/alpasim_action_space_upper_bound_30scene.json",
+      "description": "Open-loop action-space upper-bound audit over the 30-scene baseline collision timeline, comparing actor-forecast token candidates and the selector-free direct grid under the same world-frame oracle actor proxy."
+    },
+    {
+      "hf_path": "results/alpasim_action_space_upper_bound_30scene.md",
+      "local_path": "artifacts/alpasim_action_space_upper_bound_30scene.md",
+      "description": "Human-readable action-space upper-bound audit showing that the direct grid usually selects proxy-safe actions before impact, shifting the remaining collision question toward controller/receding-horizon or simulator mismatch."
+    },
+    {
+      "hf_path": "results/alpasim_partial_bridge_preimpact.json",
+      "local_path": "artifacts/alpasim_partial_bridge_preimpact.json",
+      "description": "Partial bridge analysis comparing committed AlpaSim collision-window oracle actor residuals against terminal-matched non-collision controls and controlled proxy-perturbation regimes."
+    },
+    {
+      "hf_path": "results/alpasim_partial_bridge_preimpact.md",
+      "local_path": "artifacts/alpasim_partial_bridge_preimpact.md",
+      "description": "Human-readable summary of the partial AlpaSim pre-impact bridge analysis."
+    },
+    {
+      "hf_path": "results/alpasim_partial_bridge_preimpact.svg",
+      "local_path": "artifacts/alpasim_partial_bridge_preimpact.svg",
+      "description": "Small SVG figure for the partial AlpaSim pre-impact bridge analysis."
+    },
+    {
+      "hf_path": "results/alpasim_direct_actor_planner_collision18_analysis.json",
+      "local_path": "artifacts/alpasim_direct_actor_planner_collision18_v2_analysis.json",
+      "description": "Matched 18-scene selector-free direct actor-aware planner analysis on baseline collision clips, showing weak collision recovery and stronger progress gains."
+    },
+    {
+      "hf_path": "results/alpasim_direct_actor_planner_collision18_analysis.md",
+      "local_path": "artifacts/alpasim_direct_actor_planner_collision18_v2_analysis.md",
+      "description": "Human-readable paired summary for the selector-free direct actor-aware planner collision18 diagnostic."
+    },
+    {
+      "hf_path": "results/alpasim_direct_grid_max_clearance_collision18_analysis.json",
+      "local_path": "artifacts/alpasim_direct_grid_max_clearance_collision18_analysis.json",
+      "description": "Matched 18-scene max-clearance selector-free direct-grid oracle replay on baseline collision clips, testing whether a cost-free clearance objective resolves residual collisions."
+    },
+    {
+      "hf_path": "results/alpasim_direct_grid_max_clearance_collision18_analysis.md",
+      "local_path": "artifacts/alpasim_direct_grid_max_clearance_collision18_analysis.md",
+      "description": "Human-readable paired summary for the max-clearance selector-free direct-grid oracle collision18 replay."
+    },
+    {
+      "hf_path": "paper/corl2027/paper.pdf",
+      "local_path": "docs/corl2027/paper.pdf",
+      "description": "Current CoRL manuscript PDF aligned with the matched 30-scene raw world-frame oracle AlpaSim evidence."
+    },
+    {
+      "hf_path": "paper/corl2027/paper.tex",
+      "local_path": "docs/corl2027/paper.tex",
+      "description": "Current CoRL manuscript source aligned with the matched 30-scene raw world-frame oracle AlpaSim evidence."
+    },
+    {
+      "hf_path": "paper/corl2027/alpasim_matrix10_with_axis_analysis.md",
+      "local_path": "docs/corl2027/results/alpasim_matrix10_with_axis_analysis.md",
+      "description": "Reviewer-facing AlpaSim metric provenance and matched raw rear-risk actor-axis rerun note."
+    },
+    {
+      "hf_path": "scene_presets/fresh_3scene.yaml",
+      "local_path": "src/minimal_shot_av/simulator/alpasim_scene_presets/fresh_3scene.yaml",
+      "description": "3-scene AlpaSim smoke preset tracked in the main repo."
+    },
+    {
+      "hf_path": "scene_presets/front_camera_10scene_smoke.yaml",
+      "local_path": "src/minimal_shot_av/simulator/alpasim_scene_presets/front_camera_10scene_smoke.yaml",
+      "description": "10-scene front-camera AlpaSim smoke preset tracked in the main repo."
+    },
+    {
+      "hf_path": "scene_presets/front_camera_30scene_merged.yaml",
+      "local_path": "src/minimal_shot_av/simulator/alpasim_scene_presets/front_camera_30scene_merged.yaml",
+      "description": "30-scene front-camera AlpaSim merged preset tracked in the main repo."
+    },
+    {
+      "hf_path": "scene_presets/front_camera_collision18.yaml",
+      "local_path": "src/minimal_shot_av/simulator/alpasim_scene_presets/front_camera_collision18.yaml",
+      "description": "18-scene AlpaSim preset containing baseline collision clips used by the selector-free direct actor-aware planner diagnostic."
+    }
+  ]
+}
