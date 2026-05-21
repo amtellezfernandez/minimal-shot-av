@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export PATH="$HOME/.local/bin:$PATH"
-export ALPASIM_ROOT="${ALPASIM_ROOT:-$ROOT/alpasim}"
+export ALPASIM_ROOT="${ALPASIM_ROOT:-$ROOT/workspace/alpasim}"
 
 if [[ -f "$ROOT/.env.alpasim_hf" ]]; then
   # shellcheck disable=SC1091

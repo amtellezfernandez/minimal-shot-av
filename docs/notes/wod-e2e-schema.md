@@ -4,11 +4,11 @@ This is the compact implementation reference for WOD-E2E. Use it when building l
 
 Local source files:
 
-- `waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_data.proto`
-- `waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_submission.proto`
-- `waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_metrics.proto`
-- `waymo-open-dataset/src/waymo_open_dataset/metrics/python/rater_feedback_utils.py`
-- `waymo-open-dataset/tutorial/tutorial_vision_based_e2e_driving.ipynb`
+- `workspace/waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_data.proto`
+- `workspace/waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_submission.proto`
+- `workspace/waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_metrics.proto`
+- `workspace/waymo-open-dataset/src/waymo_open_dataset/metrics/python/rater_feedback_utils.py`
+- `workspace/waymo-open-dataset/tutorial/tutorial_vision_based_e2e_driving.ipynb`
 
 ## `E2EDFrame`
 

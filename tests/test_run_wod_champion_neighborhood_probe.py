@@ -31,7 +31,7 @@ class WodChampionNeighborhoodProbeTests(unittest.TestCase):
             local_folds=2,
             official_frames=20,
             official_folds=2,
-            waymo_src=ROOT / "waymo-open-dataset/src",
+            waymo_src=ROOT / "workspace" / "waymo-open-dataset/src",
         )
 
         command = module._build_command(
@@ -64,7 +64,7 @@ class WodChampionNeighborhoodProbeTests(unittest.TestCase):
             local_folds=2,
             official_frames=20,
             official_folds=2,
-            waymo_src=ROOT / "waymo-open-dataset/src",
+            waymo_src=ROOT / "workspace" / "waymo-open-dataset/src",
         )
 
         local_variants = module._local_variants(args)

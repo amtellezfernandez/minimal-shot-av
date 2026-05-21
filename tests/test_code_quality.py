@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.check_code_quality import check_files, load_quality_config
+from minimal_shot_av.cli.commands.check_code_quality import check_files, load_quality_config
 
 
 class CodeQualityTests(unittest.TestCase):

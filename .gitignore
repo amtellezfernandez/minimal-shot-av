@@ -32,8 +32,8 @@ artifacts/*
 !artifacts/ablation_token_count/results.json
 !artifacts/ablation_token_count/results_multisuite.json
 !artifacts/eval_all_suites.json
-artifact/external/*
-!artifact/external/README.md
+workspace/*
+!workspace/README.md
 outputs/
 runs/
 .hf/
@@ -42,6 +42,7 @@ data/
 docs/corl2027/*.aux
 docs/corl2027/*.log
 docs/corl2027/*.out
+artifact/
 waymo_open_dataset_end_to_end_camera_v_1_0_0/
 alpasim/
 waymo-open-dataset/

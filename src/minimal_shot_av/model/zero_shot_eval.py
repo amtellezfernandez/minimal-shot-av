@@ -399,7 +399,7 @@ def main() -> int:
     parser.add_argument(
         "--val-dir",
         type=Path,
-        default=Path("waymo_open_dataset_end_to_end_camera_v_1_0_0") / "val",
+        default=Path("workspace") / "waymo_open_dataset_end_to_end_camera_v_1_0_0" / "val",
     )
     parser.add_argument(
         "--candidate-jsonl",
@@ -422,7 +422,7 @@ def main() -> int:
     parser.add_argument(
         "--waymo-src",
         type=Path,
-        default=Path("waymo-open-dataset") / "src",
+        default=Path("workspace") / "waymo-open-dataset" / "src",
         help="Path containing waymo_open_dataset/metrics/python/rater_feedback_utils.py.",
     )
     parser.add_argument("--max-shards", type=int)

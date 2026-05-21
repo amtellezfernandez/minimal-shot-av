@@ -79,9 +79,10 @@ Fetch them with:
 ## Full AlpaSim Reproduction
 
 This requires an `x86_64` machine with Docker access and a real AlpaSim checkout.
+The canonical local location is `workspace/alpasim/`.
 
 ```bash
-export ALPASIM_ROOT=/abs/path/to/alpasim
+export ALPASIM_ROOT=/abs/path/to/workspace/alpasim
 ./scripts/bootstrap_alpasim_runtime.sh
 ./scripts/check_alpasim_readiness.py --scene-preset front_camera_30scene_merged
 ./.venv/bin/python scripts/fetch_checkpoints.py

@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UV_BIN="${UV_BIN:-$(command -v uv || true)}"
-ALPASIM_ROOT="${ALPASIM_ROOT:-$ROOT/alpasim}"
+ALPASIM_ROOT="${ALPASIM_ROOT:-$ROOT/workspace/alpasim}"
 TORCH_PACKAGE="${TORCH_PACKAGE:-torch==2.11.0+cu129}"
 TORCH_INDEX_URL="${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu129}"
 

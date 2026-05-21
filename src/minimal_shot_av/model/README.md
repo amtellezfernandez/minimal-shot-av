@@ -35,7 +35,7 @@ This directory is first-party repo code. It is distinct from:
 
 - `src/minimal_shot_av/simulator/` — closed-loop simulator surface
 - `third_party/` — explicit external overrides or patches
-- `waymo-open-dataset/` — separate nested upstream checkout
+- `workspace/waymo-open-dataset/` — separate nested upstream checkout
 
 For the benchmark write-up, go to:
 

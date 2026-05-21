@@ -7,8 +7,8 @@ import numpy as np
 import tempfile
 from pathlib import Path
 
-from scripts.bc_collect_dagger_data import TOKEN_ORDER as DAGGER_TOKEN_ORDER
-from scripts.bc_train import (
+from minimal_shot_av.cli.commands.bc_collect_dagger_data import TOKEN_ORDER as DAGGER_TOKEN_ORDER
+from minimal_shot_av.cli.commands.bc_train import (
     GeomTransformerTokenBC,
     TOKEN_ORDER as TRAIN_TOKEN_ORDER,
     _classification_loss,

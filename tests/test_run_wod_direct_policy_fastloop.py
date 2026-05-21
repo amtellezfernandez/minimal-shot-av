@@ -75,7 +75,7 @@ class WodDirectPolicyFastloopTests(unittest.TestCase):
         rewritten = module._official_preflight_command(
             command,
             output=ROOT / "official.json",
-            waymo_src=ROOT / "waymo-open-dataset/src",
+            waymo_src=ROOT / "workspace" / "waymo-open-dataset/src",
             frames=20,
             folds=2,
             progress_every_fold=True,
@@ -83,7 +83,7 @@ class WodDirectPolicyFastloopTests(unittest.TestCase):
 
         self.assertEqual("official", rewritten[rewritten.index("--rfs-backend") + 1])
         self.assertEqual("official.json", Path(rewritten[rewritten.index("--output") + 1]).name)
-        self.assertEqual(str(ROOT / "waymo-open-dataset/src"), rewritten[rewritten.index("--waymo-src") + 1])
+        self.assertEqual(str(ROOT / "workspace" / "waymo-open-dataset/src"), rewritten[rewritten.index("--waymo-src") + 1])
         self.assertEqual("20", rewritten[rewritten.index("--max-preference-frames") + 1])
         self.assertEqual("2", rewritten[rewritten.index("--folds") + 1])
         self.assertIn("--progress-every-fold", rewritten)
@@ -95,7 +95,7 @@ class WodDirectPolicyFastloopTests(unittest.TestCase):
         rewritten = module._official_preflight_command(
             command,
             output=ROOT / "official.json",
-            waymo_src=ROOT / "waymo-open-dataset/src",
+            waymo_src=ROOT / "workspace" / "waymo-open-dataset/src",
             frames=20,
             folds=2,
             progress_every_fold=False,
@@ -123,7 +123,7 @@ class WodDirectPolicyFastloopTests(unittest.TestCase):
         variants = module._official_sweep_commands(
             base_command,
             output_dir=ROOT / "artifacts" / "tmp_fastloop",
-            waymo_src=ROOT / "waymo-open-dataset/src",
+            waymo_src=ROOT / "workspace" / "waymo-open-dataset/src",
             frames=20,
             folds=2,
             progress_every_fold=True,

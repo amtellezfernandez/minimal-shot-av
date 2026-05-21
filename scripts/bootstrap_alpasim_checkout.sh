@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ALPASIM_ROOT="${ALPASIM_ROOT:-$ROOT/alpasim}"
+ALPASIM_ROOT="${ALPASIM_ROOT:-$ROOT/workspace/alpasim}"
 ALPASIM_UPSTREAM_URL="${ALPASIM_UPSTREAM_URL:-https://github.com/NVlabs/alpasim.git}"
 ALPASIM_UPSTREAM_REF="${ALPASIM_UPSTREAM_REF:-v2026.4}"
 STAMP="$(date +%Y%m%d_%H%M%S)"

@@ -97,6 +97,8 @@ This repo is intentionally split into three visible surfaces:
 | Waymo / WOD-E2E stack | [`src/minimal_shot_av/model/README.md`](src/minimal_shot_av/model/README.md) |
 | WOD walkthrough | [`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md) |
 | report / comparison helpers | [`src/minimal_shot_av/neutral/README.md`](src/minimal_shot_av/neutral/README.md) |
+| command entrypoints | [`src/minimal_shot_av/cli/README.md`](src/minimal_shot_av/cli/README.md) |
+| local upstream checkouts / datasets | [`workspace/README.md`](workspace/README.md) |
 | current paper | [`docs/corl2027/paper.pdf`](docs/corl2027/paper.pdf) |
 | branch presentation PDF | [`docs/presentations/presentation-sota.pdf`](docs/presentations/presentation-sota.pdf) |
 

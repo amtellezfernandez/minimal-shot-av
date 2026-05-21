@@ -20,7 +20,7 @@ Checked from repo root on 2026-04-25.
 Actual WOD-E2E TFRecords:
 
 - Validation split is present under
-  `waymo_open_dataset_end_to_end_camera_v_1_0_0/val`.
+  `workspace/waymo_open_dataset_end_to_end_camera_v_1_0_0/val`.
 - Local validation shard count: `93`.
 - Parsed preference-labeled validation frames: `479`.
 - Parsed valid human-rated reference trajectories: `1437`.
@@ -33,17 +33,17 @@ Actual WOD-E2E TFRecords:
 
 Files currently present:
 
-- Official Waymo code checkout: `waymo-open-dataset/`
+- Official Waymo code checkout: `workspace/waymo-open-dataset/`
 - E2E proto definitions:
-  - `waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_data.proto`
-  - `waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_submission.proto`
-  - `waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_metrics.proto`
+  - `workspace/waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_data.proto`
+  - `workspace/waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_submission.proto`
+  - `workspace/waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_metrics.proto`
 - Official E2E tutorial:
-  - `waymo-open-dataset/tutorial/tutorial_vision_based_e2e_driving.ipynb`
+  - `workspace/waymo-open-dataset/tutorial/tutorial_vision_based_e2e_driving.ipynb`
 - Official RFS utility:
-  - `waymo-open-dataset/src/waymo_open_dataset/metrics/python/rater_feedback_utils.py`
+  - `workspace/waymo-open-dataset/src/waymo_open_dataset/metrics/python/rater_feedback_utils.py`
 
-Do not treat the separate `waymo-open-dataset/` checkout as downloaded
+Do not treat the separate `workspace/waymo-open-dataset/` checkout as downloaded
 WOD-E2E data. It contains code, protos, tutorials, and non-submission examples,
 not the local train/test challenge splits.
 
@@ -149,7 +149,7 @@ Current known values:
 ```text
 WOD_E2E_ROOT=waymo_open_dataset_end_to_end_camera_v_1_0_0
 TRAIN_GLOB=/home/amdev/waymo/train/training_*.tfrecord-*
-VALIDATION_GLOB=waymo_open_dataset_end_to_end_camera_v_1_0_0/val/val_*.tfrecord-*
+VALIDATION_GLOB=workspace/waymo_open_dataset_end_to_end_camera_v_1_0_0/val/val_*.tfrecord-*
 TEST_GLOB=
 SUBMISSION_FRAME_JSON=
 

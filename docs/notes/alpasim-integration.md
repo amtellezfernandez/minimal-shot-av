@@ -30,7 +30,7 @@ extra, and, if `ALPASIM_ROOT` points at a real AlpaSim checkout, installs this
 repo into the AlpaSim driver environment too:
 
 ```bash
-export ALPASIM_ROOT=/abs/path/to/alpasim
+export ALPASIM_ROOT=/abs/path/to/workspace/alpasim
 ./scripts/bootstrap_alpasim_runtime.sh
 ./scripts/check_alpasim_readiness.py --scene-preset fresh_3scene
 ./.venv/bin/python scripts/fetch_checkpoints.py
@@ -69,7 +69,7 @@ readiness before any expensive Docker work, and only then builds the local
 If you only need the plugin registration step:
 
 ```bash
-ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/setup_alpasim_local_plugin.py
+ALPASIM_ROOT=/abs/path/to/workspace/alpasim ./.venv/bin/python scripts/setup_alpasim_local_plugin.py
 ```
 
 This bootstraps a minimal `$ALPASIM_ROOT/.venv` with `uv`, installs the
@@ -117,7 +117,7 @@ The pinned external source version is:
 You can rerun the check without reinstalling:
 
 ```bash
-ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/setup_alpasim_local_plugin.py --check-only
+ALPASIM_ROOT=/abs/path/to/workspace/alpasim ./.venv/bin/python scripts/setup_alpasim_local_plugin.py --check-only
 ```
 
 The plugin list should include:
@@ -130,7 +130,7 @@ For repeatable external-driver launches, use the repo-local launcher instead of
 hand-editing Hydra overrides:
 
 ```bash
-ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/run_alpasim_local_external.py \
+ALPASIM_ROOT=/abs/path/to/workspace/alpasim ./.venv/bin/python scripts/run_alpasim_local_external.py \
   --mode print \
   --model token_dagger_iter2_hybrid_clamped \
   --scene-preset fresh_3scene
@@ -170,7 +170,7 @@ The preferred path is the repo-local launcher, which writes a concrete
 edge cases:
 
 ```bash
-ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/run_alpasim_local_external.py \
+ALPASIM_ROOT=/abs/path/to/workspace/alpasim ./.venv/bin/python scripts/run_alpasim_local_external.py \
   --mode print \
   --model token_dagger_iter2_hybrid_clamped \
   --scene-preset fresh_3scene
@@ -179,7 +179,7 @@ ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/run_alpasim_local_e
 If you want a real run immediately:
 
 ```bash
-ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/run_alpasim_local_external.py \
+ALPASIM_ROOT=/abs/path/to/workspace/alpasim ./.venv/bin/python scripts/run_alpasim_local_external.py \
   --mode both \
   --model token_dagger_iter2_hybrid_clamped \
   --scene-preset fresh_3scene
@@ -253,7 +253,7 @@ and logs:
 Run the oracle-gated learned policy with:
 
 ```bash
-ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/run_alpasim_local_external.py \
+ALPASIM_ROOT=/abs/path/to/workspace/alpasim ./.venv/bin/python scripts/run_alpasim_local_external.py \
   --mode both \
   --model token_dagger_iter2_axis_constrained_oracle_actor_clamped \
   --scene-preset front_camera_10scene_smoke \
@@ -264,7 +264,7 @@ For scene-level paired statistics, use the same model and proxy path through the
 batch runner:
 
 ```bash
-ALPASIM_ROOT=/abs/path/to/alpasim ./.venv/bin/python scripts/run_alpasim_scene_batch.py \
+ALPASIM_ROOT=/abs/path/to/workspace/alpasim ./.venv/bin/python scripts/run_alpasim_scene_batch.py \
   --mode both \
   --model token_dagger_iter2_axis_constrained_oracle_actor_clamped \
   --scene-preset front_camera_10scene_smoke \

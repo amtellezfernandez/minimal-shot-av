@@ -9,7 +9,7 @@ PRESET="${PRESET:-front_camera_30scene_merged}"
 BASELINE_MODEL="${BASELINE_MODEL:-token_dagger_iter2_axis_constrained_clamped}"
 ORACLE_MODEL="${ORACLE_MODEL:-token_dagger_iter2_axis_constrained_oracle_actor_clamped}"
 
-ALPASIM_ROOT="${ALPASIM_ROOT:-$ROOT/alpasim}"
+ALPASIM_ROOT="${ALPASIM_ROOT:-$ROOT/workspace/alpasim}"
 PYTHON_BIN="${PYTHON_BIN:-$ROOT/.venv/bin/python}"
 ALPASIM_PYTHON="${ALPASIM_PYTHON:-$ALPASIM_ROOT/.venv/bin/python}"
 

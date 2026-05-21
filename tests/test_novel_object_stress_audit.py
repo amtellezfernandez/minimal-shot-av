@@ -12,8 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.audit_novel_object_stress import build_report
-from scripts.audit_novel_object_stress import GEOMETRY_ONLY_POLICY
+from minimal_shot_av.cli.commands.audit_novel_object_stress import build_report
+from minimal_shot_av.cli.commands.audit_novel_object_stress import GEOMETRY_ONLY_POLICY
 
 
 SCRIPT = ROOT / "scripts" / "audit_novel_object_stress.py"

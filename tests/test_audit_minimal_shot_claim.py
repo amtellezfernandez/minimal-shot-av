@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.audit_minimal_shot_claim import build_report
+from minimal_shot_av.cli.commands.audit_minimal_shot_claim import build_report
 
 
 class MinimalShotClaimAuditTest(unittest.TestCase):

@@ -7,7 +7,7 @@ produce a valid Waymo E2E submission that can challenge the active leaderboard.
 ## Current Reality
 
 - The local workspace has WOD-E2E validation only:
-  `waymo_open_dataset_end_to_end_camera_v_1_0_0/val`.
+  `workspace/waymo_open_dataset_end_to_end_camera_v_1_0_0/val`.
 - The train split, test split, and official test frame list are not present.
 - The current best repo path is still mostly ego-history, route-intent, ridge
   residual candidates, and a structured selector.

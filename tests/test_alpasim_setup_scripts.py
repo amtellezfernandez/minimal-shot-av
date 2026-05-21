@@ -7,12 +7,12 @@ from pathlib import Path
 from unittest.mock import patch
 import subprocess
 
-from scripts.run_alpasim_local_external import _resolve_alpasim_root as resolve_run_root
-from scripts.run_alpasim_local_external import _preflight_scene_artifacts
-from scripts.run_alpasim_local_external import _preflight_docker_access
-from scripts.run_alpasim_local_external import _preflight_alpasim_base_image
-from scripts.run_alpasim_local_external import _validate_alpasim_checkout as validate_run_checkout
-from scripts.run_alpasim_local_external import (
+from minimal_shot_av.cli.commands.run_alpasim_local_external import _resolve_alpasim_root as resolve_run_root
+from minimal_shot_av.cli.commands.run_alpasim_local_external import _preflight_scene_artifacts
+from minimal_shot_av.cli.commands.run_alpasim_local_external import _preflight_docker_access
+from minimal_shot_av.cli.commands.run_alpasim_local_external import _preflight_alpasim_base_image
+from minimal_shot_av.cli.commands.run_alpasim_local_external import _validate_alpasim_checkout as validate_run_checkout
+from minimal_shot_av.cli.commands.run_alpasim_local_external import (
     MODEL_PRESETS,
     _driver_env,
     _driver_command,
@@ -20,8 +20,8 @@ from scripts.run_alpasim_local_external import (
     _wizard_command,
     _wizard_deploy_target,
 )
-from scripts.run_alpasim_local_external import _scene_ids
-from scripts.setup_alpasim_local_plugin import (
+from minimal_shot_av.cli.commands.run_alpasim_local_external import _scene_ids
+from minimal_shot_av.cli.commands.setup_alpasim_local_plugin import (
     _apply_local_alpasim_overrides,
     _bootstrap_alpasim_venv,
     _compile_alpasim_protos,
@@ -119,14 +119,14 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
             "",
             "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock",
         )
-        with patch("scripts.run_alpasim_local_external.subprocess.run", return_value=denied):
+        with patch("minimal_shot_av.cli.commands.run_alpasim_local_external.subprocess.run", return_value=denied):
             with self.assertRaises(SystemExit) as ctx:
                 _preflight_docker_access()
         self.assertIn("Docker daemon is not accessible", str(ctx.exception))
 
     def test_preflight_docker_access_accepts_healthy_daemon(self) -> None:
         healthy = subprocess.CompletedProcess(["docker", "info"], 0, "", "")
-        with patch("scripts.run_alpasim_local_external.subprocess.run", return_value=healthy):
+        with patch("minimal_shot_av.cli.commands.run_alpasim_local_external.subprocess.run", return_value=healthy):
             _preflight_docker_access()
 
     def test_preflight_alpasim_base_image_rejects_missing_image(self) -> None:
@@ -136,7 +136,7 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
             "",
             "No such image",
         )
-        with patch("scripts.run_alpasim_local_external.subprocess.run", return_value=missing):
+        with patch("minimal_shot_av.cli.commands.run_alpasim_local_external.subprocess.run", return_value=missing):
             with self.assertRaises(SystemExit) as ctx:
                 _preflight_alpasim_base_image()
         self.assertIn("build_alpasim_base_image.sh", str(ctx.exception))
@@ -148,7 +148,7 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
             "[]",
             "",
         )
-        with patch("scripts.run_alpasim_local_external.subprocess.run", return_value=present):
+        with patch("minimal_shot_av.cli.commands.run_alpasim_local_external.subprocess.run", return_value=present):
             _preflight_alpasim_base_image()
 
     def test_driver_env_expands_run_dir_and_oracle_actor_proxy(self) -> None:
@@ -201,7 +201,7 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
             source_file.parent.mkdir(parents=True)
             source_file.write_text("override-file\n", encoding="utf-8")
 
-            with patch("scripts.setup_alpasim_local_plugin.ALPASIM_OVERRIDE_ROOT", source_root):
+            with patch("minimal_shot_av.cli.commands.setup_alpasim_local_plugin.ALPASIM_OVERRIDE_ROOT", source_root):
                 _apply_local_alpasim_overrides(alpasim_root)
 
             self.assertEqual("override-file\n", target_file.read_text(encoding="utf-8"))
@@ -231,7 +231,7 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
             source_file.parent.mkdir(parents=True)
             source_file.write_text("driver-model-override\n", encoding="utf-8")
 
-            with patch("scripts.setup_alpasim_local_plugin.ALPASIM_OVERRIDE_ROOT", source_root):
+            with patch("minimal_shot_av.cli.commands.setup_alpasim_local_plugin.ALPASIM_OVERRIDE_ROOT", source_root):
                 _apply_local_alpasim_overrides(alpasim_root)
 
             self.assertEqual("driver-model-override\n", target_file.read_text(encoding="utf-8"))
@@ -260,7 +260,7 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            with patch("scripts.setup_alpasim_local_plugin.ALPASIM_OVERRIDE_ROOT", source_root):
+            with patch("minimal_shot_av.cli.commands.setup_alpasim_local_plugin.ALPASIM_OVERRIDE_ROOT", source_root):
                 _apply_local_alpasim_overrides(alpasim_root)
                 _apply_local_alpasim_overrides(alpasim_root)
 
@@ -289,13 +289,14 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
                     (proto_root / output_name).write_text("# generated\n", encoding="utf-8")
                 return type("Result", (), {"stdout": "", "stderr": "", "returncode": 0})()
 
-            with patch("scripts.setup_alpasim_local_plugin._run", side_effect=fake_run):
+            with patch("minimal_shot_av.cli.commands.setup_alpasim_local_plugin._run", side_effect=fake_run):
                 _bootstrap_alpasim_venv(alpasim_root, uv_bin="uv")
 
             self.assertGreaterEqual(len(calls), 2)
             self.assertEqual(["uv", "venv", str(alpasim_root / ".venv")], calls[0])
             self.assertIn("pip", calls[1])
             self.assertTrue(set(ALPASIM_CORE_DEPENDENCIES).issubset(set(calls[1])))
+            proto_call = next(cmd for cmd in calls if "grpc_tools.protoc" in cmd)
             self.assertEqual(
                 [
                     str(venv_python),
@@ -306,9 +307,9 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
                     f"--grpc_python_out={alpasim_root / 'src' / 'grpc'}",
                     "alpasim_grpc/v0/common.proto",
                 ],
-                calls[2],
+                proto_call,
             )
-            editable_targets = [cmd[-1] for cmd in calls[5:]]
+            editable_targets = [cmd[-1] for cmd in calls if "-e" in cmd]
             self.assertEqual(
                 [str(alpasim_root / relative) for relative in ALPASIM_EDITABLE_PACKAGES],
                 editable_targets,
@@ -330,7 +331,7 @@ class AlpaSimSetupScriptTests(unittest.TestCase):
                 (proto_root / output_name).write_text("# generated\n", encoding="utf-8")
                 return type("Result", (), {"stdout": "", "stderr": "", "returncode": 0})()
 
-            with patch("scripts.setup_alpasim_local_plugin._run", side_effect=fake_run):
+            with patch("minimal_shot_av.cli.commands.setup_alpasim_local_plugin._run", side_effect=fake_run):
                 _compile_alpasim_protos(alpasim_root, venv_python=Path("/tmp/alpasim/.venv/bin/python"))
 
             self.assertEqual(3, len(calls))

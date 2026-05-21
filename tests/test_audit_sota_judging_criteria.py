@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.audit_sota_judging_criteria import build_report
+from minimal_shot_av.cli.commands.audit_sota_judging_criteria import build_report
 
 
 class SotaJudgingCriteriaAuditTest(unittest.TestCase):

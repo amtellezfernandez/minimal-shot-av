@@ -23,7 +23,7 @@ from minimal_shot_av.model.learned_trajectory_model import (
     write_learned_candidate_jsonl,
 )
 from minimal_shot_av.model.wod_e2e import WodE2EPreferenceFrame
-from scripts.generate_wod_learned_candidates import write_candidate_jsonl
+from minimal_shot_av.cli.commands.generate_wod_learned_candidates import write_candidate_jsonl
 
 
 def sample_frame(frame_name: str, *, step: float = 1.0, intent: int = 1) -> WodE2EPreferenceFrame:

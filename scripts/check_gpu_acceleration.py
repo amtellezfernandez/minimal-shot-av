@@ -1,23 +1,22 @@
-#!/usr/bin/env python3
 from __future__ import annotations
 
-import json
-import sys
+from importlib import import_module
 from pathlib import Path
-
+import runpy
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT / "scripts") not in sys.path:
-    sys.path.insert(0, str(ROOT / "scripts"))
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
-from check_cuda_preflight import cuda_preflight_report  # noqa: E402
-
-
-def main() -> int:
-    report = cuda_preflight_report()
-    print(json.dumps(report, indent=2, sort_keys=True))
-    return 0 if report.get("torch_cuda_available") else 1
-
+_TARGET_MODULE = "minimal_shot_av.cli.commands.check_gpu_acceleration"
+_target = import_module(_TARGET_MODULE)
+for _name, _value in vars(_target).items():
+    if _name not in {"__name__", "__package__", "__loader__", "__spec__"}:
+        globals()[_name] = _value
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    if hasattr(_target, "main"):
+        raise SystemExit(_target.main())
+    runpy.run_module(_TARGET_MODULE, run_name="__main__")

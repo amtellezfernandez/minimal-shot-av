@@ -10,7 +10,7 @@ Primary sources:
 - 2025 Vision-based E2E challenge page: <https://waymo.com/open/challenges/2025/e2e-driving/>
 - WOD-E2E paper: <https://arxiv.org/abs/2510.26125>
 - Official codebase: <https://github.com/waymo-research/waymo-open-dataset>
-- Local proto and metric references in `waymo-open-dataset/src/waymo_open_dataset/`
+- Local proto and metric references in `workspace/waymo-open-dataset/src/waymo_open_dataset/`
 
 Related local references:
 
@@ -41,7 +41,7 @@ The key facts:
 Current local data status is tracked in `docs/waymo-data-access.md`. At the
 time of this repo check, the Waymo code/protos/tutorial are present locally and
 the WOD-E2E validation split is present under
-`waymo_open_dataset_end_to_end_camera_v_1_0_0/val`. Train and test TFRecords
+`workspace/waymo_open_dataset_end_to_end_camera_v_1_0_0/val`. Train and test TFRecords
 are not present in this workspace. The local parser currently finds 479
 preference-labeled validation frames and 1,437 valid human-rated reference
 trajectories.

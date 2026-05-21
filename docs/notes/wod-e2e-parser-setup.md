@@ -22,10 +22,10 @@ That requires parsing downloaded WOD-E2E validation TFRecords as official
 
 The official parser contract comes from the local Waymo checkout:
 
-- `waymo-open-dataset/tutorial/tutorial_vision_based_e2e_driving.ipynb`
-- `waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_data.proto`
-- `waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_submission.proto`
-- `waymo-open-dataset/src/waymo_open_dataset/metrics/python/rater_feedback_utils.py`
+- `workspace/waymo-open-dataset/tutorial/tutorial_vision_based_e2e_driving.ipynb`
+- `workspace/waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_data.proto`
+- `workspace/waymo-open-dataset/src/waymo_open_dataset/protos/end_to_end_driving_submission.proto`
+- `workspace/waymo-open-dataset/src/waymo_open_dataset/metrics/python/rater_feedback_utils.py`
 
 The official parsing pattern is:
 
@@ -60,7 +60,7 @@ artifacts and are ignored by git.
 The WOD-E2E validation split is downloaded under:
 
 ```text
-waymo_open_dataset_end_to_end_camera_v_1_0_0/val/
+workspace/waymo_open_dataset_end_to_end_camera_v_1_0_0/val/
 ```
 
 Current verified state:
@@ -134,7 +134,7 @@ summary frames=5 mean_log_future_rfs=7.184 min=4.794 max=10.000
 ```
 
 The scorer loads Waymo's official
-`waymo-open-dataset/src/waymo_open_dataset/metrics/python/rater_feedback_utils.py`
+`workspace/waymo-open-dataset/src/waymo_open_dataset/metrics/python/rater_feedback_utils.py`
 by file path to avoid a package path conflict between the source checkout and
 the generated `.wod-protos` modules.
 

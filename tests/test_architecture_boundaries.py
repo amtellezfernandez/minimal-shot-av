@@ -12,6 +12,7 @@ SRC = ROOT / "src" / "minimal_shot_av"
 MODEL_SRC = SRC / "model"
 SIMULATOR_SRC = SRC / "simulator"
 NEUTRAL_SRC = SRC / "neutral"
+CLI_COMMANDS_SRC = SRC / "cli" / "commands"
 SCRIPTS = ROOT / "scripts"
 PYPROJECT = ROOT / "pyproject.toml"
 UV_LOCK = ROOT / "uv.lock"
@@ -37,6 +38,7 @@ MODEL_MODULES = {
 }
 
 SIMULATOR_MODULES = {
+    "alpasim_direct_actor_planner",
     "alpasim_signal",
     "alpasim_spotlight",
     "alpasim_token_bc",
@@ -79,6 +81,7 @@ MODEL_SCRIPTS = {
     "build_cosmos_predict25_tokenizer_embedding_cache.py",
     "build_cosmos_tokenizer_embedding_cache.py",
     "build_wod_e2e_frame_list.py",
+    "build_wod_grounding_ablation_table.py",
     "build_wod_internvla_av_candidates.py",
     "build_wod_internvla_embedding_cache.py",
     "build_wod_candidate_score_dataset.py",
@@ -131,9 +134,13 @@ SIMULATOR_SCRIPTS = {
     "audit_novel_object_stress.py",
     "audit_seizure_topology_susceptibility.py",
     "audit_alpasignal_bridge.py",
+    "audit_alpasim_action_space_upper_bound.py",
+    "audit_alpasim_candidate_counterfactuals.py",
+    "audit_alpasim_collision_surface.py",
     "audit_dagger_representation.py",
     "audit_minor_runtime_constraints.py",
     "audit_sota_submission_bundles.py",
+    "build_alpasim_oracle_actor_proxy.py",
     "bc_collect_dagger_data.py",
     "bc_collect_data.py",
     "bc_train.py",
@@ -143,6 +150,7 @@ SIMULATOR_SCRIPTS = {
     "eval_baseline_vs_spotlight.py",
     "eval_bc_vs_spotlight.py",
     "eval_heldout_latin_hypercube.py",
+    "eval_internal_proxy_transfer.py",
     "eval_score_vs_spotlight.py",
     "eval_stress_phase.py",
     "evaluate_scenarios.py",
@@ -166,8 +174,20 @@ NEUTRAL_SCRIPTS = {
     "audit_production_av_readiness.py",
     "audit_final_submission_readiness.py",
     "audit_minimal_shot_claim.py",
+    "analyze_transfer_predictors.py",
+    "analyze_alpasim_transfer_matrix.py",
+    "audit_corl_evidence_strength.py",
+    "build_readme_media.py",
+    "check_alpasim_readiness.py",
+    "fetch_checkpoints.py",
+    "liberate_space.py",
+    "publish_hf_release.py",
+    "run_alpasim_scene_batch.py",
+    "run_alpasim_transfer_matrix.py",
     "import_alpasim_metrics.py",
+    "analyze_alpasim_partial_bridge.py",
     "run_alpasim_local_external.py",
+    "audit_alpasim_transfer_diagnostic.py",
     "produce_alpasim_comparable_reports.py",
     "setup_alpasim_local_plugin.py",
     "summarize_alpasim_episodes.py",
@@ -201,10 +221,15 @@ class ArchitectureBoundaryTests(unittest.TestCase):
             *MODEL_SRC.glob("*.py"),
             *SIMULATOR_SRC.glob("*.py"),
             *NEUTRAL_SRC.glob("*.py"),
+            *CLI_COMMANDS_SRC.glob("*.py"),
             *SCRIPTS.glob("*.py"),
         ]
         violations = _flat_root_import_violations(paths)
         self.assertEqual([], violations)
+
+    def test_scripts_are_thin_wrappers(self) -> None:
+        for path in sorted(SCRIPTS.glob("*.py")):
+            self.assertEqual(_expected_wrapper_text(path.stem), path.read_text(encoding="utf-8"))
 
     def test_pyproject_entrypoints_target_boundary_packages(self) -> None:
         pyproject = load_string_tables(PYPROJECT)
@@ -346,6 +371,29 @@ def _text_surface_violations(paths, forbidden_terms: list[str]) -> list[str]:
             if term in text:
                 violations.append(f"{path.relative_to(ROOT)} contains {term}")
     return violations
+
+
+def _expected_wrapper_text(module: str) -> str:
+    return (
+        "from __future__ import annotations\n\n"
+        "from importlib import import_module\n"
+        "from pathlib import Path\n"
+        "import runpy\n"
+        "import sys\n\n"
+        "ROOT = Path(__file__).resolve().parents[1]\n"
+        "SRC = ROOT / \"src\"\n"
+        "if str(SRC) not in sys.path:\n"
+        "    sys.path.insert(0, str(SRC))\n\n"
+        f"_TARGET_MODULE = \"minimal_shot_av.cli.commands.{module}\"\n"
+        "_target = import_module(_TARGET_MODULE)\n"
+        "for _name, _value in vars(_target).items():\n"
+        "    if _name not in {\"__name__\", \"__package__\", \"__loader__\", \"__spec__\"}:\n"
+        "        globals()[_name] = _value\n\n"
+        "if __name__ == \"__main__\":\n"
+        "    if hasattr(_target, \"main\"):\n"
+        "        raise SystemExit(_target.main())\n"
+        "    runpy.run_module(_TARGET_MODULE, run_name=\"__main__\")\n"
+    )
 
 
 if __name__ == "__main__":

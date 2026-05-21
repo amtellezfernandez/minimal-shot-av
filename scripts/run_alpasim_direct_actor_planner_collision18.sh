@@ -9,7 +9,7 @@ PRESET="${PRESET:-front_camera_collision18}"
 BASELINE_MODEL="${BASELINE_MODEL:-token_dagger_iter2_axis_constrained_clamped}"
 DIRECT_MODEL="${DIRECT_MODEL:-direct_actor_planner_oracle}"
 
-ALPASIM_ROOT="${ALPASIM_ROOT:-$ROOT/alpasim}"
+ALPASIM_ROOT="${ALPASIM_ROOT:-$ROOT/workspace/alpasim}"
 PYTHON_BIN="${PYTHON_BIN:-$ROOT/.venv/bin/python}"
 ALPASIM_PYTHON="${ALPASIM_PYTHON:-$ALPASIM_ROOT/.venv/bin/python}"
 
