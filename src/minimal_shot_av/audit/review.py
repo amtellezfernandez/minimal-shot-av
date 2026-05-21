@@ -94,8 +94,9 @@ def critical_event_bundle(
     frames: list[dict[str, Any]],
     *,
     context_radius: int = 2,
+    min_severity: str = "low",
 ) -> dict[str, Any]:
-    bookmarks = frame_bookmarks(frames)
+    bookmarks = [item for item in frame_bookmarks(frames) if severity_rank(str(item.get("severity", "low"))) >= severity_rank(min_severity)]
     selected_indices: set[int] = set()
     for bookmark_item in bookmarks:
         frame_idx = int(bookmark_item.get("frame_idx", 0))
@@ -113,12 +114,15 @@ def critical_event_bundle(
 
 def bookmark(kind: str, frame: dict[str, Any], detail: dict[str, Any]) -> dict[str, Any]:
     step = frame.get("step", {})
+    media = frame.get("media", [])
     return {
         "kind": kind,
+        "severity": bookmark_severity(kind, detail),
         "frame_idx": int(frame.get("frame_idx", 0)),
         "timestamp_s": float(frame.get("timestamp_s", 0.0) or 0.0),
         "action_mode": step.get("action_mode"),
         "detail": detail,
+        "media": media if isinstance(media, list) else [],
     }
 
 
@@ -149,3 +153,24 @@ def as_float(value: Any, default: float) -> float:
         return float(value)
     except (TypeError, ValueError):
         return default
+
+
+def bookmark_severity(kind: str, detail: dict[str, Any]) -> str:
+    if kind in {"collision_risk_spike", "stall_or_deadlock"}:
+        return "high"
+    if kind == "near_miss":
+        return "high" if as_float(detail.get("min_clearance"), default=math.inf) <= 0.5 else "medium"
+    if kind == "lane_violation":
+        return "high" if as_float(detail.get("lane_error"), default=0.0) >= 1.5 else "medium"
+    if kind == "intervention":
+        action_mode = str(detail.get("action_mode", "") or "")
+        if any(token in action_mode for token in ("emergency", "evasive", "escape")):
+            return "high"
+        return "medium"
+    if kind == "trigger_activation":
+        return "low"
+    return "medium"
+
+
+def severity_rank(level: str) -> int:
+    return {"low": 0, "medium": 1, "high": 2}.get(level, 0)

@@ -148,6 +148,8 @@ class AuditRerunBridgeTests(unittest.TestCase):
                     str(output_path),
                     "--context-radius",
                     "1",
+                    "--min-severity",
+                    "medium",
                 ],
                 cwd=ROOT,
                 check=True,
@@ -159,9 +161,72 @@ class AuditRerunBridgeTests(unittest.TestCase):
             bundle = json.loads(output_path.read_text(encoding="utf-8"))
 
         self.assertEqual(str(output_path), payload["output"])
+        self.assertEqual("medium", payload["min_severity"])
         self.assertGreater(bundle["bookmark_count"], 0)
         self.assertGreater(bundle["critical_frame_count"], 0)
         self.assertLessEqual(bundle["critical_frame_count"], bundle["manifest"]["frame_count"])
+        self.assertTrue(all(item["severity"] in {"medium", "high"} for item in bundle["bookmarks"]))
+
+    def test_critical_event_bundle_keeps_bookmark_media_refs(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            run_dir = Path(temp_dir) / "run"
+            audit_dir = Path(temp_dir) / "audit"
+            (run_dir / "driver").mkdir(parents=True)
+            (run_dir / "aggregate").mkdir(parents=True)
+            (run_dir / "launch-metadata.json").write_text(
+                json.dumps({"model": "token_dagger_iter2_hybrid_clamped", "scene_preset": "fresh_3scene", "scene_ids": ["clipgt-test-scene"]}),
+                encoding="utf-8",
+            )
+            (run_dir / "aggregate" / "metrics_results.json").write_text(
+                json.dumps({"run_count": 1, "collision_at_fault": 0.0, "offroad": 0.0, "dist_to_gt_trajectory": 1.2}),
+                encoding="utf-8",
+            )
+            selection_row = {
+                "frame_index": 1,
+                "scene_id": "clipgt-test-scene",
+                "command": "straight",
+                "speed_mps": 6.0,
+                "front_camera_image_path": "frames/front_0001.jpg",
+                "selection_mode": "fallback_stop",
+                "trajectory_mode": "clamped_lateral",
+                "hybrid_token": "slow_yield",
+                "spotlight_token": "slow_yield",
+                "decision_type": "fallback_stop",
+                "dagger_argmax_geo_gap": 0.4,
+                "top_logits": [{"token": "slow_yield", "logit": 5.0}],
+                "spotlight_top_candidates": [{"token": "slow_yield"}],
+                "alpasim_signal": {
+                    "route_waypoints": [{"x": 0.0, "y": 0.0}, {"x": 20.0, "y": 0.0}],
+                    "structured_hazards": [],
+                    "dynamics_risk": 0.85,
+                },
+            }
+            (run_dir / "driver" / "selection-log.jsonl").write_text(json.dumps(selection_row) + "\n", encoding="utf-8")
+            export_alpasim_audit_log(run_dir, audit_dir)
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "export_audit_critical_events.py"),
+                    str(audit_dir),
+                    "--output",
+                    str(Path(temp_dir) / "critical_alpasim.json"),
+                    "--min-severity",
+                    "high",
+                ],
+                cwd=ROOT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            payload = json.loads(result.stdout)
+            bundle = json.loads((Path(temp_dir) / "critical_alpasim.json").read_text(encoding="utf-8"))
+
+        self.assertEqual("high", payload["min_severity"])
+        self.assertGreater(bundle["bookmark_count"], 0)
+        self.assertTrue(all(item["severity"] == "high" for item in bundle["bookmarks"]))
+        self.assertTrue(any(item["media"] and item["media"][0]["path"] == "frames/front_0001.jpg" for item in bundle["bookmarks"]))
 
     def test_export_alpasim_audit_log_from_selection_log(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
