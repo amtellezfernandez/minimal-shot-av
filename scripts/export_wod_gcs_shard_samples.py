@@ -10,6 +10,7 @@ if str(SRC) not in sys.path:
 
 from minimal_shot_av.cli.wrapper import export_command_namespace, run_command_module
 
+_TARGET_MODULE = ""
 _target = export_command_namespace(globals(), "export_wod_gcs_shard_samples")
 
 if __name__ == "__main__":

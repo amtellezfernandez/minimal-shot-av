@@ -10,6 +10,7 @@ if str(SRC) not in sys.path:
 
 from minimal_shot_av.cli.wrapper import export_command_namespace, run_command_module
 
+_TARGET_MODULE = ""
 _target = export_command_namespace(globals(), "evaluate_wod_e2e_rfs")
 
 if __name__ == "__main__":

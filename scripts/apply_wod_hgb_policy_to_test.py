@@ -10,6 +10,7 @@ if str(SRC) not in sys.path:
 
 from minimal_shot_av.cli.wrapper import export_command_namespace, run_command_module
 
+_TARGET_MODULE = ""
 _target = export_command_namespace(globals(), "apply_wod_hgb_policy_to_test")
 
 if __name__ == "__main__":

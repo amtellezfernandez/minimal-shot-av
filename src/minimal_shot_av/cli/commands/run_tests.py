@@ -125,7 +125,8 @@ def _run_parallel(modules: list[str], workers: int, *, fail_fast: bool = False) 
 def _run_module(module: str) -> TestResult:
     env = os.environ.copy()
     existing_path = env.get("PYTHONPATH")
-    env["PYTHONPATH"] = str(SRC) if not existing_path else f"{SRC}{os.pathsep}{existing_path}"
+    src_path = ROOT / "src"
+    env["PYTHONPATH"] = str(src_path) if not existing_path else f"{src_path}{os.pathsep}{existing_path}"
     start = time.perf_counter()
     proc = subprocess.run(
         [sys.executable, "-m", "unittest", module],

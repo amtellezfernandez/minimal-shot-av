@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import sys
 import tarfile
 from typing import Any
 
@@ -324,7 +325,7 @@ def _write_archive(artifacts_root: Path, track: str, readme: Path) -> Path:
     with tarfile.open(output, "w:gz") as archive:
         archive.add(readme, arcname=f"{track}/README.md")
         for source in TRACK_DOCS[track]:
-            path = ROOT / source
+            path = _resolve_track_doc_path(source)
             if path.exists():
                 archive_name = "repo_README.md" if source == "README.md" else source
                 archive.add(path, arcname=f"{track}/{archive_name}")
@@ -348,6 +349,24 @@ def _track_artifact_dirs(artifacts_root: Path, track: str) -> list[Path]:
         dirs.append(artifacts_root / "minor_runtime")
         dirs.append(artifacts_root / "minor_visual_gallery")
     return dirs
+
+
+def _resolve_track_doc_path(source: str) -> Path:
+    direct = ROOT / source
+    if direct.exists():
+        return direct
+    if not source.startswith("docs/"):
+        return direct
+    relative = Path(source).relative_to("docs")
+    for candidate in (
+        ROOT / "docs" / "notes" / relative,
+        ROOT / "docs" / "archive" / relative,
+    ):
+        if candidate.exists():
+            return candidate
+    if source == "docs/minor-simulation-submission.md":
+        return ROOT / "docs" / "simulation.md"
+    return direct
 
 
 def _archive_report(path: Path) -> dict[str, Any]:

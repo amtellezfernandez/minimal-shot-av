@@ -391,6 +391,7 @@ def _expected_wrapper_text(module: str) -> str:
         "if str(SRC) not in sys.path:\n"
         "    sys.path.insert(0, str(SRC))\n\n"
         "from minimal_shot_av.cli.wrapper import export_command_namespace, run_command_module\n\n"
+        "_TARGET_MODULE = \"\"\n"
         f"_target = export_command_namespace(globals(), \"{module}\")\n\n"
         "if __name__ == \"__main__\":\n"
         "    run_command_module(_TARGET_MODULE, _target)\n"
