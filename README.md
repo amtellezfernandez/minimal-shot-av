@@ -2,7 +2,16 @@
 
 > CoRL 2027 repository for Spotlight Reflex, long-tail simulation, AlpaSim transfer diagnostics, and a grounded WOD-E2E selector stack.
 
-![README hero](docs/images/readme_hero_banner.png)
+| Spotlight vs baseline | Construction corridor |
+|---|---|
+| ![Spotlight vs baseline](docs/images/spotlight_vs_baseline.gif) | ![Construction corridor](docs/images/construction_success.gif) |
+
+| Intersection stress | AlpaSim transfer |
+|---|---|
+| ![Intersection stress](docs/images/intersection_stress.gif) | ![AlpaSim transfer](docs/images/alpasim_transfer.gif) |
+
+Reasoning panel:
+![AlpaSim reasoning panel](docs/images/alpasim_reasoning_panel.png)
 
 ## Why This Repo Pops
 
@@ -26,10 +35,6 @@ not hide behind scale-only rhetoric.
 That combination is what makes the project look like an autonomy paradigm rather than
 just another benchmark table.
 
-## Media Wall
-
-![Showcase grid](docs/images/readme_showcase_grid.png)
-
 ## Watch This Order
 
 If you only show four things, show them in this order:
@@ -39,23 +44,16 @@ If you only show four things, show them in this order:
 3. **Intersection stress.**
 4. **AlpaSim transfer clip plus reasoning panel.**
 
-| Spotlight vs baseline | Construction corridor |
-|---|---|
-| ![Spotlight vs baseline](docs/images/spotlight_vs_baseline.gif) | ![Construction corridor](docs/images/construction_success.gif) |
-
-| Intersection stress | AlpaSim transfer |
-|---|---|
-| ![Intersection stress](docs/images/intersection_stress.gif) | ![AlpaSim transfer](docs/images/alpasim_transfer.gif) |
-
-Reasoning panel:
-![AlpaSim reasoning panel](docs/images/alpasim_reasoning_panel.png)
-
 That sequence tells the right story:
 
 - success in a rare hazard,
 - breadth across scene types,
 - pressure under multi-agent timing,
 - and then honest external transfer diagnostics.
+
+## Media Wall
+
+![Showcase grid](docs/images/readme_showcase_grid.png)
 
 ## Fast Facts
 
@@ -65,8 +63,6 @@ That sequence tells the right story:
 - **WOD-E2E stack:** candidate generation plus a learned selector over preference-labeled Waymo validation frames.
 
 ## Scoreboard
-
-![Scoreboard](docs/images/readme_scoreboard.png)
 
 | Result | Number |
 |---|---:|
