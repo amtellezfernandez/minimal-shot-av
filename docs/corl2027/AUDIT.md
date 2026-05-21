@@ -67,7 +67,7 @@ artifacts/models_manifest.json
 Release packaging metadata is kept separate from the paper surface:
 
 ```text
-release/hf/
+artifacts/hf_release/
 ```
 
 Fetch them with:

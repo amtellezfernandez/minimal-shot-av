@@ -13,7 +13,7 @@ Use it for:
 
 - `docs/corl2027/` explains the paper and audit path
 - `artifacts/corl2027/` stores generated proof artifacts for that paper surface
-- `release/hf/` stores Hugging Face release packaging metadata and should stay separate
+- `artifacts/hf_release/` stores Hugging Face release packaging metadata and should stay separate
 
 ## Core Audit Outputs
 

@@ -11,8 +11,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 MODELS_MANIFEST = ROOT / "artifacts" / "models_manifest.json"
-RESULTS_MANIFEST = ROOT / "release" / "hf" / "results_manifest.json"
-RELEASE_DIR = ROOT / "release" / "hf"
+RESULTS_MANIFEST = ROOT / "artifacts" / "hf_release" / "results_manifest.json"
+RELEASE_DIR = ROOT / "artifacts" / "hf_release"
 
 
 @dataclass(frozen=True)

@@ -98,6 +98,7 @@ This repo is intentionally split into three visible surfaces:
 | WOD walkthrough | [`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md) |
 | report / comparison helpers | [`src/minimal_shot_av/neutral/README.md`](src/minimal_shot_av/neutral/README.md) |
 | current paper | [`docs/corl2027/paper.pdf`](docs/corl2027/paper.pdf) |
+| branch presentation PDF | [`docs/presentations/presentation-sota.pdf`](docs/presentations/presentation-sota.pdf) |
 
 ## Demo Artifacts
 
