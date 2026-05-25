@@ -17,6 +17,7 @@ from minimal_shot_av.model.nuplan_maneuver_token_selector import selector_featur
 ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_OUTPUT_JSON = ROOT / "artifacts" / "corl2027" / "nuplan_maneuvertoken_rollout.json"
 DEFAULT_OUTPUT_MARKDOWN = ROOT / "artifacts" / "corl2027" / "nuplan_maneuvertoken_rollout.md"
+NEAR_MISS_THRESHOLD_M = 0.5
 FAILURE_RUNGS = (
     "no actor/state visibility",
     "no safe token existed",
@@ -24,6 +25,7 @@ FAILURE_RUNGS = (
     "proxy predicted safe but realized failed",
     "metric/spec ambiguity",
 )
+RESOLVED_SAFE = "resolved safe"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -119,7 +121,8 @@ def run_rollout(scenes: list[dict[str, Any]], *, selector=None) -> dict[str, Any
         if bool(record["selected_token_proxy_safe"]):
             safe_count += 1
         enrich_scene_failure_diagnostics(record)
-        rung_counts[str(record["failure_rung"])] += 1
+        if str(record["failure_rung"]) in rung_counts:
+            rung_counts[str(record["failure_rung"])] += 1
     rung_table = [
         {
             "failure_rung": rung,
@@ -128,11 +131,31 @@ def run_rollout(scenes: list[dict[str, Any]], *, selector=None) -> dict[str, Any
         }
         for rung in FAILURE_RUNGS
     ]
+    proxy_safe_selected_count = sum(1 for record in records if bool(record["proxy_safe_selected"]))
+    proxy_safe_realized_safe_count = sum(
+        1
+        for record in records
+        if bool(record["proxy_safe_selected"]) and record["failure_rung"] == RESOLVED_SAFE
+    )
+    proxy_safe_realized_near_or_collision_count = sum(
+        1
+        for record in records
+        if bool(record["proxy_safe_selected"]) and record["failure_rung"] == "proxy predicted safe but realized failed"
+    )
+    proxy_safe_realized_missing_count = sum(
+        1
+        for record in records
+        if bool(record["proxy_safe_selected"]) and record["selected_token_realized_min_clearance_m"] is None
+    )
     return {
         "schema": "nuplan_maneuvertoken_rollout_v2",
         "selection_mode": "learned_selector" if selector is not None else "heuristic_selector",
         "scene_count": len(records),
         "proxy_safe_rate": round(safe_count / len(records), 6) if records else 0.0,
+        "proxy_safe_selected_count": proxy_safe_selected_count,
+        "proxy_safe_realized_safe_count": proxy_safe_realized_safe_count,
+        "proxy_safe_realized_near_or_collision_count": proxy_safe_realized_near_or_collision_count,
+        "proxy_safe_realized_missing_count": proxy_safe_realized_missing_count,
         "selected_token_histogram": dict(sorted(selected_token_histogram.items())),
         "failure_rung_table": rung_table,
         "scenes": records,
@@ -159,25 +182,48 @@ def enrich_scene_failure_diagnostics(record: dict[str, Any]) -> None:
             ),
         )["token"]
     realized_min_clearance = _realized_min_clearance(record)
-    collision_or_near_miss = None if realized_min_clearance is None else realized_min_clearance <= 0.5
+    collision_or_near_miss = (
+        None if realized_min_clearance is None else realized_min_clearance < NEAR_MISS_THRESHOLD_M
+    )
     selector_chose_safe_token = bool(record["selected_token_proxy_safe"])
-    if int(actor_summary["visible_actor_count"]) < int(actor_summary["actor_count"]):
-        failure_rung = "no actor/state visibility"
-    elif not safe_token_existed:
-        failure_rung = "no safe token existed"
-    elif not selector_chose_safe_token:
-        failure_rung = "safe token existed but selector missed it"
-    elif collision_or_near_miss is True:
-        failure_rung = "proxy predicted safe but realized failed"
-    else:
-        failure_rung = "metric/spec ambiguity"
+    failure_rung = classify_failure_rung(
+        actor_visible_count=int(actor_summary["visible_actor_count"]),
+        actor_count=int(actor_summary["actor_count"]),
+        safe_token_existed=safe_token_existed,
+        selector_chose_safe_token=selector_chose_safe_token,
+        selected_token_realized_min_clearance_m=realized_min_clearance,
+        near_miss_threshold_m=NEAR_MISS_THRESHOLD_M,
+    )
     record["proxy_safe_selected"] = selector_chose_safe_token
+    record["selected_token_realized_min_clearance_m"] = realized_min_clearance
     record["realized_min_clearance"] = realized_min_clearance
     record["collision_or_near_miss"] = collision_or_near_miss
     record["safe_token_existed"] = safe_token_existed
     record["oracle_safe_token"] = oracle_safe_token
     record["selector_chose_safe_token"] = selector_chose_safe_token
     record["failure_rung"] = failure_rung
+
+
+def classify_failure_rung(
+    *,
+    actor_visible_count: int,
+    actor_count: int,
+    safe_token_existed: bool,
+    selector_chose_safe_token: bool,
+    selected_token_realized_min_clearance_m: float | None,
+    near_miss_threshold_m: float,
+) -> str:
+    if actor_visible_count < actor_count:
+        return "no actor/state visibility"
+    if not safe_token_existed:
+        return "no safe token existed"
+    if not selector_chose_safe_token:
+        return "safe token existed but selector missed it"
+    if selected_token_realized_min_clearance_m is None:
+        return "metric/spec ambiguity"
+    if selected_token_realized_min_clearance_m < near_miss_threshold_m:
+        return "proxy predicted safe but realized failed"
+    return RESOLVED_SAFE
 
 
 def _realized_min_clearance(record: dict[str, Any]) -> float | None:
@@ -194,6 +240,10 @@ def markdown_report(report: dict[str, Any]) -> str:
         "",
         f"- Scene count: `{report['scene_count']}`",
         f"- Proxy-safe rate: `{report['proxy_safe_rate']:.3f}`",
+        f"- Proxy-safe selected count: `{report['proxy_safe_selected_count']}`",
+        f"- Proxy-safe + realized safe count: `{report['proxy_safe_realized_safe_count']}`",
+        f"- Proxy-safe + realized near/collision count: `{report['proxy_safe_realized_near_or_collision_count']}`",
+        f"- Proxy-safe + realized missing count: `{report['proxy_safe_realized_missing_count']}`",
         f"- Selected token histogram: `{json.dumps(report['selected_token_histogram'], sort_keys=True)}`",
         "",
         "## Failure Table",

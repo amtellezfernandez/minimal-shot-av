@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from collections import Counter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +51,7 @@ class RunNuPlanManeuverTokenRolloutTests(unittest.TestCase):
         self.assertIn("safe_token_existed", report["scenes"][0])
         self.assertIn("oracle_safe_token", report["scenes"][0])
         self.assertIn("realized_min_clearance", report["scenes"][0])
+        self.assertIn("selected_token_realized_min_clearance_m", report["scenes"][0])
 
     def test_cli_main_writes_json_and_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -78,6 +80,7 @@ class RunNuPlanManeuverTokenRolloutTests(unittest.TestCase):
             self.assertEqual(1, payload["scene_count"])
             self.assertEqual(5, len(payload["failure_rung_table"]))
             self.assertIn("Failure rung", output_md.read_text(encoding="utf-8"))
+            self.assertIn("Proxy-safe selected count", output_md.read_text(encoding="utf-8"))
             self.assertIn("Proxy-safe rate", output_md.read_text(encoding="utf-8"))
 
     def test_rollout_can_use_trained_selector_model(self) -> None:
@@ -109,6 +112,79 @@ class RunNuPlanManeuverTokenRolloutTests(unittest.TestCase):
         self.assertEqual(expected_token, report["scenes"][0]["selected_token"])
         self.assertEqual("learned_selector", report["scenes"][0]["selection_source"])
         self.assertEqual("metric/spec ambiguity", report["scenes"][0]["failure_rung"])
+
+    def test_proxy_safe_without_realized_clearance_is_ambiguity(self) -> None:
+        rung = self.module.classify_failure_rung(
+            actor_visible_count=2,
+            actor_count=2,
+            safe_token_existed=True,
+            selector_chose_safe_token=True,
+            selected_token_realized_min_clearance_m=None,
+            near_miss_threshold_m=1.0,
+        )
+
+        self.assertEqual("metric/spec ambiguity", rung)
+
+    def test_proxy_safe_realized_near_is_controller_proxy_mismatch(self) -> None:
+        rung = self.module.classify_failure_rung(
+            actor_visible_count=2,
+            actor_count=2,
+            safe_token_existed=True,
+            selector_chose_safe_token=True,
+            selected_token_realized_min_clearance_m=0.4,
+            near_miss_threshold_m=1.0,
+        )
+
+        self.assertEqual("proxy predicted safe but realized failed", rung)
+
+    def test_proxy_safe_realized_safe_is_resolved_safe(self) -> None:
+        rung = self.module.classify_failure_rung(
+            actor_visible_count=2,
+            actor_count=2,
+            safe_token_existed=True,
+            selector_chose_safe_token=True,
+            selected_token_realized_min_clearance_m=3.2,
+            near_miss_threshold_m=1.0,
+        )
+
+        self.assertEqual("resolved safe", rung)
+
+    def test_no_safe_token_has_precedence(self) -> None:
+        rung = self.module.classify_failure_rung(
+            actor_visible_count=2,
+            actor_count=2,
+            safe_token_existed=False,
+            selector_chose_safe_token=False,
+            selected_token_realized_min_clearance_m=0.2,
+            near_miss_threshold_m=1.0,
+        )
+
+        self.assertEqual("no safe token existed", rung)
+
+    def test_selector_miss_when_safe_token_exists_but_not_selected(self) -> None:
+        rung = self.module.classify_failure_rung(
+            actor_visible_count=2,
+            actor_count=2,
+            safe_token_existed=True,
+            selector_chose_safe_token=False,
+            selected_token_realized_min_clearance_m=None,
+            near_miss_threshold_m=1.0,
+        )
+
+        self.assertEqual("safe token existed but selector missed it", rung)
+
+    def test_current_failure_rung_count_summary(self) -> None:
+        records = (
+            [{"failure_rung": "no safe token existed"} for _ in range(25)]
+            + [{"failure_rung": "metric/spec ambiguity"} for _ in range(25)]
+        )
+        counts = Counter(record["failure_rung"] for record in records)
+
+        self.assertEqual(0, counts["no actor/state visibility"])
+        self.assertEqual(25, counts["no safe token existed"])
+        self.assertEqual(0, counts["safe token existed but selector missed it"])
+        self.assertEqual(0, counts["proxy predicted safe but realized failed"])
+        self.assertEqual(25, counts["metric/spec ambiguity"])
 
 
 def _scene(scene_id: str) -> dict:
