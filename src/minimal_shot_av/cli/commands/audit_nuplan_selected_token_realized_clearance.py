@@ -20,6 +20,15 @@ DEFAULT_OUTPUT_JSON = ROOT / "artifacts" / "corl2027" / "nuplan_mini_rollout50_r
 DEFAULT_OUTPUT_MARKDOWN = ROOT / "artifacts" / "corl2027" / "nuplan_mini_rollout50_realized_clearance.md"
 DEFAULT_NEAR_MISS_THRESHOLD_M = 1.0
 THRESHOLD_SENSITIVITY_METERS = (0.5, 1.0, 1.5, 2.0)
+HORIZON_SENSITIVITY_SECONDS = (1.0, 2.0, 3.0, 4.0, 5.0)
+REPLAY_INFEASIBLE_RUNG = "proxy-safe but replay-infeasible"
+REPLAY_FAILURE_RUNGS = (
+    "no actor/state visibility",
+    "no safe token existed",
+    "safe token existed but selector missed it",
+    REPLAY_INFEASIBLE_RUNG,
+    "metric/spec ambiguity",
+)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -87,6 +96,12 @@ def enrich_report_with_realized_clearance(
             selector_chose_safe_token=bool(scene["selector_chose_safe_token"]),
             selected_token_realized_min_clearance_m=scene["selected_token_realized_min_clearance_m"],
             near_miss_threshold_m=float(near_miss_threshold_m),
+        )
+        scene["failure_rung"] = _replay_specific_failure_rung(scene["failure_rung"], scene["realized_clearance_source"])
+        scene["hypothesis_supported"] = (
+            "controller_proxy_mismatch_candidate"
+            if scene["failure_rung"] == REPLAY_INFEASIBLE_RUNG
+            else None
         )
     _recompute_report_summary(enriched)
     enriched["schema"] = "nuplan_maneuvertoken_realized_clearance_v1"
@@ -157,7 +172,7 @@ def compute_scene_log_replay_realized_fields(scene: dict[str, Any]) -> dict[str,
 
 def _recompute_report_summary(report: dict[str, Any]) -> None:
     scenes = list(report.get("scenes", []))
-    rung_counts = {rung: 0 for rung in FAILURE_RUNGS}
+    rung_counts = {rung: 0 for rung in REPLAY_FAILURE_RUNGS}
     proxy_safe_selected_count = 0
     proxy_safe_realized_safe_count = 0
     proxy_safe_realized_near_or_collision_count = 0
@@ -172,7 +187,7 @@ def _recompute_report_summary(report: dict[str, Any]) -> None:
                 proxy_safe_realized_missing_count += 1
             elif rung == RESOLVED_SAFE:
                 proxy_safe_realized_safe_count += 1
-            elif rung == "proxy predicted safe but realized failed":
+            elif rung == REPLAY_INFEASIBLE_RUNG:
                 proxy_safe_realized_near_or_collision_count += 1
     report["proxy_safe_selected_count"] = proxy_safe_selected_count
     report["proxy_safe_realized_safe_count"] = proxy_safe_realized_safe_count
@@ -193,12 +208,16 @@ def _recompute_report_summary(report: dict[str, Any]) -> None:
             "count": rung_counts[rung],
             "rate": round(rung_counts[rung] / len(scenes), 6) if scenes else 0.0,
         }
-        for rung in FAILURE_RUNGS
+        for rung in REPLAY_FAILURE_RUNGS
     ]
     report["token_failure_table"] = _token_failure_table(scenes)
     report["threshold_sensitivity_table"] = _threshold_sensitivity_table(
         scenes=scenes,
         thresholds_m=THRESHOLD_SENSITIVITY_METERS,
+    )
+    report["horizon_sensitivity_table"] = _horizon_sensitivity_table(
+        scenes=scenes,
+        horizons_s=HORIZON_SENSITIVITY_SECONDS,
     )
     report["no_safe_token_cause_table"] = _no_safe_token_cause_table(scenes)
     report["replay_oracle_case_table"] = _replay_oracle_case_table(scenes)
@@ -326,7 +345,7 @@ def _candidate_replay_evaluations(
 ) -> list[dict[str, Any]]:
     rows = []
     for candidate in scene.get("candidates", []):
-        min_clearance_m, min_time_s, _ = _compute_log_replay_clearance(
+        min_clearance_m, min_time_s, trace = _compute_log_replay_clearance(
             ego=ego,
             poses=list(candidate["poses"]),
             dt_s=dt_s,
@@ -344,6 +363,7 @@ def _candidate_replay_evaluations(
                     None if min_clearance_m is None else bool(min_clearance_m < DEFAULT_NEAR_MISS_THRESHOLD_M)
                 ),
                 "realized_collision": None if min_clearance_m is None else bool(min_clearance_m < 0.0),
+                "realized_clearance_trace": trace,
             }
         )
     return rows
@@ -460,7 +480,7 @@ def _clearance_trace_examples(scenes: list[dict[str, Any]], *, limit: int = 5) -
     failed = [
         scene
         for scene in scenes
-        if scene.get("failure_rung") == "proxy predicted safe but realized failed"
+        if scene.get("failure_rung") == REPLAY_INFEASIBLE_RUNG
         and scene.get("selected_token_realized_clearance_trace")
     ]
     failed.sort(key=lambda scene: float(scene["selected_token_realized_min_clearance_m"]))
@@ -560,6 +580,76 @@ def _binomial_ci95(*, successes: int, trials: int) -> dict[str, float]:
     p = successes / trials
     margin = 1.96 * math.sqrt(max(p * (1.0 - p), 0.0) / trials)
     return {"lower": round(max(0.0, p - margin), 6), "upper": round(min(1.0, p + margin), 6)}
+
+
+def _replay_specific_failure_rung(failure_rung: str, realized_clearance_source: Any) -> str:
+    if str(realized_clearance_source) == "log_replay" and failure_rung == "proxy predicted safe but realized failed":
+        return REPLAY_INFEASIBLE_RUNG
+    return str(failure_rung)
+
+
+def _horizon_sensitivity_table(
+    *,
+    scenes: list[dict[str, Any]],
+    horizons_s: tuple[float, ...],
+) -> list[dict[str, Any]]:
+    rows = []
+    for horizon_s in horizons_s:
+        selected_failures = 0
+        stop_failures = 0
+        no_replay_safe_token = 0
+        available = False
+        for scene in scenes:
+            selected_trace = list(scene.get("selected_token_realized_clearance_trace", []))
+            if selected_trace:
+                available = available or _horizon_available(selected_trace, horizon_s)
+            if bool(scene.get("proxy_safe_selected")) and _trace_near_miss(selected_trace, horizon_s):
+                selected_failures += 1
+                if str(scene.get("selected_token")) == "stop":
+                    stop_failures += 1
+            evaluations = list(scene.get("candidate_replay_evaluations", []))
+            if evaluations and not _any_replay_safe_by_horizon(evaluations, horizon_s):
+                no_replay_safe_token += 1
+        rows.append(
+            {
+                "horizon_s": float(horizon_s),
+                "available": available,
+                "proxy_safe_selected_failures": selected_failures if available else None,
+                "proxy_safe_stop_failures": stop_failures if available else None,
+                "no_replay_safe_token": no_replay_safe_token if available else None,
+            }
+        )
+    return rows
+
+
+def _trace_near_miss(trace: list[dict[str, Any]], horizon_s: float) -> bool:
+    if not _horizon_available(trace, horizon_s):
+        return False
+    clearances = [
+        float(row["realized_clearance_m"])
+        for row in trace
+        if float(row["time_s"]) <= horizon_s + 1.0e-6
+    ]
+    return bool(clearances) and min(clearances) < DEFAULT_NEAR_MISS_THRESHOLD_M
+
+
+def _horizon_available(trace: list[dict[str, Any]], horizon_s: float) -> bool:
+    return bool(trace) and max(float(row["time_s"]) for row in trace) + 1.0e-6 >= horizon_s
+
+
+def _any_replay_safe_by_horizon(evaluations: list[dict[str, Any]], horizon_s: float) -> bool:
+    for evaluation in evaluations:
+        trace = list(evaluation.get("realized_clearance_trace", []))
+        if not _horizon_available(trace, horizon_s):
+            continue
+        clearances = [
+            float(row["realized_clearance_m"])
+            for row in trace
+            if float(row["time_s"]) <= horizon_s + 1.0e-6
+        ]
+        if clearances and min(clearances) >= DEFAULT_NEAR_MISS_THRESHOLD_M:
+            return True
+    return False
 
 
 def _local_to_global(
@@ -670,6 +760,23 @@ def markdown_report(report: Mapping[str, Any]) -> str:
     for row in report["threshold_sensitivity_table"]:
         lines.append(
             f"| {row['threshold_m']:.1f} m | {row['proxy_safe_realized_near_or_collision_count']} | {row['rate']:.3f} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Horizon Sensitivity",
+            "",
+            "| Horizon | Proxy-safe selected failures | Proxy-safe stop failures | No replay-safe token |",
+            "|---:|---:|---:|---:|",
+        ]
+    )
+    for row in report["horizon_sensitivity_table"]:
+        if not row["available"]:
+            lines.append(f"| {row['horizon_s']:.1f} s | n/a | n/a | n/a |")
+            continue
+        lines.append(
+            f"| {row['horizon_s']:.1f} s | {row['proxy_safe_selected_failures']} | "
+            f"{row['proxy_safe_stop_failures']} | {row['no_replay_safe_token']} |"
         )
     lines.extend(
         [

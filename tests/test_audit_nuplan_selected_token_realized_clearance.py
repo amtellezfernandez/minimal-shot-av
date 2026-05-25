@@ -52,6 +52,7 @@ class AuditNuPlanSelectedTokenRealizedClearanceTests(unittest.TestCase):
         self.assertEqual("log_replay", scene["realized_clearance_source"])
         self.assertIn("candidate_replay_evaluations", scene)
         self.assertIn("oracle_log_replay_safe_token", scene)
+        self.assertIn("horizon_sensitivity_table", enriched)
 
     def test_proxy_safe_cases_have_some_realized_clearance(self) -> None:
         report = _base_report()
@@ -126,7 +127,26 @@ class AuditNuPlanSelectedTokenRealizedClearanceTests(unittest.TestCase):
             payload = json.loads(output_json.read_text(encoding="utf-8"))
             self.assertEqual("nuplan_maneuvertoken_realized_clearance_v1", payload["schema"])
             self.assertIn("threshold_sensitivity_table", payload)
+            self.assertIn("horizon_sensitivity_table", payload)
             self.assertIn("Failure rung", output_md.read_text(encoding="utf-8"))
+
+    def test_log_replay_failure_rung_uses_replay_specific_label(self) -> None:
+        report = _base_report()
+
+        enriched = self.module.enrich_report_with_realized_clearance(
+            report,
+            clearance_provider=lambda scene: {
+                "selected_token_realized_min_clearance_m": 0.4,
+                "selected_token_realized_min_clearance_t": 1.0,
+                "selected_token_realized_collision": False,
+                "selected_token_realized_near_miss": True,
+                "selected_token_realized_clearance_trace": [{"time_s": 1.0, "realized_clearance_m": 0.4}],
+                "realized_clearance_source": "log_replay",
+            },
+            near_miss_threshold_m=1.0,
+        )
+
+        self.assertEqual("proxy-safe but replay-infeasible", enriched["scenes"][0]["failure_rung"])
 
     def test_replay_oracle_case_table_distinguishes_alternative_safe_token(self) -> None:
         report = _base_report()
