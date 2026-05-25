@@ -137,7 +137,11 @@ def compute_scene_log_replay_realized_fields(scene: dict[str, Any]) -> dict[str,
         actor_tracks=actor_tracks,
     )
     oracle_log_replay_safe_token = _oracle_log_replay_safe_token(candidate_replay_evaluations)
-    selected_failed_stop_cause = _selected_failed_stop_cause(scene, candidate_replay_evaluations)
+    selected_failed_stop_cause = _selected_failed_stop_cause(
+        scene=scene,
+        candidate_replay_evaluations=candidate_replay_evaluations,
+        selected_token_realized_min_clearance_m=min_clearance_m,
+    )
     return {
         "selected_token_realized_min_clearance_m": min_clearance_m,
         "selected_token_realized_min_clearance_t": min_time_s,
@@ -200,6 +204,7 @@ def _recompute_report_summary(report: dict[str, Any]) -> None:
     report["replay_oracle_case_table"] = _replay_oracle_case_table(scenes)
     report["failed_stop_cause_table"] = _failed_stop_cause_table(scenes)
     report["stop_vs_evasive_right_table"] = _stop_vs_evasive_right_table(scenes)
+    report["stop_vs_evasive_right_summary"] = _stop_vs_evasive_right_summary(report["stop_vs_evasive_right_table"])
     report["clearance_trace_examples"] = _clearance_trace_examples(scenes)
 
 
@@ -361,12 +366,14 @@ def _oracle_log_replay_safe_token(candidate_replay_evaluations: list[dict[str, A
 
 
 def _selected_failed_stop_cause(
+    *,
     scene: dict[str, Any],
     candidate_replay_evaluations: list[dict[str, Any]],
+    selected_token_realized_min_clearance_m: float | None,
 ) -> str | None:
     if str(scene.get("selected_token")) != "stop":
         return None
-    selected_clearance = scene.get("selected_token_realized_min_clearance_m")
+    selected_clearance = selected_token_realized_min_clearance_m
     if selected_clearance is None or float(selected_clearance) >= DEFAULT_NEAR_MISS_THRESHOLD_M:
         return None
     actor_summary = scene.get("actor_summary", {})
@@ -537,6 +544,16 @@ def _stop_vs_evasive_right_table(scenes: list[dict[str, Any]]) -> list[dict[str,
     return rows
 
 
+def _stop_vs_evasive_right_summary(rows: list[dict[str, Any]]) -> dict[str, int]:
+    return {
+        "failed_stop_scene_count": len(rows),
+        "evasive_right_available_count": sum(1 for row in rows if bool(row["evasive_right_available"])),
+        "evasive_right_would_avoid_failure_count": sum(
+            1 for row in rows if bool(row["would_evasive_right_avoid_failure"])
+        ),
+    }
+
+
 def _binomial_ci95(*, successes: int, trials: int) -> dict[str, float]:
     if trials <= 0:
         return {"lower": 0.0, "upper": 0.0}
@@ -687,6 +704,17 @@ def markdown_report(report: Mapping[str, Any]) -> str:
     )
     for row in report["failed_stop_cause_table"]:
         lines.append(f"| {row['cause']} | {row['count']} |")
+    summary = report["stop_vs_evasive_right_summary"]
+    lines.extend(
+        [
+            "",
+            "## Stop Vs Evasive Right",
+            "",
+            f"- Failed stop scenes: `{summary['failed_stop_scene_count']}`",
+            f"- `evasive_right` available: `{summary['evasive_right_available_count']}`",
+            f"- `evasive_right` would avoid failure: `{summary['evasive_right_would_avoid_failure_count']}`",
+        ]
+    )
     return "\n".join(lines)
 
 
