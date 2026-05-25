@@ -8,14 +8,20 @@ import sys
 import unittest
 
 import numpy as np
-import torch
 
-from tests.pyproject_helpers import load_string_tables
+try:
+    import torch
+except ImportError:  # pragma: no cover - exercised in dependency-light artifact checks.
+    torch = None
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
+
+from tests.pyproject_helpers import load_string_tables
 
 from minimal_shot_av.neutral.alpasim_metrics import build_alpasim_evidence, load_alpasim_metrics
 from minimal_shot_av.simulator.alpasim_direct_actor_planner import (
@@ -1465,6 +1471,19 @@ class AlpaSimIntegrationTests(unittest.TestCase):
         self.assertEqual(evidence["run_count"], 4)
         self.assertEqual(evidence["metrics"]["dist_to_gt_trajectory"], 1.5)
         self.assertTrue(all(value is True for value in evidence["gates"].values()))
+
+
+def _skip_torch_dependent_tests_if_needed() -> None:
+    if torch is not None:
+        return
+    reason = "Torch environment not available for learned policy validation"
+    for name in dir(AlpaSimIntegrationTests):
+        if name.startswith("test_token_bc_alpasim_adapter_"):
+            setattr(AlpaSimIntegrationTests, name, unittest.skip(reason)(getattr(AlpaSimIntegrationTests, name)))
+
+
+_skip_torch_dependent_tests_if_needed()
+
 
 if __name__ == "__main__":
     unittest.main()
