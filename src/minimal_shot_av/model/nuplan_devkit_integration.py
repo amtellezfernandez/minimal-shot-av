@@ -203,16 +203,16 @@ def _discover_db_files(*, data_root: Path, db_files: tuple[str, ...]) -> list[st
                 discovered.append(str(candidate))
                 continue
             if candidate.is_dir():
-                discovered.extend(str(path) for path in sorted(candidate.glob("*.db")))
+                discovered.extend(str(path) for path in sorted(candidate.rglob("*.db")))
                 continue
             rooted = data_root / value
             if rooted.is_file():
                 discovered.append(str(rooted))
             elif rooted.is_dir():
-                discovered.extend(str(path) for path in sorted(rooted.glob("*.db")))
+                discovered.extend(str(path) for path in sorted(rooted.rglob("*.db")))
             else:
                 raise FileNotFoundError(value)
-        return discovered
+        return list(dict.fromkeys(discovered))
     return [str(path) for path in sorted(data_root.rglob("*.db"))]
 
 
