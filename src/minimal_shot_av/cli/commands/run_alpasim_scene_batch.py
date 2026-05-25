@@ -33,6 +33,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout", type=int, default=900)
     parser.add_argument("--topology", default="1gpu")
     parser.add_argument("--driver-warmup-seconds", type=float, default=10.0)
+    parser.add_argument("--max-retries", type=int, default=1)
     parser.add_argument("--wizard-dry-run", action="store_true")
     parser.add_argument("--wizard-arg", action="append", default=[])
     parser.add_argument("--checkpoint", type=Path, default=None)
@@ -61,6 +62,7 @@ def main() -> int:
         "scene_ids": scene_ids,
         "topology": args.topology,
         "timeout": args.timeout,
+        "max_retries": args.max_retries,
         "baseport": args.baseport,
         "port": args.port,
         "wizard_args": list(args.wizard_arg),
@@ -90,7 +92,7 @@ def main() -> int:
             continue
 
         run_dir.mkdir(parents=True, exist_ok=True)
-        returncode = subprocess.run(command, cwd=ROOT, check=False).returncode
+        returncode, attempts = _run_scene_with_retries(command, cwd=ROOT, max_retries=args.max_retries)
         result = "completed" if returncode == 0 else "failed"
         statuses.append(
             {
@@ -98,6 +100,7 @@ def main() -> int:
                 "status": _scene_status(run_dir),
                 "result": result,
                 "returncode": int(returncode),
+                "attempts": attempts,
             }
         )
         _write_json(batch_dir / "batch-status.json", {"runs": statuses})
@@ -197,6 +200,17 @@ def _scene_status(run_dir: Path) -> str:
     if run_dir.exists():
         return "partial"
     return "missing"
+
+
+def _run_scene_with_retries(command: list[str], *, cwd: Path, max_retries: int) -> tuple[int, int]:
+    attempts = 0
+    last_returncode = 0
+    for _ in range(max(0, int(max_retries)) + 1):
+        attempts += 1
+        last_returncode = subprocess.run(command, cwd=cwd, check=False).returncode
+        if last_returncode == 0:
+            break
+    return int(last_returncode), attempts
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:

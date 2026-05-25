@@ -40,6 +40,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout", type=int, default=900)
     parser.add_argument("--topology", default="1gpu")
     parser.add_argument("--driver-warmup-seconds", type=float, default=10.0)
+    parser.add_argument("--max-retries", type=int, default=1)
     parser.add_argument("--wizard-arg", action="append", default=[])
     parser.add_argument("--oracle-actor-proxy", type=Path, default=None)
     parser.add_argument("--alpasim-root", type=Path, default=None)
@@ -165,6 +166,8 @@ def _job_command(
         str(args.topology),
         "--driver-warmup-seconds",
         str(args.driver_warmup_seconds),
+        "--max-retries",
+        str(args.max_retries),
     ]
     if args.scene_offset:
         command.extend(["--scene-offset", str(args.scene_offset)])

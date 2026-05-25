@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+from unittest import mock
 import tempfile
 from pathlib import Path
 import unittest
@@ -51,6 +52,7 @@ class RunAlpaSimSceneBatchTests(unittest.TestCase):
             oracle_actor_proxy=None,
             alpasim_root=Path("/tmp/alpasim"),
             wizard_arg=["wizard.timeout=1200"],
+            max_retries=1,
         )
 
         command = module._scene_command(
@@ -83,6 +85,7 @@ class RunAlpaSimSceneBatchTests(unittest.TestCase):
             oracle_actor_proxy=Path("/tmp/oracle_actor_proxy.json"),
             alpasim_root=None,
             wizard_arg=[],
+            max_retries=1,
         )
 
         command = module._scene_command(
@@ -114,6 +117,24 @@ class RunAlpaSimSceneBatchTests(unittest.TestCase):
             self.assertEqual("partial", module._scene_status(partial))
             self.assertEqual("completed", module._scene_status(completed.parent))
             self.assertEqual("completed", module._scene_status(completed_alt.parent))
+
+    def test_run_scene_with_retries_retries_once_then_succeeds(self) -> None:
+        module = _load_module()
+        results = [1, 0]
+
+        def _fake_run(*_args, **_kwargs):
+            return argparse.Namespace(returncode=results.pop(0))
+
+        with mock.patch.object(module.subprocess, "run", side_effect=_fake_run) as patched:
+            returncode, attempts = module._run_scene_with_retries(
+                ["python", "scene.py"],
+                cwd=ROOT,
+                max_retries=1,
+            )
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(2, attempts)
+        self.assertEqual(2, patched.call_count)
 
 
 if __name__ == "__main__":

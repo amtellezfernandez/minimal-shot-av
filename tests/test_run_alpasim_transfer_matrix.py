@@ -30,6 +30,7 @@ class RunAlpaSimTransferMatrixTests(unittest.TestCase):
             timeout=900,
             topology="1gpu",
             driver_warmup_seconds=10.0,
+            max_retries=1,
             scene_offset=0,
             scene_limit=10,
             rerun_existing=False,
@@ -49,6 +50,7 @@ class RunAlpaSimTransferMatrixTests(unittest.TestCase):
         self.assertIn("run_alpasim_scene_batch.py", command[1])
         self.assertEqual("token_dagger_iter2", command[command.index("--model") + 1])
         self.assertEqual("front_camera_10scene_smoke", command[command.index("--scene-preset") + 1])
+        self.assertEqual("1", command[command.index("--max-retries") + 1])
         self.assertEqual("10", command[command.index("--scene-limit") + 1])
         self.assertIn("--continue-on-error", command)
         self.assertEqual("wizard.timeout=1200", command[-1])
