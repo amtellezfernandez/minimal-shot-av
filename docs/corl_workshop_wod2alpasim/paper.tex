@@ -41,52 +41,37 @@ or a log converter; it is a reusable external-driver contract extension that mak
 WOD-style trajectory policies executable under AlpaSim's closed-loop runtime.
 \end{abstract}
 
-\keywords{autonomous driving, simulation, Waymo Open Dataset, closed-loop evaluation,
-AlpaSim, policy adapters}
-
 \section{Introduction}
 
-The Waymo Open Dataset (WOD) end-to-end driving task gives a clear policy contract:
-observe camera and ego context, condition on route intent, and output a short-horizon ego
-trajectory~\citep{sun2020scalability}. That contract is not a simulator driver. AlpaSim
-expects a live driver service that can be discovered as a trajectory-model plugin,
-consume simulator-native camera and egomotion messages, process route updates, return
-headings and trajectory points at the rollout clock, and tolerate the ordering behavior
-of a distributed runtime~\citep{alpasim2026}.
+The Waymo Open Dataset (WOD) end-to-end driving task and AlpaSim solve different
+problems, so they expose different interfaces. WOD gives a policy-learning contract:
+observe camera and ego context, condition on route intent, and predict a short-horizon
+trajectory~\citep{sun2020scalability}. AlpaSim gives a simulator-execution contract: a
+live driver service is discovered as a trajectory-model plugin, receives camera and
+egomotion messages over time, processes route updates, returns trajectory points and
+headings at the rollout clock, and remains alive inside a distributed runtime~\citep{alpasim2026}.
 
-The obstacle was not trajectory generation alone. A plugin-only integration failed
-because the simulator-facing contract had already removed state that WOD-style policies
-use. The route geometry had been collapsed into a left/straight/right command before the
-model saw it. After route waypoints were exposed, a second route error appeared:
-multi-lane road centers were not necessarily ego travel lanes. The remaining failures
-were also contract failures: importing the model package could require unselected
-Alpamayo or VAM dependencies, batch runs could terminate on late session messages, and
-hand-built launches hid runtime assumptions in shell history and Hydra overrides.
+That difference is the reason a direct policy wrapper was insufficient. A dataset policy
+usually expects a compact, already-assembled example. A simulator driver must survive an
+ongoing session and consume state as it arrives. In stock AlpaSim, route geometry had
+already been collapsed into a left/straight/right command before prediction, which is
+acceptable for command-conditioned models but not for policies that score trajectories
+against a local route polyline. Even after route waypoints were exposed, another mismatch
+appeared: multi-lane road centers were not necessarily ego travel lanes. The remaining
+gaps were also between a dataset contract and a simulator contract: importing the model
+package could require unselected Alpamayo or VAM backends, late session messages could
+terminate batch runs, and launch assumptions lived outside the experiment record.
 
-This paper is an artifact paper about that external-driver boundary. WOD2ALPAsim extends
-the AlpaSim contract so WOD-style policies receive route geometry, load through the
-existing plugin registry without unrelated built-in backends, survive normal
-service-lifecycle ordering, and launch from recorded runtime state. On top of that
-extended contract, the project registers a reflex policy, a learned token BC/DAgger
-policy, and a direct actor-aware planner as native \texttt{alpasim.models} plugins. The
-same pattern is the precedent for future AlpaSim adapters: preserve simulator-native
-route geometry at prediction time, keep dataset protobufs out of policy code, register
-through the existing model mechanism, and materialize launch assumptions before rollout.
-
-\paragraph{Contributions.}
-We contribute:
-
-\begin{enumerate}
-  \item an external-driver contract analysis for WOD-style policies in AlpaSim;
-  \item an implemented AlpaSim contract extension covering route geometry, model
-    discovery, session lifecycle, and launch state;
-  \item three project-owned AlpaSim model plugins: a reflex policy, a learned token
-    BC/DAgger policy, and a selector-free actor-aware planner;
-  \item signal reconstruction code that converts AlpaSim prediction inputs into route,
-    dynamics, visibility, actor, and hazard context without WOD protobufs; and
-  \item setup, readiness, launch, and validation commands that make the extended contract
-    reproducible.
-\end{enumerate}
+This paper is about extending that simulator-side contract so WOD-style policies can run
+as ordinary AlpaSim external drivers. WOD2ALPAsim preserves route geometry at
+prediction time, decouples external plugin discovery from unrelated built-in backends,
+makes session handling idempotent under normal service ordering, and records launch state
+before rollout. On top of that contract, the project registers a reflex policy, a learned
+token BC/DAgger policy, and a direct actor-aware planner through
+\texttt{alpasim.models}, reconstructs a policy-facing signal from AlpaSim inputs, and
+provides setup, readiness, launch, and validation commands. The artifact claim is narrow:
+this is not a new autonomy method, but a reusable external-driver contract extension for
+turning dataset-style trajectory policies into executable AlpaSim drivers.
 
 \section{External-Driver Contract Gaps}
 
@@ -321,57 +306,22 @@ Across these plugins, route scoring uses policy-facing route centerlines rather 
 road-center geometry. Exposing a route polyline is not enough; the policy must score
 against the lane the ego should actually follow.
 
-\section{Code Boundary}
+The code split follows the contract split. Route propagation, model discovery, session
+lifecycle, and deploy behavior are patched in the AlpaSim checkout through
+\texttt{route\_waypoints.patch} and \texttt{local\_checkout.patch}. Policy registration,
+signal reconstruction, and policy logic stay in project code through
+\texttt{pyproject.toml}, \texttt{alpasim\_signal.py}, \texttt{alpasim\_spotlight.py},
+\texttt{alpasim\_token\_bc.py}, and the direct planner adapter. Setup, readiness, and
+launch commands then make that combined surface runnable as one external-driver artifact.
 
-Table~\ref{tab:artifact_surface} lists the files that make the integration work. The
-split matters: route, import, session, and deploy changes must live in the AlpaSim
-checkout; policy code and tests remain in this repository.
+\section{Policy Signal}
 
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{p{0.31\linewidth}p{0.58\linewidth}}
-\toprule
-File or module & Implemented role \\
-\midrule
-\texttt{route\_waypoints.patch} &
-Adds \texttt{route\_waypoints} to \texttt{PredictionInput} and forwards the stored route
-through batch prediction. \\
-\texttt{local\_checkout.patch} &
-Treats late session messages idempotently, lazy-loads Alpamayo/VAM model wrappers, and
-patches local external-driver deployment. \\
-\texttt{pyproject.toml} &
-Registers \texttt{spotlight\_reflex}, \texttt{token\_dagger\_bc}, and
-\texttt{direct\_actor\_planner} under \texttt{alpasim.models}. \\
-\texttt{alpasim\_signal.py} &
-Reconstructs route, dynamics, visibility, static hazards, and moving actors from
-AlpaSim prediction inputs. \\
-\texttt{alpasim\_spotlight.py} &
-Wraps the minimal-shot reflex policy as a native AlpaSim trajectory model. \\
-\texttt{alpasim\_token\_bc.py} &
-Runs learned token BC/DAgger checkpoints with route, lane, actor, and hybrid-veto
-selection modes. \\
-Direct planner adapter &
-Runs a selector-free actor-aware trajectory sampler under the same driver contract. \\
-\texttt{setup command} &
-Applies overrides, bootstraps the AlpaSim environment, and verifies model entry-point
-discovery. \\
-\texttt{readiness and run commands} &
-Check runtime prerequisites and emit matched driver/wizard commands. \\
-\bottomrule
-\end{tabular}
-\caption{Implemented code boundary. AlpaSim patches change the driver runtime; project
-files provide plugins, signal conversion, setup, launch, and tests.}
-\label{tab:artifact_surface}
-\end{table}
-
-\section{Signal Reconstruction}
-
-The signal layer reconstructs a compact policy scenario from \texttt{PredictionInput}. It
-extracts route waypoints from the patched AlpaSim field when present, falling back to a
-command-proxy route only when route geometry is unavailable. It also extracts speed,
-acceleration, pose-history length, camera count, a simple visibility-risk signal from
-camera brightness, and optional structured hazards from fields such as
+Dataset policies do not consume raw AlpaSim driver messages directly, so the adapter
+builds a compact policy signal from \texttt{PredictionInput}. It extracts route
+waypoints from the patched AlpaSim field when present, falling back to a command-proxy
+route only when route geometry is unavailable. It also extracts speed, acceleration,
+pose-history length, camera count, a simple visibility-risk signal from camera
+brightness, and optional structured hazards from fields such as
 \texttt{structured\_hazards}, \texttt{hazards}, \texttt{traffic\_hazards}, or
 \texttt{alpasignal}.
 
@@ -380,8 +330,8 @@ become obstacles with shape and heading metadata. Moving hazards become actors w
 velocity, size, heading, and inferred or explicit behavior. Route waypoints become the
 local lane centerline used by the policy and planner. If no explicit hazard is available
 but visibility or dynamics indicate a high-risk state, the adapter can add a caution-zone
-obstacle. This layer is intentionally independent of WOD protobufs and AlpaSim internals:
-it is the policy input used by all three AlpaSim plugins.
+obstacle. This translation is intentionally independent of WOD protobufs and AlpaSim
+internals: it is the shared policy input used by all three AlpaSim plugins.
 
 \section{Launch Contract}
 
@@ -401,7 +351,7 @@ planner variants. The driver and wizard are launched as a matched pair: the driv
 from the AlpaSim virtual environment, while the wizard receives the external driver
 address, topology, scene IDs, log directory, base port, and timeout.
 
-These files are part of the contract. Without them, an AlpaSim run depends on a hidden
+These files are part of the artifact. Without them, an AlpaSim run depends on a hidden
 mixture of Hydra overrides, Docker image state, plugin installation state, gated scene
 artifacts, and host-specific GPU behavior. WOD2ALPAsim writes those assumptions before
 the rollout starts.
@@ -505,34 +455,24 @@ integration failures before closed-loop rollouts.}
 \label{fig:artifact_path}
 \end{figure}
 
-\section{External-Driver Precedent}
+\section{What Generalizes}
 
-The resulting code establishes three external-driver claims.
+WOD2ALPAsim is specific to this project, but the adapter pattern is not. The same
+external-driver shape should transfer to other dataset-trained or benchmark-trained
+trajectory policies that are not written as native AlpaSim drivers.
 
-\paragraph{Closed-loop execution of WOD-style policies.}
-Policies developed around WOD-style route, timing, and trajectory conventions can run as
-AlpaSim external drivers. The simulator repeatedly queries the plugin and executes the
-returned trajectory through its controller path.
+The reusable part is the boundary definition: preserve simulator route geometry at
+prediction time; keep policy code independent of dataset protobufs and simulator message
+internals; register policies through the existing \texttt{alpasim.models} mechanism;
+separate base driver abstractions from optional heavyweight backends; handle late session
+messages idempotently; and materialize launch state before rollout. Those choices let
+very different policies share one closed-loop runtime. In this artifact, the reflex
+policy, learned token policy, and direct actor planner all run through the same route
+signal, resampling path, and launch system.
 
-\paragraph{Shared runtime for heterogeneous policies.}
-The reflex policy, learned token policy, and direct actor planner share one driver
-contract, one route signal, one trajectory resampling path, and one launch system. This
-lets policy-interface questions be tested inside a single closed-loop runtime rather than
-through separate bespoke scripts.
-
-\paragraph{Inspectable transfer boundary.}
-Because patched AlpaSim code is separated from project-owned adapters, it is clear which
-claims depend on simulator changes and which depend on policy logic. That separation is
-what makes the result inspectable: the code can be checked module by module instead of
-treated as a single opaque experiment script.
-
-\paragraph{A precedent for future AlpaSim adapters.}
-Future dataset or benchmark integrations can reuse the same external-driver contract:
-preserve simulator-native route geometry at the driver boundary, avoid dataset protobufs
-inside policy code, expose only compact policy-facing signal, keep policies registered as
-ordinary AlpaSim model plugins, make session handling idempotent, and make setup plus
-launch assumptions executable. In this sense, WOD2ALPAsim is both a WOD integration and a
-reference implementation for additional AlpaSim adapters.
+The result is therefore more than a WOD integration. It is a concrete reference for what
+an AlpaSim external-driver adapter has to provide when the source policy was designed for
+offline learning or log-based evaluation rather than for a persistent simulator service.
 
 \section{Limitations}
 
