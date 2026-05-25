@@ -37,6 +37,36 @@ from safetensors.torch import load_file
 
 
 # ---------------------------------------------------------------------------
+# Trajectory parsing for candidate export
+# ---------------------------------------------------------------------------
+
+def response_to_traj(resp):
+    """Parse a generated waypoint string into [[x, y, heading], ...]."""
+    if not isinstance(resp, str):
+        return None
+
+    s = resp.strip().replace("\n", " ")
+    if s.startswith(">["):
+        s = s[1:]
+
+    for tag in [
+        "<answer>", "</answer>", "<|im_end|>", "<|start-latent|>",
+        "<|latent|>", "<|end-latent|>", "<|start-latent-vis|>",
+        "<|end-latent-vis|>", "<|latent-vis|>",
+    ]:
+        s = s.replace(tag, "")
+
+    try:
+        try:
+            arr = json.loads("[" + s + "]")
+        except Exception:
+            arr = json.loads("[[" + s + "]")
+        return [[float(v) for v in point] for point in arr]
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------------------
 # GT / waypoint parsing for coordinate prefill (--prefix_k)
 # ---------------------------------------------------------------------------
 
@@ -641,6 +671,18 @@ def main():
                              "(flow-matching head is intentionally unsupported)")
     parser.add_argument("--float_head_output_dim", type=int, default=24,
                         help="Float head output dim (default 24 = 8 waypoints * 3)")
+    parser.add_argument("--num_candidates", type=int, default=1,
+                        help="Number of decoded trajectory candidates to return")
+    parser.add_argument("--candidate_mode", type=str, default="greedy",
+                        choices=["greedy", "sample", "beam"],
+                        help="Candidate generation mode")
+    parser.add_argument("--temperature", type=float, default=0.8,
+                        help="Sampling temperature when candidate_mode=sample")
+    parser.add_argument("--top_p", type=float, default=0.95,
+                        help="Sampling top-p when candidate_mode=sample")
+    parser.add_argument("--num_beams", type=int, default=None,
+                        help="Beam count when candidate_mode=beam "
+                             "(defaults to num_candidates)")
 
     args = parser.parse_args()
     device = args.device
@@ -757,6 +799,26 @@ def main():
     need_hidden = (aux_decoder is not None
                    or visual_aux_decoder is not None
                    or float_head is not None)
+
+    if args.candidate_mode == "greedy":
+        generate_kwargs = {
+            "do_sample": False,
+            "num_return_sequences": 1,
+        }
+    elif args.candidate_mode == "sample":
+        generate_kwargs = {
+            "do_sample": True,
+            "temperature": args.temperature,
+            "top_p": args.top_p,
+            "num_return_sequences": args.num_candidates,
+        }
+    else:
+        beam_count = args.num_beams or args.num_candidates
+        generate_kwargs = {
+            "do_sample": False,
+            "num_beams": beam_count,
+            "num_return_sequences": args.num_candidates,
+        }
 
     for idx, item in enumerate(test_set):
         output_dict = {}
@@ -884,18 +946,16 @@ def main():
         gen_outputs = model.generate(
             **inputs,
             max_new_tokens=args.max_new_tokens,
-            do_sample=False,
             return_dict_in_generate=True,
             output_scores=True,
+            **generate_kwargs,
         )
         torch.cuda.synchronize()
         latency = time.time() - t0
 
         generated_ids = gen_outputs.sequences
-        generated_ids_trimmed = [
-            out[len(inp):] for inp, out
-            in zip(inputs.input_ids, generated_ids)
-        ]
+        prompt_len = inputs.input_ids.shape[1]
+        generated_ids_trimmed = [out[prompt_len:] for out in generated_ids]
         output_text = processor.batch_decode(
             generated_ids_trimmed, skip_special_tokens=False,
             clean_up_tokenization_spaces=False,
@@ -904,8 +964,6 @@ def main():
         output_dict["latency"] = latency
         output_dict["messages"] = messages
         output_dict["GT"] = item.get("GT", "")
-        output_dict["output_text"] = output_text[0]
-
         scores = gen_outputs.scores
         entropies = []
         for step_logits in scores:
@@ -913,22 +971,47 @@ def main():
             entropies.append(
                 -torch.sum(probs * torch.log(probs + 1e-10), dim=-1))
         entropies_tensor = torch.stack(entropies).transpose(0, 1)
-        avg_entropy = entropies_tensor.mean(dim=1)
+        avg_entropy = entropies_tensor.mean(dim=1).tolist()
 
         transition_scores = model.compute_transition_scores(
             generated_ids, scores, normalize_logits=True)
         avg_log_prob = transition_scores.mean(dim=1)
         seq_confidence = torch.exp(avg_log_prob)
 
-        output_dict["avg_entropy"] = avg_entropy.item()
-        output_dict["avg_log_prob"] = avg_log_prob.item()
-        output_dict["seq_confidence"] = seq_confidence.item()
+        source_name = {
+            "greedy": "onevl_top1",
+            "sample": "onevl_sample",
+            "beam": "onevl_beam",
+        }[args.candidate_mode]
+
+        candidates = []
+        for candidate_id, candidate_text in enumerate(output_text):
+            candidates.append({
+                "candidate_id": candidate_id,
+                "source": source_name if candidate_id else "onevl_top1",
+                "trajectory": response_to_traj(candidate_text),
+                "raw_text": candidate_text,
+                "avg_entropy": avg_entropy[candidate_id],
+                "avg_log_prob": avg_log_prob[candidate_id].item(),
+                "seq_confidence": seq_confidence[candidate_id].item(),
+            })
+
+        output_dict["candidate_mode"] = args.candidate_mode
+        output_dict["num_candidates"] = len(candidates)
+        output_dict["candidates"] = candidates
+        output_dict["output_text"] = candidates[0]["raw_text"]
+
+        output_dict["avg_entropy"] = candidates[0]["avg_entropy"]
+        output_dict["avg_log_prob"] = candidates[0]["avg_log_prob"]
+        output_dict["seq_confidence"] = candidates[0]["seq_confidence"]
 
         if idx < 3 or idx % 100 == 0:
             print(f"\n=== Sample {idx} ===")
-            print(f"  Output: {output_text[0][:200]}")
-            print(f"  Entropy: {avg_entropy.item():.4f}, "
-                  f"Confidence: {seq_confidence.item():.2%}")
+            print(f"  Output[0]: {candidates[0]['raw_text'][:200]}")
+            print(f"  Candidates: {len(candidates)} "
+                  f"mode={args.candidate_mode}")
+            print(f"  Entropy[0]: {candidates[0]['avg_entropy']:.4f}, "
+                  f"Confidence[0]: {candidates[0]['seq_confidence']:.2%}")
             if output_dict.get("decoder_explain"):
                 print(f"  Explain: {output_dict['decoder_explain'][:200]}")
             if output_dict.get("visual_decoder_explain"):
