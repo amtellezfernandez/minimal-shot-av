@@ -50,6 +50,8 @@ class AuditNuPlanSelectedTokenRealizedClearanceTests(unittest.TestCase):
         self.assertEqual(2.0, scene["selected_token_realized_min_clearance_t"])
         self.assertFalse(scene["selected_token_realized_near_miss"])
         self.assertEqual("log_replay", scene["realized_clearance_source"])
+        self.assertIn("candidate_replay_evaluations", scene)
+        self.assertIn("oracle_log_replay_safe_token", scene)
 
     def test_proxy_safe_cases_have_some_realized_clearance(self) -> None:
         report = _base_report()
@@ -123,7 +125,22 @@ class AuditNuPlanSelectedTokenRealizedClearanceTests(unittest.TestCase):
 
             payload = json.loads(output_json.read_text(encoding="utf-8"))
             self.assertEqual("nuplan_maneuvertoken_realized_clearance_v1", payload["schema"])
+            self.assertIn("threshold_sensitivity_table", payload)
             self.assertIn("Failure rung", output_md.read_text(encoding="utf-8"))
+
+    def test_replay_oracle_case_table_distinguishes_alternative_safe_token(self) -> None:
+        report = _base_report()
+        report["scenes"][0]["candidate_replay_evaluations"] = [
+            {"token": "stop", "realized_min_clearance_m": 0.2},
+            {"token": "evasive_right", "realized_min_clearance_m": 1.5},
+        ]
+        report["scenes"][0]["selected_token_realized_near_miss"] = True
+        report["scenes"][0]["oracle_log_replay_safe_token"] = "evasive_right"
+
+        table = self.module._replay_oracle_case_table(report["scenes"])
+        counts = {row["case"]: row["count"] for row in table}
+
+        self.assertEqual(1, counts["proxy-safe selected token fails but another token would replay-safe pass"])
 
 
 def _base_report() -> dict:

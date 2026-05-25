@@ -74,6 +74,9 @@ def enrich_report_with_realized_clearance(
         scene["selected_token_realized_clearance_trace"] = list(
             fields.get("selected_token_realized_clearance_trace", [])
         )
+        scene["candidate_replay_evaluations"] = list(fields.get("candidate_replay_evaluations", []))
+        scene["oracle_log_replay_safe_token"] = fields.get("oracle_log_replay_safe_token")
+        scene["selected_failed_stop_cause"] = fields.get("selected_failed_stop_cause")
         scene["realized_clearance_source"] = fields.get("realized_clearance_source")
         scene["realized_min_clearance"] = scene["selected_token_realized_min_clearance_m"]
         scene["collision_or_near_miss"] = scene["selected_token_realized_near_miss"]
@@ -127,12 +130,23 @@ def compute_scene_log_replay_realized_fields(scene: dict[str, Any]) -> dict[str,
     )
     if min_clearance_m is None:
         return None
+    candidate_replay_evaluations = _candidate_replay_evaluations(
+        ego=ego,
+        scene=scene,
+        dt_s=dt_s,
+        actor_tracks=actor_tracks,
+    )
+    oracle_log_replay_safe_token = _oracle_log_replay_safe_token(candidate_replay_evaluations)
+    selected_failed_stop_cause = _selected_failed_stop_cause(scene, candidate_replay_evaluations)
     return {
         "selected_token_realized_min_clearance_m": min_clearance_m,
         "selected_token_realized_min_clearance_t": min_time_s,
         "selected_token_realized_collision": min_clearance_m < 0.0,
         "selected_token_realized_near_miss": min_clearance_m < DEFAULT_NEAR_MISS_THRESHOLD_M,
         "selected_token_realized_clearance_trace": trace,
+        "candidate_replay_evaluations": candidate_replay_evaluations,
+        "oracle_log_replay_safe_token": oracle_log_replay_safe_token,
+        "selected_failed_stop_cause": selected_failed_stop_cause,
         "realized_clearance_source": "log_replay",
     }
 
@@ -183,6 +197,9 @@ def _recompute_report_summary(report: dict[str, Any]) -> None:
         thresholds_m=THRESHOLD_SENSITIVITY_METERS,
     )
     report["no_safe_token_cause_table"] = _no_safe_token_cause_table(scenes)
+    report["replay_oracle_case_table"] = _replay_oracle_case_table(scenes)
+    report["failed_stop_cause_table"] = _failed_stop_cause_table(scenes)
+    report["stop_vs_evasive_right_table"] = _stop_vs_evasive_right_table(scenes)
     report["clearance_trace_examples"] = _clearance_trace_examples(scenes)
 
 
@@ -295,6 +312,74 @@ def _actor_state_at_time(actor: dict[str, Any], *, t_s: float) -> dict[str, floa
     }
 
 
+def _candidate_replay_evaluations(
+    *,
+    ego: Any,
+    scene: dict[str, Any],
+    dt_s: float,
+    actor_tracks: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    rows = []
+    for candidate in scene.get("candidates", []):
+        min_clearance_m, min_time_s, _ = _compute_log_replay_clearance(
+            ego=ego,
+            poses=list(candidate["poses"]),
+            dt_s=dt_s,
+            proxy_trace=list(candidate.get("per_frame_diagnostics", [])),
+            actor_tracks=actor_tracks,
+        )
+        rows.append(
+            {
+                "token": str(candidate["token"]),
+                "proxy_safe": bool(candidate["proxy_safe"]),
+                "proxy_min_clearance_m": round(float(candidate["min_proxy_clearance_m"]), 6),
+                "realized_min_clearance_m": _optional_round(min_clearance_m),
+                "realized_min_clearance_t": _optional_round(min_time_s),
+                "realized_near_miss": (
+                    None if min_clearance_m is None else bool(min_clearance_m < DEFAULT_NEAR_MISS_THRESHOLD_M)
+                ),
+                "realized_collision": None if min_clearance_m is None else bool(min_clearance_m < 0.0),
+            }
+        )
+    return rows
+
+
+def _oracle_log_replay_safe_token(candidate_replay_evaluations: list[dict[str, Any]]) -> str | None:
+    safe = [
+        row
+        for row in candidate_replay_evaluations
+        if row["realized_min_clearance_m"] is not None
+        and float(row["realized_min_clearance_m"]) >= DEFAULT_NEAR_MISS_THRESHOLD_M
+    ]
+    if not safe:
+        return None
+    best = max(
+        safe,
+        key=lambda row: (float(row["realized_min_clearance_m"]), float(row["proxy_min_clearance_m"])),
+    )
+    return str(best["token"])
+
+
+def _selected_failed_stop_cause(
+    scene: dict[str, Any],
+    candidate_replay_evaluations: list[dict[str, Any]],
+) -> str | None:
+    if str(scene.get("selected_token")) != "stop":
+        return None
+    selected_clearance = scene.get("selected_token_realized_min_clearance_m")
+    if selected_clearance is None or float(selected_clearance) >= DEFAULT_NEAR_MISS_THRESHOLD_M:
+        return None
+    actor_summary = scene.get("actor_summary", {})
+    if int(actor_summary.get("rear_closing_actor_count", 0)) > 0:
+        return "rear_closing"
+    if int(actor_summary.get("crossing_actor_count", 0)) > 0:
+        return "crossing_conflict"
+    oracle = _oracle_log_replay_safe_token(candidate_replay_evaluations)
+    if oracle in {"evasive_left", "evasive_right", "nudge_left", "nudge_right", "lane_recover"}:
+        return "stopped_in_conflict_zone"
+    return "horizon_artifact"
+
+
 def _token_failure_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
     rows: dict[str, dict[str, Any]] = {}
     for scene in scenes:
@@ -384,6 +469,72 @@ def _clearance_trace_examples(scenes: list[dict[str, Any]], *, limit: int = 5) -
             }
         )
     return examples
+
+
+def _replay_oracle_case_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    counts = {
+        "proxy-safe token exists and replay-safe token exists": 0,
+        "proxy-safe token exists but no replay-safe token exists": 0,
+        "proxy-safe selected token fails but another token would replay-safe pass": 0,
+        "no proxy-safe token but replay-safe token exists": 0,
+    }
+    for scene in scenes:
+        proxy_safe_exists = bool(scene.get("safe_token_existed"))
+        replay_safe_exists = scene.get("oracle_log_replay_safe_token") is not None
+        selected_fails = bool(scene.get("selected_token_realized_near_miss"))
+        selected_token = str(scene.get("selected_token"))
+        oracle = scene.get("oracle_log_replay_safe_token")
+        if proxy_safe_exists and replay_safe_exists:
+            counts["proxy-safe token exists and replay-safe token exists"] += 1
+        if proxy_safe_exists and not replay_safe_exists:
+            counts["proxy-safe token exists but no replay-safe token exists"] += 1
+        if proxy_safe_exists and selected_fails and oracle is not None and str(oracle) != selected_token:
+            counts["proxy-safe selected token fails but another token would replay-safe pass"] += 1
+        if not proxy_safe_exists and replay_safe_exists:
+            counts["no proxy-safe token but replay-safe token exists"] += 1
+    return [{"case": key, "count": value} for key, value in counts.items()]
+
+
+def _failed_stop_cause_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    counts: dict[str, int] = {}
+    for scene in scenes:
+        cause = scene.get("selected_failed_stop_cause")
+        if cause is None:
+            continue
+        counts[str(cause)] = counts.get(str(cause), 0) + 1
+    return [{"cause": cause, "count": counts[cause]} for cause in sorted(counts)]
+
+
+def _stop_vs_evasive_right_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rows = []
+    for scene in scenes:
+        if str(scene.get("selected_token")) != "stop":
+            continue
+        if not bool(scene.get("selected_token_realized_near_miss")):
+            continue
+        evasive = next(
+            (
+                row
+                for row in scene.get("candidate_replay_evaluations", [])
+                if str(row.get("token")) == "evasive_right"
+            ),
+            None,
+        )
+        rows.append(
+            {
+                "scene_id": str(scene["scene_id"]),
+                "evasive_right_available": evasive is not None,
+                "evasive_right_realized_min_clearance_m": (
+                    None if evasive is None else evasive["realized_min_clearance_m"]
+                ),
+                "would_evasive_right_avoid_failure": (
+                    False
+                    if evasive is None or evasive["realized_min_clearance_m"] is None
+                    else float(evasive["realized_min_clearance_m"]) >= DEFAULT_NEAR_MISS_THRESHOLD_M
+                ),
+            }
+        )
+    return rows
 
 
 def _binomial_ci95(*, successes: int, trials: int) -> dict[str, float]:
@@ -513,6 +664,28 @@ def markdown_report(report: Mapping[str, Any]) -> str:
         ]
     )
     for row in report["no_safe_token_cause_table"]:
+        lines.append(f"| {row['cause']} | {row['count']} |")
+    lines.extend(
+        [
+            "",
+            "## Replay Oracle Cases",
+            "",
+            "| Case | Count |",
+            "|---|---:|",
+        ]
+    )
+    for row in report["replay_oracle_case_table"]:
+        lines.append(f"| {row['case']} | {row['count']} |")
+    lines.extend(
+        [
+            "",
+            "## Failed Stop Causes",
+            "",
+            "| Cause | Count |",
+            "|---|---:|",
+        ]
+    )
+    for row in report["failed_stop_cause_table"]:
         lines.append(f"| {row['cause']} | {row['count']} |")
     return "\n".join(lines)
 
