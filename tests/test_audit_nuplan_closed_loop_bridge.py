@@ -214,6 +214,103 @@ class AuditNuPlanClosedLoopBridgeTests(unittest.TestCase):
         table = {row["selector"]: row for row in enriched["closed_loop_selector_comparison"]}
         self.assertEqual(0, table["replay_constrained_risk_0.5"]["aligned_logged_actor_failure_count"])
 
+    def test_selector_comparison_can_use_selective_regret_selector(self) -> None:
+        report = {"scenes": [_comparison_scene()]}
+
+        class BaselineSelector:
+            def predict_score(self, features):
+                return float(features["candidate_score_heuristic"])
+
+        class RegretSelector:
+            def predict_score(self, features):
+                return 10.0 if float(features["candidate_score_heuristic"]) < 0.75 else -1.0
+
+        def executor(scene):
+            clearance = 2.0 if scene["selected_token"] == "stop" else 0.2
+            return {
+                "selected_token_executed_min_clearance_m": clearance,
+                "selected_token_executed_min_clearance_t": 1.0,
+                "selected_token_executed_near_miss": clearance < 1.0,
+                "selected_token_executed_collision": False,
+                "first_erosion_time_s": None,
+                "time_from_first_erosion_to_impact_s": None,
+                "executed_clearance_source": "nuplan_closed_loop",
+                "aligned_executed_metric_variants": {"box_clearance_m": clearance},
+            }
+
+        enriched = self.module.enrich_report_with_closed_loop_selector_comparison(
+            report,
+            replay_calibrated_selector=BaselineSelector(),
+            selective_regret_policy={
+                "regret_model": RegretSelector(),
+                "config": {"top_k": 2, "margin_threshold": 5.0, "intervention_threshold": 0.0},
+            },
+            executor=executor,
+            replay_infeasible_limit=1,
+            safe_match_limit=0,
+            near_miss_threshold_m=1.0,
+        )
+
+        table = {row["selector"]: row for row in enriched["closed_loop_selector_comparison"]}
+        self.assertEqual(0, table["selective_regret"]["aligned_logged_actor_failure_count"])
+
+    def test_selector_comparison_can_use_boundary_intervention_selector(self) -> None:
+        report = {"scenes": [_comparison_scene()]}
+
+        class BaselineSelector:
+            def predict_score(self, features):
+                return float(features["candidate_score_heuristic"])
+
+        def executor(scene):
+            clearance = 2.0 if scene["selected_token"] == "stop" else 0.2
+            return {
+                "selected_token_executed_min_clearance_m": clearance,
+                "selected_token_executed_min_clearance_t": 1.0,
+                "selected_token_executed_near_miss": clearance < 1.0,
+                "selected_token_executed_collision": False,
+                "first_erosion_time_s": None,
+                "time_from_first_erosion_to_impact_s": None,
+                "executed_clearance_source": "nuplan_closed_loop",
+                "aligned_executed_metric_variants": {"box_clearance_m": clearance},
+            }
+
+        enriched = self.module.enrich_report_with_closed_loop_selector_comparison(
+            report,
+            replay_calibrated_selector=BaselineSelector(),
+            boundary_intervention_policy={
+                "feature_names": [
+                    "scene_margin",
+                    "score_delta",
+                    "progress_delta",
+                    "proxy_safe_delta",
+                    "clearance_delta",
+                    "speed_scale_delta",
+                    "lateral_offset_delta",
+                    "obstacle_pressure",
+                    "route_blockage",
+                    "nearest_actor_distance_m",
+                    "rear_closing_actor_count",
+                    "crossing_actor_count",
+                    "baseline_progress_m",
+                    "baseline_proxy_clearance_m",
+                ],
+                "feature_mean": [0.0] * 14,
+                "feature_scale": [1.0] * 14,
+                "weights": [0.0, -5.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "bias": 0.0,
+                "top_k": 2,
+                "margin_threshold": 5.0,
+                "intervention_threshold": 0.0,
+            },
+            executor=executor,
+            replay_infeasible_limit=1,
+            safe_match_limit=0,
+            near_miss_threshold_m=1.0,
+        )
+
+        table = {row["selector"]: row for row in enriched["closed_loop_selector_comparison"]}
+        self.assertEqual(0, table["boundary_intervention"]["aligned_logged_actor_failure_count"])
+
     def test_select_selector_border_scenes_prioritizes_disagreement_then_low_margin(self) -> None:
         scenes = [
             _border_scene("a", maintain_score=1.0, stop_score=0.9),
@@ -253,6 +350,7 @@ class AuditNuPlanClosedLoopBridgeTests(unittest.TestCase):
         self.assertEqual(["c", "a"], [row["scene_id"] for row in selected])
         self.assertEqual(3, summary["total_disagreement_count"])
         self.assertEqual(2, summary["selected_disagreement_count"])
+        self.assertEqual(["replay_safe", "replay_safe"], [row["bridge_replay_class"] for row in selected])
 
 
 def _scene(scene_id: str, *, failure_rung: str, selected_token: str, near: bool) -> dict[str, object]:

@@ -30,6 +30,17 @@ from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _replay_by_token
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _select_replay_oracle_token
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _select_with_score_model
+from minimal_shot_av.cli.commands.train_nuplan_boundary_intervention_selector import (
+    load_boundary_intervention_policy,
+)
+from minimal_shot_av.cli.commands.train_nuplan_boundary_intervention_selector import (
+    predict_boundary_delta,
+)
+from minimal_shot_av.cli.commands.train_nuplan_boundary_intervention_selector import (
+    select_with_boundary_intervention,
+)
+from minimal_shot_av.cli.commands.train_nuplan_selective_regret_selector import load_selective_regret_policy
+from minimal_shot_av.cli.commands.train_nuplan_selective_regret_selector import select_with_selective_regret
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import select_with_constrained_replay_risk
 from minimal_shot_av.cli.commands.run_nuplan_replay_calibration_experiments import predict_meta_lambda_value
 from minimal_shot_av.cli.commands.run_nuplan_replay_calibration_experiments import select_with_meta_lambda_value_policy
@@ -90,6 +101,16 @@ def _parse_args() -> argparse.Namespace:
         help="Optional meta-lambda value policy JSON used instead of scalar risk-penalty selection.",
     )
     parser.add_argument(
+        "--comparison-boundary-intervention-model",
+        type=Path,
+        help="Optional boundary-intervention selector artifact used instead of scalar/meta replay calibration.",
+    )
+    parser.add_argument(
+        "--comparison-selective-regret-model",
+        type=Path,
+        help="Optional selective-regret selector artifact used instead of scalar/meta replay calibration.",
+    )
+    parser.add_argument(
         "--comparison-border-only",
         action="store_true",
         help="Select bridge scenes from selector-border cases instead of replay-class matched cases.",
@@ -133,6 +154,16 @@ def main() -> int:
         enriched = enrich_report_with_closed_loop_selector_comparison(
             report,
             replay_calibrated_selector=load_selector(args.comparison_selector_model),
+            boundary_intervention_policy=(
+                None
+                if args.comparison_boundary_intervention_model is None
+                else load_boundary_intervention_policy(args.comparison_boundary_intervention_model)
+            ),
+            selective_regret_policy=(
+                None
+                if args.comparison_selective_regret_model is None
+                else load_selective_regret_policy(args.comparison_selective_regret_model)
+            ),
             meta_value_policy=(
                 None
                 if args.comparison_meta_value_policy is None
@@ -218,6 +249,8 @@ def enrich_report_with_closed_loop_selector_comparison(
     report: Mapping[str, Any],
     *,
     replay_calibrated_selector: Any,
+    boundary_intervention_policy: Mapping[str, Any] | None = None,
+    selective_regret_policy: Mapping[str, Any] | None = None,
     meta_value_policy: Mapping[str, Any] | None = None,
     executor: Callable[[dict[str, Any]], dict[str, Any]],
     replay_infeasible_limit: int | None,
@@ -233,6 +266,33 @@ def enrich_report_with_closed_loop_selector_comparison(
     calibrated_name = "replay_calibrated"
     calibrated_fn = lambda scene: _select_with_score_model(scene, replay_calibrated_selector)
     calibrated_margin_fn = lambda scene: _score_model_decision(scene, replay_calibrated_selector)
+    if boundary_intervention_policy is not None:
+        calibrated_name = "boundary_intervention"
+        calibrated_fn = lambda scene: select_with_boundary_intervention(
+            scene,
+            baseline_selector=replay_calibrated_selector,
+            policy=boundary_intervention_policy,
+        )
+        calibrated_margin_fn = lambda scene: _boundary_intervention_decision(
+            scene,
+            baseline_selector=replay_calibrated_selector,
+            boundary_intervention_policy=boundary_intervention_policy,
+        )
+    if selective_regret_policy is not None:
+        calibrated_name = "selective_regret"
+        calibrated_fn = lambda scene: select_with_selective_regret(
+            scene,
+            baseline_selector=replay_calibrated_selector,
+            regret_selector=selective_regret_policy["regret_model"],
+            top_k=int(selective_regret_policy["config"].get("top_k", 2)),
+            margin_threshold=float(selective_regret_policy["config"].get("margin_threshold", 1.5)),
+            intervention_threshold=float(selective_regret_policy["config"].get("intervention_threshold", 0.0)),
+        )
+        calibrated_margin_fn = lambda scene: _selective_regret_decision(
+            scene,
+            baseline_selector=replay_calibrated_selector,
+            selective_regret_policy=selective_regret_policy,
+        )
     if constrained_risk_threshold is not None:
         calibrated_name = f"replay_constrained_risk_{float(constrained_risk_threshold):g}"
         calibrated_fn = lambda scene: select_with_constrained_replay_risk(
@@ -396,6 +456,11 @@ def select_selector_border_scenes(
         disagreement_count += 1 if disagree else 0
         min_margin = min(float(a_decision["margin"]), float(b_decision["margin"]))
         row = dict(scene)
+        row["bridge_replay_class"] = (
+            "replay_infeasible"
+            if bool(scene.get("proxy_safe_selected")) and str(scene.get("failure_rung")) == REPLAY_INFEASIBLE_RUNG
+            else "replay_safe"
+        )
         row["selector_border"] = {
             selector_a_name: a_decision,
             selector_b_name: b_decision,
@@ -503,6 +568,103 @@ def _meta_value_decision(
     )
     decision = _decision_from_scored_candidates(scored)
     decision["lambda"] = selected_lambda
+    return decision
+
+
+def _selective_regret_decision(
+    scene: Mapping[str, Any],
+    *,
+    baseline_selector: Any,
+    selective_regret_policy: Mapping[str, Any],
+) -> dict[str, Any]:
+    config = dict(selective_regret_policy["config"])
+    token = select_with_selective_regret(
+        scene,
+        baseline_selector=baseline_selector,
+        regret_selector=selective_regret_policy["regret_model"],
+        top_k=int(config.get("top_k", 2)),
+        margin_threshold=float(config.get("margin_threshold", 1.5)),
+        intervention_threshold=float(config.get("intervention_threshold", 0.0)),
+    )
+    ranked = _candidate_scores(
+        scene,
+        score_fn=lambda candidate: float(
+            baseline_selector.predict_score(
+                candidate["features"] if "features" in candidate else _features(scene, candidate)
+            )
+        ),
+    )
+    decision = _decision_from_scored_candidates(ranked)
+    decision["token"] = token
+    return decision
+
+
+def _boundary_intervention_decision(
+    scene: Mapping[str, Any],
+    *,
+    baseline_selector: Any,
+    boundary_intervention_policy: Mapping[str, Any],
+) -> dict[str, Any]:
+    token = select_with_boundary_intervention(
+        scene,
+        baseline_selector=baseline_selector,
+        policy=boundary_intervention_policy,
+    )
+    ranked = _candidate_scores(
+        scene,
+        score_fn=lambda candidate: float(
+            baseline_selector.predict_score(
+                candidate["features"] if "features" in candidate else _features(scene, candidate)
+            )
+        ),
+    )
+    decision = _decision_from_scored_candidates(ranked)
+    decision["token"] = token
+    by_token = {
+        str(candidate.get("token", "")): candidate
+        for candidate in list(scene.get("candidates", []))
+    }
+    baseline_candidate = by_token.get(str(ranked[0]["token"])) if ranked else None
+    chosen_candidate = by_token.get(token)
+    if baseline_candidate is not None and chosen_candidate is not None and len(ranked) >= 2:
+        baseline_features = (
+            baseline_candidate["features"] if "features" in baseline_candidate else _features(scene, baseline_candidate)
+        )
+        chosen_features = (
+            chosen_candidate["features"] if "features" in chosen_candidate else _features(scene, chosen_candidate)
+        )
+        decision["predicted_delta"] = predict_boundary_delta(
+            {
+                "scene_margin": float(ranked[0]["score"] - ranked[1]["score"]),
+                "score_delta": float(
+                    baseline_selector.predict_score(chosen_features) - baseline_selector.predict_score(baseline_features)
+                ),
+                "progress_delta": float(
+                    chosen_features["candidate_final_progress_m"] - baseline_features["candidate_final_progress_m"]
+                ),
+                "proxy_safe_delta": float(
+                    chosen_features["candidate_proxy_safe"] - baseline_features["candidate_proxy_safe"]
+                ),
+                "clearance_delta": float(
+                    chosen_features["candidate_min_proxy_clearance_m"]
+                    - baseline_features["candidate_min_proxy_clearance_m"]
+                ),
+                "speed_scale_delta": float(
+                    chosen_features["candidate_speed_scale"] - baseline_features["candidate_speed_scale"]
+                ),
+                "lateral_offset_delta": float(
+                    chosen_features["candidate_lateral_offset_m"] - baseline_features["candidate_lateral_offset_m"]
+                ),
+                "obstacle_pressure": float(baseline_features["obstacle_pressure"]),
+                "route_blockage": float(baseline_features["route_blockage"]),
+                "nearest_actor_distance_m": float(baseline_features["nearest_actor_distance_m"]),
+                "rear_closing_actor_count": float(baseline_features["rear_closing_actor_count"]),
+                "crossing_actor_count": float(baseline_features["crossing_actor_count"]),
+                "baseline_progress_m": float(baseline_features["candidate_final_progress_m"]),
+                "baseline_proxy_clearance_m": float(baseline_features["candidate_min_proxy_clearance_m"]),
+            },
+            boundary_intervention_policy,
+        )
     return decision
 
 

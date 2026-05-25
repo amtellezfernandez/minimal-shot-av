@@ -37,6 +37,7 @@ SELECTOR_FEATURE_NAMES = (
     "candidate_score_heuristic",
 )
 REPLAY_CALIBRATED_MODEL_TYPE = "nuplan_replay_calibrated_selector_v1"
+REPLAY_VALUE_MODEL_TYPE = "nuplan_replay_value_selector_v1"
 
 
 @dataclass(frozen=True)
@@ -205,11 +206,68 @@ class NuPlanReplayCalibratedSelector:
         )
 
 
-def load_selector(path: Path) -> NuPlanMlpSelector | NuPlanReplayCalibratedSelector:
+@dataclass(frozen=True)
+class NuPlanReplayValueSelector:
+    feature_names: tuple[str, ...]
+    feature_mean: tuple[float, ...]
+    feature_scale: tuple[float, ...]
+    weights: tuple[float, ...]
+    bias: float
+
+    def predict_score(self, features: Mapping[str, float]) -> float:
+        vector = np.asarray([float(features[name]) for name in self.feature_names], dtype=np.float64)
+        mean = np.asarray(self.feature_mean, dtype=np.float64)
+        scale = np.asarray(self.feature_scale, dtype=np.float64)
+        normalized = (vector - mean) / scale
+        return float(normalized @ np.asarray(self.weights, dtype=np.float64) + float(self.bias))
+
+    def select_record(self, scene_record: Mapping[str, Any]) -> dict[str, Any]:
+        candidates = list(scene_record["candidates"])
+        scored = [
+            (
+                self.predict_score(selector_feature_row(scene_record, candidate)),
+                candidate,
+            )
+            for candidate in candidates
+        ]
+        _, selected = max(
+            scored,
+            key=lambda item: (
+                item[0],
+                item[1]["min_proxy_clearance_m"],
+                item[1]["final_progress_m"],
+            ),
+        )
+        return dict(selected)
+
+    def to_payload(self) -> dict[str, Any]:
+        return {
+            "model_type": REPLAY_VALUE_MODEL_TYPE,
+            "feature_names": list(self.feature_names),
+            "feature_mean": list(self.feature_mean),
+            "feature_scale": list(self.feature_scale),
+            "weights": list(self.weights),
+            "bias": float(self.bias),
+        }
+
+    @classmethod
+    def from_payload(cls, payload: Mapping[str, Any]) -> "NuPlanReplayValueSelector":
+        return cls(
+            feature_names=tuple(str(name) for name in payload["feature_names"]),
+            feature_mean=tuple(float(value) for value in payload["feature_mean"]),
+            feature_scale=tuple(float(value) for value in payload["feature_scale"]),
+            weights=tuple(float(value) for value in payload["weights"]),
+            bias=float(payload["bias"]),
+        )
+
+
+def load_selector(path: Path) -> NuPlanMlpSelector | NuPlanReplayCalibratedSelector | NuPlanReplayValueSelector:
     payload = json.loads(path.read_text(encoding="utf-8"))
     model_type = str(payload.get("model_type", "nuplan_maneuvertoken_selector_mlp_v1"))
     if model_type == REPLAY_CALIBRATED_MODEL_TYPE:
         return NuPlanReplayCalibratedSelector.from_payload(payload)
+    if model_type == REPLAY_VALUE_MODEL_TYPE:
+        return NuPlanReplayValueSelector.from_payload(payload)
     return NuPlanMlpSelector.from_payload(payload)
 
 
@@ -414,6 +472,48 @@ def fit_replay_calibrated_selector(
         near_miss_threshold_m=float(near_miss_threshold_m),
     )
     return selector, evaluate_replay_risk_head(selector, examples)
+
+
+def fit_replay_value_selector(
+    examples: list[Mapping[str, Any]],
+    *,
+    ridge_alpha: float = 1.0e-3,
+) -> tuple[NuPlanReplayValueSelector, dict[str, float]]:
+    if not examples:
+        raise ValueError("cannot train replay-value selector on an empty example set")
+    feature_names = tuple(SELECTOR_FEATURE_NAMES)
+    x = np.asarray(
+        [[float(example["features"][name]) for name in feature_names] for example in examples],
+        dtype=np.float64,
+    )
+    y = np.asarray([float(example["objective_value"]) for example in examples], dtype=np.float64)
+    weights = np.asarray([float(example.get("example_weight", 1.0)) for example in examples], dtype=np.float64)
+    weights = np.clip(weights, 1.0e-6, None)
+    feature_mean = x.mean(axis=0)
+    feature_scale = x.std(axis=0)
+    feature_scale[feature_scale < 1.0e-8] = 1.0
+    x_norm = (x - feature_mean) / feature_scale
+    design = np.concatenate([x_norm, np.ones((x_norm.shape[0], 1), dtype=np.float64)], axis=1)
+    penalty = np.eye(design.shape[1], dtype=np.float64) * float(ridge_alpha)
+    penalty[-1, -1] = 0.0
+    weighted_design = design * weights[:, None]
+    coefficients = np.linalg.solve(design.T @ weighted_design + penalty, design.T @ (weights * y))
+    predictions = design @ coefficients
+    selector = NuPlanReplayValueSelector(
+        feature_names=feature_names,
+        feature_mean=tuple(float(value) for value in feature_mean),
+        feature_scale=tuple(float(value) for value in feature_scale),
+        weights=tuple(float(value) for value in coefficients[:-1]),
+        bias=float(coefficients[-1]),
+    )
+    metrics = {
+        "example_count": float(len(examples)),
+        "mean_example_weight": float(weights.mean()),
+        "objective_mean": float(y.mean()),
+        "objective_mse": float(np.mean((predictions - y) ** 2)),
+        "objective_mae": float(np.mean(np.abs(predictions - y))),
+    }
+    return selector, metrics
 
 
 def evaluate_replay_risk_head(
