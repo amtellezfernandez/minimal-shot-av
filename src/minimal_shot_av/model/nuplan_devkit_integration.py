@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 from pathlib import Path
-import sys
 from typing import Any
 from typing import Iterable
 
@@ -217,13 +216,18 @@ def _discover_db_files(*, data_root: Path, db_files: tuple[str, ...]) -> list[st
 
 
 def _nuplan_imports() -> dict[str, Any]:
-    _ensure_local_nuplan_site_packages()
-    from nuplan.database.nuplan_db.nuplan_db_utils import get_lidarpc_sensor_data
-    from nuplan.database.nuplan_db.nuplan_scenario_queries import get_ego_state_for_lidarpc_token_from_db
-    from nuplan.database.nuplan_db.nuplan_scenario_queries import get_mission_goal_for_sensor_data_token_from_db
-    from nuplan.database.nuplan_db.nuplan_scenario_queries import get_sampled_ego_states_from_db
-    from nuplan.database.nuplan_db.nuplan_scenario_queries import get_scenarios_from_db
-    from nuplan.database.nuplan_db.nuplan_scenario_queries import get_tracked_objects_for_lidarpc_token_from_db
+    try:
+        from nuplan.database.nuplan_db.nuplan_db_utils import get_lidarpc_sensor_data
+        from nuplan.database.nuplan_db.nuplan_scenario_queries import get_ego_state_for_lidarpc_token_from_db
+        from nuplan.database.nuplan_db.nuplan_scenario_queries import get_mission_goal_for_sensor_data_token_from_db
+        from nuplan.database.nuplan_db.nuplan_scenario_queries import get_sampled_ego_states_from_db
+        from nuplan.database.nuplan_db.nuplan_scenario_queries import get_scenarios_from_db
+        from nuplan.database.nuplan_db.nuplan_scenario_queries import get_tracked_objects_for_lidarpc_token_from_db
+    except ModuleNotFoundError as exc:  # pragma: no cover - exercised only outside nuPlan installs.
+        raise ImportError(
+            "nuPlan devkit is not installed. Run `./scripts/bootstrap_nuplan_env.sh` "
+            "or install `minimal-shot-av[nuplan]` into the active environment."
+        ) from exc
 
     return {
         "get_ego_state_for_lidarpc_token_from_db": get_ego_state_for_lidarpc_token_from_db,
@@ -233,15 +237,6 @@ def _nuplan_imports() -> dict[str, Any]:
         "get_scenarios_from_db": get_scenarios_from_db,
         "get_tracked_objects_for_lidarpc_token_from_db": get_tracked_objects_for_lidarpc_token_from_db,
     }
-
-
-def _ensure_local_nuplan_site_packages() -> None:
-    root = Path(__file__).resolve().parents[3]
-    matches = sorted((root / ".venv-nuplan" / "lib").glob("python*/site-packages"))
-    for path in reversed(matches):
-        path_str = str(path)
-        if path_str not in sys.path:
-            sys.path.insert(0, path_str)
 
 
 def _speed_mps(ego: Any) -> float:

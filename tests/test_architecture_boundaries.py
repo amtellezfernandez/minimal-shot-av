@@ -191,6 +191,7 @@ NEUTRAL_SCRIPTS = {
     "build_readme_media.py",
     "check_alpasim_readiness.py",
     "fetch_checkpoints.py",
+    "fetch_nuplan_public_mini.py",
     "liberate_space.py",
     "publish_hf_release.py",
     "run_alpasim_scene_batch.py",

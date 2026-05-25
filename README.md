@@ -124,6 +124,7 @@ This repo is intentionally split into three visible surfaces:
 | AlpaSim integration / reproduction | [`docs/corl2027/AUDIT.md`](docs/corl2027/AUDIT.md) |
 | patched-upstream AlpaSim work | [`third_party/alpasim_overrides/README.md`](third_party/alpasim_overrides/README.md) |
 | Waymo / WOD-E2E stack | [`src/minimal_shot_av/model/README.md`](src/minimal_shot_av/model/README.md) |
+| nuPlan setup / public mini path | [`docs/notes/nuplan-setup.md`](docs/notes/nuplan-setup.md) |
 | WOD walkthrough | [`docs/wod-e2e-system-walkthrough.md`](docs/wod-e2e-system-walkthrough.md) |
 | report / comparison helpers | [`src/minimal_shot_av/neutral/README.md`](src/minimal_shot_av/neutral/README.md) |
 | command entrypoints | [`src/minimal_shot_av/cli/README.md`](src/minimal_shot_av/cli/README.md) |
@@ -160,6 +161,21 @@ than a simple proxy-visibility or ranking story.
 ## Run Something
 
 ```bash
+# Direct nuPlan setup on a fresh machine
+./scripts/bootstrap_nuplan_env.sh
+./.venv/bin/python scripts/fetch_nuplan_public_mini.py --db-count 5
+PYTHONPATH=src ./.venv/bin/python scripts/run_nuplan_maneuvertoken_rollout.py \
+  --nuplan-db-file workspace/nuplan/public_mini \
+  --limit 50 \
+  --output-json artifacts/corl2027/nuplan_mini_rollout50.json \
+  --output-markdown artifacts/corl2027/nuplan_mini_rollout50.md
+PYTHONPATH=src ./.venv/bin/python scripts/train_nuplan_maneuvertoken_selector.py \
+  --nuplan-db-file workspace/nuplan/public_mini \
+  --limit 200 \
+  --epochs 50 \
+  --hidden-dim 16 \
+  --output artifacts/corl2027/nuplan_mini_selector200.json
+
 # Single Spotlight Reflex demo
 uv run --no-sync python scripts/run_demo.py \
   --policy spotlight-reflex \

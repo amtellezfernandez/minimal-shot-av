@@ -13,6 +13,23 @@ dependencies = ["numpy>=1.26"]
 [project.optional-dependencies]
 sim-viz = ["Pillow>=10"]
 alpasim = ["numpy", "PyYAML>=6", "pandas>=2", "pyarrow>=16", "scipy>=1.11"]
+nuplan = [
+    "aioboto3",
+    "geopandas",
+    "hydra-core",
+    "matplotlib",
+    "nuplan-devkit",
+    "opencv-python-headless",
+    "Pillow>=10",
+    "pyquaternion",
+    "rasterio",
+    "remotezip",
+    "requests",
+    "retry",
+    "scipy>=1.11",
+    "shapely",
+    "tqdm",
+]
 tuning = ["optuna>=3.6"]
 audit-viz = ["rerun-sdk>=0.18"]
 
