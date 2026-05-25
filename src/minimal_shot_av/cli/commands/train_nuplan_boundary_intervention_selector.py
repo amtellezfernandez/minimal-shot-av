@@ -28,6 +28,8 @@ DEFAULT_OUTPUT = ROOT / "artifacts" / "corl2027" / "nuplan_boundary_intervention
 DEFAULT_REPORT_JSON = ROOT / "artifacts" / "corl2027" / "nuplan_boundary_intervention_selector_eval.json"
 DEFAULT_REPORT_MARKDOWN = ROOT / "artifacts" / "corl2027" / "nuplan_boundary_intervention_selector_eval.md"
 MODEL_TYPE = "nuplan_boundary_intervention_selector_v1"
+OBJECTIVE_DELTA = "objective_delta"
+CLEARANCE_DELTA = "clearance_delta"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -46,7 +48,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--top-k", type=int, default=2)
     parser.add_argument("--margin-threshold", type=float, default=0.75)
     parser.add_argument("--intervention-threshold", type=float, default=0.0)
+    parser.add_argument("--target-mode", choices=(OBJECTIVE_DELTA, CLEARANCE_DELTA), default=OBJECTIVE_DELTA)
     parser.add_argument("--fail-penalty", type=float, default=250.0)
+    parser.add_argument("--objective-clearance-weight", type=float, default=0.0)
     parser.add_argument("--objective-progress-weight", type=float, default=1.0)
     parser.add_argument("--objective-ade-weight", type=float, default=2.0)
     parser.add_argument("--positive-weight", type=float, default=4.0)
@@ -68,8 +72,10 @@ def main() -> int:
         baseline_selector=baseline_selector,
         near_miss_threshold_m=float(args.near_miss_threshold_m),
         fail_penalty=float(args.fail_penalty),
+        objective_clearance_weight=float(args.objective_clearance_weight),
         objective_progress_weight=float(args.objective_progress_weight),
         objective_ade_weight=float(args.objective_ade_weight),
+        target_mode=str(args.target_mode),
         top_k=int(args.top_k),
         margin_threshold=float(args.margin_threshold),
         positive_weight=float(args.positive_weight),
@@ -89,7 +95,9 @@ def main() -> int:
             "top_k": int(args.top_k),
             "margin_threshold": float(args.margin_threshold),
             "intervention_threshold": float(args.intervention_threshold),
+            "target_mode": str(args.target_mode),
             "fail_penalty": float(args.fail_penalty),
+            "objective_clearance_weight": float(args.objective_clearance_weight),
             "objective_progress_weight": float(args.objective_progress_weight),
             "objective_ade_weight": float(args.objective_ade_weight),
             "positive_weight": float(args.positive_weight),
@@ -137,8 +145,10 @@ def build_boundary_intervention_examples(
     baseline_selector: Any,
     near_miss_threshold_m: float,
     fail_penalty: float,
+    objective_clearance_weight: float,
     objective_progress_weight: float,
     objective_ade_weight: float,
+    target_mode: str,
     top_k: int,
     margin_threshold: float,
     positive_weight: float,
@@ -157,12 +167,13 @@ def build_boundary_intervention_examples(
         baseline_row = ranked[0]
         baseline_token = str(baseline_row["token"])
         baseline_features = _complete_features(scene, candidate_by_token[baseline_token])
-        baseline_objective = _candidate_objective(
+        baseline_objective = _boundary_objective(
             scene,
             candidate_by_token[baseline_token],
             replay_by_token.get(baseline_token),
             near_miss_threshold_m=near_miss_threshold_m,
             fail_penalty=fail_penalty,
+            objective_clearance_weight=objective_clearance_weight,
             objective_progress_weight=objective_progress_weight,
             objective_ade_weight=objective_ade_weight,
         )
@@ -172,18 +183,24 @@ def build_boundary_intervention_examples(
         for alt_row in ranked[1 : max(2, int(top_k))]:
             alt_token = str(alt_row["token"])
             alt_features = _complete_features(scene, candidate_by_token[alt_token])
-            alt_objective = _candidate_objective(
+            alt_objective = _boundary_objective(
                 scene,
                 candidate_by_token[alt_token],
                 replay_by_token.get(alt_token),
                 near_miss_threshold_m=near_miss_threshold_m,
                 fail_penalty=fail_penalty,
+                objective_clearance_weight=objective_clearance_weight,
                 objective_progress_weight=objective_progress_weight,
                 objective_ade_weight=objective_ade_weight,
             )
             if alt_objective is None:
                 continue
-            delta = float(alt_objective - baseline_objective)
+            if str(target_mode) == CLEARANCE_DELTA:
+                baseline_clearance = float(replay_by_token[baseline_token]["realized_min_clearance_m"])
+                alt_clearance = float(replay_by_token[alt_token]["realized_min_clearance_m"])
+                delta = float(alt_clearance - baseline_clearance)
+            else:
+                delta = float(alt_objective - baseline_objective)
             features = _intervention_features(
                 alt_features,
                 baseline_features,
@@ -247,6 +264,31 @@ def fit_boundary_intervention_policy(
         "positive_delta_rate": float(np.mean(y > 0.0)),
     }
     return policy, metrics
+
+
+def _boundary_objective(
+    scene: Mapping[str, Any],
+    candidate: Mapping[str, Any],
+    replay: Mapping[str, Any] | None,
+    *,
+    near_miss_threshold_m: float,
+    fail_penalty: float,
+    objective_clearance_weight: float,
+    objective_progress_weight: float,
+    objective_ade_weight: float,
+) -> float | None:
+    objective = _candidate_objective(
+        scene,
+        candidate,
+        replay,
+        near_miss_threshold_m=near_miss_threshold_m,
+        fail_penalty=fail_penalty,
+        objective_progress_weight=objective_progress_weight,
+        objective_ade_weight=objective_ade_weight,
+    )
+    if objective is None or replay is None or replay.get("realized_min_clearance_m") is None:
+        return objective
+    return float(objective) + float(objective_clearance_weight) * float(replay["realized_min_clearance_m"])
 
 
 def evaluate_selector_family(
@@ -425,7 +467,8 @@ def markdown_evaluation(report: Mapping[str, Any]) -> str:
         (
             f"- Boundary intervention: `top_k={report['config']['top_k']}, "
             f"margin_threshold={report['config']['margin_threshold']:.2f}, "
-            f"intervention_threshold={report['config']['intervention_threshold']:.2f}`"
+            f"intervention_threshold={report['config']['intervention_threshold']:.2f}, "
+            f"target_mode={report['config']['target_mode']}`"
         ),
         "",
     ]

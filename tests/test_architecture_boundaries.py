@@ -123,6 +123,7 @@ MODEL_SCRIPTS = {
     "run_wod_internvla_dualvln_inference.py",
     "run_wod_leaderboard_attack.py",
     "run_navsim_in_memory_matrix.py",
+    "analyze_nuplan_bootstrap_candidate_calibration.py",
     "run_nuplan_maneuvertoken_rollout.py",
     "run_nuplan_replay_calibration_experiments.py",
     "train_nuplan_border_residual_selector.py",
