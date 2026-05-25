@@ -1,0 +1,78 @@
+{
+  "date": "2026-05-25",
+  "scope": "nuplan_maneuvertoken_adapter",
+  "goal": "Replace the private AlpaSim main evidence surface with a public nuPlan closed-loop diagnostic ladder.",
+  "main_surface": "nuplan_fixed_hard_split",
+  "surface_selection_rule": "Prefer Test14-Hard; otherwise use the closest fixed public hard split with persistent closed-loop failures and record the exact split name in every artifact.",
+  "experiments": [
+    {
+      "name": "nuplan_adapter",
+      "question": "Can the ManeuverToken interface be ported to a public closed-loop nuPlan benchmark with per-frame diagnostics?",
+      "inputs": [
+        "ego state",
+        "surrounding actors",
+        "map route context"
+      ],
+      "outputs": [
+        "six-scalar state",
+        "ManeuverToken candidates",
+        "selected token",
+        "controller rollout",
+        "per-frame diagnostics"
+      ],
+      "deliverables": [
+        "scene-level metric exports",
+        "per-frame diagnostic traces",
+        "fixed hard split metadata"
+      ]
+    },
+    {
+      "name": "simple_learned_selector",
+      "question": "Can a small MLP improve token ranking without becoming the whole paper?",
+      "policy": "pi_phi(a | x)",
+      "state_features": [
+        "six-scalar state",
+        "route features",
+        "actor summary"
+      ],
+      "supervision": "Token imitation distance plus safety-feasibility penalty over short-horizon rollouts.",
+      "model": "small_mlp"
+    },
+    {
+      "name": "diagnostic_ladder",
+      "question": "Which rung explains each collision or near-miss?",
+      "rungs": [
+        "state_visibility_failure",
+        "candidate_feasibility_failure",
+        "selector_ranking_failure",
+        "proxy_risk_estimation_failure",
+        "controller_proxy_mismatch"
+      ]
+    },
+    {
+      "name": "proxy_realized_clearance",
+      "question": "Does proxy clearance erode before realized impact on the public closed-loop surface?",
+      "primary_measurement": "delta_clearance = proxy_clearance - realized_clearance",
+      "required_reports": [
+        "proxy_safe_realized_near_rate",
+        "erosion_before_impact_rate",
+        "erosion_to_impact_delay",
+        "failure_rung_fraction",
+        "bootstrap_confidence_intervals",
+        "threshold_sensitivity"
+      ]
+    }
+  ],
+  "paper_tables": [
+    {
+      "name": "benchmark_surfaces",
+      "rows": [
+        ["AlpaSim", "motivation_appendix", "origin_of_hypothesis_private_surface"],
+        ["nuPlan", "main_result", "public_closed_loop_benchmark"],
+        ["nuPlan-R", "optional_ablation", "ideal_if_code_is_available"],
+        ["NAVSIM_v2", "optional_appendix", "public_but_not_reactive_enough"],
+        ["Fail2Drive", "related_work", "paired_scenario_diagnosis_not_rung_level"]
+      ]
+    }
+  ]
+}
