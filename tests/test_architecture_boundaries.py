@@ -105,6 +105,7 @@ MODEL_SCRIPTS = {
     "generate_wod_learned_candidates.py",
     "generate_wod_v20_candidates.py",
     "apply_wod_hgb_policy_to_test.py",
+    "audit_nuplan_selected_token_realized_clearance.py",
     "export_wod_neural_training_frames.py",
     "train_wod_anchor_trajectory_model.py",
     "train_wod_neural_trajectory_model.py",

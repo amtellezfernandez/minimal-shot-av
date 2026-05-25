@@ -64,12 +64,21 @@ def load_nuplan_scenes(
             if not future_states:
                 continue
             tracked_objects = list(imports["get_tracked_objects_for_lidarpc_token_from_db"](log_file, token))
+            sensor_timestamp_us = int(
+                imports["get_sensor_data_token_timestamp_from_db"](
+                    log_file,
+                    imports["get_lidarpc_sensor_data"](),
+                    token,
+                )
+                or 0
+            )
             scenes.append(
                 _scene_from_nuplan_row(
                     log_file=log_file,
                     token=token,
                     scenario_type=str(row["scenario_type"] or "unknown"),
                     map_name=str(row["map_name"]),
+                    sensor_timestamp_us=sensor_timestamp_us,
                     ego=ego,
                     mission_goal=mission_goal,
                     future_states=future_states,
@@ -87,6 +96,7 @@ def _scene_from_nuplan_row(
     token: str,
     scenario_type: str,
     map_name: str,
+    sensor_timestamp_us: int,
     ego: Any,
     mission_goal: Any,
     future_states: list[Any],
@@ -101,10 +111,12 @@ def _scene_from_nuplan_row(
     expert_trajectory = [_ego_future_row(ego=ego, state=state) for state in future_states]
     return {
         "scene_id": f"{Path(log_file).stem}:{token}",
+        "source_db_file": str(log_file),
         "log_name": Path(log_file).name,
         "scenario_token": token,
         "scenario_type": scenario_type,
         "map_name": map_name,
+        "sensor_timestamp_us": int(sensor_timestamp_us),
         "ego_state": {
             "speed_mps": _speed_mps(ego),
             "x_m": float(ego.rear_axle.x),
@@ -222,6 +234,7 @@ def _nuplan_imports() -> dict[str, Any]:
         from nuplan.database.nuplan_db.nuplan_scenario_queries import get_mission_goal_for_sensor_data_token_from_db
         from nuplan.database.nuplan_db.nuplan_scenario_queries import get_sampled_ego_states_from_db
         from nuplan.database.nuplan_db.nuplan_scenario_queries import get_scenarios_from_db
+        from nuplan.database.nuplan_db.nuplan_scenario_queries import get_sensor_data_token_timestamp_from_db
         from nuplan.database.nuplan_db.nuplan_scenario_queries import get_tracked_objects_for_lidarpc_token_from_db
     except ModuleNotFoundError as exc:  # pragma: no cover - exercised only outside nuPlan installs.
         raise ImportError(
@@ -235,6 +248,7 @@ def _nuplan_imports() -> dict[str, Any]:
         "get_mission_goal_for_sensor_data_token_from_db": get_mission_goal_for_sensor_data_token_from_db,
         "get_sampled_ego_states_from_db": get_sampled_ego_states_from_db,
         "get_scenarios_from_db": get_scenarios_from_db,
+        "get_sensor_data_token_timestamp_from_db": get_sensor_data_token_timestamp_from_db,
         "get_tracked_objects_for_lidarpc_token_from_db": get_tracked_objects_for_lidarpc_token_from_db,
     }
 

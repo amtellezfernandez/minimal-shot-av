@@ -216,16 +216,24 @@ def select_maneuver_token(scene: Mapping[str, Any] | Any) -> ManeuverTokenCandid
 
 
 def build_scene_diagnostic_record(scene: Mapping[str, Any] | Any) -> dict[str, Any]:
+    rollout_dt_s = 0.5
+    rollout_horizon_s = 4.0
     scalar_state = extract_scalar_state(scene)
     route = extract_route_features(scene)
     actor_summary = summarize_actors(scene)
-    candidates = build_maneuver_token_candidates(scene)
+    candidates = build_maneuver_token_candidates(scene, horizon_s=rollout_horizon_s, dt_s=rollout_dt_s)
     selected = max(
         candidates,
         key=lambda candidate: (candidate.score, candidate.min_proxy_clearance_m, candidate.final_progress_m),
     )
     return {
         "scene_id": str(_get_value(scene, "scene_id", "unknown_scene")),
+        "source_db_file": _get_value(scene, "source_db_file", None),
+        "log_name": _get_value(scene, "log_name", None),
+        "scenario_token": _get_value(scene, "scenario_token", None),
+        "scenario_type": _get_value(scene, "scenario_type", None),
+        "map_name": _get_value(scene, "map_name", None),
+        "sensor_timestamp_us": _get_value(scene, "sensor_timestamp_us", None),
         "six_scalar_state": {
             **asdict(scalar_state),
             "vector": [round(value, 6) for value in six_scalar_vector(scalar_state)],
@@ -233,6 +241,8 @@ def build_scene_diagnostic_record(scene: Mapping[str, Any] | Any) -> dict[str, A
         "route_features": asdict(route),
         "actor_summary": asdict(actor_summary),
         "candidate_count": len(candidates),
+        "selected_token_rollout_dt_s": rollout_dt_s,
+        "selected_token_rollout_horizon_s": rollout_horizon_s,
         "selected_token": selected.token,
         "selected_token_proxy_safe": selected.proxy_safe,
         "selected_token_min_proxy_clearance_m": round(selected.min_proxy_clearance_m, 6),

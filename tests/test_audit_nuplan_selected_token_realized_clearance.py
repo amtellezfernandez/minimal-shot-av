@@ -1,0 +1,147 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPT = ROOT / "scripts" / "audit_nuplan_selected_token_realized_clearance.py"
+
+
+def _load_module():
+    spec = importlib.util.spec_from_file_location("audit_nuplan_selected_token_realized_clearance", SCRIPT)
+    if spec is None or spec.loader is None:
+        raise ImportError(SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+class AuditNuPlanSelectedTokenRealizedClearanceTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.module = _load_module()
+
+    def test_enrich_report_fills_realized_clearance_fields(self) -> None:
+        report = _base_report()
+
+        def provider(scene):
+            return {
+                "selected_token_realized_min_clearance_m": 1.5,
+                "selected_token_realized_min_clearance_t": 2.0,
+                "selected_token_realized_collision": False,
+                "selected_token_realized_near_miss": False,
+                "realized_clearance_source": "log_replay",
+            }
+
+        enriched = self.module.enrich_report_with_realized_clearance(
+            report,
+            clearance_provider=provider,
+            near_miss_threshold_m=1.0,
+        )
+
+        scene = enriched["scenes"][0]
+        self.assertEqual(1.5, scene["selected_token_realized_min_clearance_m"])
+        self.assertEqual(2.0, scene["selected_token_realized_min_clearance_t"])
+        self.assertFalse(scene["selected_token_realized_near_miss"])
+        self.assertEqual("log_replay", scene["realized_clearance_source"])
+
+    def test_proxy_safe_cases_have_some_realized_clearance(self) -> None:
+        report = _base_report()
+
+        enriched = self.module.enrich_report_with_realized_clearance(
+            report,
+            clearance_provider=lambda scene: {
+                "selected_token_realized_min_clearance_m": 1.5,
+                "selected_token_realized_min_clearance_t": 1.0,
+                "selected_token_realized_collision": False,
+                "selected_token_realized_near_miss": False,
+                "realized_clearance_source": "log_replay",
+            },
+            near_miss_threshold_m=1.0,
+        )
+
+        proxy_safe = [scene for scene in enriched["scenes"] if scene["proxy_safe_selected"]]
+        with_realized = [
+            scene for scene in proxy_safe if scene["selected_token_realized_min_clearance_m"] is not None
+        ]
+
+        self.assertEqual(1, len(proxy_safe))
+        self.assertGreater(len(with_realized), 0)
+
+    def test_realized_near_miss_matches_threshold(self) -> None:
+        report = _base_report()
+
+        enriched = self.module.enrich_report_with_realized_clearance(
+            report,
+            clearance_provider=lambda scene: {
+                "selected_token_realized_min_clearance_m": 0.4,
+                "selected_token_realized_min_clearance_t": 1.0,
+                "selected_token_realized_collision": False,
+                "selected_token_realized_near_miss": True,
+                "realized_clearance_source": "log_replay",
+            },
+            near_miss_threshold_m=1.0,
+        )
+
+        for scene in enriched["scenes"]:
+            clearance = scene["selected_token_realized_min_clearance_m"]
+            if clearance is None:
+                continue
+            self.assertEqual(scene["selected_token_realized_near_miss"], clearance < 1.0)
+
+    def test_cli_main_writes_realized_clearance_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            input_path = tmp_path / "rollout.json"
+            output_json = tmp_path / "realized.json"
+            output_md = tmp_path / "realized.md"
+            input_path.write_text(json.dumps(_base_report()), encoding="utf-8")
+            argv = [
+                str(SCRIPT),
+                "--input-json",
+                str(input_path),
+                "--output-json",
+                str(output_json),
+                "--output-markdown",
+                str(output_md),
+            ]
+            original_argv = sys.argv
+            sys.argv = argv
+            try:
+                original_provider = self.module.compute_scene_log_replay_realized_fields
+                self.module.compute_scene_log_replay_realized_fields = lambda scene: None
+                self.module.main()
+            finally:
+                self.module.compute_scene_log_replay_realized_fields = original_provider
+                sys.argv = original_argv
+
+            payload = json.loads(output_json.read_text(encoding="utf-8"))
+            self.assertEqual("nuplan_maneuvertoken_realized_clearance_v1", payload["schema"])
+            self.assertIn("Failure rung", output_md.read_text(encoding="utf-8"))
+
+
+def _base_report() -> dict:
+    return {
+        "scene_count": 1,
+        "scenes": [
+            {
+                "scene_id": "scene_a",
+                "actor_summary": {"actor_count": 2, "visible_actor_count": 2},
+                "safe_token_existed": True,
+                "selector_chose_safe_token": True,
+                "proxy_safe_selected": True,
+                "selected_token_realized_min_clearance_m": None,
+                "selected_token": "stop",
+            }
+        ],
+    }
+
+
+if __name__ == "__main__":
+    unittest.main()
