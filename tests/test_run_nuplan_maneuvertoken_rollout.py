@@ -41,10 +41,15 @@ class RunNuPlanManeuverTokenRolloutTests(unittest.TestCase):
 
         self.assertEqual(2, report["scene_count"])
         self.assertIn("selected_token_histogram", report)
+        self.assertIn("failure_rung_table", report)
         self.assertEqual(2, len(report["scenes"]))
         self.assertEqual(9, report["scenes"][0]["candidate_count"])
         self.assertIn("selected_token_rollout", report["scenes"][0])
         self.assertTrue(report["scenes"][0]["selected_token_rollout"]["per_frame_diagnostics"])
+        self.assertIn("failure_rung", report["scenes"][0])
+        self.assertIn("safe_token_existed", report["scenes"][0])
+        self.assertIn("oracle_safe_token", report["scenes"][0])
+        self.assertIn("realized_min_clearance", report["scenes"][0])
 
     def test_cli_main_writes_json_and_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -71,6 +76,8 @@ class RunNuPlanManeuverTokenRolloutTests(unittest.TestCase):
 
             payload = json.loads(output_json.read_text(encoding="utf-8"))
             self.assertEqual(1, payload["scene_count"])
+            self.assertEqual(5, len(payload["failure_rung_table"]))
+            self.assertIn("Failure rung", output_md.read_text(encoding="utf-8"))
             self.assertIn("Proxy-safe rate", output_md.read_text(encoding="utf-8"))
 
     def test_rollout_can_use_trained_selector_model(self) -> None:
@@ -101,6 +108,7 @@ class RunNuPlanManeuverTokenRolloutTests(unittest.TestCase):
         self.assertGreaterEqual(metrics["scene_accuracy"], 0.99)
         self.assertEqual(expected_token, report["scenes"][0]["selected_token"])
         self.assertEqual("learned_selector", report["scenes"][0]["selection_source"])
+        self.assertEqual("metric/spec ambiguity", report["scenes"][0]["failure_rung"])
 
 
 def _scene(scene_id: str) -> dict:
