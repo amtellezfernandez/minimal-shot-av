@@ -72,7 +72,7 @@ def main() -> int:
     _write_json(batch_dir / "batch-manifest.json", manifest)
 
     statuses: list[dict[str, Any]] = []
-    for index, scene_id in enumerate(scene_ids, start=1):
+    for index, scene_id in enumerate(scene_ids, start=args.scene_offset + 1):
         run_dir = batch_dir / f"{index:03d}_{scene_id}"
         command = _scene_command(args, scene_id=scene_id, run_dir=run_dir)
         status = _scene_status(run_dir)
@@ -208,9 +208,44 @@ def _run_scene_with_retries(command: list[str], *, cwd: Path, max_retries: int) 
     for _ in range(max(0, int(max_retries)) + 1):
         attempts += 1
         last_returncode = subprocess.run(command, cwd=cwd, check=False).returncode
-        if last_returncode == 0:
+        if last_returncode == 0 and _scene_artifacts_complete(command):
             break
+        last_returncode = 1
+        _cleanup_failed_scene(command, cwd=cwd)
     return int(last_returncode), attempts
+
+
+def _cleanup_failed_scene(command: list[str], *, cwd: Path) -> None:
+    run_dir = _extract_run_dir(command)
+    if run_dir is None:
+        return
+    compose_path = run_dir / "docker-compose.yaml"
+    if not compose_path.is_file():
+        return
+    subprocess.run(
+        ["docker", "compose", "-f", str(compose_path), "down", "-v"],
+        cwd=cwd,
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def _extract_run_dir(command: list[str]) -> Path | None:
+    try:
+        index = command.index("--run-dir")
+    except ValueError:
+        return None
+    if index + 1 >= len(command):
+        return None
+    return Path(command[index + 1])
+
+
+def _scene_artifacts_complete(command: list[str]) -> bool:
+    run_dir = _extract_run_dir(command)
+    if run_dir is None:
+        return False
+    return _scene_status(run_dir) == "completed"
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
