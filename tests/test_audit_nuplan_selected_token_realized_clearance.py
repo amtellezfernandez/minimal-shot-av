@@ -162,6 +162,30 @@ class AuditNuPlanSelectedTokenRealizedClearanceTests(unittest.TestCase):
 
         self.assertEqual(1, counts["proxy-safe selected token fails but another token would replay-safe pass"])
 
+    def test_horizon_sensitivity_summary_pins_immediate_failures(self) -> None:
+        trace = [
+            {"time_s": 1.0, "realized_clearance_m": 0.4},
+            {"time_s": 2.0, "realized_clearance_m": 0.3},
+            {"time_s": 3.0, "realized_clearance_m": 0.2},
+            {"time_s": 4.0, "realized_clearance_m": 0.1},
+        ]
+        evaluations = [{"realized_clearance_trace": trace}]
+        scenes = [
+            {
+                "proxy_safe_selected": True,
+                "selected_token": "stop",
+                "selected_token_realized_clearance_trace": trace,
+                "candidate_replay_evaluations": evaluations,
+            }
+        ]
+
+        table = self.module._horizon_sensitivity_table(scenes=scenes, horizons_s=(1.0, 2.0, 3.0, 4.0, 5.0))
+        by_horizon = {row["horizon_s"]: row for row in table}
+
+        self.assertEqual(1, by_horizon[1.0]["proxy_safe_selected_failures"])
+        self.assertEqual(1, by_horizon[1.0]["proxy_safe_stop_failures"])
+        self.assertFalse(by_horizon[5.0]["available"])
+
 
 def _base_report() -> dict:
     return {

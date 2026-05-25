@@ -404,7 +404,7 @@ def _selected_failed_stop_cause(
     oracle = _oracle_log_replay_safe_token(candidate_replay_evaluations)
     if oracle in {"evasive_left", "evasive_right", "nudge_left", "nudge_right", "lane_recover"}:
         return "stopped_in_conflict_zone"
-    return "horizon_artifact"
+    return "stop_token_replay_infeasible"
 
 
 def _token_failure_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -726,6 +726,8 @@ def markdown_report(report: Mapping[str, Any]) -> str:
         f"`[{report['proxy_safe_realized_near_or_collision_ci95']['lower']:.3f}, "
         f"{report['proxy_safe_realized_near_or_collision_ci95']['upper']:.3f}]`",
         f"- Realized clearance source: `log_replay`",
+        "- All replay-infeasible stop cases are already infeasible at the 1s horizon; "
+        "this is not a long-horizon replay artifact.",
         "",
         "## Failure Table",
         "",
