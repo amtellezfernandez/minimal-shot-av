@@ -10,7 +10,10 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-import pyarrow.parquet as pq
+try:
+    import pyarrow.parquet as pq
+except ModuleNotFoundError:  # pragma: no cover - import-only tests do not need parquet I/O.
+    pq = None
 
 from minimal_shot_av.simulator.alpasim_direct_actor_planner import (
     DirectPlannerConfig,
@@ -485,8 +488,12 @@ def _direct_grid_action_space_summary(
 def _classify_scene(frames: list[dict[str, Any]], *, actionable_lead_frames: int) -> dict[str, Any]:
     evaluable = [frame for frame in frames if frame.get("status") == "ok"]
     actionable = [frame for frame in evaluable if int(frame.get("lead_frames", 0)) >= actionable_lead_frames]
-    token_safe = [frame for frame in actionable if (frame.get("token_candidate_set") or {}).get("any_collision_free_proxy")]
-    token_margin = [frame for frame in actionable if (frame.get("token_candidate_set") or {}).get("any_margin_safe_proxy")]
+    token_safe = [
+        frame for frame in actionable if (frame.get("token_candidate_set") or {}).get("any_collision_free_proxy")
+    ]
+    token_margin = [
+        frame for frame in actionable if (frame.get("token_candidate_set") or {}).get("any_margin_safe_proxy")
+    ]
     token_selected_safe = [
         frame for frame in token_safe if (frame.get("token_candidate_set") or {}).get("selected_collision_free_proxy")
     ]
@@ -564,8 +571,12 @@ def _summary(
     all_frames = [frame for scene in scenes for frame in scene["frames"]]
     evaluable = [frame for frame in all_frames if frame.get("status") == "ok"]
     actionable = [frame for frame in evaluable if int(frame.get("lead_frames", 0)) >= actionable_lead_frames]
-    token_safe = [frame for frame in actionable if (frame.get("token_candidate_set") or {}).get("any_collision_free_proxy")]
-    token_margin = [frame for frame in actionable if (frame.get("token_candidate_set") or {}).get("any_margin_safe_proxy")]
+    token_safe = [
+        frame for frame in actionable if (frame.get("token_candidate_set") or {}).get("any_collision_free_proxy")
+    ]
+    token_margin = [
+        frame for frame in actionable if (frame.get("token_candidate_set") or {}).get("any_margin_safe_proxy")
+    ]
     token_selected_safe = [
         frame for frame in token_safe if (frame.get("token_candidate_set") or {}).get("selected_collision_free_proxy")
     ]
@@ -671,6 +682,8 @@ def _load_scene_dirs(run_dir: Path) -> dict[str, Path]:
 
 
 def _metric_timeline(scene_dir: Path) -> list[dict[str, Any]]:
+    if pq is None:
+        raise ModuleNotFoundError("pyarrow is required to read AlpaSim parquet metric timelines")
     table = pq.read_table(
         scene_dir / "aggregate" / "metrics_unprocessed.parquet",
         columns=["name", "timestamps_us", "values", "valid"],
@@ -948,7 +961,10 @@ def _markdown(report: dict[str, Any]) -> str:
         "",
         "## Per-scene buckets",
         "",
-        "| Scene | Component | Bucket | Token safe frames | Token selected safe | Direct safe frames | Direct selected safe | Direct cost misses | First direct safe lead |",
+        (
+            "| Scene | Component | Bucket | Token safe frames | Token selected safe | Direct safe frames | "
+            "Direct selected safe | Direct cost misses | First direct safe lead |"
+        ),
         "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for scene in report["scenes"]:
@@ -968,7 +984,10 @@ def _markdown(report: dict[str, Any]) -> str:
         )
     lines.extend(["", "## Impact-frame snapshot", ""])
     lines.append(
-        "| Scene | Lead | Token selected safe | Token safe count | Direct selected safe | Direct safe count | Direct selected clearance | Direct best clearance |"
+        (
+            "| Scene | Lead | Token selected safe | Token safe count | Direct selected safe | "
+            "Direct safe count | Direct selected clearance | Direct best clearance |"
+        )
     )
     lines.append("| --- | ---: | --- | ---: | --- | ---: | ---: | ---: |")
     for scene in report["scenes"]:

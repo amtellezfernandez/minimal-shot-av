@@ -1,0 +1,870 @@
+{
+  "config": {
+    "actionable_lead_frames": 5,
+    "proxy_clearance_thresholds_m": [
+      0.0,
+      0.55,
+      1.0
+    ],
+    "realized_near_thresholds_m": [
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ]
+  },
+  "method_note": "Uses committed per-frame audit artifacts. Realized current clearance is the transformed ego-frame closest actor-proxy clearance at the rollout frame; proxy clearance is the selected direct-grid future minimum clearance stored by the open-loop audit.",
+  "scenes": [
+    {
+      "actionable_frame_count": 32,
+      "assigned_mode": "candidate_feasibility_or_actor_axis_definition",
+      "clipgt_id": "clipgt-a309e228-26e1-423e-a44c-cb00aa7378cb",
+      "counterfactual_bucket": "no_actor_axis_safe_candidate_actionable",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 37,
+        "timestamp_us": 2753674646209
+      },
+      "median_direct_selected_proxy_clearance_m": 0.4627,
+      "median_hazard_count": 24.0,
+      "median_realized_current_clearance_m": 12.824300000000001,
+      "median_speed_mps": 1.19975,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 32,
+          "first_unsafe_after_safe_lead_frames": 17
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 32,
+          "first_unsafe_after_safe_lead_frames": 31
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 13,
+          "first_unsafe_after_safe_lead_frames": 7
+        }
+      },
+      "scene": "001_clipgt-a309e228-26e1-423e-a44c-cb00aa7378cb"
+    },
+    {
+      "actionable_frame_count": 38,
+      "assigned_mode": "controller_proxy_residual",
+      "clipgt_id": "clipgt-804afc4a-fd1e-4f58-bd39-a4c486a916e5",
+      "counterfactual_bucket": "baseline_selected_actor_axis_safe_candidate_but_collision_persisted",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 43,
+        "timestamp_us": 1567444283200
+      },
+      "median_direct_selected_proxy_clearance_m": 4.888199999999999,
+      "median_hazard_count": 22.5,
+      "median_realized_current_clearance_m": 6.1692,
+      "median_speed_mps": 2.88645,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 42,
+          "first_unsafe_after_safe_lead_frames": 6
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 42,
+          "first_unsafe_after_safe_lead_frames": 6
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 42,
+          "first_unsafe_after_safe_lead_frames": 6
+        }
+      },
+      "scene": "002_clipgt-804afc4a-fd1e-4f58-bd39-a4c486a916e5"
+    },
+    {
+      "actionable_frame_count": 46,
+      "assigned_mode": "controller_proxy_residual",
+      "clipgt_id": "clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e",
+      "counterfactual_bucket": "baseline_selected_actor_axis_safe_candidate_but_collision_persisted",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 51,
+        "timestamp_us": 2054181437002
+      },
+      "median_direct_selected_proxy_clearance_m": 2.4266,
+      "median_hazard_count": 21.0,
+      "median_realized_current_clearance_m": 7.2799000000000005,
+      "median_speed_mps": 2.5015,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 50,
+          "first_unsafe_after_safe_lead_frames": 6
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 50,
+          "first_unsafe_after_safe_lead_frames": 6
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 50,
+          "first_unsafe_after_safe_lead_frames": 6
+        }
+      },
+      "scene": "004_clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e"
+    },
+    {
+      "actionable_frame_count": 25,
+      "assigned_mode": "selector_ranking_secondary",
+      "clipgt_id": "clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e",
+      "counterfactual_bucket": "mixed_actor_axis_safe_candidate_intermittently_missed",
+      "first_collision": {
+        "components": [
+          "collision_front"
+        ],
+        "frame_index": 30,
+        "timestamp_us": 2156805631113
+      },
+      "median_direct_selected_proxy_clearance_m": 1.3892,
+      "median_hazard_count": 21.0,
+      "median_realized_current_clearance_m": 3.6548,
+      "median_speed_mps": 0.25,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": false,
+          "first_safe_lead_frames": 29,
+          "first_unsafe_after_safe_lead_frames": null
+        },
+        "0.55": {
+          "eroded_before_impact": false,
+          "first_safe_lead_frames": 29,
+          "first_unsafe_after_safe_lead_frames": null
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 27,
+          "first_unsafe_after_safe_lead_frames": 9
+        }
+      },
+      "scene": "005_clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e"
+    },
+    {
+      "actionable_frame_count": 35,
+      "assigned_mode": "controller_proxy_residual",
+      "clipgt_id": "clipgt-8aaa1135-573f-4f6c-8ff8-7ac6bd6ea5d6",
+      "counterfactual_bucket": "baseline_selected_actor_axis_safe_candidate_but_collision_persisted",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 40,
+        "timestamp_us": 2053959337002
+      },
+      "median_direct_selected_proxy_clearance_m": 2.1004,
+      "median_hazard_count": 19.0,
+      "median_realized_current_clearance_m": 7.4061,
+      "median_speed_mps": 2.378,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 39,
+          "first_unsafe_after_safe_lead_frames": 10
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 39,
+          "first_unsafe_after_safe_lead_frames": 11
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 39,
+          "first_unsafe_after_safe_lead_frames": 11
+        }
+      },
+      "scene": "007_clipgt-8aaa1135-573f-4f6c-8ff8-7ac6bd6ea5d6"
+    },
+    {
+      "actionable_frame_count": 49,
+      "assigned_mode": "controller_proxy_residual",
+      "clipgt_id": "clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d",
+      "counterfactual_bucket": "baseline_selected_actor_axis_safe_candidate_but_collision_persisted",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 54,
+        "timestamp_us": 681858216131
+      },
+      "median_direct_selected_proxy_clearance_m": 2.8152,
+      "median_hazard_count": 23.0,
+      "median_realized_current_clearance_m": 6.882999999999999,
+      "median_speed_mps": 2.3536,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 53,
+          "first_unsafe_after_safe_lead_frames": 6
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 53,
+          "first_unsafe_after_safe_lead_frames": 6
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 53,
+          "first_unsafe_after_safe_lead_frames": 6
+        }
+      },
+      "scene": "008_clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d"
+    },
+    {
+      "actionable_frame_count": 44,
+      "assigned_mode": "controller_proxy_residual",
+      "clipgt_id": "clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e",
+      "counterfactual_bucket": "baseline_selected_actor_axis_safe_candidate_but_collision_persisted",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 49,
+        "timestamp_us": 2056914916206
+      },
+      "median_direct_selected_proxy_clearance_m": 2.1164,
+      "median_hazard_count": 22.0,
+      "median_realized_current_clearance_m": 3.44175,
+      "median_speed_mps": 1.84735,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 48,
+          "first_unsafe_after_safe_lead_frames": 9
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 48,
+          "first_unsafe_after_safe_lead_frames": 11
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 48,
+          "first_unsafe_after_safe_lead_frames": 12
+        }
+      },
+      "scene": "009_clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e"
+    },
+    {
+      "actionable_frame_count": 24,
+      "assigned_mode": "controller_proxy_residual",
+      "clipgt_id": "clipgt-9b6a51bd-cb54-4a68-8ed8-0e33a504c67e",
+      "counterfactual_bucket": "baseline_selected_actor_axis_safe_candidate_but_collision_persisted",
+      "first_collision": {
+        "components": [
+          "collision_front"
+        ],
+        "frame_index": 29,
+        "timestamp_us": 1975545460122
+      },
+      "median_direct_selected_proxy_clearance_m": 1.7295,
+      "median_hazard_count": 23.0,
+      "median_realized_current_clearance_m": 5.4644,
+      "median_speed_mps": 0.25,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 28,
+          "first_unsafe_after_safe_lead_frames": 27
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 25,
+          "first_unsafe_after_safe_lead_frames": 9
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 25,
+          "first_unsafe_after_safe_lead_frames": 10
+        }
+      },
+      "scene": "011_clipgt-9b6a51bd-cb54-4a68-8ed8-0e33a504c67e"
+    },
+    {
+      "actionable_frame_count": 89,
+      "assigned_mode": "controller_proxy_residual",
+      "clipgt_id": "clipgt-89f2eeb8-f4e4-42a1-8e07-d60003d223dc",
+      "counterfactual_bucket": "baseline_selected_actor_axis_safe_candidate_but_collision_persisted",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 94,
+        "timestamp_us": 226984463812
+      },
+      "median_direct_selected_proxy_clearance_m": 15.2252,
+      "median_hazard_count": 24.0,
+      "median_realized_current_clearance_m": 15.3677,
+      "median_speed_mps": 0.25,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 93,
+          "first_unsafe_after_safe_lead_frames": 5
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 93,
+          "first_unsafe_after_safe_lead_frames": 5
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 93,
+          "first_unsafe_after_safe_lead_frames": 5
+        }
+      },
+      "scene": "013_clipgt-89f2eeb8-f4e4-42a1-8e07-d60003d223dc"
+    },
+    {
+      "actionable_frame_count": 23,
+      "assigned_mode": "controller_proxy_residual",
+      "clipgt_id": "clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75",
+      "counterfactual_bucket": "baseline_selected_actor_axis_safe_candidate_but_collision_persisted",
+      "first_collision": {
+        "components": [
+          "collision_front"
+        ],
+        "frame_index": 28,
+        "timestamp_us": 2188623096459
+      },
+      "median_direct_selected_proxy_clearance_m": 0.9702,
+      "median_hazard_count": 9.0,
+      "median_realized_current_clearance_m": 2.3215,
+      "median_speed_mps": 0.25,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 27,
+          "first_unsafe_after_safe_lead_frames": 7
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 27,
+          "first_unsafe_after_safe_lead_frames": 7
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 27,
+          "first_unsafe_after_safe_lead_frames": 26
+        }
+      },
+      "scene": "014_clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75"
+    },
+    {
+      "actionable_frame_count": 40,
+      "assigned_mode": "controller_proxy_residual",
+      "clipgt_id": "clipgt-825dc886-0491-482a-abe3-e1743f5972b8",
+      "counterfactual_bucket": "baseline_selected_actor_axis_safe_candidate_but_collision_persisted",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 45,
+        "timestamp_us": 269972671585
+      },
+      "median_direct_selected_proxy_clearance_m": 1.6853,
+      "median_hazard_count": 24.0,
+      "median_realized_current_clearance_m": 3.5229500000000002,
+      "median_speed_mps": 1.90065,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 44,
+          "first_unsafe_after_safe_lead_frames": 9
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 44,
+          "first_unsafe_after_safe_lead_frames": 11
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 44,
+          "first_unsafe_after_safe_lead_frames": 12
+        }
+      },
+      "scene": "018_clipgt-825dc886-0491-482a-abe3-e1743f5972b8"
+    },
+    {
+      "actionable_frame_count": 39,
+      "assigned_mode": "selector_ranking_secondary",
+      "clipgt_id": "clipgt-994977b5-4db6-43eb-950a-c0faaccc930b",
+      "counterfactual_bucket": "actor_axis_safe_candidate_missed_by_baseline_selector",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 44,
+        "timestamp_us": 1414068106232
+      },
+      "median_direct_selected_proxy_clearance_m": 1.8037,
+      "median_hazard_count": 23.0,
+      "median_realized_current_clearance_m": 3.2131,
+      "median_speed_mps": 1.9928,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 43,
+          "first_unsafe_after_safe_lead_frames": 7
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 43,
+          "first_unsafe_after_safe_lead_frames": 9
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 43,
+          "first_unsafe_after_safe_lead_frames": 11
+        }
+      },
+      "scene": "019_clipgt-994977b5-4db6-43eb-950a-c0faaccc930b"
+    },
+    {
+      "actionable_frame_count": 168,
+      "assigned_mode": "selector_ranking_secondary",
+      "clipgt_id": "clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30",
+      "counterfactual_bucket": "mixed_actor_axis_safe_candidate_intermittently_missed",
+      "first_collision": {
+        "components": [
+          "collision_lateral"
+        ],
+        "frame_index": 173,
+        "timestamp_us": 2108058744559
+      },
+      "median_direct_selected_proxy_clearance_m": 3.6008,
+      "median_hazard_count": 16.0,
+      "median_realized_current_clearance_m": 7.071750000000001,
+      "median_speed_mps": 0.25,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 172,
+          "first_unsafe_after_safe_lead_frames": 171
+        },
+        "0.55": {
+          "eroded_before_impact": false,
+          "first_safe_lead_frames": 169,
+          "first_unsafe_after_safe_lead_frames": null
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 169,
+          "first_unsafe_after_safe_lead_frames": 5
+        }
+      },
+      "scene": "020_clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30"
+    },
+    {
+      "actionable_frame_count": 45,
+      "assigned_mode": "controller_proxy_residual",
+      "clipgt_id": "clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e",
+      "counterfactual_bucket": "baseline_selected_actor_axis_safe_candidate_but_collision_persisted",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 50,
+        "timestamp_us": 1975321776662
+      },
+      "median_direct_selected_proxy_clearance_m": 2.5154,
+      "median_hazard_count": 7.0,
+      "median_realized_current_clearance_m": 6.5209,
+      "median_speed_mps": 2.0652,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 49,
+          "first_unsafe_after_safe_lead_frames": 10
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 49,
+          "first_unsafe_after_safe_lead_frames": 10
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 49,
+          "first_unsafe_after_safe_lead_frames": 10
+        }
+      },
+      "scene": "021_clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e"
+    },
+    {
+      "actionable_frame_count": 27,
+      "assigned_mode": "candidate_feasibility_or_actor_axis_definition",
+      "clipgt_id": "clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b",
+      "counterfactual_bucket": "no_actor_axis_safe_candidate_actionable",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 32,
+        "timestamp_us": 4819865906000
+      },
+      "median_direct_selected_proxy_clearance_m": 1.3878,
+      "median_hazard_count": 24.0,
+      "median_realized_current_clearance_m": 2.6086000000000005,
+      "median_speed_mps": 0.25,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": false,
+          "first_safe_lead_frames": 31,
+          "first_unsafe_after_safe_lead_frames": null
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 31,
+          "first_unsafe_after_safe_lead_frames": 17
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 31,
+          "first_unsafe_after_safe_lead_frames": 18
+        }
+      },
+      "scene": "022_clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b"
+    },
+    {
+      "actionable_frame_count": 137,
+      "assigned_mode": "controller_proxy_residual",
+      "clipgt_id": "clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06",
+      "counterfactual_bucket": "baseline_selected_actor_axis_safe_candidate_but_collision_persisted",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 142,
+        "timestamp_us": 2057415988291
+      },
+      "median_direct_selected_proxy_clearance_m": 6.4225,
+      "median_hazard_count": 24.0,
+      "median_realized_current_clearance_m": 13.3013,
+      "median_speed_mps": 0.25,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 141,
+          "first_unsafe_after_safe_lead_frames": 6
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 141,
+          "first_unsafe_after_safe_lead_frames": 6
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 141,
+          "first_unsafe_after_safe_lead_frames": 6
+        }
+      },
+      "scene": "023_clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06"
+    },
+    {
+      "actionable_frame_count": 118,
+      "assigned_mode": "selector_ranking_secondary",
+      "clipgt_id": "clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888",
+      "counterfactual_bucket": "actor_axis_safe_candidate_missed_by_baseline_selector",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 123,
+        "timestamp_us": 2053066637002
+      },
+      "median_direct_selected_proxy_clearance_m": 1.89605,
+      "median_hazard_count": 22.0,
+      "median_realized_current_clearance_m": 2.1671,
+      "median_speed_mps": 0.4495,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 122,
+          "first_unsafe_after_safe_lead_frames": 13
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 122,
+          "first_unsafe_after_safe_lead_frames": 18
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 122,
+          "first_unsafe_after_safe_lead_frames": 20
+        }
+      },
+      "scene": "025_clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888"
+    },
+    {
+      "actionable_frame_count": 48,
+      "assigned_mode": "controller_proxy_residual",
+      "clipgt_id": "clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc",
+      "counterfactual_bucket": "baseline_selected_actor_axis_safe_candidate_but_collision_persisted",
+      "first_collision": {
+        "components": [
+          "collision_rear"
+        ],
+        "frame_index": 53,
+        "timestamp_us": 1482604331791
+      },
+      "median_direct_selected_proxy_clearance_m": 1.9511,
+      "median_hazard_count": 24.0,
+      "median_realized_current_clearance_m": 1.9859499999999999,
+      "median_speed_mps": 0.4511,
+      "proxy_clearance_erosion": {
+        "0.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 52,
+          "first_unsafe_after_safe_lead_frames": 8
+        },
+        "0.55": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 52,
+          "first_unsafe_after_safe_lead_frames": 12
+        },
+        "1.0": {
+          "eroded_before_impact": true,
+          "first_safe_lead_frames": 52,
+          "first_unsafe_after_safe_lead_frames": 13
+        }
+      },
+      "scene": "030_clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc"
+    }
+  ],
+  "schema": "alpasim_ladder_validation_v1",
+  "source_paths": {
+    "action_space_upper_bound": "/home/amdev/sota/minimal-shot-av/artifacts/alpasim_action_space_upper_bound_30scene.json",
+    "candidate_counterfactual": "/home/amdev/sota/minimal-shot-av/artifacts/corl2027/alpasim_candidate_counterfactual_30scene.json"
+  },
+  "summary": {
+    "clearance_divergence": {
+      "1.0": {
+        "frame_count": 28,
+        "median_onset_lead_frames": 35.0,
+        "median_onset_lead_seconds": 3.5,
+        "scene_count": 7,
+        "scene_rate": 0.3888888888888889,
+        "scenes": [
+          "008_clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d",
+          "018_clipgt-825dc886-0491-482a-abe3-e1743f5972b8",
+          "019_clipgt-994977b5-4db6-43eb-950a-c0faaccc930b",
+          "020_clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30",
+          "021_clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e",
+          "023_clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06",
+          "030_clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc"
+        ]
+      },
+      "2.0": {
+        "frame_count": 151,
+        "median_onset_lead_frames": 32.0,
+        "median_onset_lead_seconds": 3.2,
+        "scene_count": 13,
+        "scene_rate": 0.7222222222222222,
+        "scenes": [
+          "004_clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e",
+          "005_clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e",
+          "008_clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d",
+          "009_clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e",
+          "014_clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75",
+          "018_clipgt-825dc886-0491-482a-abe3-e1743f5972b8",
+          "019_clipgt-994977b5-4db6-43eb-950a-c0faaccc930b",
+          "020_clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30",
+          "021_clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e",
+          "022_clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b",
+          "023_clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06",
+          "025_clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888",
+          "030_clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc"
+        ]
+      },
+      "3.0": {
+        "frame_count": 272,
+        "median_onset_lead_frames": 32.5,
+        "median_onset_lead_seconds": 3.25,
+        "scene_count": 14,
+        "scene_rate": 0.7777777777777778,
+        "scenes": [
+          "004_clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e",
+          "005_clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e",
+          "008_clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d",
+          "009_clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e",
+          "011_clipgt-9b6a51bd-cb54-4a68-8ed8-0e33a504c67e",
+          "014_clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75",
+          "018_clipgt-825dc886-0491-482a-abe3-e1743f5972b8",
+          "019_clipgt-994977b5-4db6-43eb-950a-c0faaccc930b",
+          "020_clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30",
+          "021_clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e",
+          "022_clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b",
+          "023_clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06",
+          "025_clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888",
+          "030_clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc"
+        ]
+      },
+      "4.0": {
+        "frame_count": 343,
+        "median_onset_lead_frames": 34.0,
+        "median_onset_lead_seconds": 3.4,
+        "scene_count": 15,
+        "scene_rate": 0.8333333333333334,
+        "scenes": [
+          "001_clipgt-a309e228-26e1-423e-a44c-cb00aa7378cb",
+          "004_clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e",
+          "005_clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e",
+          "008_clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d",
+          "009_clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e",
+          "011_clipgt-9b6a51bd-cb54-4a68-8ed8-0e33a504c67e",
+          "014_clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75",
+          "018_clipgt-825dc886-0491-482a-abe3-e1743f5972b8",
+          "019_clipgt-994977b5-4db6-43eb-950a-c0faaccc930b",
+          "020_clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30",
+          "021_clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e",
+          "022_clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b",
+          "023_clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06",
+          "025_clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888",
+          "030_clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc"
+        ]
+      },
+      "5.0": {
+        "frame_count": 416,
+        "median_onset_lead_frames": 40.5,
+        "median_onset_lead_seconds": 4.05,
+        "scene_count": 16,
+        "scene_rate": 0.8888888888888888,
+        "scenes": [
+          "001_clipgt-a309e228-26e1-423e-a44c-cb00aa7378cb",
+          "002_clipgt-804afc4a-fd1e-4f58-bd39-a4c486a916e5",
+          "004_clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e",
+          "005_clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e",
+          "008_clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d",
+          "009_clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e",
+          "011_clipgt-9b6a51bd-cb54-4a68-8ed8-0e33a504c67e",
+          "014_clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75",
+          "018_clipgt-825dc886-0491-482a-abe3-e1743f5972b8",
+          "019_clipgt-994977b5-4db6-43eb-950a-c0faaccc930b",
+          "020_clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30",
+          "021_clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e",
+          "022_clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b",
+          "023_clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06",
+          "025_clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888",
+          "030_clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc"
+        ]
+      },
+      "6.0": {
+        "frame_count": 469,
+        "median_onset_lead_frames": 43.5,
+        "median_onset_lead_seconds": 4.35,
+        "scene_count": 18,
+        "scene_rate": 1.0,
+        "scenes": [
+          "001_clipgt-a309e228-26e1-423e-a44c-cb00aa7378cb",
+          "002_clipgt-804afc4a-fd1e-4f58-bd39-a4c486a916e5",
+          "004_clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e",
+          "005_clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e",
+          "007_clipgt-8aaa1135-573f-4f6c-8ff8-7ac6bd6ea5d6",
+          "008_clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d",
+          "009_clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e",
+          "011_clipgt-9b6a51bd-cb54-4a68-8ed8-0e33a504c67e",
+          "013_clipgt-89f2eeb8-f4e4-42a1-8e07-d60003d223dc",
+          "014_clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75",
+          "018_clipgt-825dc886-0491-482a-abe3-e1743f5972b8",
+          "019_clipgt-994977b5-4db6-43eb-950a-c0faaccc930b",
+          "020_clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30",
+          "021_clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e",
+          "022_clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b",
+          "023_clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06",
+          "025_clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888",
+          "030_clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc"
+        ]
+      }
+    },
+    "mode_counts": {
+      "candidate_feasibility_or_actor_axis_definition": 2,
+      "controller_proxy_residual": 12,
+      "selector_ranking_secondary": 4
+    },
+    "proxy_clearance_erosion": {
+      "0.0": {
+        "median_first_unsafe_lead_frames": 8.5,
+        "median_first_unsafe_lead_seconds": 0.8500000000000001,
+        "scene_count": 16,
+        "scene_rate": 0.8888888888888888
+      },
+      "0.55": {
+        "median_first_unsafe_lead_frames": 9.5,
+        "median_first_unsafe_lead_seconds": 0.95,
+        "scene_count": 16,
+        "scene_rate": 0.8888888888888888
+      },
+      "1.0": {
+        "median_first_unsafe_lead_frames": 10.0,
+        "median_first_unsafe_lead_seconds": 1.0,
+        "scene_count": 18,
+        "scene_rate": 1.0
+      }
+    },
+    "scene_count": 18,
+    "subset_characterization": {
+      "candidate_feasibility_or_actor_axis_definition": {
+        "median_direct_selected_proxy_clearance_m": 0.9252499999999999,
+        "median_hazard_count": 24.0,
+        "median_realized_current_clearance_m": 7.716450000000001,
+        "median_speed_mps": 0.724875,
+        "scene_count": 2,
+        "scenes": [
+          "001_clipgt-a309e228-26e1-423e-a44c-cb00aa7378cb",
+          "022_clipgt-82da2d46-4ec7-4f8c-8f54-e6febb1c303b"
+        ]
+      },
+      "controller_proxy_residual": {
+        "median_direct_selected_proxy_clearance_m": 2.2715,
+        "median_hazard_count": 22.75,
+        "median_realized_current_clearance_m": 6.3450500000000005,
+        "median_speed_mps": 1.874,
+        "scene_count": 12,
+        "scenes": [
+          "002_clipgt-804afc4a-fd1e-4f58-bd39-a4c486a916e5",
+          "004_clipgt-9b3509c2-a5fa-42c0-b0e5-feb617e9bf4e",
+          "007_clipgt-8aaa1135-573f-4f6c-8ff8-7ac6bd6ea5d6",
+          "008_clipgt-9f8acd00-e8f5-467a-867d-b205f8d4d75d",
+          "009_clipgt-97a2e621-a27b-4b87-9a58-b6b740fc1b4e",
+          "011_clipgt-9b6a51bd-cb54-4a68-8ed8-0e33a504c67e",
+          "013_clipgt-89f2eeb8-f4e4-42a1-8e07-d60003d223dc",
+          "014_clipgt-7c4f23b7-be14-4505-b332-6d1ceb36cd75",
+          "018_clipgt-825dc886-0491-482a-abe3-e1743f5972b8",
+          "021_clipgt-7eaac028-ff62-4f54-9cca-52c8f49ba87e",
+          "023_clipgt-89c2e887-cffa-4b7c-86cf-80b89be1cb06",
+          "030_clipgt-98dd56b2-3e60-49ec-9366-70b610dd93cc"
+        ]
+      },
+      "selector_ranking_secondary": {
+        "median_direct_selected_proxy_clearance_m": 1.849875,
+        "median_hazard_count": 21.5,
+        "median_realized_current_clearance_m": 3.43395,
+        "median_speed_mps": 0.34975,
+        "scene_count": 4,
+        "scenes": [
+          "005_clipgt-90d1908c-9fdc-40ea-a5a1-351240aa323e",
+          "019_clipgt-994977b5-4db6-43eb-950a-c0faaccc930b",
+          "020_clipgt-8578f2c7-70a0-4877-980a-7ba65bcded30",
+          "025_clipgt-7c05aee0-88f1-4338-a48b-5cbe24d5b888"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,603 @@
+{
+  "conclusion": {
+    "claim": "Residual AlpaSim collision is not localized to actor visibility, token candidate availability, learned selector ranking, or direct-grid cost ranking alone.",
+    "recommended_positioning": "Frame the contribution as a diagnostic ladder below perception: feasibility, ranking, direct-grid ranking, and controller/proxy execution.",
+    "rung_statuses": {
+      "actor_visibility": "visibility_real_but_not_sufficient",
+      "controller_execution_or_proxy_mismatch": "residual_load_bearing_boundary",
+      "direct_grid_cost_ranking": "direct_grid_cost_not_open_loop_bottleneck",
+      "token_candidate_feasibility": "token_safe_candidate_present_in_all_collision_scenes",
+      "token_selector_ranking": "selector_miss_secondary"
+    },
+    "top_residual_rung": "controller_execution_or_proxy_mismatch"
+  },
+  "notes": [
+    "The offline localization scores are deterministic evidence weights from committed audits, not a learned DROPO posterior.",
+    "The ladder localizes residual collision only within the available AlpaSim artifacts; it does not prove deployment safety."
+  ],
+  "offline_localization": {
+    "method": "deterministic_frequency_weighted_localization",
+    "normalized_score_bootstrap_ci": {
+      "iterations": 2000,
+      "observed_counts": {
+        "actor_visibility": {
+          "hit_count": 0,
+          "trial_count": 30
+        },
+        "controller_execution_or_proxy_mismatch": {
+          "hit_count": 16,
+          "trial_count": 18
+        },
+        "direct_grid_cost_ranking": {
+          "hit_count": 0,
+          "trial_count": 18
+        },
+        "token_candidate_feasibility": {
+          "hit_count": 0,
+          "trial_count": 18
+        },
+        "token_selector_ranking": {
+          "hit_count": 4,
+          "trial_count": 18
+        }
+      },
+      "percentile_95": {
+        "actor_visibility": {
+          "high": 0.0,
+          "low": 0.0,
+          "median": 0.0
+        },
+        "controller_execution_or_proxy_mismatch": {
+          "high": 0.9444444444444444,
+          "low": 0.6666666666666666,
+          "median": 0.7999999999999999
+        },
+        "direct_grid_cost_ranking": {
+          "high": 0.0,
+          "low": 0.0,
+          "median": 0.0
+        },
+        "token_candidate_feasibility": {
+          "high": 0.0,
+          "low": 0.0,
+          "median": 0.0
+        },
+        "token_selector_ranking": {
+          "high": 0.3333333333333333,
+          "low": 0.05555555555555555,
+          "median": 0.19999999999999998
+        }
+      },
+      "seed": 7
+    },
+    "normalized_scores": {
+      "actor_visibility": 0.0,
+      "controller_execution_or_proxy_mismatch": 0.7999999999999999,
+      "direct_grid_cost_ranking": 0.0,
+      "token_candidate_feasibility": 0.0,
+      "token_selector_ranking": 0.19999999999999998
+    },
+    "ranking": [
+      {
+        "rung": "controller_execution_or_proxy_mismatch",
+        "weight": 0.7999999999999999
+      },
+      {
+        "rung": "token_selector_ranking",
+        "weight": 0.19999999999999998
+      },
+      {
+        "rung": "actor_visibility",
+        "weight": 0.0
+      },
+      {
+        "rung": "token_candidate_feasibility",
+        "weight": 0.0
+      },
+      {
+        "rung": "direct_grid_cost_ranking",
+        "weight": 0.0
+      }
+    ],
+    "raw_scores": {
+      "actor_visibility": 0.0,
+      "controller_execution_or_proxy_mismatch": 0.8888888888888888,
+      "direct_grid_cost_ranking": 0.0,
+      "token_candidate_feasibility": 0.0,
+      "token_selector_ranking": 0.2222222222222222
+    },
+    "top_rung": "controller_execution_or_proxy_mismatch",
+    "uncertainty_method": "Deterministic per-rung frequency bootstrap over observed scene-count evidence; not a learned posterior and not an independence proof between rungs."
+  },
+  "rungs": [
+    {
+      "evidence": {
+        "actor_completion_collision_count": 18,
+        "actor_completion_first_impact_proxy_hits": 17,
+        "actor_completion_logged_at_impact": 17,
+        "baseline_collision_count": 18,
+        "baseline_first_impact_structured_hazards_zero": 18,
+        "common_scene_count": 30,
+        "paired_collision_improved_scenes": 0,
+        "paired_collision_worsened_scenes": 0
+      },
+      "interpretation": "Actor dropout is real at impact, but matched actor completion preserves the same raw collision count; this rung is necessary context, not a sufficient explanation.",
+      "load_bearing_score": 0.0,
+      "name": "actor_visibility",
+      "question": "Does restoring actor visibility explain the collision surface?",
+      "status": "visibility_real_but_not_sufficient"
+    },
+    {
+      "evidence": {
+        "collision_scene_count": 18,
+        "first_token_proxy_safe_lead_frames": {
+          "count": 18,
+          "max": 172.0,
+          "mean": 61.0556,
+          "median": 46.0,
+          "min": 27.0
+        },
+        "proxy_safe_actionable_frame_count": 986,
+        "scene_count_with_proxy_safe_token": 18,
+        "selected_proxy_safe_actionable_frame_count": 889
+      },
+      "interpretation": "The committed open-loop audit finds proxy-safe token candidates before impact in every collision scene, so pure candidate absence is not the dominant explanation.",
+      "load_bearing_score": 0.0,
+      "name": "token_candidate_feasibility",
+      "question": "Did the bounded token set contain proxy-safe candidate actions before impact?",
+      "status": "token_safe_candidate_present_in_all_collision_scenes"
+    },
+    {
+      "evidence": {
+        "actor_axis_missed_safe_actionable_frame_count": 5,
+        "actor_axis_safe_actionable_frame_count": 25,
+        "actor_axis_safe_at_impact_count": 0,
+        "actor_axis_selected_safe_actionable_frame_count": 20,
+        "collision_scene_count": 18,
+        "scene_count_selected_safe_but_collision_persisted": 12,
+        "scene_count_with_any_selector_miss": 4
+      },
+      "interpretation": "Selector mistakes exist, but many scenes already select actor-axis-safe tokens before collision; selector ranking alone is not sufficient.",
+      "load_bearing_score": 0.2222222222222222,
+      "name": "token_selector_ranking",
+      "question": "Was an actor-axis-safe token present but rejected by the baseline selector?",
+      "status": "selector_miss_secondary"
+    },
+    {
+      "evidence": {
+        "collision_scene_count": 18,
+        "cost_missed_proxy_safe_actionable_frame_count": 0,
+        "scene_count_with_direct_cost_miss": 0,
+        "scene_count_with_direct_proxy_safe_action": 18,
+        "scene_count_with_direct_selected_proxy_safe_action": 18,
+        "selected_proxy_safe_actionable_frame_count": 962
+      },
+      "interpretation": "The direct-grid open-loop cost selects proxy-safe actions where available, so the remaining collision cannot be assigned to direct-grid cost ranking alone.",
+      "load_bearing_score": 0.0,
+      "name": "direct_grid_cost_ranking",
+      "question": "If the learned selector is bypassed, does the direct-grid cost reject proxy-safe actions?",
+      "status": "direct_grid_cost_not_open_loop_bottleneck"
+    },
+    {
+      "evidence": {
+        "clearance_direct_grid_collision_rate": 0.8888888888888888,
+        "clearance_direct_grid_improved_scenes": 2,
+        "collision_scene_count": 18,
+        "cost_ranked_direct_grid_collision_rate": 0.8888888888888888,
+        "cost_ranked_direct_grid_improved_scenes": 2,
+        "minimum_persisted_collision_scenes_across_direct_replays": 16
+      },
+      "interpretation": "Closed-loop direct-grid replay removes only a small number of collisions despite open-loop proxy-safe actions. The residual boundary is controller execution, receding-horizon erosion, or proxy/simulator clearance mismatch.",
+      "load_bearing_score": 0.8888888888888888,
+      "name": "controller_execution_or_proxy_mismatch",
+      "question": "Do closed-loop direct-grid replays eliminate collision after proxy-safe actions exist?",
+      "status": "residual_load_bearing_boundary"
+    }
+  ],
+  "schema": "alpasim_diagnostic_ladder_v1",
+  "source_paths": {
+    "action_space_upper_bound": "/home/amdev/sota/minimal-shot-av/artifacts/alpasim_action_space_upper_bound_30scene.json",
+    "actor_completion_analysis": "/home/amdev/sota/minimal-shot-av/artifacts/corl2027/alpasim_actor_blindness_30scene_raw_analysis.json",
+    "candidate_counterfactual": "/home/amdev/sota/minimal-shot-av/artifacts/corl2027/alpasim_candidate_counterfactual_30scene.json",
+    "collision_surface": "/home/amdev/sota/minimal-shot-av/artifacts/corl2027/alpasim_collision_surface_30scene_audit.json",
+    "direct_grid_clearance_replay": "/home/amdev/sota/minimal-shot-av/artifacts/alpasim_direct_grid_max_clearance_collision18_analysis.json",
+    "direct_grid_cost_replay": "/home/amdev/sota/minimal-shot-av/artifacts/alpasim_direct_actor_planner_collision18_v2_analysis.json",
+    "matrix_analysis": "/home/amdev/sota/minimal-shot-av/artifacts/corl2027/alpasim_matrix10_with_axis_analysis.json"
+  },
+  "trajectory_discrepancy": {
+    "actor_completion_30scene": {
+      "token_dagger_iter2_axis_constrained_oracle_actor_clamped": {
+        "axes": {
+          "raw_collision_any": {
+            "baseline_rate": 0.6,
+            "candidate_rate": 0.6,
+            "improved_scenes": 0,
+            "scene_count": 30,
+            "signed_delta": 0.0,
+            "worsened_scenes": 0
+          },
+          "raw_dist_to_gt_trajectory": {
+            "mean_delta": -0.11844938945055422,
+            "median_delta": 0.019571113757125003,
+            "negative_count": 15,
+            "positive_count": 15
+          },
+          "raw_dist_traveled_m": {
+            "mean_delta": 2.661252749169469,
+            "median_delta": 2.1936820505566956,
+            "negative_count": 10,
+            "positive_count": 20
+          },
+          "raw_offroad": {
+            "baseline_rate": 0.20689655172413793,
+            "candidate_rate": 0.3103448275862069,
+            "improved_scenes": 0,
+            "scene_count": 29,
+            "signed_delta": 0.10344827586206898,
+            "worsened_scenes": 3
+          },
+          "raw_progress": {
+            "mean_delta": 0.013938900173869503,
+            "median_delta": 0.011136267159917633,
+            "negative_count": 9,
+            "positive_count": 21
+          },
+          "raw_wrong_lane": {
+            "baseline_rate": 0.2413793103448276,
+            "candidate_rate": 0.1724137931034483,
+            "improved_scenes": 2,
+            "scene_count": 29,
+            "signed_delta": -0.06896551724137931,
+            "worsened_scenes": 0
+          }
+        },
+        "axis_conflicts": {
+          "dist_to_gt_down_collision_up": 0,
+          "progress_up_collision_up": 0,
+          "progress_up_offroad_up": 2,
+          "progress_up_offroad_up_valid_scenes": 29,
+          "wrong_lane_down_collision_flat_or_up": 2,
+          "wrong_lane_down_collision_flat_or_up_valid_scenes": 29
+        },
+        "scene_count": 30
+      }
+    },
+    "direct_grid_clearance_collision18": {
+      "direct_actor_planner_max_clearance_oracle": {
+        "axes": {
+          "raw_collision_any": {
+            "baseline_rate": 1.0,
+            "candidate_rate": 0.8888888888888888,
+            "improved_scenes": 2,
+            "scene_count": 18,
+            "signed_delta": -0.11111111111111116,
+            "worsened_scenes": 0
+          },
+          "raw_dist_to_gt_trajectory": {
+            "mean_delta": -0.6672423884284485,
+            "median_delta": -0.36506429232236887,
+            "negative_count": 15,
+            "positive_count": 3
+          },
+          "raw_dist_traveled_m": {
+            "mean_delta": 1.2845056104449,
+            "median_delta": 1.7668047864792067,
+            "negative_count": 7,
+            "positive_count": 11
+          },
+          "raw_offroad": {
+            "baseline_rate": 0.11764705882352941,
+            "candidate_rate": 0.058823529411764705,
+            "improved_scenes": 1,
+            "scene_count": 17,
+            "signed_delta": -0.058823529411764705,
+            "worsened_scenes": 0
+          },
+          "raw_progress": {
+            "mean_delta": 0.0073200994946195684,
+            "median_delta": 0.015290307307739094,
+            "negative_count": 7,
+            "positive_count": 11
+          },
+          "raw_wrong_lane": {
+            "baseline_rate": 0.23529411764705882,
+            "candidate_rate": 0.17647058823529413,
+            "improved_scenes": 2,
+            "scene_count": 17,
+            "signed_delta": -0.05882352941176469,
+            "worsened_scenes": 1
+          }
+        },
+        "axis_conflicts": {
+          "dist_to_gt_down_collision_up": 0,
+          "progress_up_collision_up": 0,
+          "progress_up_offroad_up": 0,
+          "progress_up_offroad_up_valid_scenes": 17,
+          "wrong_lane_down_collision_flat_or_up": 2,
+          "wrong_lane_down_collision_flat_or_up_valid_scenes": 17
+        },
+        "scene_count": 18
+      }
+    },
+    "direct_grid_cost_collision18": {
+      "direct_actor_planner_oracle": {
+        "axes": {
+          "raw_collision_any": {
+            "baseline_rate": 1.0,
+            "candidate_rate": 0.8888888888888888,
+            "improved_scenes": 2,
+            "scene_count": 18,
+            "signed_delta": -0.11111111111111116,
+            "worsened_scenes": 0
+          },
+          "raw_dist_to_gt_trajectory": {
+            "mean_delta": -0.3884885513972289,
+            "median_delta": -0.1909819329271817,
+            "negative_count": 10,
+            "positive_count": 8
+          },
+          "raw_dist_traveled_m": {
+            "mean_delta": 14.38611481119208,
+            "median_delta": 9.604794870085055,
+            "negative_count": 4,
+            "positive_count": 14
+          },
+          "raw_offroad": {
+            "baseline_rate": 0.125,
+            "candidate_rate": 0.125,
+            "improved_scenes": 0,
+            "scene_count": 16,
+            "signed_delta": 0.0,
+            "worsened_scenes": 0
+          },
+          "raw_progress": {
+            "mean_delta": 0.07883137520997513,
+            "median_delta": 0.0600294711765229,
+            "negative_count": 4,
+            "positive_count": 14
+          },
+          "raw_wrong_lane": {
+            "baseline_rate": 0.25,
+            "candidate_rate": 0.3125,
+            "improved_scenes": 0,
+            "scene_count": 16,
+            "signed_delta": 0.0625,
+            "worsened_scenes": 1
+          }
+        },
+        "axis_conflicts": {
+          "dist_to_gt_down_collision_up": 0,
+          "progress_up_collision_up": 0,
+          "progress_up_offroad_up": 0,
+          "progress_up_offroad_up_valid_scenes": 16,
+          "wrong_lane_down_collision_flat_or_up": 0,
+          "wrong_lane_down_collision_flat_or_up_valid_scenes": 16
+        },
+        "scene_count": 18
+      }
+    },
+    "matrix10": {
+      "token_dagger_iter2_axis_constrained_clamped": {
+        "axes": {
+          "raw_collision_any": {
+            "baseline_rate": 0.6,
+            "candidate_rate": 0.7,
+            "improved_scenes": 1,
+            "scene_count": 10,
+            "signed_delta": 0.09999999999999998,
+            "worsened_scenes": 2
+          },
+          "raw_dist_to_gt_trajectory": {
+            "mean_delta": -11.60544954359295,
+            "median_delta": -12.441858519471769,
+            "negative_count": 10,
+            "positive_count": 0
+          },
+          "raw_dist_traveled_m": {
+            "mean_delta": -7.17736838911915,
+            "median_delta": -7.733107329767918,
+            "negative_count": 10,
+            "positive_count": 0
+          },
+          "raw_offroad": {
+            "baseline_rate": 0.9,
+            "candidate_rate": 0.2,
+            "improved_scenes": 7,
+            "scene_count": 10,
+            "signed_delta": -0.7,
+            "worsened_scenes": 0
+          },
+          "raw_progress": {
+            "mean_delta": 0.3237474204949324,
+            "median_delta": 0.3175922222325887,
+            "negative_count": 0,
+            "positive_count": 10
+          },
+          "raw_wrong_lane": {
+            "baseline_rate": 0.7,
+            "candidate_rate": 0.2,
+            "improved_scenes": 5,
+            "scene_count": 10,
+            "signed_delta": -0.49999999999999994,
+            "worsened_scenes": 0
+          }
+        },
+        "axis_conflicts": {
+          "dist_to_gt_down_collision_up": 2,
+          "progress_up_collision_up": 2,
+          "progress_up_offroad_up": 0,
+          "progress_up_offroad_up_valid_scenes": 10,
+          "wrong_lane_down_collision_flat_or_up": 4,
+          "wrong_lane_down_collision_flat_or_up_valid_scenes": 10
+        },
+        "scene_count": 10
+      },
+      "token_dagger_iter2_clamped": {
+        "axes": {
+          "raw_collision_any": {
+            "baseline_rate": 0.6,
+            "candidate_rate": 0.7,
+            "improved_scenes": 1,
+            "scene_count": 10,
+            "signed_delta": 0.09999999999999998,
+            "worsened_scenes": 2
+          },
+          "raw_dist_to_gt_trajectory": {
+            "mean_delta": -8.651051040801232,
+            "median_delta": -8.532627054194199,
+            "negative_count": 10,
+            "positive_count": 0
+          },
+          "raw_dist_traveled_m": {
+            "mean_delta": -2.129447930165674,
+            "median_delta": -2.1305501142818954,
+            "negative_count": 10,
+            "positive_count": 0
+          },
+          "raw_offroad": {
+            "baseline_rate": 0.9,
+            "candidate_rate": 0.5,
+            "improved_scenes": 4,
+            "scene_count": 10,
+            "signed_delta": -0.4,
+            "worsened_scenes": 0
+          },
+          "raw_progress": {
+            "mean_delta": 0.3495765166844699,
+            "median_delta": 0.33533789731358876,
+            "negative_count": 0,
+            "positive_count": 10
+          },
+          "raw_wrong_lane": {
+            "baseline_rate": 0.7,
+            "candidate_rate": 0.2,
+            "improved_scenes": 5,
+            "scene_count": 10,
+            "signed_delta": -0.49999999999999994,
+            "worsened_scenes": 0
+          }
+        },
+        "axis_conflicts": {
+          "dist_to_gt_down_collision_up": 2,
+          "progress_up_collision_up": 2,
+          "progress_up_offroad_up": 0,
+          "progress_up_offroad_up_valid_scenes": 10,
+          "wrong_lane_down_collision_flat_or_up": 4,
+          "wrong_lane_down_collision_flat_or_up_valid_scenes": 10
+        },
+        "scene_count": 10
+      },
+      "token_dagger_iter2_hybrid_clamped": {
+        "axes": {
+          "raw_collision_any": {
+            "baseline_rate": 0.6,
+            "candidate_rate": 0.8,
+            "improved_scenes": 0,
+            "scene_count": 10,
+            "signed_delta": 0.20000000000000007,
+            "worsened_scenes": 2
+          },
+          "raw_dist_to_gt_trajectory": {
+            "mean_delta": 8.854912780697344,
+            "median_delta": -7.984897518334099,
+            "negative_count": 6,
+            "positive_count": 4
+          },
+          "raw_dist_traveled_m": {
+            "mean_delta": 104.08326589584473,
+            "median_delta": 117.14883084749474,
+            "negative_count": 0,
+            "positive_count": 10
+          },
+          "raw_offroad": {
+            "baseline_rate": 0.9,
+            "candidate_rate": 0.2,
+            "improved_scenes": 7,
+            "scene_count": 10,
+            "signed_delta": -0.7,
+            "worsened_scenes": 0
+          },
+          "raw_progress": {
+            "mean_delta": 0.8023354766554007,
+            "median_delta": 0.8760252937791585,
+            "negative_count": 0,
+            "positive_count": 10
+          },
+          "raw_wrong_lane": {
+            "baseline_rate": 0.7,
+            "candidate_rate": 0.7,
+            "improved_scenes": 3,
+            "scene_count": 10,
+            "signed_delta": 0.0,
+            "worsened_scenes": 3
+          }
+        },
+        "axis_conflicts": {
+          "dist_to_gt_down_collision_up": 1,
+          "progress_up_collision_up": 2,
+          "progress_up_offroad_up": 0,
+          "progress_up_offroad_up_valid_scenes": 10,
+          "wrong_lane_down_collision_flat_or_up": 3,
+          "wrong_lane_down_collision_flat_or_up_valid_scenes": 10
+        },
+        "scene_count": 10
+      },
+      "token_dagger_srcdecay": {
+        "axes": {
+          "raw_collision_any": {
+            "baseline_rate": 0.6,
+            "candidate_rate": 0.6,
+            "improved_scenes": 0,
+            "scene_count": 10,
+            "signed_delta": 0.0,
+            "worsened_scenes": 0
+          },
+          "raw_dist_to_gt_trajectory": {
+            "mean_delta": 13.298316663421161,
+            "median_delta": 17.055945035444374,
+            "negative_count": 1,
+            "positive_count": 9
+          },
+          "raw_dist_traveled_m": {
+            "mean_delta": 0.9450747087474063,
+            "median_delta": 1.246669638215188,
+            "negative_count": 3,
+            "positive_count": 7
+          },
+          "raw_offroad": {
+            "baseline_rate": 0.9,
+            "candidate_rate": 0.9,
+            "improved_scenes": 0,
+            "scene_count": 10,
+            "signed_delta": 0.0,
+            "worsened_scenes": 0
+          },
+          "raw_progress": {
+            "mean_delta": 0.14044884233879112,
+            "median_delta": 0.07181692460822645,
+            "negative_count": 0,
+            "positive_count": 10
+          },
+          "raw_wrong_lane": {
+            "baseline_rate": 0.7,
+            "candidate_rate": 0.4,
+            "improved_scenes": 3,
+            "scene_count": 10,
+            "signed_delta": -0.29999999999999993,
+            "worsened_scenes": 0
+          }
+        },
+        "axis_conflicts": {
+          "dist_to_gt_down_collision_up": 0,
+          "progress_up_collision_up": 0,
+          "progress_up_offroad_up": 0,
+          "progress_up_offroad_up_valid_scenes": 10,
+          "wrong_lane_down_collision_flat_or_up": 3,
+          "wrong_lane_down_collision_flat_or_up_valid_scenes": 10
+        },
+        "scene_count": 10
+      }
+    },
+    "method_note": "SimOpt-style diagnostic discrepancy: signed per-axis metric deltas between paired AlpaSim interventions. Positive values are candidate minus baseline for the raw metric."
+  }
+}
