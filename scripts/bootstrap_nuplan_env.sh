@@ -4,10 +4,19 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UV_BIN="${UV_BIN:-$(command -v uv || true)}"
 VENV_DIR="${VENV_DIR:-$ROOT/.venv}"
+BOOTSTRAP_VENV_DIR="${BOOTSTRAP_VENV_DIR:-$ROOT/.bootstrap-uv}"
 
 if [[ -z "$UV_BIN" ]]; then
-  echo "uv is required. Install it first, e.g. python3 -m pip install --user uv" >&2
-  exit 1
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 is required to bootstrap uv" >&2
+    exit 1
+  fi
+  if [[ ! -x "$BOOTSTRAP_VENV_DIR/bin/python" ]]; then
+    python3 -m venv "$BOOTSTRAP_VENV_DIR"
+  fi
+  "$BOOTSTRAP_VENV_DIR/bin/python" -m pip install --upgrade pip >/dev/null
+  "$BOOTSTRAP_VENV_DIR/bin/python" -m pip install uv >/dev/null
+  UV_BIN="$BOOTSTRAP_VENV_DIR/bin/uv"
 fi
 
 mkdir -p "$ROOT/.uv-cache"
