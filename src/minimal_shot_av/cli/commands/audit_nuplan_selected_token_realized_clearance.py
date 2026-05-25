@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-from collections import defaultdict
 import json
 import math
 from pathlib import Path
@@ -20,6 +19,7 @@ DEFAULT_INPUT_JSON = ROOT / "artifacts" / "corl2027" / "nuplan_mini_rollout50.js
 DEFAULT_OUTPUT_JSON = ROOT / "artifacts" / "corl2027" / "nuplan_mini_rollout50_realized_clearance.json"
 DEFAULT_OUTPUT_MARKDOWN = ROOT / "artifacts" / "corl2027" / "nuplan_mini_rollout50_realized_clearance.md"
 DEFAULT_NEAR_MISS_THRESHOLD_M = 1.0
+THRESHOLD_SENSITIVITY_METERS = (0.5, 1.0, 1.5, 2.0)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -71,6 +71,9 @@ def enrich_report_with_realized_clearance(
         )
         scene["selected_token_realized_collision"] = _optional_bool(fields.get("selected_token_realized_collision"))
         scene["selected_token_realized_near_miss"] = _optional_bool(fields.get("selected_token_realized_near_miss"))
+        scene["selected_token_realized_clearance_trace"] = list(
+            fields.get("selected_token_realized_clearance_trace", [])
+        )
         scene["realized_clearance_source"] = fields.get("realized_clearance_source")
         scene["realized_min_clearance"] = scene["selected_token_realized_min_clearance_m"]
         scene["collision_or_near_miss"] = scene["selected_token_realized_near_miss"]
@@ -106,6 +109,7 @@ def compute_scene_log_replay_realized_fields(scene: dict[str, Any]) -> dict[str,
     tracked_objects = list(query["get_tracked_objects_for_lidarpc_token_from_db"](source_db_file, scenario_token))
     dt_s = float(scene.get("selected_token_rollout_dt_s", 0.5))
     poses = list(scene["selected_token_rollout"]["poses"])
+    proxy_trace = list(scene["selected_token_rollout"]["per_frame_diagnostics"])
     horizon_us = int(round(len(poses) * dt_s * 1_000_000))
     actor_tracks = _build_actor_tracks(
         query=query,
@@ -114,10 +118,11 @@ def compute_scene_log_replay_realized_fields(scene: dict[str, Any]) -> dict[str,
         start_timestamp_us=timestamp_us,
         end_timestamp_us=timestamp_us + horizon_us,
     )
-    min_clearance_m, min_time_s = _compute_log_replay_clearance(
+    min_clearance_m, min_time_s, trace = _compute_log_replay_clearance(
         ego=ego,
         poses=poses,
         dt_s=dt_s,
+        proxy_trace=proxy_trace,
         actor_tracks=actor_tracks,
     )
     if min_clearance_m is None:
@@ -127,6 +132,7 @@ def compute_scene_log_replay_realized_fields(scene: dict[str, Any]) -> dict[str,
         "selected_token_realized_min_clearance_t": min_time_s,
         "selected_token_realized_collision": min_clearance_m < 0.0,
         "selected_token_realized_near_miss": min_clearance_m < DEFAULT_NEAR_MISS_THRESHOLD_M,
+        "selected_token_realized_clearance_trace": trace,
         "realized_clearance_source": "log_replay",
     }
 
@@ -154,6 +160,15 @@ def _recompute_report_summary(report: dict[str, Any]) -> None:
     report["proxy_safe_realized_safe_count"] = proxy_safe_realized_safe_count
     report["proxy_safe_realized_near_or_collision_count"] = proxy_safe_realized_near_or_collision_count
     report["proxy_safe_realized_missing_count"] = proxy_safe_realized_missing_count
+    report["proxy_safe_realized_near_or_collision_rate"] = (
+        round(proxy_safe_realized_near_or_collision_count / proxy_safe_selected_count, 6)
+        if proxy_safe_selected_count
+        else 0.0
+    )
+    report["proxy_safe_realized_near_or_collision_ci95"] = _binomial_ci95(
+        successes=proxy_safe_realized_near_or_collision_count,
+        trials=proxy_safe_selected_count,
+    )
     report["failure_rung_table"] = [
         {
             "failure_rung": rung,
@@ -162,6 +177,13 @@ def _recompute_report_summary(report: dict[str, Any]) -> None:
         }
         for rung in FAILURE_RUNGS
     ]
+    report["token_failure_table"] = _token_failure_table(scenes)
+    report["threshold_sensitivity_table"] = _threshold_sensitivity_table(
+        scenes=scenes,
+        thresholds_m=THRESHOLD_SENSITIVITY_METERS,
+    )
+    report["no_safe_token_cause_table"] = _no_safe_token_cause_table(scenes)
+    report["clearance_trace_examples"] = _clearance_trace_examples(scenes)
 
 
 def _build_actor_tracks(
@@ -214,15 +236,17 @@ def _compute_log_replay_clearance(
     ego: Any,
     poses: list[list[float] | tuple[float, ...]],
     dt_s: float,
+    proxy_trace: list[dict[str, Any]],
     actor_tracks: list[dict[str, Any]],
-) -> tuple[float | None, float | None]:
+) -> tuple[float | None, float | None, list[dict[str, float]]]:
     if not poses or not actor_tracks:
-        return None, None
+        return None, None, []
     ego_x = float(ego.rear_axle.x)
     ego_y = float(ego.rear_axle.y)
     ego_heading = float(ego.rear_axle.heading)
     min_clearance_m = math.inf
     min_time_s = None
+    trace: list[dict[str, float]] = []
     for index, pose in enumerate(poses):
         t_s = (index + 1) * dt_s
         global_x, global_y = _local_to_global(
@@ -232,17 +256,30 @@ def _compute_log_replay_clearance(
             local_x=float(pose[0]),
             local_y=float(pose[1]),
         )
+        realized_clearance = math.inf
         for actor in actor_tracks:
             actor_state = _actor_state_at_time(actor, t_s=t_s)
             clearance = math.hypot(global_x - actor_state["x_m"], global_y - actor_state["y_m"]) - 1.0 - float(
                 actor_state["radius_m"]
             )
-            if clearance < min_clearance_m:
-                min_clearance_m = clearance
-                min_time_s = t_s
+            realized_clearance = min(realized_clearance, clearance)
+        if realized_clearance < min_clearance_m:
+            min_clearance_m = realized_clearance
+            min_time_s = t_s
+        proxy_clearance = float(proxy_trace[index]["proxy_clearance_m"]) if index < len(proxy_trace) else math.nan
+        trace.append(
+            {
+                "step": float(index),
+                "time_s": round(float(t_s), 6),
+                "proxy_clearance_m": round(float(proxy_clearance), 6) if math.isfinite(proxy_clearance) else 50.0,
+                "realized_clearance_m": (
+                    round(float(realized_clearance), 6) if math.isfinite(realized_clearance) else 50.0
+                ),
+            }
+        )
     if not math.isfinite(min_clearance_m):
-        return None, None
-    return float(min_clearance_m), float(min_time_s or 0.0)
+        return None, None, trace
+    return float(min_clearance_m), float(min_time_s or 0.0), trace
 
 
 def _actor_state_at_time(actor: dict[str, Any], *, t_s: float) -> dict[str, float]:
@@ -256,6 +293,105 @@ def _actor_state_at_time(actor: dict[str, Any], *, t_s: float) -> dict[str, floa
         "y_m": float(nearest["y_m"]),
         "radius_m": float(nearest["radius_m"]),
     }
+
+
+def _token_failure_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rows: dict[str, dict[str, Any]] = {}
+    for scene in scenes:
+        token = str(scene["selected_token"])
+        row = rows.setdefault(
+            token,
+            {"token": token, "proxy_safe_selected": 0, "realized_near_or_collision": 0, "failure_rate": 0.0},
+        )
+        if bool(scene.get("proxy_safe_selected")):
+            row["proxy_safe_selected"] += 1
+            if scene.get("selected_token_realized_near_miss"):
+                row["realized_near_or_collision"] += 1
+    for row in rows.values():
+        denom = int(row["proxy_safe_selected"])
+        row["failure_rate"] = round(row["realized_near_or_collision"] / denom, 6) if denom else 0.0
+    return [rows[key] for key in sorted(rows)]
+
+
+def _threshold_sensitivity_table(
+    *,
+    scenes: list[dict[str, Any]],
+    thresholds_m: tuple[float, ...],
+) -> list[dict[str, Any]]:
+    proxy_safe = [scene for scene in scenes if bool(scene.get("proxy_safe_selected"))]
+    rows = []
+    for threshold in thresholds_m:
+        count = sum(
+            1
+            for scene in proxy_safe
+            if scene.get("selected_token_realized_min_clearance_m") is not None
+            and float(scene["selected_token_realized_min_clearance_m"]) < threshold
+        )
+        rows.append(
+            {
+                "threshold_m": float(threshold),
+                "proxy_safe_realized_near_or_collision_count": count,
+                "rate": round(count / len(proxy_safe), 6) if proxy_safe else 0.0,
+            }
+        )
+    return rows
+
+
+def _no_safe_token_cause_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    counts: dict[str, int] = {}
+    for scene in scenes:
+        if bool(scene.get("safe_token_existed")):
+            continue
+        cause = _classify_no_safe_token_cause(scene)
+        counts[cause] = counts.get(cause, 0) + 1
+    return [{"cause": cause, "count": counts[cause]} for cause in sorted(counts)]
+
+
+def _classify_no_safe_token_cause(scene: dict[str, Any]) -> str:
+    candidates = list(scene.get("candidates", []))
+    stop = next((candidate for candidate in candidates if candidate["token"] == "stop"), None)
+    lateral = [
+        candidate
+        for candidate in candidates
+        if candidate["token"] in {"nudge_left", "nudge_right", "evasive_left", "evasive_right", "lane_recover"}
+    ]
+    if candidates and all(float(candidate["min_proxy_clearance_m"]) < 0.0 for candidate in candidates):
+        if stop is not None and float(stop["min_proxy_clearance_m"]) < 0.0:
+            return "stop still unsafe"
+        if lateral and all(float(candidate["min_proxy_clearance_m"]) < 0.0 for candidate in lateral):
+            return "insufficient lateral options"
+        return "actor clearance"
+    return "unknown/spec issue"
+
+
+def _clearance_trace_examples(scenes: list[dict[str, Any]], *, limit: int = 5) -> list[dict[str, Any]]:
+    failed = [
+        scene
+        for scene in scenes
+        if scene.get("failure_rung") == "proxy predicted safe but realized failed"
+        and scene.get("selected_token_realized_clearance_trace")
+    ]
+    failed.sort(key=lambda scene: float(scene["selected_token_realized_min_clearance_m"]))
+    examples = []
+    for scene in failed[:limit]:
+        examples.append(
+            {
+                "scene_id": scene["scene_id"],
+                "selected_token": scene["selected_token"],
+                "selected_token_realized_min_clearance_m": scene["selected_token_realized_min_clearance_m"],
+                "selected_token_realized_min_clearance_t": scene["selected_token_realized_min_clearance_t"],
+                "trace": list(scene["selected_token_realized_clearance_trace"]),
+            }
+        )
+    return examples
+
+
+def _binomial_ci95(*, successes: int, trials: int) -> dict[str, float]:
+    if trials <= 0:
+        return {"lower": 0.0, "upper": 0.0}
+    p = successes / trials
+    margin = 1.96 * math.sqrt(max(p * (1.0 - p), 0.0) / trials)
+    return {"lower": round(max(0.0, p - margin), 6), "upper": round(min(1.0, p + margin), 6)}
 
 
 def _local_to_global(
@@ -327,6 +463,10 @@ def markdown_report(report: Mapping[str, Any]) -> str:
         f"- Proxy-safe + realized safe count: `{report['proxy_safe_realized_safe_count']}`",
         f"- Proxy-safe + realized near/collision count: `{report['proxy_safe_realized_near_or_collision_count']}`",
         f"- Proxy-safe + realized missing count: `{report['proxy_safe_realized_missing_count']}`",
+        f"- Proxy-safe realized near/collision rate: `{report['proxy_safe_realized_near_or_collision_rate']:.3f}`",
+        f"- Proxy-safe realized near/collision 95% CI: "
+        f"`[{report['proxy_safe_realized_near_or_collision_ci95']['lower']:.3f}, "
+        f"{report['proxy_safe_realized_near_or_collision_ci95']['upper']:.3f}]`",
         f"- Realized clearance source: `log_replay`",
         "",
         "## Failure Table",
@@ -336,6 +476,44 @@ def markdown_report(report: Mapping[str, Any]) -> str:
     ]
     for row in report["failure_rung_table"]:
         lines.append(f"| {row['failure_rung']} | {row['count']} | {row['rate']:.3f} |")
+    lines.extend(
+        [
+            "",
+            "## Token Failure Table",
+            "",
+            "| Token | Proxy-safe selected | Realized near/collision | Failure rate |",
+            "|---|---:|---:|---:|",
+        ]
+    )
+    for row in report["token_failure_table"]:
+        lines.append(
+            f"| {row['token']} | {row['proxy_safe_selected']} | "
+            f"{row['realized_near_or_collision']} | {row['failure_rate']:.3f} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Threshold Sensitivity",
+            "",
+            "| Threshold | Proxy-safe + realized near/collision | Rate |",
+            "|---:|---:|---:|",
+        ]
+    )
+    for row in report["threshold_sensitivity_table"]:
+        lines.append(
+            f"| {row['threshold_m']:.1f} m | {row['proxy_safe_realized_near_or_collision_count']} | {row['rate']:.3f} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## No-Safe-Token Causes",
+            "",
+            "| Cause | Count |",
+            "|---|---:|",
+        ]
+    )
+    for row in report["no_safe_token_cause_table"]:
+        lines.append(f"| {row['cause']} | {row['count']} |")
     return "\n".join(lines)
 
 
