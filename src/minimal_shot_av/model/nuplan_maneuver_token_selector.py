@@ -36,6 +36,7 @@ SELECTOR_FEATURE_NAMES = (
     "candidate_final_progress_m",
     "candidate_score_heuristic",
 )
+REPLAY_CALIBRATED_MODEL_TYPE = "nuplan_replay_calibrated_selector_v1"
 
 
 @dataclass(frozen=True)
@@ -106,8 +107,110 @@ class NuPlanMlpSelector:
         )
 
 
-def load_selector(path: Path) -> NuPlanMlpSelector:
-    return NuPlanMlpSelector.from_payload(json.loads(path.read_text(encoding="utf-8")))
+@dataclass(frozen=True)
+class NuPlanReplayCalibratedSelector:
+    feature_names: tuple[str, ...]
+    hidden_dim: int
+    feature_mean: tuple[float, ...]
+    feature_scale: tuple[float, ...]
+    w1: tuple[tuple[float, ...], ...]
+    b1: tuple[float, ...]
+    w2: tuple[float, ...]
+    b2: float
+    risk_weight: float
+    proxy_score_weight: float
+    progress_weight: float
+    unsafe_penalty: float
+    near_miss_threshold_m: float
+
+    def predict_risk(self, features: Mapping[str, float]) -> float:
+        logit = _predict_mlp_logit(
+            features=features,
+            feature_names=self.feature_names,
+            feature_mean=self.feature_mean,
+            feature_scale=self.feature_scale,
+            w1=self.w1,
+            b1=self.b1,
+            w2=self.w2,
+            b2=self.b2,
+        )
+        return float(1.0 / (1.0 + math.exp(-max(-40.0, min(40.0, logit)))))
+
+    def predict_score(self, features: Mapping[str, float]) -> float:
+        risk = self.predict_risk(features)
+        proxy_score = float(features["candidate_score_heuristic"])
+        progress = float(features["candidate_final_progress_m"])
+        proxy_safe = bool(float(features["candidate_proxy_safe"]) >= 0.5)
+        unsafe_penalty = 0.0 if proxy_safe else float(self.unsafe_penalty)
+        return (
+            float(self.proxy_score_weight) * proxy_score
+            + float(self.progress_weight) * progress
+            - float(self.risk_weight) * risk
+            - unsafe_penalty
+        )
+
+    def select_record(self, scene_record: Mapping[str, Any]) -> dict[str, Any]:
+        candidates = list(scene_record["candidates"])
+        scored = [
+            (
+                self.predict_score(selector_feature_row(scene_record, candidate)),
+                candidate,
+            )
+            for candidate in candidates
+        ]
+        _, selected = max(
+            scored,
+            key=lambda item: (
+                item[0],
+                item[1]["min_proxy_clearance_m"],
+                item[1]["final_progress_m"],
+            ),
+        )
+        return dict(selected)
+
+    def to_payload(self) -> dict[str, Any]:
+        return {
+            "model_type": REPLAY_CALIBRATED_MODEL_TYPE,
+            "feature_names": list(self.feature_names),
+            "hidden_dim": int(self.hidden_dim),
+            "feature_mean": list(self.feature_mean),
+            "feature_scale": list(self.feature_scale),
+            "w1": [list(row) for row in self.w1],
+            "b1": list(self.b1),
+            "w2": list(self.w2),
+            "b2": float(self.b2),
+            "risk_weight": float(self.risk_weight),
+            "proxy_score_weight": float(self.proxy_score_weight),
+            "progress_weight": float(self.progress_weight),
+            "unsafe_penalty": float(self.unsafe_penalty),
+            "near_miss_threshold_m": float(self.near_miss_threshold_m),
+        }
+
+    @classmethod
+    def from_payload(cls, payload: Mapping[str, Any]) -> NuPlanReplayCalibratedSelector:
+        return cls(
+            feature_names=tuple(str(name) for name in payload["feature_names"]),
+            hidden_dim=int(payload["hidden_dim"]),
+            feature_mean=tuple(float(value) for value in payload["feature_mean"]),
+            feature_scale=tuple(float(value) for value in payload["feature_scale"]),
+            w1=tuple(tuple(float(value) for value in row) for row in payload["w1"]),
+            b1=tuple(float(value) for value in payload["b1"]),
+            w2=tuple(float(value) for value in payload["w2"]),
+            b2=float(payload["b2"]),
+            risk_weight=float(payload.get("risk_weight", 4.0)),
+            proxy_score_weight=float(payload.get("proxy_score_weight", 1.0)),
+            progress_weight=float(payload.get("progress_weight", 0.0)),
+            unsafe_penalty=float(payload.get("unsafe_penalty", 2.0)),
+            near_miss_threshold_m=float(payload.get("near_miss_threshold_m", 1.0)),
+        )
+
+
+def load_selector(path: Path) -> NuPlanMlpSelector | NuPlanReplayCalibratedSelector:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    model_type = str(payload.get("model_type", "nuplan_maneuvertoken_selector_mlp_v1"))
+    if model_type == REPLAY_CALIBRATED_MODEL_TYPE:
+        return NuPlanReplayCalibratedSelector.from_payload(payload)
+    return NuPlanMlpSelector.from_payload(payload)
 
 
 def selector_feature_row(scene_record: Mapping[str, Any], candidate: Mapping[str, Any]) -> dict[str, float]:
@@ -215,14 +318,140 @@ def fit_selector_mlp(
     if not examples:
         raise ValueError("cannot train selector on an empty example set")
     feature_names = tuple(SELECTOR_FEATURE_NAMES)
+    fitted = _fit_binary_mlp(
+        examples=examples,
+        label_key="label",
+        feature_names=feature_names,
+        hidden_dim=hidden_dim,
+        epochs=epochs,
+        learning_rate=learning_rate,
+        seed=seed,
+    )
+    selector = NuPlanMlpSelector(
+        feature_names=feature_names,
+        hidden_dim=int(hidden_dim),
+        feature_mean=fitted["feature_mean"],
+        feature_scale=fitted["feature_scale"],
+        w1=fitted["w1"],
+        b1=fitted["b1"],
+        w2=fitted["w2"],
+        b2=fitted["b2"],
+    )
+    metrics = evaluate_selector(selector, examples)
+    return selector, metrics
+
+
+def build_replay_calibration_examples(
+    replay_report: Mapping[str, Any],
+    *,
+    near_miss_threshold_m: float = 1.0,
+) -> list[dict[str, Any]]:
+    examples = []
+    for scene in replay_report.get("scenes", []):
+        candidate_by_token = {str(candidate["token"]): candidate for candidate in scene.get("candidates", [])}
+        replay_by_token = {
+            str(candidate["token"]): candidate for candidate in scene.get("candidate_replay_evaluations", [])
+        }
+        for token, candidate in candidate_by_token.items():
+            replay = replay_by_token.get(token)
+            if replay is None or replay.get("realized_min_clearance_m") is None:
+                continue
+            realized_clearance = float(replay["realized_min_clearance_m"])
+            examples.append(
+                {
+                    "scene_id": str(scene["scene_id"]),
+                    "source_db_file": str(scene.get("source_db_file", "")),
+                    "token": token,
+                    "replay_infeasible": 1.0 if realized_clearance < near_miss_threshold_m else 0.0,
+                    "replay_min_clearance_m": realized_clearance,
+                    "proxy_safe": bool(candidate.get("proxy_safe")),
+                    "proxy_score": float(candidate.get("score", 0.0)),
+                    "final_progress_m": float(candidate.get("final_progress_m", 0.0)),
+                    "features": selector_feature_row(scene, candidate),
+                }
+            )
+    return examples
+
+
+def fit_replay_calibrated_selector(
+    examples: list[Mapping[str, Any]],
+    *,
+    hidden_dim: int = 16,
+    epochs: int = 250,
+    learning_rate: float = 0.05,
+    seed: int = 0,
+    risk_weight: float = 4.0,
+    proxy_score_weight: float = 1.0,
+    progress_weight: float = 0.0,
+    unsafe_penalty: float = 2.0,
+    near_miss_threshold_m: float = 1.0,
+) -> tuple[NuPlanReplayCalibratedSelector, dict[str, float]]:
+    if not examples:
+        raise ValueError("cannot train replay-calibrated selector on an empty example set")
+    feature_names = tuple(SELECTOR_FEATURE_NAMES)
+    fitted = _fit_binary_mlp(
+        examples=examples,
+        label_key="replay_infeasible",
+        feature_names=feature_names,
+        hidden_dim=hidden_dim,
+        epochs=epochs,
+        learning_rate=learning_rate,
+        seed=seed,
+    )
+    selector = NuPlanReplayCalibratedSelector(
+        feature_names=feature_names,
+        hidden_dim=int(hidden_dim),
+        feature_mean=fitted["feature_mean"],
+        feature_scale=fitted["feature_scale"],
+        w1=fitted["w1"],
+        b1=fitted["b1"],
+        w2=fitted["w2"],
+        b2=fitted["b2"],
+        risk_weight=float(risk_weight),
+        proxy_score_weight=float(proxy_score_weight),
+        progress_weight=float(progress_weight),
+        unsafe_penalty=float(unsafe_penalty),
+        near_miss_threshold_m=float(near_miss_threshold_m),
+    )
+    return selector, evaluate_replay_risk_head(selector, examples)
+
+
+def evaluate_replay_risk_head(
+    selector: NuPlanReplayCalibratedSelector,
+    examples: list[Mapping[str, Any]],
+) -> dict[str, float]:
+    if not examples:
+        return {"example_count": 0.0, "risk_accuracy": 0.0, "risk_log_loss": 0.0}
+    labels = np.asarray([float(example["replay_infeasible"]) for example in examples], dtype=np.float64)
+    probs = np.asarray([selector.predict_risk(example["features"]) for example in examples], dtype=np.float64)
+    predictions = probs >= 0.5
+    loss = -np.mean(
+        labels * np.log(np.clip(probs, 1.0e-8, 1.0))
+        + (1.0 - labels) * np.log(np.clip(1.0 - probs, 1.0e-8, 1.0))
+    )
+    return {
+        "example_count": float(len(examples)),
+        "risk_positive_rate": float(labels.mean()),
+        "risk_accuracy": float(np.mean(predictions == (labels >= 0.5))),
+        "risk_log_loss": float(loss),
+    }
+
+
+def _fit_binary_mlp(
+    *,
+    examples: list[Mapping[str, Any]],
+    label_key: str,
+    feature_names: tuple[str, ...],
+    hidden_dim: int,
+    epochs: int,
+    learning_rate: float,
+    seed: int,
+) -> dict[str, Any]:
     x = np.asarray(
-        [
-            [float(example["features"][name]) for name in feature_names]
-            for example in examples
-        ],
+        [[float(example["features"][name]) for name in feature_names] for example in examples],
         dtype=np.float64,
     )
-    y = np.asarray([float(example["label"]) for example in examples], dtype=np.float64).reshape(-1, 1)
+    y = np.asarray([float(example[label_key]) for example in examples], dtype=np.float64).reshape(-1, 1)
     feature_mean = x.mean(axis=0)
     feature_scale = x.std(axis=0)
     feature_scale[feature_scale < 1.0e-8] = 1.0
@@ -248,18 +477,36 @@ def fit_selector_mlp(
         b1 -= learning_rate * grad_b1
         w2 -= learning_rate * grad_w2
         b2 -= learning_rate * grad_b2
-    selector = NuPlanMlpSelector(
-        feature_names=feature_names,
-        hidden_dim=int(hidden_dim),
-        feature_mean=tuple(float(value) for value in feature_mean),
-        feature_scale=tuple(float(value) for value in feature_scale),
-        w1=tuple(tuple(float(value) for value in row) for row in w1),
-        b1=tuple(float(value) for value in b1),
-        w2=tuple(float(value) for value in w2[:, 0]),
-        b2=float(b2[0]),
+    return {
+        "feature_mean": tuple(float(value) for value in feature_mean),
+        "feature_scale": tuple(float(value) for value in feature_scale),
+        "w1": tuple(tuple(float(value) for value in row) for row in w1),
+        "b1": tuple(float(value) for value in b1),
+        "w2": tuple(float(value) for value in w2[:, 0]),
+        "b2": float(b2[0]),
+    }
+
+
+def _predict_mlp_logit(
+    *,
+    features: Mapping[str, float],
+    feature_names: tuple[str, ...],
+    feature_mean: tuple[float, ...],
+    feature_scale: tuple[float, ...],
+    w1: tuple[tuple[float, ...], ...],
+    b1: tuple[float, ...],
+    w2: tuple[float, ...],
+    b2: float,
+) -> float:
+    vector = np.asarray([float(features[name]) for name in feature_names], dtype=np.float64)
+    mean = np.asarray(feature_mean, dtype=np.float64)
+    scale = np.asarray(feature_scale, dtype=np.float64)
+    normalized = (vector - mean) / scale
+    hidden = np.maximum(
+        normalized @ np.asarray(w1, dtype=np.float64) + np.asarray(b1, dtype=np.float64),
+        0.0,
     )
-    metrics = evaluate_selector(selector, examples)
-    return selector, metrics
+    return float(hidden @ np.asarray(w2, dtype=np.float64) + float(b2))
 
 
 def evaluate_selector(

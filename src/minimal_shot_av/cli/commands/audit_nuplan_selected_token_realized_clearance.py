@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import math
 from pathlib import Path
@@ -28,6 +29,12 @@ REPLAY_FAILURE_RUNGS = (
     "safe token existed but selector missed it",
     REPLAY_INFEASIBLE_RUNG,
     "metric/spec ambiguity",
+)
+REPLAY_ORACLE_DIAGNOSTICS = (
+    "selected_replay_safe",
+    "selected_failed_no_replay_safe_alternative",
+    "selected_failed_with_replay_safe_alternative",
+    "selected_replay_missing",
 )
 
 
@@ -98,6 +105,11 @@ def enrich_report_with_realized_clearance(
             near_miss_threshold_m=float(near_miss_threshold_m),
         )
         scene["failure_rung"] = _replay_specific_failure_rung(scene["failure_rung"], scene["realized_clearance_source"])
+        scene["replay_oracle_diagnostic"] = _replay_oracle_diagnostic(scene)
+        scene["selected_failed_but_replay_safe_alternative_exists"] = (
+            scene["replay_oracle_diagnostic"] == "selected_failed_with_replay_safe_alternative"
+        )
+        scene["proxy_safe_replay_failure_onset_bucket"] = _proxy_safe_replay_failure_onset_bucket(scene)
         scene["hypothesis_supported"] = (
             "controller_proxy_mismatch_candidate"
             if scene["failure_rung"] == REPLAY_INFEASIBLE_RUNG
@@ -210,6 +222,10 @@ def _recompute_report_summary(report: dict[str, Any]) -> None:
         }
         for rung in REPLAY_FAILURE_RUNGS
     ]
+    report["replay_oracle_diagnostic_table"] = _replay_oracle_diagnostic_table(scenes)
+    report["failure_rung_by_replay_oracle_diagnostic_table"] = _failure_rung_by_replay_oracle_diagnostic_table(scenes)
+    report["proxy_safe_replay_failure_split_table"] = _proxy_safe_replay_failure_split_table(scenes)
+    report["replay_oracle_miss_table"] = _replay_oracle_miss_table(scenes)
     report["token_failure_table"] = _token_failure_table(scenes)
     report["threshold_sensitivity_table"] = _threshold_sensitivity_table(
         scenes=scenes,
@@ -219,6 +235,7 @@ def _recompute_report_summary(report: dict[str, Any]) -> None:
         scenes=scenes,
         horizons_s=HORIZON_SENSITIVITY_SECONDS,
     )
+    report["proxy_safe_replay_failure_onset_table"] = _proxy_safe_replay_failure_onset_table(scenes)
     report["no_safe_token_cause_table"] = _no_safe_token_cause_table(scenes)
     report["replay_oracle_case_table"] = _replay_oracle_case_table(scenes)
     report["failed_stop_cause_table"] = _failed_stop_cause_table(scenes)
@@ -407,6 +424,93 @@ def _selected_failed_stop_cause(
     return "stop_token_replay_infeasible"
 
 
+def _replay_oracle_diagnostic(scene: Mapping[str, Any]) -> str:
+    selected_clearance = scene.get("selected_token_realized_min_clearance_m")
+    if selected_clearance is None:
+        return "selected_replay_missing"
+    oracle = scene.get("oracle_log_replay_safe_token")
+    selected_token = str(scene.get("selected_token"))
+    if float(selected_clearance) >= DEFAULT_NEAR_MISS_THRESHOLD_M:
+        return "selected_replay_safe"
+    if oracle is not None and str(oracle) != selected_token:
+        return "selected_failed_with_replay_safe_alternative"
+    return "selected_failed_no_replay_safe_alternative"
+
+
+def _replay_oracle_diagnostic_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    counts = {diagnostic: 0 for diagnostic in REPLAY_ORACLE_DIAGNOSTICS}
+    for scene in scenes:
+        counts[str(scene.get("replay_oracle_diagnostic", "selected_replay_missing"))] += 1
+    return [
+        {
+            "diagnostic": diagnostic,
+            "count": counts[diagnostic],
+            "rate": round(counts[diagnostic] / len(scenes), 6) if scenes else 0.0,
+        }
+        for diagnostic in REPLAY_ORACLE_DIAGNOSTICS
+    ]
+
+
+def _failure_rung_by_replay_oracle_diagnostic_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    counts: dict[tuple[str, str], int] = {}
+    for scene in scenes:
+        key = (
+            str(scene.get("failure_rung")),
+            str(scene.get("replay_oracle_diagnostic", "selected_replay_missing")),
+        )
+        counts[key] = counts.get(key, 0) + 1
+    return [
+        {
+            "failure_rung": failure_rung,
+            "replay_oracle_diagnostic": diagnostic,
+            "count": count,
+        }
+        for (failure_rung, diagnostic), count in sorted(counts.items())
+    ]
+
+
+def _proxy_safe_replay_failure_split_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    counts = {
+        "no_replay_safe_alternative": 0,
+        "replay_safe_alternative_exists": 0,
+    }
+    for scene in scenes:
+        if str(scene.get("failure_rung")) != REPLAY_INFEASIBLE_RUNG:
+            continue
+        if str(scene.get("replay_oracle_diagnostic")) == "selected_failed_with_replay_safe_alternative":
+            counts["replay_safe_alternative_exists"] += 1
+        else:
+            counts["no_replay_safe_alternative"] += 1
+    total = sum(counts.values())
+    return [
+        {"type": key, "count": value, "rate": round(value / total, 6) if total else 0.0}
+        for key, value in counts.items()
+    ]
+
+
+def _replay_oracle_miss_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    oracle_by_selected: dict[str, Counter[str]] = {}
+    for scene in scenes:
+        if str(scene.get("replay_oracle_diagnostic")) != "selected_failed_with_replay_safe_alternative":
+            continue
+        selected_token = str(scene.get("selected_token"))
+        oracle_token = str(scene.get("oracle_log_replay_safe_token"))
+        oracle_by_selected.setdefault(selected_token, Counter())[oracle_token] += 1
+    rows = []
+    for selected_token in sorted(oracle_by_selected):
+        counts = oracle_by_selected[selected_token]
+        oracle_token, oracle_count = counts.most_common(1)[0]
+        rows.append(
+            {
+                "selected_token": selected_token,
+                "count": sum(counts.values()),
+                "most_common_oracle_token": oracle_token,
+                "most_common_oracle_count": oracle_count,
+            }
+        )
+    return rows
+
+
 def _token_failure_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
     rows: dict[str, dict[str, Any]] = {}
     for scene in scenes:
@@ -498,11 +602,41 @@ def _clearance_trace_examples(scenes: list[dict[str, Any]], *, limit: int = 5) -
     return examples
 
 
+def _proxy_safe_replay_failure_onset_bucket(scene: Mapping[str, Any]) -> str | None:
+    if str(scene.get("failure_rung")) != REPLAY_INFEASIBLE_RUNG:
+        return None
+    trace = list(scene.get("selected_token_realized_clearance_trace", []))
+    onset = _first_near_miss_time(trace)
+    if onset is None:
+        return None
+    if onset <= 1.0 + 1.0e-6:
+        return "immediate_<=1s"
+    if onset <= 2.0 + 1.0e-6:
+        return "mid_1to2s"
+    if onset <= 3.0 + 1.0e-6:
+        return "mid_2to3s"
+    return "late_3to4s"
+
+
+def _proxy_safe_replay_failure_onset_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    counts = {
+        "immediate_<=1s": 0,
+        "mid_1to2s": 0,
+        "mid_2to3s": 0,
+        "late_3to4s": 0,
+    }
+    for scene in scenes:
+        bucket = scene.get("proxy_safe_replay_failure_onset_bucket")
+        if bucket in counts:
+            counts[str(bucket)] += 1
+    return [{"onset": key, "count": value} for key, value in counts.items()]
+
+
 def _replay_oracle_case_table(scenes: list[dict[str, Any]]) -> list[dict[str, Any]]:
     counts = {
         "proxy-safe token exists and replay-safe token exists": 0,
         "proxy-safe token exists but no replay-safe token exists": 0,
-        "proxy-safe selected token fails but another token would replay-safe pass": 0,
+        "selected token fails but another replay-safe token exists": 0,
         "no proxy-safe token but replay-safe token exists": 0,
     }
     for scene in scenes:
@@ -516,7 +650,7 @@ def _replay_oracle_case_table(scenes: list[dict[str, Any]]) -> list[dict[str, An
         if proxy_safe_exists and not replay_safe_exists:
             counts["proxy-safe token exists but no replay-safe token exists"] += 1
         if proxy_safe_exists and selected_fails and oracle is not None and str(oracle) != selected_token:
-            counts["proxy-safe selected token fails but another token would replay-safe pass"] += 1
+            counts["selected token fails but another replay-safe token exists"] += 1
         if not proxy_safe_exists and replay_safe_exists:
             counts["no proxy-safe token but replay-safe token exists"] += 1
     return [{"case": key, "count": value} for key, value in counts.items()]
@@ -620,6 +754,13 @@ def _horizon_sensitivity_table(
             }
         )
     return rows
+
+
+def _first_near_miss_time(trace: list[dict[str, Any]]) -> float | None:
+    for row in trace:
+        if float(row["realized_clearance_m"]) < DEFAULT_NEAR_MISS_THRESHOLD_M:
+            return float(row["time_s"])
+    return None
 
 
 def _trace_near_miss(trace: list[dict[str, Any]], horizon_s: float) -> bool:
@@ -726,8 +867,7 @@ def markdown_report(report: Mapping[str, Any]) -> str:
         f"`[{report['proxy_safe_realized_near_or_collision_ci95']['lower']:.3f}, "
         f"{report['proxy_safe_realized_near_or_collision_ci95']['upper']:.3f}]`",
         f"- Realized clearance source: `log_replay`",
-        "- All replay-infeasible stop cases are already infeasible at the 1s horizon; "
-        "this is not a long-horizon replay artifact.",
+        "- Replay-oracle diagnostics are secondary analyses; they do not redefine the primary failure rungs.",
         "",
         "## Failure Table",
         "",
@@ -736,6 +876,41 @@ def markdown_report(report: Mapping[str, Any]) -> str:
     ]
     for row in report["failure_rung_table"]:
         lines.append(f"| {row['failure_rung']} | {row['count']} | {row['rate']:.3f} |")
+    lines.extend(
+        [
+            "",
+            "## Replay Oracle Diagnostics",
+            "",
+            "| Diagnostic | Count | Rate |",
+            "|---|---:|---:|",
+        ]
+    )
+    for row in report["replay_oracle_diagnostic_table"]:
+        lines.append(f"| {row['diagnostic']} | {row['count']} | {row['rate']:.3f} |")
+    lines.extend(
+        [
+            "",
+            "## Primary Rung By Replay Oracle Diagnostic",
+            "",
+            "| Failure rung | Replay oracle diagnostic | Count |",
+            "|---|---|---:|",
+        ]
+    )
+    for row in report["failure_rung_by_replay_oracle_diagnostic_table"]:
+        lines.append(
+            f"| {row['failure_rung']} | {row['replay_oracle_diagnostic']} | {row['count']} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Proxy-Safe Replay Failure Split",
+            "",
+            "| Type | Count | Rate |",
+            "|---|---:|---:|",
+        ]
+    )
+    for row in report["proxy_safe_replay_failure_split_table"]:
+        lines.append(f"| {row['type']} | {row['count']} | {row['rate']:.3f} |")
     lines.extend(
         [
             "",
@@ -783,6 +958,17 @@ def markdown_report(report: Mapping[str, Any]) -> str:
     lines.extend(
         [
             "",
+            "## Proxy-Safe Replay Failure Onset",
+            "",
+            "| Failure onset | Count |",
+            "|---|---:|",
+        ]
+    )
+    for row in report["proxy_safe_replay_failure_onset_table"]:
+        lines.append(f"| {row['onset']} | {row['count']} |")
+    lines.extend(
+        [
+            "",
             "## No-Safe-Token Causes",
             "",
             "| Cause | Count |",
@@ -802,6 +988,20 @@ def markdown_report(report: Mapping[str, Any]) -> str:
     )
     for row in report["replay_oracle_case_table"]:
         lines.append(f"| {row['case']} | {row['count']} |")
+    lines.extend(
+        [
+            "",
+            "## Replay Oracle Misses",
+            "",
+            "| Selected token | Count | Most common replay-safe oracle token | Most common oracle count |",
+            "|---|---:|---|---:|",
+        ]
+    )
+    for row in report["replay_oracle_miss_table"]:
+        lines.append(
+            f"| {row['selected_token']} | {row['count']} | "
+            f"{row['most_common_oracle_token']} | {row['most_common_oracle_count']} |"
+        )
     lines.extend(
         [
             "",

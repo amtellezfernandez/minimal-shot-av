@@ -53,6 +53,13 @@ class RunNuPlanManeuverTokenRolloutTests(unittest.TestCase):
         self.assertIn("realized_min_clearance", report["scenes"][0])
         self.assertIn("selected_token_realized_min_clearance_m", report["scenes"][0])
 
+    def test_rollout_preserves_expert_trajectory_when_available(self) -> None:
+        scene = _training_scene("scene_with_expert", "left")
+
+        report = self.module.run_rollout([scene])
+
+        self.assertEqual(scene["expert_trajectory"], report["scenes"][0]["expert_trajectory"])
+
     def test_cli_main_writes_json_and_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

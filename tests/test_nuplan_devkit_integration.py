@@ -31,8 +31,33 @@ class NuPlanDevkitIntegrationTests(unittest.TestCase):
 
             self.assertEqual([str(second), str(first)], discovered)
 
+    def test_route_features_fall_back_without_goal_or_future(self) -> None:
+        ego = _FakeEgo(x=1.0, y=2.0, heading=0.1)
+
+        command, heading_error_rad, route_remaining_m = self.module._route_features_from_goal(
+            ego=ego,
+            mission_goal=None,
+            future_states=[],
+        )
+
+        self.assertEqual("straight", command)
+        self.assertEqual(0.0, heading_error_rad)
+        self.assertEqual(0.0, route_remaining_m)
+
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class _FakeRearAxle:
+    def __init__(self, *, x: float, y: float, heading: float) -> None:
+        self.x = x
+        self.y = y
+        self.heading = heading
+
+
+class _FakeEgo:
+    def __init__(self, *, x: float, y: float, heading: float) -> None:
+        self.rear_axle = _FakeRearAxle(x=x, y=y, heading=heading)
 
 
 if __name__ == "__main__":

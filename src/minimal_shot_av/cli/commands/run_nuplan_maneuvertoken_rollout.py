@@ -95,7 +95,9 @@ def run_rollout(scenes: list[dict[str, Any]], *, selector=None) -> dict[str, Any
     selected_token_histogram: dict[str, int] = {}
     safe_count = 0
     rung_counts = {rung: 0 for rung in FAILURE_RUNGS}
-    for record in records:
+    for scene, record in zip(scenes, records):
+        if "expert_trajectory" in scene:
+            record["expert_trajectory"] = list(scene.get("expert_trajectory", []))
         if selector is not None:
             selected = max(
                 record["candidates"],

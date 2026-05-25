@@ -73,7 +73,7 @@ def load_nuplan_scenes(
                 or 0
             )
             scenes.append(
-                _scene_from_nuplan_row(
+                build_nuplan_scene_summary(
                     log_file=log_file,
                     token=token,
                     scenario_type=str(row["scenario_type"] or "unknown"),
@@ -90,7 +90,7 @@ def load_nuplan_scenes(
     return scenes
 
 
-def _scene_from_nuplan_row(
+def build_nuplan_scene_summary(
     *,
     log_file: str,
     token: str,
@@ -147,6 +147,8 @@ def _route_features_from_goal(*, ego: Any, mission_goal: Any, future_states: lis
         route_remaining_m = math.hypot(goal_x, goal_y)
         command = _turn_command(goal_y)
         return command, float(heading_error_rad), float(route_remaining_m)
+    if not future_states:
+        return "straight", 0.0, 0.0
     final_local = _ego_future_row(ego=ego, state=future_states[-1])
     heading_error_rad = math.atan2(float(final_local["y_m"]), max(1.0e-6, float(final_local["x_m"])))
     route_remaining_m = math.hypot(float(final_local["x_m"]), float(final_local["y_m"]))

@@ -21,6 +21,7 @@ nuplan = [
     "nuplan-devkit",
     "opencv-python-headless",
     "Pillow>=10",
+    "pytest",
     "pyquaternion",
     "rasterio",
     "remotezip",

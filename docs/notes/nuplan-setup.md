@@ -32,6 +32,20 @@ The extractor reads directly from Motional's public `nuplan-v1.1_mini.zip` via
 ranged requests and writes a `manifest.json` alongside the extracted DB files.
 It avoids downloading the full archive when you only need a smoke-test bundle.
 
+## Public maps
+
+```bash
+./.venv/bin/python scripts/fetch_nuplan_public_maps.py
+```
+
+This extracts the public nuPlan maps bundle into:
+
+```text
+workspace/nuplan/maps/
+```
+
+The closed-loop bridge command requires this maps tree.
+
 ## Rollout and selector smoke runs
 
 ```bash
@@ -48,6 +62,37 @@ PYTHONPATH=src ./.venv/bin/python scripts/train_nuplan_maneuvertoken_selector.py
   --hidden-dim 16 \
   --output artifacts/corl2027/nuplan_mini_selector200.json
 ```
+
+## One-shot replay study
+
+```bash
+PYTHONPATH=src ./.venv/bin/python scripts/run_nuplan_public_replay_study.py \
+  --db-count 20 \
+  --scene-limit 250 \
+  --output-dir artifacts/corl2027/nuplan_public_replay_study
+```
+
+This command:
+
+- extracts a larger public DB bundle
+- runs the ManeuverToken rollout
+- runs the replay audit
+- writes `bundle_manifest.json`, `rollout.json/md`, and `replay.json/md`
+
+## Closed-loop bridge
+
+```bash
+PYTHONPATH=src ./.venv/bin/python scripts/audit_nuplan_closed_loop_bridge.py \
+  --input-json artifacts/corl2027/nuplan_public_replay_study/replay.json \
+  --maps-root workspace/nuplan/maps \
+  --output-json artifacts/corl2027/nuplan_public_replay_study/closed_loop_bridge.json \
+  --output-markdown artifacts/corl2027/nuplan_public_replay_study/closed_loop_bridge.md
+```
+
+This runs nuPlan's simulation loop on the decisive subset:
+
+- replay-infeasible proxy-safe scenes
+- matched replay-safe proxy-safe scenes
 
 ## Full dataset
 

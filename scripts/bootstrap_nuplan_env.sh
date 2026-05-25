@@ -32,10 +32,22 @@ env UV_CACHE_DIR="$ROOT/.uv-cache" "$UV_BIN" pip install \
 "$VENV_DIR/bin/python" - <<'PY'
 from nuplan.database.nuplan_db.nuplan_db_utils import get_lidarpc_sensor_data
 from nuplan.database.nuplan_db.nuplan_scenario_queries import get_scenarios_from_db
+from nuplan.planning.simulation.controller.perfect_tracking import PerfectTrackingController
+from nuplan.planning.simulation.observation.tracks_observation import TracksObservation
+from nuplan.planning.simulation.runner.simulations_runner import SimulationRunner
+from nuplan.planning.simulation.simulation import Simulation
+from nuplan.planning.simulation.simulation_time_controller.step_simulation_time_controller import (
+    StepSimulationTimeController,
+)
 
 print("nuplan imports ok")
 print("sensor source:", get_lidarpc_sensor_data())
 print("scenario query:", get_scenarios_from_db.__name__)
+print("simulation runner:", SimulationRunner.__name__)
+print("controller:", PerfectTrackingController.__name__)
+print("observation:", TracksObservation.__name__)
+print("simulation:", Simulation.__name__)
+print("time controller:", StepSimulationTimeController.__name__)
 PY
 
 cat <<EOF
@@ -43,10 +55,14 @@ Repo nuPlan environment is ready at $VENV_DIR
 
 Next steps:
   $VENV_DIR/bin/python scripts/fetch_nuplan_public_mini.py --db-count 5
+  $VENV_DIR/bin/python scripts/fetch_nuplan_public_maps.py
   PYTHONPATH=src $VENV_DIR/bin/python scripts/run_nuplan_maneuvertoken_rollout.py \\
     --nuplan-db-file $ROOT/workspace/nuplan/public_mini \\
     --limit 50
   PYTHONPATH=src $VENV_DIR/bin/python scripts/train_nuplan_maneuvertoken_selector.py \\
     --nuplan-db-file $ROOT/workspace/nuplan/public_mini \\
     --limit 200
+  PYTHONPATH=src $VENV_DIR/bin/python scripts/run_nuplan_public_replay_study.py \\
+    --db-count 20 \\
+    --scene-limit 250
 EOF
