@@ -18,21 +18,24 @@ TORCH_SITE_PACKAGES="${TORCH_SITE_PACKAGES:-${ROOT_DIR}/venv/onevl/lib/python3.1
 
 MAX_STAGE_ONE="${MAX_STAGE_ONE:-2}"
 MAX_STAGE_TWO="${MAX_STAGE_TWO:-2}"
+MAX_GROUPS="${MAX_GROUPS:-1}"
 K="${K:-4}"
 SEED="${SEED:-0}"
 TEMPERATURE="${TEMPERATURE:-0.8}"
 TOP_P="${TOP_P:-0.95}"
 
 SCENE_FILTER_YAML="${NAVSIM_V2_REPO}/navsim/planning/script/config/common/train_test_split/scene_filter/navhard_two_stage.yaml"
-DATASET_JSON="test_data/navsim_v2_navhard_smoke_s1_${MAX_STAGE_ONE}_s2_${MAX_STAGE_TWO}.json"
+TRAIN_TEST_SPLIT_YAML="${NAVSIM_V2_REPO}/navsim/planning/script/config/common/train_test_split/navhard_two_stage.yaml"
+DATASET_JSON="test_data/navsim_v2_navhard_smoke_g${MAX_GROUPS}.json"
 OUT_DIR="output/navsim_v2/smoke"
-GREEDY_JSON="${OUT_DIR}/navhard_smoke_greedy_seed${SEED}.json"
-SAMPLE_JSON="${OUT_DIR}/navhard_smoke_sample$((K - 1))_seed${SEED}_t${TEMPERATURE}_p${TOP_P}.json"
-HYBRID_JSON="${OUT_DIR}/navhard_smoke_hybrid_k${K}_seed${SEED}_t${TEMPERATURE}_p${TOP_P}.json"
-METRIC_CACHE="${NAVSIM_EXP_ROOT}/metric_cache_navhard_two_stage_smoke_s1_${MAX_STAGE_ONE}_s2_${MAX_STAGE_TWO}"
-SUBMISSION_DIR="${OUT_DIR}/submissions_k${K}_seed${SEED}"
-SCORE_DIR="${OUT_DIR}/scores_k${K}_seed${SEED}"
-ORACLE_JSON="${OUT_DIR}/navhard_smoke_hybrid_k${K}_seed${SEED}_oracle.json"
+RUN_STEM="navhard_smoke_g${MAX_GROUPS}"
+GREEDY_JSON="${OUT_DIR}/${RUN_STEM}_greedy_seed${SEED}.json"
+SAMPLE_JSON="${OUT_DIR}/${RUN_STEM}_sample$((K - 1))_seed${SEED}_t${TEMPERATURE}_p${TOP_P}.json"
+HYBRID_JSON="${OUT_DIR}/${RUN_STEM}_hybrid_k${K}_seed${SEED}_t${TEMPERATURE}_p${TOP_P}.json"
+METRIC_CACHE="${NAVSIM_EXP_ROOT}/metric_cache_navhard_two_stage_smoke_g${MAX_GROUPS}"
+SUBMISSION_DIR="${OUT_DIR}/submissions_g${MAX_GROUPS}_k${K}_seed${SEED}"
+SCORE_DIR="${OUT_DIR}/scores_g${MAX_GROUPS}_k${K}_seed${SEED}"
+ORACLE_JSON="${OUT_DIR}/${RUN_STEM}_hybrid_k${K}_seed${SEED}_oracle.json"
 
 if [[ "${K}" -lt 1 ]]; then
   echo "K must be >= 1" >&2
@@ -49,7 +52,9 @@ PYTHONPATH="${NAVSIM_V2_REPO}" "${REPO_PYTHON}" scripts/build_navsim_v2_onevl_da
   --synthetic-sensor-root "${OPENSCENE_DATA_ROOT}/navhard_two_stage/sensor_blobs" \
   --output-json "${DATASET_JSON}" \
   --max-stage-one "${MAX_STAGE_ONE}" \
-  --max-stage-two "${MAX_STAGE_TWO}"
+  --max-stage-two "${MAX_STAGE_TWO}" \
+  --train-test-split-yaml "${TRAIN_TEST_SPLIT_YAML}" \
+  --max-groups "${MAX_GROUPS}"
 
 "${INFER_PYTHON}" infer_onevl.py \
   --model_path "${MODEL_PATH}" \

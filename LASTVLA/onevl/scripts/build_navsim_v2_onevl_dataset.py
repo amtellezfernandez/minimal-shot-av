@@ -120,6 +120,31 @@ def candidate_stage_tokens(scene_filter_cfg: dict, max_stage_one: int | None, ma
     return stage_one, stage_two
 
 
+def ordered_unique(values: list[str]) -> list[str]:
+    seen = set()
+    output = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        output.append(value)
+    return output
+
+
+def mapped_stage_tokens(train_test_split_cfg: dict, max_groups: int | None) -> tuple[list[str], list[str]]:
+    mappings = list(train_test_split_cfg.get("reactive_all_mapping") or [])
+    if max_groups is not None:
+        mappings = mappings[:max_groups]
+
+    stage_one = []
+    stage_two = []
+    for orig_token, prev_token, two_stage_pairs in mappings:
+        stage_one.extend([orig_token, prev_token])
+        for now_token, previous_token in two_stage_pairs:
+            stage_two.extend([now_token, previous_token])
+    return ordered_unique(stage_one), ordered_unique(stage_two)
+
+
 def front_image_from_original(frame: dict, sensor_root: Path) -> str:
     return str((sensor_root / frame["cams"]["CAM_F0"]["data_path"]).resolve())
 
@@ -327,12 +352,18 @@ def main() -> None:
     parser.add_argument("--include-stage", choices=["first", "second", "both"], default="both")
     parser.add_argument("--max-stage-one", type=int, default=None)
     parser.add_argument("--max-stage-two", type=int, default=None)
+    parser.add_argument("--train-test-split-yaml", type=Path, default=None)
+    parser.add_argument("--max-groups", type=int, default=None)
     parser.add_argument("--command-text", default="MOVE FORWARD")
     parser.add_argument("--include-gt", action="store_true")
     args = parser.parse_args()
 
     cfg = load_yaml(args.scene_filter_yaml)
-    stage_one_tokens, stage_two_tokens = candidate_stage_tokens(cfg, args.max_stage_one, args.max_stage_two)
+    if args.train_test_split_yaml is not None and args.max_groups is not None:
+        split_cfg = load_yaml(args.train_test_split_yaml)
+        stage_one_tokens, stage_two_tokens = mapped_stage_tokens(split_cfg, args.max_groups)
+    else:
+        stage_one_tokens, stage_two_tokens = candidate_stage_tokens(cfg, args.max_stage_one, args.max_stage_two)
 
     items = []
     idx = 0

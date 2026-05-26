@@ -64,6 +64,28 @@ def hydra_list(values: list[str]) -> str:
     return "[" + ",".join(values) + "]"
 
 
+def add_scene_filter_overrides(
+    cmd: list[str],
+    first_stage_tokens: list[str],
+    second_stage_tokens: list[str],
+    max_cli_filter_tokens: int,
+) -> None:
+    token_filter_count = len(first_stage_tokens) + len(second_stage_tokens)
+    use_cli_filters = token_filter_count <= max_cli_filter_tokens
+    if first_stage_tokens and use_cli_filters:
+        cmd.append(f"train_test_split.scene_filter.tokens={hydra_list(first_stage_tokens)}")
+    if second_stage_tokens and use_cli_filters:
+        synthetic_tokens = hydra_list(second_stage_tokens)
+        cmd.append(f"train_test_split.scene_filter.reactive_synthetic_initial_tokens={synthetic_tokens}")
+        cmd.append(f"++train_test_split.scene_filter.synthetic_scene_tokens={synthetic_tokens}")
+    if not use_cli_filters:
+        print(
+            "Skipping Hydra CLI token filters because "
+            f"{token_filter_count} tokens exceeds --max-cli-filter-tokens={max_cli_filter_tokens}. "
+            "NAVSIM will use the configured split."
+        )
+
+
 def build_submission_pickles(candidate_json_path: Path, output_dir: Path, team_name: str) -> list[Path]:
     from navsim.common.dataclasses import Trajectory
 
@@ -152,18 +174,7 @@ def run_metric_cache(
         f"metric_cache_path={cache_path}",
         f"output_dir={cache_path / 'metadata'}",
     ]
-    token_filter_count = len(first_stage_tokens) + len(second_stage_tokens)
-    use_cli_filters = token_filter_count <= max_cli_filter_tokens
-    if first_stage_tokens and use_cli_filters:
-        cmd.append(f"train_test_split.scene_filter.tokens={hydra_list(first_stage_tokens)}")
-    if second_stage_tokens and use_cli_filters:
-        cmd.append(f"train_test_split.scene_filter.reactive_synthetic_initial_tokens={hydra_list(second_stage_tokens)}")
-    if not use_cli_filters:
-        print(
-            "Skipping Hydra CLI token filters because "
-            f"{token_filter_count} tokens exceeds --max-cli-filter-tokens={max_cli_filter_tokens}. "
-            "NAVSIM will cache the configured split."
-        )
+    add_scene_filter_overrides(cmd, first_stage_tokens, second_stage_tokens, max_cli_filter_tokens)
     run_cmd(cmd, navsim_env(navsim_repo, openscene_data_root, navsim_exp_root, nuplan_maps_root))
 
 
@@ -176,6 +187,9 @@ def run_candidate_scores(
     score_dir: Path,
     metric_cache_path: Path,
     split: str,
+    first_stage_tokens: list[str],
+    second_stage_tokens: list[str],
+    max_cli_filter_tokens: int,
     nuplan_maps_root: Path | None,
 ):
     score_dir.mkdir(parents=True, exist_ok=True)
@@ -193,6 +207,7 @@ def run_candidate_scores(
             f"metric_cache_path={metric_cache_path}",
             f"output_dir={candidate_score_dir}",
         ]
+        add_scene_filter_overrides(cmd, first_stage_tokens, second_stage_tokens, max_cli_filter_tokens)
         run_cmd(cmd, env)
 
 
@@ -331,6 +346,9 @@ def main():
         args.score_dir,
         args.metric_cache_path,
         args.split,
+        first_stage_tokens,
+        second_stage_tokens,
+        args.max_cli_filter_tokens,
         args.nuplan_maps_root,
     )
     summary = build_oracle_summary(args.score_dir, args.oracle_summary_out)
