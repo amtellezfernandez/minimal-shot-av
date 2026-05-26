@@ -1,0 +1,213 @@
+{
+  "scene_count": 24,
+  "candidate_count": 1,
+  "top1_candidate": 0,
+  "top1_epdms": 0.0,
+  "best_fixed_candidate": 0,
+  "best_fixed_epdms": 0.0,
+  "fixed_candidate_epdms": {
+    "0": 0.0
+  },
+  "fixed_candidate_stage_one_epdms": {
+    "0": 0.0
+  },
+  "fixed_candidate_stage_two_epdms": {
+    "0": 0.9635476427795248
+  },
+  "token_oracle_proxy_at_k_score": 0.6032668181140225,
+  "token_oracle_proxy_gap": 0.6032668181140225,
+  "per_token": [
+    {
+      "token": "0a8cbe192f3d3dfba",
+      "scores": [
+        0.8565279504080507
+      ],
+      "oracle_score": 0.8565279504080507,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "0e55c21e09e86d8ba",
+      "scores": [
+        0.7187402733520315
+      ],
+      "oracle_score": 0.7187402733520315,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "13aeb83dad95704fa",
+      "scores": [
+        0.8079903564282238
+      ],
+      "oracle_score": 0.8079903564282238,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "18dbdfb5b9fe301f4",
+      "scores": [
+        1.0
+      ],
+      "oracle_score": 1.0,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "3b8808368bea4771a",
+      "scores": [
+        0.7046518707930609
+      ],
+      "oracle_score": 0.7046518707930609,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "3b9a4be29bdd2c8ae",
+      "scores": [
+        0.5752240064850325
+      ],
+      "oracle_score": 0.5752240064850325,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "3dd919c5a93fd6754",
+      "scores": [
+        0.945932043772359
+      ],
+      "oracle_score": 0.945932043772359,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "46ccc7e9752595671",
+      "scores": [
+        0.0
+      ],
+      "oracle_score": 0.0,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "4a919f7ea2f65200",
+      "scores": [
+        0.0
+      ],
+      "oracle_score": 0.0,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "530edf0e35aa025b6",
+      "scores": [
+        1.0
+      ],
+      "oracle_score": 1.0,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "5421fa2f2e2b4cb13",
+      "scores": [
+        0.8715687594146513
+      ],
+      "oracle_score": 0.8715687594146513,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "5634addd2134d1453",
+      "scores": [
+        0.8270967035615864
+      ],
+      "oracle_score": 0.8270967035615864,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "6b5b128424d5357b0",
+      "scores": [
+        0.5628676857555247
+      ],
+      "oracle_score": 0.5628676857555247,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "6b912a3796564dd7e",
+      "scores": [
+        0.6415673833198233
+      ],
+      "oracle_score": 0.6415673833198233,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "778f661244251a842",
+      "scores": [
+        1.0
+      ],
+      "oracle_score": 1.0,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "7be779b9f100e6373",
+      "scores": [
+        1.0
+      ],
+      "oracle_score": 1.0,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "7d4dd35efebf5aa8f",
+      "scores": [
+        0.7971975059680888
+      ],
+      "oracle_score": 0.7971975059680888,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "b4750fa326ea1085b",
+      "scores": [
+        0.0
+      ],
+      "oracle_score": 0.0,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "b7f53c6ea01b7cbc9",
+      "scores": [
+        0.0
+      ],
+      "oracle_score": 0.0,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "bba03402f6222135f",
+      "scores": [
+        0.0
+      ],
+      "oracle_score": 0.0,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "c864abb5afff1f7f4",
+      "scores": [
+        0.6765718219336738
+      ],
+      "oracle_score": 0.6765718219336738,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "d715fbc6ea0551f8",
+      "scores": [
+        0.0
+      ],
+      "oracle_score": 0.0,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "e2ea1000f4e2d0904",
+      "scores": [
+        0.8673258156215709
+      ],
+      "oracle_score": 0.8673258156215709,
+      "oracle_candidate": 0
+    },
+    {
+      "token": "ea1bac206caf8d18e",
+      "scores": [
+        0.6251414579228638
+      ],
+      "oracle_score": 0.6251414579228638,
+      "oracle_candidate": 0
+    }
+  ]
+}
