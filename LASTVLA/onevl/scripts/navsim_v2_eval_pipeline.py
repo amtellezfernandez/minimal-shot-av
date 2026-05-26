@@ -130,6 +130,7 @@ def run_metric_cache(
     split: str,
     first_stage_tokens: list[str],
     second_stage_tokens: list[str],
+    max_cli_filter_tokens: int,
 ):
     cmd = [
         python_bin,
@@ -140,10 +141,18 @@ def run_metric_cache(
         f"metric_cache_path={cache_path}",
         f"output_dir={cache_path / 'metadata'}",
     ]
-    if first_stage_tokens:
+    token_filter_count = len(first_stage_tokens) + len(second_stage_tokens)
+    use_cli_filters = token_filter_count <= max_cli_filter_tokens
+    if first_stage_tokens and use_cli_filters:
         cmd.append(f"train_test_split.scene_filter.tokens={hydra_list(first_stage_tokens)}")
-    if second_stage_tokens:
+    if second_stage_tokens and use_cli_filters:
         cmd.append(f"train_test_split.scene_filter.synthetic_scene_tokens={hydra_list(second_stage_tokens)}")
+    if not use_cli_filters:
+        print(
+            "Skipping Hydra CLI token filters because "
+            f"{token_filter_count} tokens exceeds --max-cli-filter-tokens={max_cli_filter_tokens}. "
+            "NAVSIM will cache the configured split."
+        )
     run_cmd(cmd, navsim_env(navsim_repo, openscene_data_root, navsim_exp_root))
 
 
@@ -276,6 +285,12 @@ def main():
     parser.add_argument("--team-name", default="codex-onevl-v2")
     parser.add_argument("--split", default="navhard_two_stage")
     parser.add_argument("--skip-metric-cache", action="store_true")
+    parser.add_argument(
+        "--max-cli-filter-tokens",
+        type=int,
+        default=256,
+        help="Only pass explicit token-list Hydra overrides below this total count.",
+    )
     args = parser.parse_args()
 
     sys.path.insert(0, str(args.navsim_repo))
@@ -291,6 +306,7 @@ def main():
             args.split,
             first_stage_tokens,
             second_stage_tokens,
+            args.max_cli_filter_tokens,
         )
     run_candidate_scores(
         args.python_bin,
