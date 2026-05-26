@@ -388,6 +388,27 @@ recoverable by oracle@K. Student design determines how much of that recoverable 
 actually exploited. A scene-only token classifier underuses the richer bank. A
 candidate-level value student can exploit it.
 
+\begin{table}[t]
+\centering
+\caption{Holdout comparison on the expanded 21-token bank. The scene-token student leaves
+a large gap to the oracle boundary. Candidate-level replay value reaches the oracle
+failure boundary, and a balanced replay-value objective preserves more progress than the
+more conservative value point.}
+\label{tab:student_compare}
+\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+Selector & Replay fail & Progress (m) & ADE3 (m) & Entropy \\
+\midrule
+proxy top-1 & 0.740 & 31.181 & 2.714 & 2.773 \\
+scene-token student & 0.460 & 23.062 & 4.737 & 2.471 \\
+replay-value, safety-heavy & 0.097 & 12.276 & 9.190 & 3.089 \\
+replay-value, balanced & 0.097 & 14.278 & 8.451 & 3.117 \\
+replay-value oracle & 0.097 & 11.258 & 9.601 & 3.053 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Curriculum Targets}
 \label{sec:exp:curriculum}
 
