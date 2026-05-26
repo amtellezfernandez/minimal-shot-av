@@ -1,0 +1,65 @@
+{
+  "input_json": "artifacts/corl2027/replay_value_repeated_splits_summary.json",
+  "schema": "corl_boundary_consistency_audit_v1",
+  "split_count": 5,
+  "splits": [
+    {
+      "balanced_oracle_gap": 0.0,
+      "balanced_progress_gain_vs_safe_m": 1.624221,
+      "safe_oracle_gap": 0.0,
+      "scene_token_fail_improvement": 0.023333,
+      "seed": 0
+    },
+    {
+      "balanced_oracle_gap": 0.038709,
+      "balanced_progress_gain_vs_safe_m": 2.465143,
+      "safe_oracle_gap": 0.032258,
+      "scene_token_fail_improvement": -0.038709,
+      "seed": 1
+    },
+    {
+      "balanced_oracle_gap": 0.066667,
+      "balanced_progress_gain_vs_safe_m": 5.352073,
+      "safe_oracle_gap": 0.0,
+      "scene_token_fail_improvement": -0.003333,
+      "seed": 2
+    },
+    {
+      "balanced_oracle_gap": 0.04,
+      "balanced_progress_gain_vs_safe_m": 2.805596,
+      "safe_oracle_gap": 0.016666,
+      "scene_token_fail_improvement": 0.06,
+      "seed": 3
+    },
+    {
+      "balanced_oracle_gap": 0.258065,
+      "balanced_progress_gain_vs_safe_m": 6.029271,
+      "safe_oracle_gap": 0.0,
+      "scene_token_fail_improvement": 0.019355,
+      "seed": 4
+    }
+  ],
+  "summary": {
+    "balanced_exact_match_count": 1,
+    "balanced_exact_match_rate": 0.2,
+    "balanced_oracle_gap_mean": 0.080688,
+    "balanced_oracle_gap_std": 0.0912,
+    "balanced_progress_gain_mean_m": 3.655261,
+    "balanced_progress_gain_positive_count": 5,
+    "balanced_progress_gain_positive_rate": 1.0,
+    "balanced_progress_gain_std_m": 1.719217,
+    "balanced_within_tolerance_count": 3,
+    "balanced_within_tolerance_rate": 0.6,
+    "safe_exact_match_count": 3,
+    "safe_exact_match_rate": 0.6,
+    "safe_oracle_gap_mean": 0.009785,
+    "safe_oracle_gap_std": 0.012959,
+    "safe_within_tolerance_count": 5,
+    "safe_within_tolerance_rate": 1.0,
+    "scene_token_fail_improvement_mean": 0.012129,
+    "scene_token_fail_improvement_std": 0.032536,
+    "scene_token_improved_over_proxy_count": 3,
+    "scene_token_improved_over_proxy_rate": 0.6
+  },
+  "tolerance": 0.05
+}
