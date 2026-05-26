@@ -1,0 +1,55 @@
+{
+  "train_candidate_json": "/home/atellez/dev/minimal-shot-av-codex/LASTVLA/onevl/output/navsim/sweeps/train200_corrected_hybrid_k4_candidates.json",
+  "rows": [
+    {
+      "seed": 0,
+      "top1_score": 0.9180599672304526,
+      "best_fixed_score": 0.9180599672304526,
+      "oracle_at_k_score": 0.9460004090073315,
+      "transfer_reranker_score": 0.9251744059135285,
+      "selected_alpha": 100.0,
+      "gap_closed_vs_top1": 0.2546287113098984,
+      "selected_candidate_hist": {
+        "0": 22,
+        "1": 34,
+        "2": 27,
+        "3": 17
+      }
+    },
+    {
+      "seed": 1,
+      "top1_score": 0.9180599672304526,
+      "best_fixed_score": 0.9180599672304526,
+      "oracle_at_k_score": 0.9616286855588663,
+      "transfer_reranker_score": 0.923510478495743,
+      "selected_alpha": 10.0,
+      "gap_closed_vs_top1": 0.12510148277039854,
+      "selected_candidate_hist": {
+        "0": 10,
+        "1": 30,
+        "2": 27,
+        "3": 33
+      }
+    },
+    {
+      "seed": 2,
+      "top1_score": 0.9180599672304526,
+      "best_fixed_score": 0.9180599672304526,
+      "oracle_at_k_score": 0.9547329279403042,
+      "transfer_reranker_score": 0.9025848847515264,
+      "selected_alpha": 1.0,
+      "gap_closed_vs_top1": -0.4219752695006438,
+      "selected_candidate_hist": {
+        "0": 2,
+        "1": 29,
+        "2": 43,
+        "3": 26
+      }
+    }
+  ],
+  "mean_top1_score": 0.9180599672304526,
+  "mean_best_fixed_score": 0.9180599672304526,
+  "mean_oracle_at_k_score": 0.9541206741688341,
+  "mean_transfer_reranker_score": 0.9170899230535993,
+  "mean_gap_closed_vs_top1": -0.014081691806782278
+}

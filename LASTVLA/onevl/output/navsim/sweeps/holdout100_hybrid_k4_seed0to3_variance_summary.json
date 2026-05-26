@@ -1,0 +1,52 @@
+{
+  "rows": [
+    {
+      "seed": 0,
+      "oracle_at_4": 0.9460004090073312,
+      "oracle_gap": 0.0279404417768786,
+      "winner_not_top1_scenes": 38,
+      "winner_not_top1_rate": 0.38,
+      "scene_duplicate_rate": 0.0,
+      "pair_duplicate_rate": 0.0,
+      "mean_pair_distance": 0.21736727021533336
+    },
+    {
+      "seed": 1,
+      "oracle_at_4": 0.9616286855588663,
+      "oracle_gap": 0.04356871832841369,
+      "winner_not_top1_scenes": 37,
+      "winner_not_top1_rate": 0.37,
+      "scene_duplicate_rate": 0.0,
+      "pair_duplicate_rate": 0.0,
+      "mean_pair_distance": 0.22979374782082634
+    },
+    {
+      "seed": 2,
+      "oracle_at_4": 0.9547329279403042,
+      "oracle_gap": 0.0366729607098516,
+      "winner_not_top1_scenes": 37,
+      "winner_not_top1_rate": 0.37,
+      "scene_duplicate_rate": 0.0,
+      "pair_duplicate_rate": 0.0,
+      "mean_pair_distance": 0.21109636706831544
+    },
+    {
+      "seed": 3,
+      "oracle_at_4": 0.9450178794183711,
+      "oracle_gap": 0.026957912187918542,
+      "winner_not_top1_scenes": 35,
+      "winner_not_top1_rate": 0.35,
+      "scene_duplicate_rate": 0.0,
+      "pair_duplicate_rate": 0.0,
+      "mean_pair_distance": 0.21666512035178243
+    }
+  ],
+  "oracle_mean": 0.9518449754812182,
+  "oracle_std": 0.006797599764042441,
+  "gap_mean": 0.03378500825076561,
+  "gap_std": 0.006797599764042441,
+  "winner_not_top1_rate_mean": 0.3675,
+  "scene_duplicate_rate_mean": 0.0,
+  "pair_duplicate_rate_mean": 0.0,
+  "mean_pair_distance_mean": 0.2187306263640644
+}

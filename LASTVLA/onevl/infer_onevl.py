@@ -24,6 +24,7 @@ import argparse
 import glob
 import re
 import time
+import random
 
 import torch
 import torch.nn as nn
@@ -706,10 +707,18 @@ def main():
     parser.add_argument("--num_beams", type=int, default=None,
                         help="Beam count when candidate_mode=beam "
                              "(defaults to num_candidates)")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="Random seed for sampled candidate generation")
 
     args = parser.parse_args()
     device = args.device
     dtype = torch.bfloat16
+
+    if args.seed is not None:
+        random.seed(args.seed)
+        torch.manual_seed(args.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(args.seed)
 
     # ---- Load model ----
     print(f"[INFO] Loading model from {args.model_path}")

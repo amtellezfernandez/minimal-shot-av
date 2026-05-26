@@ -199,6 +199,8 @@ def main():
     by_token = {}
     for ex in examples:
         by_token.setdefault(ex["token"], []).append(ex)
+    candidate_ids = sorted({ex["candidate_id"] for ex in examples})
+    candidate_count = len(candidate_ids)
 
     def matrix(exs):
         X = np.array([[ex["features"][name] for name in feature_names] for ex in exs], dtype=float)
@@ -223,7 +225,7 @@ def main():
             {
                 "alpha": alpha,
                 "mean_score": float(np.mean(selected_scores)),
-                "candidate_hist": {str(i): selected_ids.count(i) for i in range(4)},
+                "candidate_hist": {str(i): selected_ids.count(i) for i in candidate_ids},
             }
         )
 
@@ -244,20 +246,21 @@ def main():
     candidate_scores = {str(idx): float(avg_by_candidate[idx]["score"]) for idx in sorted(avg_by_candidate)}
     top1_score = candidate_scores["0"]
     best_fixed_score = max(candidate_scores.values())
-    oracle_at_4_score = np.mean([max(ex["score"] for ex in exs) for exs in by_token.values()])
+    oracle_at_k_score = np.mean([max(ex["score"] for ex in exs) for exs in by_token.values()])
     summary = {
         "scene_count": len(by_token),
+        "candidate_count": candidate_count,
         "feature_count": len(feature_names),
         "alphas": cv_rows,
         "selected_alpha": alpha,
         "top1_score": top1_score,
         "best_fixed_score": best_fixed_score,
-        "oracle_at_4_score": float(oracle_at_4_score),
+        "oracle_at_k_score": float(oracle_at_k_score),
         "reranker_loso_score": float(np.mean(selected_scores)),
-        "gap_closed_vs_top1": float((np.mean(selected_scores) - top1_score) / (oracle_at_4_score - top1_score))
-        if oracle_at_4_score > top1_score
+        "gap_closed_vs_top1": float((np.mean(selected_scores) - top1_score) / (oracle_at_k_score - top1_score))
+        if oracle_at_k_score > top1_score
         else 0.0,
-        "selected_candidate_hist": {str(i): selected_ids.count(i) for i in range(4)},
+        "selected_candidate_hist": {str(i): selected_ids.count(i) for i in candidate_ids},
     }
     args.summary_out.write_text(json.dumps(summary, indent=2))
 
