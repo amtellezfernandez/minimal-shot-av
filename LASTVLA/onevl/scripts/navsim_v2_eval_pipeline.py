@@ -120,7 +120,10 @@ def navsim_env(
     nuplan_maps_root: Path | None,
 ) -> dict[str, str]:
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(navsim_repo)
+    pythonpath = [str(navsim_repo)]
+    if env.get("PYTHONPATH"):
+        pythonpath.append(env["PYTHONPATH"])
+    env["PYTHONPATH"] = os.pathsep.join(pythonpath)
     env["OPENSCENE_DATA_ROOT"] = str(openscene_data_root)
     env["NAVSIM_EXP_ROOT"] = str(navsim_exp_root)
     if nuplan_maps_root is not None:

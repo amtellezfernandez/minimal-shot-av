@@ -14,6 +14,7 @@ if [[ -f venv/onevl/bin/activate ]]; then
   source venv/onevl/bin/activate
 fi
 INFER_PYTHON="${INFER_PYTHON:-python}"
+TORCH_SITE_PACKAGES="${TORCH_SITE_PACKAGES:-${ROOT_DIR}/venv/onevl/lib/python3.12/site-packages}"
 
 MAX_STAGE_ONE="${MAX_STAGE_ONE:-2}"
 MAX_STAGE_TWO="${MAX_STAGE_TWO:-2}"
@@ -92,7 +93,7 @@ else
   cp "${GREEDY_JSON}" "${HYBRID_JSON}"
 fi
 
-PYTHONPATH="${NAVSIM_V2_REPO}" "${REPO_PYTHON}" scripts/navsim_v2_eval_pipeline.py \
+PYTHONPATH="${NAVSIM_V2_REPO}:${TORCH_SITE_PACKAGES}" "${REPO_PYTHON}" scripts/navsim_v2_eval_pipeline.py \
   --candidate-json "${HYBRID_JSON}" \
   --navsim-repo "${NAVSIM_V2_REPO}" \
   --openscene-data-root "${OPENSCENE_DATA_ROOT}" \
