@@ -275,6 +275,27 @@ top-1 candidate. The recoverable regret is
   R(s)=\max(0, V(s,\tau^\star)-V(s,\tau_1)).
 \end{equation}
 
+\subsection{Boundary-Matching Student}
+\label{sec:method:student}
+
+The learned object in the current draft is not a generic reranker over scene labels. It is
+a candidate-level boundary matcher. For each scene--candidate pair $(s,\tau)$, the student
+receives the same per-candidate replay and utility features used by the audit and predicts
+\[
+  \hat V_\phi(s,\tau) \approx V(s,\tau).
+\]
+Selection is then
+\[
+  \hat \tau_\phi(s)=\arg\max_{\tau\in\mathcal{C}_t(s)} \hat V_\phi(s,\tau).
+\]
+
+This matters because the decision boundary is defined inside each candidate bank. The
+student is successful only if it reproduces the oracle ordering that separates
+replay-failed candidates from replay-safe candidates with maximal value. A scene-token
+classifier collapses this structure into one scene label and therefore cannot express
+within-bank tradeoffs once the bank becomes richer. The candidate-level replay-value
+student instead learns the local oracle boundary directly.
+
 \subsection{Regret Taxonomy}
 \label{sec:method:taxonomy}
 
@@ -300,17 +321,23 @@ generation gap takes precedence over both because no in-bank target can repair t
 
 \method{} converts the taxonomy into training data for the next generator iteration.
 For each recoverable safety-regret scene, the target is the oracle@K candidate and the
-loss weight is proportional to normalized regret. After a safety-recovery pass, the
-pipeline re-audits the new generator $G_1$ and extracts utility-recovery targets from the
-remaining safe-but-suboptimal scenes. Generation-gap scenes are emitted as
-candidate-expansion requests instead of training labels, because distilling toward an
-unsafe oracle would teach the generator to imitate a failure.
+loss weight is proportional to normalized regret. In the candidate-level student used in
+this paper, the same scenes also provide dense pairwise supervision across the entire bank:
+unsafe low-value candidates should score below the oracle candidate, and safe but
+suboptimal candidates should be ordered by replay value rather than collapsed into one
+token class. After a safety-recovery pass, the pipeline re-audits the new generator
+$G_1$ and extracts utility-recovery targets from the remaining safe-but-suboptimal scenes.
+Generation-gap scenes are emitted as candidate-expansion requests instead of training
+labels, because distilling toward an unsafe oracle would teach the generator to imitate a
+failure.
 
 This staging is the key methodological point. A single reranker can only exploit existing
 candidate diversity. \method{} asks whether the generator itself improved: recoverable
 safety regret should fall after safety bootstrapping; utility regret may rise because safe
 but low-utility decisions become visible; generation gap should remain unchanged unless
-the candidate distribution expands.
+the candidate distribution expands. The candidate-level student therefore has one concrete
+job: approximate the oracle boundary on the current bank well enough that the next
+generator iteration can be distilled toward the right in-bank targets.
 
 % =====================================================================
 \section{Experiments}
