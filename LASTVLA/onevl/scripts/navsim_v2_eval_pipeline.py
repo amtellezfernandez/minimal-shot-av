@@ -113,11 +113,18 @@ def run_cmd(cmd: list[str], env: dict[str, str]):
     subprocess.run(cmd, check=True, env=env)
 
 
-def navsim_env(navsim_repo: Path, openscene_data_root: Path, navsim_exp_root: Path) -> dict[str, str]:
+def navsim_env(
+    navsim_repo: Path,
+    openscene_data_root: Path,
+    navsim_exp_root: Path,
+    nuplan_maps_root: Path | None,
+) -> dict[str, str]:
     env = os.environ.copy()
     env["PYTHONPATH"] = str(navsim_repo)
     env["OPENSCENE_DATA_ROOT"] = str(openscene_data_root)
     env["NAVSIM_EXP_ROOT"] = str(navsim_exp_root)
+    if nuplan_maps_root is not None:
+        env["NUPLAN_MAPS_ROOT"] = str(nuplan_maps_root)
     return env
 
 
@@ -131,6 +138,7 @@ def run_metric_cache(
     first_stage_tokens: list[str],
     second_stage_tokens: list[str],
     max_cli_filter_tokens: int,
+    nuplan_maps_root: Path | None,
 ):
     cmd = [
         python_bin,
@@ -153,7 +161,7 @@ def run_metric_cache(
             f"{token_filter_count} tokens exceeds --max-cli-filter-tokens={max_cli_filter_tokens}. "
             "NAVSIM will cache the configured split."
         )
-    run_cmd(cmd, navsim_env(navsim_repo, openscene_data_root, navsim_exp_root))
+    run_cmd(cmd, navsim_env(navsim_repo, openscene_data_root, navsim_exp_root, nuplan_maps_root))
 
 
 def run_candidate_scores(
@@ -165,9 +173,10 @@ def run_candidate_scores(
     score_dir: Path,
     metric_cache_path: Path,
     split: str,
+    nuplan_maps_root: Path | None,
 ):
     score_dir.mkdir(parents=True, exist_ok=True)
-    env = navsim_env(navsim_repo, openscene_data_root, navsim_exp_root)
+    env = navsim_env(navsim_repo, openscene_data_root, navsim_exp_root, nuplan_maps_root)
     for submission_path in sorted(submission_dir.glob("candidate_*.pkl")):
         candidate_name = submission_path.stem
         candidate_score_dir = score_dir / candidate_name
@@ -277,6 +286,7 @@ def main():
     parser.add_argument("--navsim-repo", type=Path, required=True)
     parser.add_argument("--openscene-data-root", type=Path, required=True)
     parser.add_argument("--navsim-exp-root", type=Path, required=True)
+    parser.add_argument("--nuplan-maps-root", type=Path, default=os.environ.get("NUPLAN_MAPS_ROOT"))
     parser.add_argument("--metric-cache-path", type=Path, required=True)
     parser.add_argument("--submission-dir", type=Path, required=True)
     parser.add_argument("--score-dir", type=Path, required=True)
@@ -307,6 +317,7 @@ def main():
             first_stage_tokens,
             second_stage_tokens,
             args.max_cli_filter_tokens,
+            args.nuplan_maps_root,
         )
     run_candidate_scores(
         args.python_bin,
@@ -317,6 +328,7 @@ def main():
         args.score_dir,
         args.metric_cache_path,
         args.split,
+        args.nuplan_maps_root,
     )
     summary = build_oracle_summary(args.score_dir, args.oracle_summary_out)
     print(json.dumps(summary, indent=2))

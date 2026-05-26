@@ -7,6 +7,7 @@ REPO_PYTHON="${REPO_PYTHON:-${ROOT_DIR}/../../.venv/bin/python}"
 NAVSIM_V2_REPO="${NAVSIM_V2_REPO:-${HOME}/dev/navsim-v2}"
 OPENSCENE_DATA_ROOT="${OPENSCENE_DATA_ROOT:-${NAVSIM_V2_REPO}/data}"
 NAVSIM_EXP_ROOT="${NAVSIM_EXP_ROOT:-${HOME}/dev/navsim_v2_workspace}"
+NUPLAN_MAPS_ROOT="${NUPLAN_MAPS_ROOT:-${HOME}/dev/minimal-shot-av/workspace/nuplan/maps/maps}"
 MODEL_PATH="${MODEL_PATH:-models/OneVL_NAVSIM}"
 
 if [[ -f venv/onevl/bin/activate ]]; then
@@ -96,6 +97,7 @@ PYTHONPATH="${NAVSIM_V2_REPO}" "${REPO_PYTHON}" scripts/navsim_v2_eval_pipeline.
   --navsim-repo "${NAVSIM_V2_REPO}" \
   --openscene-data-root "${OPENSCENE_DATA_ROOT}" \
   --navsim-exp-root "${NAVSIM_EXP_ROOT}" \
+  --nuplan-maps-root "${NUPLAN_MAPS_ROOT}" \
   --metric-cache-path "${METRIC_CACHE}" \
   --submission-dir "${SUBMISSION_DIR}" \
   --score-dir "${SCORE_DIR}" \
