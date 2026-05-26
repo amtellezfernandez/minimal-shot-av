@@ -11,6 +11,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from minimal_shot_av.model.nuplan_maneuver_token_adapter import TOKEN_ORDER
+from minimal_shot_av.model.nuplan_maneuver_token_adapter import EXPANDED_TOKEN_ORDER
 from minimal_shot_av.model.nuplan_maneuver_token_adapter import build_maneuver_token_candidates
 from minimal_shot_av.model.nuplan_maneuver_token_adapter import extract_scalar_state
 from minimal_shot_av.model.nuplan_maneuver_token_adapter import select_maneuver_token
@@ -45,6 +46,22 @@ class NuPlanManeuverTokenAdapterTests(unittest.TestCase):
         self.assertGreater(
             next(candidate for candidate in candidates if candidate.token == "evasive_right").min_proxy_clearance_m,
             next(candidate for candidate in candidates if candidate.token == "maintain").min_proxy_clearance_m,
+        )
+
+    def test_expanded_profile_adds_generation_gap_candidates(self) -> None:
+        scene = _scene()
+
+        candidates = build_maneuver_token_candidates(scene, candidate_profile="expanded")
+        by_token = {candidate.token: candidate for candidate in candidates}
+
+        self.assertEqual(EXPANDED_TOKEN_ORDER, tuple(candidate.token for candidate in candidates))
+        self.assertGreater(len(candidates), len(TOKEN_ORDER))
+        self.assertIn("wide_right", by_token)
+        self.assertIn("reverse_creep", by_token)
+        self.assertLess(by_token["reverse_creep"].final_progress_m, 0.0)
+        self.assertLess(
+            by_token["wide_right"].lateral_offset_m,
+            by_token["evasive_right"].lateral_offset_m,
         )
 
 

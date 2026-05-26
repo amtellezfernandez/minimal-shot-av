@@ -258,18 +258,19 @@ def fit_scene_token_student(
     epochs: int,
     learning_rate: float,
     seed: int,
+    token_order: tuple[str, ...] | None = None,
 ) -> tuple[dict[str, Any], dict[str, float]]:
     scenes = list(replay_report.get("scenes", []))
     if not scenes:
         raise ValueError("cannot train scene-token student on an empty replay report")
-    feature_names = scene_feature_names()
-    token_order = tuple(TOKEN_ORDER)
+    resolved_token_order = token_order or candidate_token_order_from_report(replay_report)
+    feature_names = scene_feature_names(resolved_token_order)
     x = np.asarray(
-        [[float(scene_feature_row(scene)[name]) for name in feature_names] for scene in scenes],
+        [[float(scene_feature_row(scene, token_order=resolved_token_order)[name]) for name in feature_names] for scene in scenes],
         dtype=np.float64,
     )
-    y = np.asarray([token_order.index(str(teacher_token_fn(scene))) for scene in scenes], dtype=np.int64)
-    class_counts = np.bincount(y, minlength=len(token_order)).astype(np.float64)
+    y = np.asarray([resolved_token_order.index(str(teacher_token_fn(scene))) for scene in scenes], dtype=np.int64)
+    class_counts = np.bincount(y, minlength=len(resolved_token_order)).astype(np.float64)
     class_weights = np.zeros_like(class_counts)
     nonzero = class_counts > 0.0
     class_weights[nonzero] = float(len(scenes)) / (float(nonzero.sum()) * class_counts[nonzero])
@@ -283,16 +284,17 @@ def fit_scene_token_student(
         epochs=epochs,
         learning_rate=learning_rate,
         seed=seed,
+        class_count=len(resolved_token_order),
     )
     model = {
         "model_type": SCENE_TOKEN_STUDENT_MODEL_TYPE,
         "feature_names": list(feature_names),
-        "token_order": list(token_order),
+        "token_order": list(resolved_token_order),
         "hidden_dim": int(hidden_dim),
         **fitted,
     }
     predictions = [predict_scene_token_student(model, scene) for scene in scenes]
-    accuracy = sum(1 for pred, label in zip(predictions, y) if pred == token_order[int(label)]) / len(scenes)
+    accuracy = sum(1 for pred, label in zip(predictions, y) if pred == resolved_token_order[int(label)]) / len(scenes)
     probabilities = _predict_multiclass_probabilities(model, x)
     losses = -np.log(np.clip(probabilities[np.arange(len(y)), y], 1.0e-8, 1.0))
     return model, {
@@ -304,12 +306,12 @@ def fit_scene_token_student(
 
 
 def predict_scene_token_student(model: Mapping[str, Any], scene: Mapping[str, Any]) -> str:
-    features = scene_feature_row(scene)
+    token_order = tuple(str(token) for token in model["token_order"])
+    features = scene_feature_row(scene, token_order=token_order)
     feature_names = tuple(str(name) for name in model["feature_names"])
     vector = np.asarray([[float(features[name]) for name in feature_names]], dtype=np.float64)
     probabilities = _predict_multiclass_probabilities(model, vector)[0]
     candidate_tokens = {str(candidate.get("token", "")) for candidate in scene.get("candidates", [])}
-    token_order = tuple(str(token) for token in model["token_order"])
     ranked = sorted(
         enumerate(probabilities),
         key=lambda item: (float(item[1]), -item[0]),
@@ -337,9 +339,10 @@ def scene_token_student_payload(model: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def scene_feature_names() -> tuple[str, ...]:
+def scene_feature_names(token_order: tuple[str, ...] | None = None) -> tuple[str, ...]:
+    resolved_token_order = token_order or tuple(TOKEN_ORDER)
     names = list(SCENE_BASE_FEATURE_NAMES)
-    for token in TOKEN_ORDER:
+    for token in resolved_token_order:
         names.extend(
             [
                 f"selected_token_is_{token}",
@@ -349,11 +352,16 @@ def scene_feature_names() -> tuple[str, ...]:
                 f"{token}_final_progress_m",
                 f"{token}_score",
             ]
-        )
+    )
     return tuple(names)
 
 
-def scene_feature_row(scene: Mapping[str, Any]) -> dict[str, float]:
+def scene_feature_row(
+    scene: Mapping[str, Any],
+    *,
+    token_order: tuple[str, ...] | None = None,
+) -> dict[str, float]:
+    resolved_token_order = token_order or tuple(TOKEN_ORDER)
     six_scalar_state = scene["six_scalar_state"]
     route = scene["route_features"]
     actor_summary = scene["actor_summary"]
@@ -387,7 +395,7 @@ def scene_feature_row(scene: Mapping[str, Any]) -> dict[str, float]:
         "mean_candidate_score": _mean(score_values),
     }
     selected_token = str(scene.get("selected_token", ""))
-    for token in TOKEN_ORDER:
+    for token in resolved_token_order:
         candidate = candidate_by_token.get(token)
         row[f"selected_token_is_{token}"] = 1.0 if selected_token == token else 0.0
         row[f"{token}_available"] = 1.0 if candidate is not None else 0.0
@@ -411,12 +419,12 @@ def _fit_multiclass_mlp(
     epochs: int,
     learning_rate: float,
     seed: int,
+    class_count: int,
 ) -> dict[str, Any]:
     feature_mean = x.mean(axis=0)
     feature_scale = x.std(axis=0)
     feature_scale[feature_scale < 1.0e-8] = 1.0
     x_norm = (x - feature_mean) / feature_scale
-    class_count = len(TOKEN_ORDER)
     rng = np.random.default_rng(seed)
     w1 = rng.normal(0.0, 0.12, size=(x_norm.shape[1], hidden_dim))
     b1 = np.zeros((hidden_dim,), dtype=np.float64)
@@ -466,6 +474,22 @@ def _softmax(logits: np.ndarray) -> np.ndarray:
     shifted = logits - np.max(logits, axis=1, keepdims=True)
     exp_values = np.exp(np.clip(shifted, -40.0, 40.0))
     return exp_values / np.clip(exp_values.sum(axis=1, keepdims=True), 1.0e-8, None)
+
+
+def candidate_token_order_from_report(replay_report: Mapping[str, Any]) -> tuple[str, ...]:
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for scene in replay_report.get("scenes", []):
+        for candidate in scene.get("candidates", []):
+            token = str(candidate.get("token", ""))
+            if token and token not in seen:
+                ordered.append(token)
+                seen.add(token)
+    for token in TOKEN_ORDER:
+        if token not in seen:
+            ordered.append(token)
+            seen.add(token)
+    return tuple(ordered)
 
 
 def top1_gap_summary(

@@ -21,6 +21,21 @@ TOKEN_ORDER = (
     "lane_recover",
 )
 
+EXPANDED_TOKEN_ORDER = TOKEN_ORDER + (
+    "micro_creep",
+    "brake_left",
+    "brake_right",
+    "creep_left",
+    "creep_right",
+    "wide_left",
+    "wide_right",
+    "wide_left_crawl",
+    "wide_right_crawl",
+    "fast_left",
+    "fast_right",
+    "reverse_creep",
+)
+
 _TOKEN_SPECS = {
     "stop": (0.0, 0.0, "smooth"),
     "crawl": (0.15, 0.0, "smooth"),
@@ -31,6 +46,18 @@ _TOKEN_SPECS = {
     "evasive_left": (0.7, 2.2, "early"),
     "evasive_right": (0.7, -2.2, "early"),
     "lane_recover": (0.9, 0.0, "smooth"),
+    "micro_creep": (0.05, 0.0, "smooth"),
+    "brake_left": (0.35, 1.2, "smooth"),
+    "brake_right": (0.35, -1.2, "smooth"),
+    "creep_left": (0.15, 1.7, "smooth"),
+    "creep_right": (0.15, -1.7, "smooth"),
+    "wide_left": (0.55, 3.4, "early"),
+    "wide_right": (0.55, -3.4, "early"),
+    "wide_left_crawl": (0.20, 3.2, "early"),
+    "wide_right_crawl": (0.20, -3.2, "early"),
+    "fast_left": (1.05, 2.4, "early"),
+    "fast_right": (1.05, -2.4, "early"),
+    "reverse_creep": (-0.10, 0.0, "smooth"),
 }
 
 _ESCAPE_SIDE_TO_FLOAT = {"left": 1.0, "center": 0.0, "right": -1.0}
@@ -161,7 +188,9 @@ def build_maneuver_token_candidates(
     *,
     horizon_s: float = 4.0,
     dt_s: float = 0.5,
+    candidate_profile: str = "base",
 ) -> list[ManeuverTokenCandidate]:
+    token_order = _token_order_for_profile(candidate_profile)
     scalar_state = extract_scalar_state(scene)
     route = extract_route_features(scene)
     actor_summary = summarize_actors(scene)
@@ -169,7 +198,7 @@ def build_maneuver_token_candidates(
     speed_mps = max(0.0, float(_get_value(ego, "speed_mps", 0.0)))
     num_poses = max(1, int(round(horizon_s / max(dt_s, 1e-6))))
     candidates = []
-    for token in TOKEN_ORDER:
+    for token in token_order:
         speed_scale, base_lateral, profile = _TOKEN_SPECS[token]
         lateral_offset = _token_lateral_offset(token, base_lateral, route)
         poses = _maneuver_token_poses(
@@ -207,21 +236,34 @@ def build_maneuver_token_candidates(
     return candidates
 
 
-def select_maneuver_token(scene: Mapping[str, Any] | Any) -> ManeuverTokenCandidate:
-    candidates = build_maneuver_token_candidates(scene)
+def select_maneuver_token(
+    scene: Mapping[str, Any] | Any,
+    *,
+    candidate_profile: str = "base",
+) -> ManeuverTokenCandidate:
+    candidates = build_maneuver_token_candidates(scene, candidate_profile=candidate_profile)
     return max(
         candidates,
         key=lambda candidate: (candidate.score, candidate.min_proxy_clearance_m, candidate.final_progress_m),
     )
 
 
-def build_scene_diagnostic_record(scene: Mapping[str, Any] | Any) -> dict[str, Any]:
+def build_scene_diagnostic_record(
+    scene: Mapping[str, Any] | Any,
+    *,
+    candidate_profile: str = "base",
+) -> dict[str, Any]:
     rollout_dt_s = 0.5
     rollout_horizon_s = 4.0
     scalar_state = extract_scalar_state(scene)
     route = extract_route_features(scene)
     actor_summary = summarize_actors(scene)
-    candidates = build_maneuver_token_candidates(scene, horizon_s=rollout_horizon_s, dt_s=rollout_dt_s)
+    candidates = build_maneuver_token_candidates(
+        scene,
+        horizon_s=rollout_horizon_s,
+        dt_s=rollout_dt_s,
+        candidate_profile=candidate_profile,
+    )
     selected = max(
         candidates,
         key=lambda candidate: (candidate.score, candidate.min_proxy_clearance_m, candidate.final_progress_m),
@@ -241,6 +283,7 @@ def build_scene_diagnostic_record(scene: Mapping[str, Any] | Any) -> dict[str, A
         "route_features": asdict(route),
         "actor_summary": asdict(actor_summary),
         "candidate_count": len(candidates),
+        "candidate_profile": candidate_profile,
         "selected_token_rollout_dt_s": rollout_dt_s,
         "selected_token_rollout_horizon_s": rollout_horizon_s,
         "selected_token": selected.token,
@@ -310,6 +353,14 @@ def _candidate_score(
     return score
 
 
+def _token_order_for_profile(candidate_profile: str) -> tuple[str, ...]:
+    if candidate_profile == "base":
+        return TOKEN_ORDER
+    if candidate_profile == "expanded":
+        return EXPANDED_TOKEN_ORDER
+    raise ValueError(f"unknown nuPlan ManeuverToken candidate profile: {candidate_profile!r}")
+
+
 def _candidate_proxy_diagnostics(
     poses: np.ndarray,
     actors: list[Any],
@@ -346,7 +397,7 @@ def _maneuver_token_poses(
     poses = []
     previous_x = 0.0
     previous_y = 0.0
-    forward_speed = max(0.0, speed_mps * speed_scale)
+    forward_speed = speed_mps * speed_scale
     for index in range(num_poses):
         t = (index + 1) * interval_length_s
         horizon_ratio = (index + 1) / max(1, num_poses)

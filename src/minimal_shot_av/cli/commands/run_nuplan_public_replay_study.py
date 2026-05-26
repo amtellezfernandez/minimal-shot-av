@@ -70,6 +70,12 @@ def _parse_args() -> argparse.Namespace:
         type=float,
         help="Exclude DB members smaller than this size in MB before extraction.",
     )
+    parser.add_argument(
+        "--candidate-profile",
+        choices=("base", "expanded"),
+        default="base",
+        help="ManeuverToken candidate bank profile for rollout/replay auditing.",
+    )
     return parser.parse_args()
 
 
@@ -98,6 +104,7 @@ def main() -> int:
         near_miss_threshold_m=float(args.near_miss_threshold_m),
         sampling_mode=str(args.sampling_mode),
         max_scenes_per_db=args.max_scenes_per_db,
+        candidate_profile=str(args.candidate_profile),
     )
     replay = study["replay_report"]
     rollout_report = study["rollout_report"]
@@ -220,6 +227,7 @@ def build_public_replay_study(
     near_miss_threshold_m: float,
     sampling_mode: str,
     max_scenes_per_db: int | None,
+    candidate_profile: str,
 ) -> dict[str, object]:
     valid_db_files, invalid_db_files = validate_bundle_db_files(bundle_dir)
     load_args = argparse.Namespace(
@@ -240,7 +248,11 @@ def build_public_replay_study(
         max_scenes_per_db=max_scenes_per_db,
     )
     selector = None if selector_model is None else load_selector(selector_model)
-    rollout_report = run_rollout(sampled_scenes, selector=selector)
+    rollout_report = run_rollout(
+        sampled_scenes,
+        selector=selector,
+        candidate_profile=candidate_profile,
+    )
     replay_report = enrich_report_with_realized_clearance(
         rollout_report,
         clearance_provider=compute_scene_log_replay_realized_fields,
@@ -253,6 +265,7 @@ def build_public_replay_study(
         sampling_rows=sampling_rows,
         sampling_mode=sampling_mode,
         max_scenes_per_db=max_scenes_per_db,
+        candidate_profile=candidate_profile,
         invalid_db_files=invalid_db_files,
     )
     return {
@@ -489,6 +502,7 @@ def build_sampling_diagnostics(
     sampling_rows: list[dict[str, Any]],
     sampling_mode: str,
     max_scenes_per_db: int | None,
+    candidate_profile: str,
     invalid_db_files: list[dict[str, str]],
 ) -> dict[str, Any]:
     token_histogram = dict(rollout_report.get("selected_token_histogram", {}))
@@ -517,6 +531,7 @@ def build_sampling_diagnostics(
     return {
         "schema": "nuplan_public_replay_sampling_diagnostics_v1",
         "sampling_mode": sampling_mode,
+        "candidate_profile": candidate_profile,
         "recommended_corl_path": INTERACTION_RECOMMENDATION,
         "candidate_scene_count": len(candidate_scenes),
         "selected_scene_count": len(sampled_scenes),
@@ -560,6 +575,7 @@ def markdown_sampling_diagnostics(diagnostics: dict[str, Any]) -> str:
         "# nuPlan Public Replay Sampling Diagnostics",
         "",
         f"- Sampling mode: `{diagnostics['sampling_mode']}`",
+        f"- Candidate profile: `{diagnostics['candidate_profile']}`",
         f"- Recommended CoRL path: `{diagnostics['recommended_corl_path']}`",
         f"- Candidate scenes: `{diagnostics['candidate_scene_count']}`",
         f"- Selected scenes: `{diagnostics['selected_scene_count']}`",

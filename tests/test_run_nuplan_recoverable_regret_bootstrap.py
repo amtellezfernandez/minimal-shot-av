@@ -61,6 +61,33 @@ class RunNuPlanRecoverableRegretBootstrapTests(unittest.TestCase):
         self.assertEqual({"slow_yield"}, {row["teacher_token"] for row in targets})
         self.assertTrue(all(row["recoverable_regret"] > 0.0 for row in targets))
 
+    def test_oracle_at_k_uses_scene_candidate_order_for_expanded_tokens(self) -> None:
+        replay = _replay_report()
+        scene = replay["scenes"][0]
+        scene["candidates"].append(
+            {
+                "token": "wide_right",
+                "speed_scale": 0.5,
+                "lateral_offset_m": 0.0,
+                "proxy_safe": True,
+                "min_proxy_clearance_m": 1.5,
+                "final_progress_m": 8.0,
+                "score": 5.0,
+                "poses": [[1.0 * step, 0.0, 0.0] for step in range(1, 9)],
+            }
+        )
+        scene["candidate_replay_evaluations"].append(
+            {
+                "token": "wide_right",
+                "realized_min_clearance_m": 2.5,
+                "realized_near_miss": False,
+            }
+        )
+
+        token, _score = self.module.oracle_at_k_token_and_score(scene, **_score_config())
+
+        self.assertEqual("slow_yield", token)
+
     def test_cli_writes_report_targets_and_student(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -101,6 +128,48 @@ class RunNuPlanRecoverableRegretBootstrapTests(unittest.TestCase):
             self.assertEqual("nuplan_bootstrap_scene_token_student_mlp_v1", payload["model_type"])
             self.assertEqual(4, len(targets.read_text(encoding="utf-8").splitlines()))
             self.assertIn("Recoverable-Regret Bootstrap", output_md.read_text(encoding="utf-8"))
+
+    def test_cli_supports_replay_value_student_kind(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            input_path = tmp_path / "replay.json"
+            output_json = tmp_path / "report.json"
+            output_md = tmp_path / "report.md"
+            targets = tmp_path / "targets.jsonl"
+            student = tmp_path / "student.json"
+            input_path.write_text(json.dumps(_replay_report()), encoding="utf-8")
+            original_argv = sys.argv
+            sys.argv = [
+                str(SCRIPT),
+                "--input-replay-json",
+                str(input_path),
+                "--output-json",
+                str(output_json),
+                "--output-markdown",
+                str(output_md),
+                "--targets-jsonl",
+                str(targets),
+                "--student-output",
+                str(student),
+                "--student-kind",
+                "replay_value_mlp",
+                "--hidden-dim",
+                "8",
+                "--epochs",
+                "180",
+                "--seed",
+                "11",
+            ]
+            try:
+                self.module.main()
+            finally:
+                sys.argv = original_argv
+
+            report = json.loads(output_json.read_text(encoding="utf-8"))
+            payload = json.loads(student.read_text(encoding="utf-8"))
+            self.assertEqual("nuplan_recoverable_regret_bootstrap_v1", report["schema"])
+            self.assertEqual("replay_value_mlp", report["student_training"]["student_kind"])
+            self.assertEqual("nuplan_replay_value_mlp_selector_v1", payload["model_type"])
 
 
 def _score_config() -> dict:

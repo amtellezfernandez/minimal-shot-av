@@ -38,19 +38,23 @@ these three cases a generation gap, recoverable safety regret, and recoverable u
 regret. This paper introduces \method, a model-agnostic audit and bootstrapping pipeline
 that turns those distinctions into training targets for candidate generators. The method
 scores every candidate under public log-replay geometry, decomposes each scene by
-oracle@K versus top-1 value, trains first on safety-recovery teachers, then on
-utility-recovery teachers, and emits candidate-expansion requests when no in-bank safe
-teacher exists. On 1,000 interaction-aware public nuPlan scenes with nine ManeuverToken
-candidates per scene, the initial generator has 281 generation gaps, 346 recoverable
-safety regrets, 44 recoverable utility regrets, and a 0.627 top-1 replay-failure rate.
-After one bootstrapped pass, recoverable safety regret falls from 346 to 13 and top-1
-failure falls from 0.627 to 0.294, while the generation gap remains fixed at 281 and
-utility regret rises to 228. This is the central finding: bootstrapping can close the
-selection/safety branch, but it cannot solve scenes whose candidate bank contains no safe
-trajectory; once safety is recovered, a separate utility-recovery branch becomes visible.
-The current evidence is deliberately bounded: it is public nuPlan log replay with a
-ManeuverToken surrogate generator, not proof of closed-loop VLA safety. The contribution
-is the recoverable-regret training loop and the empirical decomposition it exposes.
+oracle@K versus top-1 value, emits candidate-expansion requests when no in-bank safe
+teacher exists, and trains a candidate-level replay-value student on recovered oracle@K
+targets. On 1,000 interaction-aware public nuPlan scenes, a nine-token ManeuverToken bank
+has 281 generation gaps, 346 recoverable safety regrets, and a 0.627 top-1 replay-failure
+rate. Expanding the bank to 21 candidates reduces oracle@K replay failure from 0.281 to
+0.223, showing that richer candidate support directly shrinks the generation gap. However,
+a scene-token bootstrap student underuses this richer bank and still fails at rate 0.460
+on holdout. In contrast, a candidate-level replay-value student trained on the same
+expanded bank reaches 0.097 holdout replay failure, matching the oracle failure boundary,
+and a balanced value objective retains 14.278\,m mean progress versus the oracle's
+11.258\,m. The central finding is therefore structural: candidate expansion addresses the
+generation branch, but the effective learning unit for recoverable regret is candidate
+value, not scene-level token classification. The current evidence is deliberately bounded:
+it is public nuPlan log replay with a ManeuverToken surrogate generator, not proof of
+closed-loop VLA safety. The contribution is the recoverable-regret training loop, the
+generation-versus-selection decomposition, and the candidate-level replay-value student
+that exploits the richer bank.
 \end{abstract}
 
 \keywords{autonomous driving, candidate generation, imitation learning, nuPlan,
@@ -85,7 +89,10 @@ candidate-expansion requests when no safe in-bank teacher exists. The intended V
 case is direct: a VLA planner proposes $K$ trajectory candidates, the replay-value teacher
 selects high-value in-bank targets, and the generator is distilled toward those targets.
 The present paper validates the loop on a controlled ManeuverToken surrogate before
-claiming a large VLA improvement.
+claiming a large VLA improvement. The main empirical correction in this draft is that the
+student must operate at the candidate level. A scene-only token classifier can reduce some
+replay failure, but it leaves a large gap to oracle@K once the candidate bank becomes
+richer. A candidate-level replay-value student can exploit that richer bank directly.
 
 \begin{figure}[t]
 \centering
@@ -152,10 +159,13 @@ We make four contributions.
     scenes, the initial token generator exposes all three regimes at scale: 281
     generation gaps, 346 recoverable safety regrets, and 44 utility regrets.
 
-  \item \textbf{One-step lifecycle evidence.} A bootstrapped generator pass reduces
-    recoverable safety regret from 346 to 13 and top-1 replay failure from 0.627 to
-    0.294, while leaving the generation gap unchanged. This validates the split: in-bank
-    safety regret is learnable; missing safe candidates require generator expansion.
+  \item \textbf{Generation versus student evidence.} Expanding the candidate bank from 9
+    to 21 ManeuverTokens reduces oracle@K replay failure from 0.281 to 0.223. On that
+    richer bank, a scene-token student still fails at 0.460 on holdout, while a
+    candidate-level replay-value student reaches 0.097 holdout replay failure and a
+    balanced replay-value objective preserves 14.278\,m mean progress. This validates the
+    split: candidate expansion improves the generation boundary, and candidate-level value
+    learning is the right unit for exploiting that improvement.
 \end{enumerate}
 
 % =====================================================================
@@ -183,9 +193,11 @@ selection regret.
 Candidate reranking is a known way to improve top-1 decisions. \method{} is not presented
 as a novel scoring head alone. Its contribution is to use replay-measured regret to decide
 which examples should train the next generator iteration and which examples require
-candidate expansion. The safety-recovery and utility-recovery phases produce teacher
-trajectories; generation-gap scenes do not. This prevents the method from treating all
-planner failures as more labels for the same selector.
+candidate expansion, and to show empirically that the right learning unit is
+candidate-level replay value rather than scene-level token classification. The
+safety-recovery and utility-recovery phases produce teacher trajectories; generation-gap
+scenes do not. This prevents the method from treating all planner failures as more labels
+for the same selector.
 
 % =====================================================================
 \section{Method}
@@ -322,58 +334,74 @@ bridge only as infrastructure in this draft, not as the main evidence claim.
 \subsection{Initial Regret Decomposition}
 \label{sec:exp:g0}
 
-Table~\ref{tab:lifecycle} shows the main lifecycle result. The initial generator $G_0$
-has 281 generation gaps, 346 recoverable safety regrets, and 44 recoverable utility
-regrets. Its top-1 replay-failure rate is 0.627, while oracle@K replay-failure rate is
-0.281. The difference is the recoverable selection surface: many failures are not caused
-by the absence of any safe candidate, but by selecting the wrong candidate from a bank
-that already contains a safer one.
+Table~\ref{tab:lifecycle} shows the main lifecycle result. The initial nine-token
+generator $G_0$ has 281 generation gaps, 346 recoverable safety regrets, and 44
+recoverable utility regrets. Its top-1 replay-failure rate is 0.627, while oracle@K
+replay-failure rate is 0.281. The difference is the recoverable selection surface: many
+failures are not caused by the absence of any safe candidate, but by selecting the wrong
+candidate from a bank that already contains a safer one.
 
 \begin{table}[t]
 \centering
 \caption{Recoverable-regret lifecycle on 1,000 interaction-aware public nuPlan scenes.
-The bootstrapped pass closes most recoverable safety regret but does not change the
-generation gap, as expected when the candidate bank size and token library remain fixed.}
+The candidate-level replay-value student closes most recoverable safety regret on a fixed
+bank. Candidate expansion changes the oracle boundary; student choice determines how much
+of that boundary is actually exploited.}
 \label{tab:lifecycle}
 \footnotesize
 \begin{tabular}{lrrrrrr}
 \toprule
 Stage & Gen. gap & Safety regret & Utility regret & Mean regret & Top-1 fail & Oracle fail \\
 \midrule
-$G_0$ & 281 & 346 & 44  & 79.649 & 0.627 & 0.281 \\
-$G_1$ & 281 & 13  & 228 & 8.056  & 0.294 & 0.281 \\
-\midrule
-$\Delta$ & 0 & -333 & +184 & -71.594 & -0.333 & 0.000 \\
+$G_0$ 9-token bank & 281 & 346 & 44  & 79.649  & 0.627 & 0.281 \\
+expanded 21-token oracle@K & 223 & 453 & 22 & 103.238 & 0.676 & 0.223 \\
+expanded + scene-token student & 223 & n/a & n/a & 85.707 & 0.460 & 0.097 \\
+expanded + replay-value student & 223 & n/a & n/a & 21.146 & 0.097 & 0.097 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Bootstrapped Safety Pass}
+\subsection{Expanded Candidate Bank}
 \label{sec:exp:g1}
 
-The $G_1$ stage is a one-pass bootstrapped surrogate: scenes with recoverable safety
-regret are moved toward replay-safe in-bank teachers, then the candidate set is re-audited
-under the same replay-value definition. Recoverable safety regret falls from 346 to 13,
-and top-1 replay failure falls from 0.627 to 0.294. Mean regret drops from 79.649 to
-8.056. The oracle failure rate remains 0.281 because the same 281 generation-gap scenes
-still contain no replay-safe candidate in the bank.
+Expanding the bank from 9 to 21 ManeuverTokens changes the generation boundary directly.
+On the same 1,000-scene public interaction replay study, oracle@K replay failure drops
+from 0.281 to 0.223, so the generation gap falls from 281 to 223 scenes. This is the
+first empirical point the paper needs: candidate expansion is not cosmetic; it creates new
+safe in-bank teachers. However, the proxy top-1 heuristic on the expanded bank worsens to
+0.676 replay failure, because a richer bank without a stronger student simply exposes more
+selection mistakes.
 
-This pattern is the desired sanity check for the method. If the safety bootstrap had also
-reduced the generation gap, the pipeline would be silently changing the candidate set or
-the metric. If it had not reduced recoverable safety regret, the teacher targets would not
-be learnable. Instead, the lifecycle separates what the current generator can repair from
-what requires candidate expansion.
+\subsection{Student Choice Matters}
+\label{sec:exp:student}
+
+We compared two students on the expanded bank. The first is a scene-token classifier that
+predicts one token label from scene features. The second is a candidate-level replay-value
+MLP that scores each candidate directly under the replay objective. The distinction is
+decisive. The scene-token student reduces holdout replay failure from 0.740 to 0.460, but
+still leaves a large gap to the expanded-bank oracle at 0.097. In contrast, the
+candidate-level replay-value student reaches the oracle failure boundary exactly on this
+holdout split: both fail at 0.097.
+
+This is the desired methodological separation. Candidate expansion changes what is
+recoverable by oracle@K. Student design determines how much of that recoverable surface is
+actually exploited. A scene-only token classifier underuses the richer bank. A
+candidate-level value student can exploit it.
 
 \subsection{Curriculum Targets}
 \label{sec:exp:curriculum}
 
-Table~\ref{tab:curriculum} summarizes the emitted training curriculum. Phase 1 contains
-346 safety-recovery targets with high mean regret (226.103), dominated by
+Table~\ref{tab:curriculum} summarizes the emitted curriculum for the original $G_0$
+decomposition and the expanded-bank follow-up. In the original 9-token study, phase 1
+contains 346 safety-recovery targets with high mean regret (226.103), dominated by
 \token{crawl}, \token{slow\_yield}, \token{evasive\_right}, and \token{stop} teachers.
 After that safety branch is mostly closed, phase 2 contains 228 utility-recovery targets
 with much smaller mean regret (5.696), dominated by \token{maintain} and
 \token{nudge\_right}. Phase 3 contains 281 candidate-expansion requests: these scenes
-have no safe in-bank teacher and should not be used as ordinary distillation labels.
+have no safe in-bank teacher and should not be used as ordinary distillation labels. In
+the expanded-bank follow-up, the same logic yields 223 generation-gap scenes and 453
+recoverable safety-regret scenes, showing that candidate expansion shifts mass from
+generation failure into learnable in-bank regret.
 
 \begin{table}[t]
 \centering
@@ -403,13 +431,13 @@ no in-bank replay-safe teacher; request new samples or richer generator support 
 \label{sec:exp:interpretation}
 
 The result does not say that one fixed risk penalty or one reranker solves driving. It
-says the lifecycle discovers two different optimization branches. The first branch is
-recoverable safety: $G_0$ often generated a safe candidate but did not choose it, and
-bootstrapping largely fixes that branch. The second branch is utility recovery: once the
-top-1 candidate is usually safe, many scenes still have a better in-bank candidate by
-progress and logged-ego similarity. The third branch is candidate expansion: 281 scenes
-remain unsafe even under oracle@K, so no selector or calibrator can repair them without
-new candidates.
+says the lifecycle discovers two different optimization branches and one architectural
+constraint. The first branch is candidate expansion: richer banks can reduce oracle@K
+failure from 0.281 to 0.223, so generation support matters. The second branch is
+recoverable safety: once richer candidates exist, a candidate-level replay-value student
+can exploit them and reduce holdout replay failure to 0.097. The constraint is that a
+scene-only token classifier leaves a large gap to the same oracle boundary, so the
+learning problem must be formulated at candidate level rather than only at scene level.
 
 This is also why the method should be evaluated by lifecycle changes rather than a single
 top-1 score. A static reranker can reduce top-1 failure, but it does not answer whether
@@ -425,16 +453,19 @@ are unrecoverable with the current bank. \method{} makes that accounting explici
 A learned value calibrator over candidates is not enough by itself; it is close to
 standard reranking. The contribution here is the training loop around the calibrator:
 measure oracle@K regret, separate safety from utility from generation gap, distill only
-recoverable in-bank teachers, and route oracle-failed scenes to candidate expansion.
-This creates a falsifiable lifecycle prediction: safety regret should fall before utility
-regret is optimized, while generation gap should not move unless the generator emits new
-candidate modes.
+recoverable in-bank teachers, and route oracle-failed scenes to candidate expansion. The
+new empirical point in this version is that the student objective must also match the
+structure of the interface. Scene-level token classification is too weak once the bank
+grows. Candidate-level replay value is the effective learning unit.
 
-\paragraph{Why the utility branch rises.}
-The increase from 44 to 228 utility-regret scenes is not a regression under the taxonomy.
-It means safety failures have been converted into safe but suboptimal decisions. The next
-iteration should optimize the utility branch with a different loss scale and different
-teacher distribution, rather than continuing to apply the same safety-heavy objective.
+\paragraph{Why the balanced point matters.}
+The strongest replay-value student is safety-heavy and nearly matches the oracle boundary,
+but it also sacrifices progress. A balanced replay-value objective,
+$-250\,\mathbf{1}[\text{fail}] + 2\,\text{progress} - 2\,\text{ADE}_{3s}$, keeps the same
+0.097 holdout replay-failure rate while improving mean progress from 12.276\,m to
+14.278\,m relative to the more conservative point. This is the useful border result in
+the current draft: candidate-level value learning does not only clone the safest oracle
+behavior; it can preserve some utility while keeping the oracle-level failure boundary.
 
 \paragraph{Relation to VLA planners.}
 The candidate interface is intentionally model-agnostic. A VLA generator can be plugged in
@@ -462,10 +493,12 @@ candidate bank auditable, but it also fixes the candidate distribution. The unch
 generator must be evaluated by whether it reduces this gap while preserving candidate
 diversity.
 
-\paragraph{The $G_1$ pass is one-step bootstrapping, not a full policy-training result.}
-The current $G_1$ artifact demonstrates the accounting and safety-recovery branch. A full
-generator-training paper should run multiple regeneration cycles, report diversity and
-oracle@K changes, and compare static reranking against actual generator improvement.
+\paragraph{Current evidence stops at candidate-level selection.}
+The current replay-value student proves that candidate-level learning can exploit the
+expanded bank, but it does not yet show that a regenerated top-1 policy emits better
+candidates by itself. A full generator-training paper should run multiple regeneration
+cycles, report diversity and oracle@K changes, and compare candidate-level reranking
+against actual generator improvement.
 
 \paragraph{Value weights define a teacher.}
 Equation~\ref{eq:value} uses a safety-dominant replay value. Changing the failure penalty
@@ -479,18 +512,19 @@ universal driving objective.
 
 Candidate planners need more than a better top-1 scorer. They need to know whether a
 failure was recoverable inside the candidate bank. \method{} provides that accounting. On
-1,000 public nuPlan interaction scenes, the initial ManeuverToken generator has a large
-recoverable safety branch: 346 scenes where a safe in-bank teacher exists but top-1 fails.
-One bootstrapped pass reduces that branch to 13 and cuts top-1 replay failure from 0.627
-to 0.294. The unchanged 281-scene generation gap shows the boundary of the method: no
-selector can repair a bank that contains no safe candidate. The newly exposed
-228-scene utility branch defines the next training phase.
+1,000 public nuPlan interaction scenes, the initial nine-token ManeuverToken generator has
+a large recoverable safety branch: 346 scenes where a safe in-bank teacher exists but
+top-1 fails. Expanding the bank to 21 candidates reduces the oracle failure boundary from
+0.281 to 0.223, proving that candidate generation matters. On that richer bank, a
+scene-token student still underperforms badly, failing at 0.460 on holdout, while a
+candidate-level replay-value student reaches 0.097 holdout replay failure and a balanced
+replay-value objective preserves more progress than the most conservative setting.
 
 The scientific claim is therefore not that replay safety solves closed-loop AV planning.
 It is that recoverable-regret bootstrapping turns candidate-planner failures into
-different training tasks: recover safety when a safe teacher exists, recover utility when
-safety is already achieved, and expand the generator when oracle@K still fails. That is
-the mechanism a VLA candidate generator should optimize next.
+different training tasks: expand the generator when oracle@K still fails, and learn
+candidate-level replay value when the bank already contains a better action. That is the
+mechanism a VLA candidate generator should optimize next.
 
 \acknowledgments{Developed independently as a research prototype using public nuPlan-style
 replay artifacts and internal repository tooling.}

@@ -12,18 +12,20 @@ from typing import Mapping
 
 from minimal_shot_av.cli.commands.analyze_nuplan_bootstrap_candidate_calibration import candidate_distribution
 from minimal_shot_av.cli.commands.train_nuplan_bootstrap_student_generator import _fit_multiclass_mlp
+from minimal_shot_av.cli.commands.train_nuplan_bootstrap_student_generator import candidate_token_order_from_report
 from minimal_shot_av.cli.commands.train_nuplan_bootstrap_student_generator import predict_scene_token_student
 from minimal_shot_av.cli.commands.train_nuplan_bootstrap_student_generator import scene_feature_names
 from minimal_shot_av.cli.commands.train_nuplan_bootstrap_student_generator import scene_feature_row
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _candidate_by_token
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _replay_by_token
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _select_replay_oracle_token
+from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _select_with_score_model
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _token_is_replay_safe
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import candidate_logged_ego_utility
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import evaluate_selector_policy
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import split_replay_report_by_db
-from minimal_shot_av.model.nuplan_maneuver_token_adapter import TOKEN_ORDER
-
+from minimal_shot_av.cli.commands.train_nuplan_replay_value_selector import build_replay_value_examples
+from minimal_shot_av.model.nuplan_maneuver_token_selector import fit_replay_value_mlp_selector
 import numpy as np
 
 
@@ -57,6 +59,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--regret-sample-weight", type=float, default=4.0)
     parser.add_argument("--changed-target-weight", type=float, default=2.0)
     parser.add_argument("--iterations", type=int, default=1)
+    parser.add_argument(
+        "--student-kind",
+        choices=("scene_token_mlp", "replay_value_mlp"),
+        default="scene_token_mlp",
+    )
     return parser.parse_args()
 
 
@@ -87,6 +94,7 @@ def main() -> int:
         seed=int(args.seed),
         regret_sample_weight=float(args.regret_sample_weight),
         changed_target_weight=float(args.changed_target_weight),
+        student_kind=str(args.student_kind),
     )
     final_iteration = iteration_reports[-1]
     report = {
@@ -95,6 +103,7 @@ def main() -> int:
         "split": split,
         "score_config": score_config,
         "student_training": {
+            "student_kind": str(args.student_kind),
             "regret_sample_weight": float(args.regret_sample_weight),
             "changed_target_weight": float(args.changed_target_weight),
             "iterations": max(1, int(args.iterations)),
@@ -110,8 +119,9 @@ def main() -> int:
         "train": final_iteration["train"],
         "holdout": final_iteration["holdout"],
     }
+    student_payload = student_model if isinstance(student_model, dict) else student_model.to_payload()
     payload = {
-        **student_model,
+        **student_payload,
         "training": {
             "input_replay_json": str(args.input_replay_json),
             "split": split,
@@ -148,11 +158,13 @@ def run_recoverable_regret_iterations(
     seed: int,
     regret_sample_weight: float,
     changed_target_weight: float,
-) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, float]]:
+    student_kind: str,
+) -> tuple[list[dict[str, Any]], Any, dict[str, float]]:
     current_train = json.loads(json.dumps(train_report))
     current_holdout = json.loads(json.dumps(holdout_report))
+    token_order = candidate_token_order_from_report(train_report)
     reports = []
-    last_model: dict[str, Any] | None = None
+    last_model: Any | None = None
     last_fit: dict[str, float] | None = None
     for iteration_index in range(1, max(1, int(iterations)) + 1):
         train_targets = recoverable_regret_targets(
@@ -165,21 +177,37 @@ def run_recoverable_regret_iterations(
             teacher_name=f"oracle_at_k_iter{iteration_index}",
             **score_config,
         )
-        student_model, student_fit = fit_regret_weighted_scene_token_student(
-            current_train,
-            targets=train_targets,
-            hidden_dim=hidden_dim,
-            epochs=epochs,
-            learning_rate=learning_rate,
-            seed=seed + 1009 * (iteration_index - 1),
-            regret_sample_weight=regret_sample_weight,
-            changed_target_weight=changed_target_weight,
-        )
-        student_fn = lambda scene, model=student_model: predict_scene_token_student(model, scene)
+        if student_kind == "replay_value_mlp":
+            student_model, student_fit = fit_regret_weighted_replay_value_student(
+                current_train,
+                targets=train_targets,
+                score_config=score_config,
+                hidden_dim=hidden_dim,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                seed=seed + 1009 * (iteration_index - 1),
+                regret_sample_weight=regret_sample_weight,
+                changed_target_weight=changed_target_weight,
+            )
+            student_fn = lambda scene, model=student_model: _select_with_score_model(scene, model)
+        else:
+            student_model, student_fit = fit_regret_weighted_scene_token_student(
+                current_train,
+                targets=train_targets,
+                token_order=token_order,
+                hidden_dim=hidden_dim,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                seed=seed + 1009 * (iteration_index - 1),
+                regret_sample_weight=regret_sample_weight,
+                changed_target_weight=changed_target_weight,
+            )
+            student_fn = lambda scene, model=student_model: predict_scene_token_student(model, scene)
         reports.append(
             {
                 "iteration": iteration_index,
                 "student_fit_metrics": student_fit,
+                "student_kind": student_kind,
                 "train_target_summary": target_summary(train_targets),
                 "holdout_target_summary": target_summary(holdout_targets),
                 "train": evaluate_bootstrap_family(
@@ -337,13 +365,14 @@ def fit_regret_weighted_scene_token_student(
     replay_report: Mapping[str, Any],
     *,
     targets: list[Mapping[str, Any]],
+    token_order: tuple[str, ...],
     hidden_dim: int,
     epochs: int,
     learning_rate: float,
     seed: int,
     regret_sample_weight: float,
     changed_target_weight: float,
-) -> tuple[dict[str, Any], dict[str, float]]:
+) -> tuple[Any, dict[str, float]]:
     scenes = list(replay_report.get("scenes", []))
     if not scenes:
         raise ValueError("cannot train G1 student on an empty replay report")
@@ -352,8 +381,7 @@ def fit_regret_weighted_scene_token_student(
         for target in targets
     }
     target_by_scene_id = {str(target.get("scene_id", "")): target for target in targets}
-    feature_names = scene_feature_names()
-    token_order = tuple(TOKEN_ORDER)
+    feature_names = scene_feature_names(token_order)
     labels = []
     sample_weights = []
     max_regret = max([float(target.get("recoverable_regret", 0.0)) for target in targets] or [1.0])
@@ -372,7 +400,10 @@ def fit_regret_weighted_scene_token_student(
             + (float(changed_target_weight) if changed else 0.0)
         )
     x = np.asarray(
-        [[float(scene_feature_row(scene)[name]) for name in feature_names] for scene in scenes],
+        [
+            [float(scene_feature_row(scene, token_order=token_order)[name]) for name in feature_names]
+            for scene in scenes
+        ],
         dtype=np.float64,
     )
     y = np.asarray(labels, dtype=np.int64)
@@ -391,6 +422,7 @@ def fit_regret_weighted_scene_token_student(
         epochs=epochs,
         learning_rate=learning_rate,
         seed=seed,
+        class_count=len(token_order),
     )
     model = {
         "model_type": "nuplan_bootstrap_scene_token_student_mlp_v1",
@@ -428,6 +460,59 @@ def fit_regret_weighted_scene_token_student(
     }
 
 
+def fit_regret_weighted_replay_value_student(
+    replay_report: Mapping[str, Any],
+    *,
+    targets: list[Mapping[str, Any]],
+    score_config: Mapping[str, float],
+    hidden_dim: int,
+    epochs: int,
+    learning_rate: float,
+    seed: int,
+    regret_sample_weight: float,
+    changed_target_weight: float,
+) -> tuple[dict[str, Any], dict[str, float]]:
+    examples = build_replay_value_examples(
+        replay_report,
+        near_miss_threshold_m=float(score_config["near_miss_threshold_m"]),
+        fail_penalty=float(score_config["fail_penalty"]),
+        objective_progress_weight=float(score_config["progress_weight"]),
+        objective_ade_weight=float(score_config["ade_weight"]),
+    )
+    target_by_key = {
+        f"{target.get('source_db_file', '')}::{target.get('scene_id', '')}": target
+        for target in targets
+    }
+    target_by_scene_id = {str(target.get("scene_id", "")): target for target in targets}
+    max_regret = max([float(target.get("recoverable_regret", 0.0)) for target in targets] or [1.0])
+    max_regret = max(max_regret, 1.0e-6)
+    weighted_examples = []
+    for example in examples:
+        target = target_by_key.get(f"{example.get('source_db_file', '')}::{example.get('scene_id', '')}") or target_by_scene_id.get(
+            str(example.get("scene_id", ""))
+        )
+        regret = float(target.get("recoverable_regret", 0.0)) if target else 0.0
+        changed = bool(target.get("teacher_changes_proxy", False)) if target else False
+        weighted_examples.append(
+            {
+                **example,
+                "example_weight": (
+                    1.0
+                    + float(regret_sample_weight) * min(1.0, regret / max_regret)
+                    + (float(changed_target_weight) if changed else 0.0)
+                ),
+            }
+        )
+    selector, fit_metrics = fit_replay_value_mlp_selector(
+        weighted_examples,
+        hidden_dim=hidden_dim,
+        epochs=epochs,
+        learning_rate=learning_rate,
+        seed=seed,
+    )
+    return selector, fit_metrics
+
+
 def oracle_at_k_token_and_score(
     scene: Mapping[str, Any],
     *,
@@ -437,6 +522,7 @@ def oracle_at_k_token_and_score(
     ade_weight: float,
     clearance_weight: float,
 ) -> tuple[str | None, float]:
+    token_order = tuple(str(candidate.get("token", "")) for candidate in scene.get("candidates", []))
     scored = []
     for candidate in scene.get("candidates", []):
         score = token_score(
@@ -452,7 +538,7 @@ def oracle_at_k_token_and_score(
             scored.append((str(candidate.get("token", "")), float(score)))
     if not scored:
         return None, 0.0
-    return max(scored, key=lambda row: (row[1], -token_order_index(row[0])) )
+    return max(scored, key=lambda row: (row[1], -token_order_index(row[0], token_order)))
 
 
 def token_score(
@@ -569,19 +655,8 @@ def target_summary(targets: list[Mapping[str, Any]]) -> dict[str, Any]:
     }
 
 
-def token_order_index(token: str) -> int:
-    order = (
-        "maintain",
-        "slow_yield",
-        "crawl",
-        "stop",
-        "nudge_left",
-        "nudge_right",
-        "evasive_left",
-        "evasive_right",
-        "lane_recover",
-    )
-    return order.index(token) if token in order else len(order)
+def token_order_index(token: str, token_order: tuple[str, ...]) -> int:
+    return token_order.index(token) if token in token_order else len(token_order)
 
 
 def markdown_recoverable_regret_report(report: Mapping[str, Any]) -> str:

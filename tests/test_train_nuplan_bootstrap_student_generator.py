@@ -78,6 +78,25 @@ class TrainNuPlanBootstrapStudentGeneratorTests(unittest.TestCase):
         self.assertEqual(0, evaluation["g1_student"]["selected_replay_infeasible_count"])
         self.assertEqual(1.0, evaluation["g1_student"]["teacher_agreement"]["teacher_agreement_rate"])
 
+    def test_scene_token_student_supports_expanded_candidate_vocab(self) -> None:
+        replay = _expanded_replay_report()
+        targets = _teacher_targets(replay, teacher_token="wide_right")
+        teacher_fn = self.module.teacher_target_selector(targets)
+        selector, metrics = self.module.fit_scene_token_student(
+            replay,
+            teacher_token_fn=teacher_fn,
+            hidden_dim=8,
+            epochs=250,
+            learning_rate=0.05,
+            seed=17,
+        )
+
+        predicted = self.module.predict_scene_token_student(selector, replay["scenes"][0])
+
+        self.assertIn("wide_right", selector["token_order"])
+        self.assertGreater(metrics["scene_accuracy"], 0.7)
+        self.assertEqual("wide_right", predicted)
+
     def test_cli_writes_student_model_and_report(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -125,17 +144,44 @@ class TrainNuPlanBootstrapStudentGeneratorTests(unittest.TestCase):
             self.assertIn("Bootstrap Student Generator", report_md.read_text(encoding="utf-8"))
 
 
-def _teacher_targets(replay: dict) -> list[dict]:
+def _teacher_targets(replay: dict, *, teacher_token: str = "slow_yield") -> list[dict]:
     return [
         {
             "scene_id": scene["scene_id"],
             "source_db_file": scene["source_db_file"],
             "teacher": "replay_oracle",
-            "teacher_token": "slow_yield",
+            "teacher_token": teacher_token,
             "proxy_token": scene["selected_token"],
         }
         for scene in replay["scenes"]
     ]
+
+
+def _expanded_replay_report() -> dict:
+    replay = _replay_report()
+    for scene in replay["scenes"]:
+        scene["selected_token"] = "maintain"
+        scene["candidates"].append(
+            {
+                "token": "wide_right",
+                "speed_scale": 0.85,
+                "lateral_offset_m": -2.0,
+                "proxy_safe": True,
+                "min_proxy_clearance_m": 3.5,
+                "final_progress_m": 11.0,
+                "score": 7.5,
+                "poses": [[1.6 * step, -0.25 * step, 0.0] for step in range(1, 9)],
+            }
+        )
+        scene["candidate_replay_evaluations"].append(
+            {
+                "token": "wide_right",
+                "realized_min_clearance_m": 3.5,
+                "realized_near_miss": False,
+            }
+        )
+        scene["oracle_log_replay_safe_token"] = "wide_right"
+    return replay
 
 
 if __name__ == "__main__":

@@ -53,6 +53,12 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--map-name", action="append", default=[], help="Optional nuPlan map-name filter.")
     parser.add_argument("--limit", type=int, help="Limit the number of loaded nuPlan scenes.")
     parser.add_argument("--selector-model", type=Path, help="Optional trained selector artifact from Experiment 2.")
+    parser.add_argument(
+        "--candidate-profile",
+        choices=("base", "expanded"),
+        default="base",
+        help="Candidate bank profile. `expanded` adds wider/lower-speed hypotheses for generation-gap audits.",
+    )
     parser.add_argument("--output-json", type=Path, default=DEFAULT_OUTPUT_JSON)
     parser.add_argument("--output-markdown", type=Path, default=DEFAULT_OUTPUT_MARKDOWN)
     return parser.parse_args()
@@ -62,7 +68,7 @@ def main() -> None:
     args = _parse_args()
     scenes = _load_scenes(args)
     selector = None if args.selector_model is None else load_selector(args.selector_model)
-    report = run_rollout(scenes, selector=selector)
+    report = run_rollout(scenes, selector=selector, candidate_profile=str(args.candidate_profile))
     args.output_json.parent.mkdir(parents=True, exist_ok=True)
     args.output_json.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     markdown = markdown_report(report)
@@ -90,8 +96,16 @@ def _load_scenes(args: argparse.Namespace) -> list[dict[str, Any]]:
     )
 
 
-def run_rollout(scenes: list[dict[str, Any]], *, selector=None) -> dict[str, Any]:
-    records = [build_scene_diagnostic_record(scene) for scene in scenes]
+def run_rollout(
+    scenes: list[dict[str, Any]],
+    *,
+    selector=None,
+    candidate_profile: str = "base",
+) -> dict[str, Any]:
+    records = [
+        build_scene_diagnostic_record(scene, candidate_profile=candidate_profile)
+        for scene in scenes
+    ]
     selected_token_histogram: dict[str, int] = {}
     safe_count = 0
     rung_counts = {rung: 0 for rung in FAILURE_RUNGS}
@@ -151,6 +165,7 @@ def run_rollout(scenes: list[dict[str, Any]], *, selector=None) -> dict[str, Any
     )
     return {
         "schema": "nuplan_maneuvertoken_rollout_v2",
+        "candidate_profile": candidate_profile,
         "selection_mode": "learned_selector" if selector is not None else "heuristic_selector",
         "scene_count": len(records),
         "proxy_safe_rate": round(safe_count / len(records), 6) if records else 0.0,
