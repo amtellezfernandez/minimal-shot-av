@@ -151,6 +151,11 @@ def analyze_bootstrap_candidate_calibration(
         near_miss_threshold_m=near_miss_threshold_m,
         target_limit=target_limit,
     )
+    bootstrap_summary = bootstrap_iteration_summary(
+        replay_report,
+        teacher_fn=selector_fns[teacher_name],
+        near_miss_threshold_m=near_miss_threshold_m,
+    )
     return {
         "schema": "nuplan_bootstrap_candidate_calibration_v1",
         "input_replay_json": input_replay_json,
@@ -160,6 +165,7 @@ def analyze_bootstrap_candidate_calibration(
         "selector_metrics": selector_metrics,
         "gap_report": gap_report,
         "teacher": teacher_name,
+        "bootstrap_iteration_summary": bootstrap_summary,
         "bootstrap_target_count": len(targets),
         "bootstrap_target_token_histogram": dict(sorted(Counter(row["teacher_token"] for row in targets).items())),
         "bootstrap_targets": targets,
@@ -223,6 +229,76 @@ def generation_selection_gap_report(
         "proxy_selection_gap_count": proxy_selection_failures,
         "proxy_selection_gap_rate": _rate(proxy_selection_failures, scene_count),
         "per_selector": per_selector,
+    }
+
+
+def bootstrap_iteration_summary(
+    replay_report: Mapping[str, Any],
+    *,
+    teacher_fn: Callable[[Mapping[str, Any]], str],
+    near_miss_threshold_m: float,
+) -> dict[str, Any]:
+    token_changes = 0
+    replay_safe_improvements = 0
+    replay_safe_regressions = 0
+    clearance_deltas = []
+    progress_deltas = []
+    ade_deltas = []
+    fde_deltas = []
+    pose_shift_values = []
+    scene_count = 0
+    for scene in replay_report.get("scenes", []):
+        proxy_token = str(scene.get("selected_token", ""))
+        teacher_token = str(teacher_fn(scene))
+        candidate_by_token = _candidate_by_token(scene)
+        replay_by_token = _replay_by_token(scene)
+        proxy_candidate = candidate_by_token.get(proxy_token)
+        teacher_candidate = candidate_by_token.get(teacher_token)
+        proxy_replay = replay_by_token.get(proxy_token)
+        teacher_replay = replay_by_token.get(teacher_token)
+        if (
+            proxy_candidate is None
+            or teacher_candidate is None
+            or proxy_replay is None
+            or teacher_replay is None
+            or proxy_replay.get("realized_min_clearance_m") is None
+            or teacher_replay.get("realized_min_clearance_m") is None
+        ):
+            continue
+        scene_count += 1
+        if teacher_token != proxy_token:
+            token_changes += 1
+        proxy_safe = float(proxy_replay["realized_min_clearance_m"]) >= near_miss_threshold_m
+        teacher_safe = float(teacher_replay["realized_min_clearance_m"]) >= near_miss_threshold_m
+        if teacher_safe and not proxy_safe:
+            replay_safe_improvements += 1
+        if proxy_safe and not teacher_safe:
+            replay_safe_regressions += 1
+        clearance_deltas.append(
+            float(teacher_replay["realized_min_clearance_m"]) - float(proxy_replay["realized_min_clearance_m"])
+        )
+        progress_deltas.append(
+            float(teacher_candidate.get("final_progress_m", 0.0)) - float(proxy_candidate.get("final_progress_m", 0.0))
+        )
+        proxy_utility = candidate_logged_ego_utility(proxy_candidate, scene)
+        teacher_utility = candidate_logged_ego_utility(teacher_candidate, scene)
+        if proxy_utility is not None and teacher_utility is not None:
+            ade_deltas.append(float(teacher_utility["ade_3s_m"]) - float(proxy_utility["ade_3s_m"]))
+            fde_deltas.append(float(teacher_utility["fde_3s_m"]) - float(proxy_utility["fde_3s_m"]))
+        pose_shift = final_pose_shift(proxy_candidate, teacher_candidate)
+        if pose_shift is not None:
+            pose_shift_values.append(pose_shift)
+    return {
+        "scene_count": scene_count,
+        "teacher_changes_proxy_token_count": token_changes,
+        "teacher_changes_proxy_token_rate": _rate(token_changes, scene_count),
+        "replay_safe_improvement_count": replay_safe_improvements,
+        "replay_safe_regression_count": replay_safe_regressions,
+        "mean_teacher_minus_proxy_clearance_m": _mean(clearance_deltas),
+        "mean_teacher_minus_proxy_progress_m": _mean(progress_deltas),
+        "mean_teacher_minus_proxy_ade_3s_m": _mean(ade_deltas),
+        "mean_teacher_minus_proxy_fde_3s_m": _mean(fde_deltas),
+        "mean_final_pose_shift_m": _mean(pose_shift_values),
     }
 
 
@@ -305,8 +381,22 @@ def mean_pairwise_final_pose_distance(candidates: list[Mapping[str, Any]]) -> fl
     return round(sum(distances) / len(distances), 6)
 
 
+def final_pose_shift(left_candidate: Mapping[str, Any], right_candidate: Mapping[str, Any]) -> float | None:
+    left_poses = list(left_candidate.get("poses", []))
+    right_poses = list(right_candidate.get("poses", []))
+    if not left_poses or not right_poses:
+        return None
+    left_pose = left_poses[-1]
+    right_pose = right_poses[-1]
+    return round(
+        math.hypot(float(right_pose[0]) - float(left_pose[0]), float(right_pose[1]) - float(left_pose[1])),
+        6,
+    )
+
+
 def markdown_report(report: Mapping[str, Any]) -> str:
     gap = report["gap_report"]
+    bootstrap = report["bootstrap_iteration_summary"]
     lines = [
         "# nuPlan Bootstrapped Candidate-Calibration Audit",
         "",
@@ -331,6 +421,19 @@ def markdown_report(report: Mapping[str, Any]) -> str:
         f"| generation gap | {gap['generation_gap_count']} | {gap['generation_gap_rate']:.3f} |",
         f"| proxy top-1 safe | {gap['proxy_top1_safe_count']} | {gap['proxy_top1_safe_rate']:.3f} |",
         f"| proxy selection gap | {gap['proxy_selection_gap_count']} | {gap['proxy_selection_gap_rate']:.3f} |",
+        "",
+        "## Bootstrap Iteration Target",
+        "",
+        "| Metric | Value |",
+        "|---|---:|",
+        f"| teacher changes proxy token | {bootstrap['teacher_changes_proxy_token_count']} |",
+        f"| teacher change rate | {bootstrap['teacher_changes_proxy_token_rate']:.3f} |",
+        f"| replay-safe improvements | {bootstrap['replay_safe_improvement_count']} |",
+        f"| replay-safe regressions | {bootstrap['replay_safe_regression_count']} |",
+        f"| mean clearance delta | {bootstrap['mean_teacher_minus_proxy_clearance_m']:.3f} |",
+        f"| mean progress delta | {bootstrap['mean_teacher_minus_proxy_progress_m']:.3f} |",
+        f"| mean ADE3 delta | {bootstrap['mean_teacher_minus_proxy_ade_3s_m']:.3f} |",
+        f"| mean final-pose shift | {bootstrap['mean_final_pose_shift_m']:.3f} |",
         "",
         "## Selector Table",
         "",

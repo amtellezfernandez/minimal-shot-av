@@ -15,6 +15,7 @@ from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _replay_by_token
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _select_replay_oracle_token
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _select_with_score_model
+from minimal_shot_av.model.nuplan_maneuver_token_selector import fit_replay_value_mlp_selector
 from minimal_shot_av.model.nuplan_maneuver_token_selector import fit_replay_value_selector
 from minimal_shot_av.model.nuplan_maneuver_token_selector import load_selector
 
@@ -38,6 +39,10 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--holdout-fraction", type=float, default=0.3)
     parser.add_argument("--near-miss-threshold-m", type=float, default=1.0)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--model-kind", choices=("linear", "mlp"), default="linear")
+    parser.add_argument("--hidden-dim", type=int, default=32)
+    parser.add_argument("--epochs", type=int, default=400)
+    parser.add_argument("--learning-rate", type=float, default=0.03)
     parser.add_argument("--ridge-alpha", type=float, default=1.0e-3)
     parser.add_argument("--fail-penalty", type=float, default=250.0)
     parser.add_argument("--objective-progress-weight", type=float, default=1.0)
@@ -67,10 +72,19 @@ def main() -> int:
         objective_progress_weight=float(args.objective_progress_weight),
         objective_ade_weight=float(args.objective_ade_weight),
     )
-    selector, train_metrics = fit_replay_value_selector(
-        train_examples,
-        ridge_alpha=float(args.ridge_alpha),
-    )
+    if str(args.model_kind) == "mlp":
+        selector, train_metrics = fit_replay_value_mlp_selector(
+            train_examples,
+            hidden_dim=int(args.hidden_dim),
+            epochs=int(args.epochs),
+            learning_rate=float(args.learning_rate),
+            seed=int(args.seed),
+        )
+    else:
+        selector, train_metrics = fit_replay_value_selector(
+            train_examples,
+            ridge_alpha=float(args.ridge_alpha),
+        )
     baseline_selector = None if args.baseline_selector_model is None else load_selector(args.baseline_selector_model)
     evaluation = {
         "schema": "nuplan_replay_value_selector_eval_v1",
@@ -82,6 +96,7 @@ def main() -> int:
             "progress_weight": float(args.objective_progress_weight),
             "ade_weight": float(args.objective_ade_weight),
         },
+        "model_kind": str(args.model_kind),
         "train_fit_metrics": train_metrics,
         "train": evaluate_selector_family(
             train_report,
@@ -104,6 +119,7 @@ def main() -> int:
             "input_replay_json": str(args.input_replay_json),
             "split": split,
             "objective": evaluation["objective"],
+            "model_kind": str(args.model_kind),
             "train_fit_metrics": train_metrics,
             "train_example_count": len(train_examples),
             "holdout_example_count": len(holdout_examples),
@@ -203,6 +219,7 @@ def markdown_evaluation(report: Mapping[str, Any]) -> str:
         f"- Train scenes: `{report['split']['train_scene_count']}`",
         f"- Holdout scenes: `{report['split']['holdout_scene_count']}`",
         f"- Near-miss threshold: `{report['near_miss_threshold_m']:.2f} m`",
+        f"- Model kind: `{report.get('model_kind', 'linear')}`",
         (
             f"- Objective: `-{report['objective']['fail_penalty']:.1f} * replay_failure + "
             f"{report['objective']['progress_weight']:.1f} * progress - "

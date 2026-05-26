@@ -41,6 +41,8 @@ class AnalyzeNuPlanBootstrapCandidateCalibrationTests(unittest.TestCase):
 
         self.assertEqual(0, report["gap_report"]["generation_gap_count"])
         self.assertEqual(4, report["gap_report"]["proxy_selection_gap_count"])
+        self.assertEqual(4, report["bootstrap_iteration_summary"]["teacher_changes_proxy_token_count"])
+        self.assertEqual(4, report["bootstrap_iteration_summary"]["replay_safe_improvement_count"])
         self.assertEqual(4, report["bootstrap_target_count"])
         self.assertEqual({"slow_yield": 4}, report["bootstrap_target_token_histogram"])
 

@@ -22,6 +22,7 @@ import json
 import ast
 import argparse
 import glob
+import re
 import time
 
 import torch
@@ -56,14 +57,36 @@ def response_to_traj(resp):
     ]:
         s = s.replace(tag, "")
 
+    s = s.strip()
+    if not s:
+        return None
+
     try:
         try:
             arr = json.loads("[" + s + "]")
         except Exception:
-            arr = json.loads("[[" + s + "]")
+            try:
+                arr = json.loads("[[" + s + "]")
+            except Exception:
+                arr = ast.literal_eval("[" + s + "]")
         return [[float(v) for v in point] for point in arr]
     except Exception:
-        return None
+        number = r"[-+]?(?:\d+\.\d+|\d+|\.\d+)"
+        matches = re.findall(
+            rf"\[\s*({number})\s*,\s*({number})\s*,\s*({number})\s*\]",
+            s,
+        )
+        if not matches:
+            values = re.findall(number, s)
+            if len(values) < 3 or len(values) % 3 != 0:
+                return None
+            matches = [
+                values[i:i + 3] for i in range(0, len(values), 3)
+            ]
+        try:
+            return [[float(v) for v in point] for point in matches]
+        except Exception:
+            return None
 
 
 # ---------------------------------------------------------------------------

@@ -30,6 +30,7 @@ from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _replay_by_token
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _select_replay_oracle_token
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import _select_with_score_model
+from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import candidate_logged_ego_utility
 from minimal_shot_av.cli.commands.train_nuplan_boundary_intervention_selector import (
     load_boundary_intervention_policy,
 )
@@ -42,6 +43,12 @@ from minimal_shot_av.cli.commands.train_nuplan_boundary_intervention_selector im
 from minimal_shot_av.cli.commands.train_nuplan_selective_regret_selector import load_selective_regret_policy
 from minimal_shot_av.cli.commands.train_nuplan_selective_regret_selector import select_with_selective_regret
 from minimal_shot_av.cli.commands.train_nuplan_replay_calibrated_selector import select_with_constrained_replay_risk
+from minimal_shot_av.cli.commands.train_nuplan_failure_gate_selector import build_safe_token_fn
+from minimal_shot_av.cli.commands.train_nuplan_failure_gate_selector import fallback_meets_progress_retention
+from minimal_shot_av.cli.commands.train_nuplan_failure_gate_selector import failure_gate_feature_row
+from minimal_shot_av.cli.commands.train_nuplan_failure_gate_selector import load_failure_gate_policy
+from minimal_shot_av.cli.commands.train_nuplan_failure_gate_selector import predict_failure_probability
+from minimal_shot_av.cli.commands.train_nuplan_failure_gate_selector import select_with_failure_gate_policy
 from minimal_shot_av.cli.commands.run_nuplan_replay_calibration_experiments import predict_meta_lambda_value
 from minimal_shot_av.cli.commands.run_nuplan_replay_calibration_experiments import select_with_meta_lambda_value_policy
 from minimal_shot_av.model.nuplan_maneuver_token_selector import load_selector
@@ -51,7 +58,7 @@ DEFAULT_OUTPUT_JSON = ROOT / "artifacts" / "corl2027" / "nuplan_mini_rollout50_c
 DEFAULT_OUTPUT_MARKDOWN = ROOT / "artifacts" / "corl2027" / "nuplan_mini_rollout50_closed_loop_bridge.md"
 DEFAULT_CALIBRATION_JSON = ROOT / "artifacts" / "corl2027" / "nuplan_mini_closed_loop_bridge_calibration.json"
 DEFAULT_CALIBRATION_MARKDOWN = ROOT / "artifacts" / "corl2027" / "nuplan_mini_closed_loop_bridge_calibration.md"
-DEFAULT_MAPS_ROOT = ROOT / "workspace" / "nuplan" / "maps"
+DEFAULT_MAPS_ROOT = ROOT / "workspace" / "nuplan" / "maps" / "maps"
 DEFAULT_MAP_VERSION = "nuplan-maps-v1.0"
 BUFFER_VARIANTS_METERS = (0.0, 0.5, 1.0)
 
@@ -84,6 +91,11 @@ def _parse_args() -> argparse.Namespace:
         "--comparison-selector-model",
         type=Path,
         help="Replay-calibrated selector artifact used when --compare-selectors is enabled.",
+    )
+    parser.add_argument(
+        "--comparison-failure-gate-model",
+        type=Path,
+        help="Optional embedded failure-gate policy artifact used instead of scalar replay calibration.",
     )
     parser.add_argument(
         "--comparison-holdout-only",
@@ -144,16 +156,24 @@ def main() -> int:
         near_miss_threshold_m=float(args.near_miss_threshold_m),
     )
     if args.compare_selectors:
-        if args.comparison_selector_model is None:
-            raise ValueError("--compare-selectors requires --comparison-selector-model")
+        if args.comparison_selector_model is None and args.comparison_failure_gate_model is None:
+            raise ValueError("--compare-selectors requires a comparison selector or failure-gate model")
+        split_model_path = args.comparison_selector_model or args.comparison_failure_gate_model
         report = _filter_to_selector_holdout_if_requested(
             report,
-            selector_model_path=args.comparison_selector_model,
+            selector_model_path=split_model_path,
             enabled=bool(args.comparison_holdout_only),
         )
         enriched = enrich_report_with_closed_loop_selector_comparison(
             report,
-            replay_calibrated_selector=load_selector(args.comparison_selector_model),
+            replay_calibrated_selector=(
+                None if args.comparison_selector_model is None else load_selector(args.comparison_selector_model)
+            ),
+            failure_gate_policy=(
+                None
+                if args.comparison_failure_gate_model is None
+                else load_failure_gate_policy(args.comparison_failure_gate_model)
+            ),
             boundary_intervention_policy=(
                 None
                 if args.comparison_boundary_intervention_model is None
@@ -248,7 +268,8 @@ def enrich_report_with_closed_loop_execution(
 def enrich_report_with_closed_loop_selector_comparison(
     report: Mapping[str, Any],
     *,
-    replay_calibrated_selector: Any,
+    replay_calibrated_selector: Any | None,
+    failure_gate_policy: Mapping[str, Any] | None = None,
     boundary_intervention_policy: Mapping[str, Any] | None = None,
     selective_regret_policy: Mapping[str, Any] | None = None,
     meta_value_policy: Mapping[str, Any] | None = None,
@@ -264,9 +285,17 @@ def enrich_report_with_closed_loop_selector_comparison(
 ) -> dict[str, Any]:
     enriched = json.loads(json.dumps(report))
     calibrated_name = "replay_calibrated"
+    if replay_calibrated_selector is None and failure_gate_policy is None:
+        raise ValueError("selector comparison requires a replay selector or failure-gate policy")
     calibrated_fn = lambda scene: _select_with_score_model(scene, replay_calibrated_selector)
     calibrated_margin_fn = lambda scene: _score_model_decision(scene, replay_calibrated_selector)
+    if failure_gate_policy is not None:
+        calibrated_name = "failure_gate"
+        calibrated_fn = lambda scene: select_with_failure_gate_policy(scene, failure_gate_policy)
+        calibrated_margin_fn = lambda scene: _failure_gate_decision(scene, failure_gate_policy)
     if boundary_intervention_policy is not None:
+        if replay_calibrated_selector is None:
+            raise ValueError("boundary intervention comparison requires --comparison-selector-model")
         calibrated_name = "boundary_intervention"
         calibrated_fn = lambda scene: select_with_boundary_intervention(
             scene,
@@ -279,6 +308,8 @@ def enrich_report_with_closed_loop_selector_comparison(
             boundary_intervention_policy=boundary_intervention_policy,
         )
     if selective_regret_policy is not None:
+        if replay_calibrated_selector is None:
+            raise ValueError("selective regret comparison requires --comparison-selector-model")
         calibrated_name = "selective_regret"
         calibrated_fn = lambda scene: select_with_selective_regret(
             scene,
@@ -294,6 +325,8 @@ def enrich_report_with_closed_loop_selector_comparison(
             selective_regret_policy=selective_regret_policy,
         )
     if constrained_risk_threshold is not None:
+        if replay_calibrated_selector is None:
+            raise ValueError("constrained-risk comparison requires --comparison-selector-model")
         calibrated_name = f"replay_constrained_risk_{float(constrained_risk_threshold):g}"
         calibrated_fn = lambda scene: select_with_constrained_replay_risk(
             scene,
@@ -306,6 +339,8 @@ def enrich_report_with_closed_loop_selector_comparison(
             risk_threshold=float(constrained_risk_threshold),
         )
     if meta_value_policy is not None:
+        if replay_calibrated_selector is None:
+            raise ValueError("meta-value comparison requires --comparison-selector-model")
         calibrated_name = "meta_lambda_value"
         calibrated_fn = lambda scene: select_with_meta_lambda_value_policy(
             scene,
@@ -528,6 +563,35 @@ def _score_model_decision(scene: Mapping[str, Any], selector: Any) -> dict[str, 
     return _decision_from_scored_candidates(scored)
 
 
+def _failure_gate_decision(scene: Mapping[str, Any], policy: Mapping[str, Any]) -> dict[str, Any]:
+    safe_token_fn = build_safe_token_fn(
+        policy["safe_selector"],
+        fallback_mode=str(policy.get("fallback_mode", "score")),
+        fallback_risk_threshold=float(policy.get("fallback_risk_threshold", 0.5)),
+    )
+    fallback_token = str(safe_token_fn(scene))
+    probability = predict_failure_probability(
+        policy["gate_model"],
+        failure_gate_feature_row(scene, fallback_token),
+    )
+    threshold = float(policy.get("gate_threshold", 0.5))
+    progress_allowed = fallback_meets_progress_retention(
+        scene,
+        fallback_token=fallback_token,
+        min_fallback_progress_retention=float(policy.get("min_fallback_progress_retention", 0.0)),
+    )
+    token = fallback_token if probability >= threshold and progress_allowed else str(scene.get("selected_token", ""))
+    return {
+        "token": token,
+        "score": float(probability),
+        "margin": abs(float(probability) - threshold),
+        "fallback_token": fallback_token,
+        "switch_probability": float(probability),
+        "gate_threshold": threshold,
+        "progress_allowed": progress_allowed,
+    }
+
+
 def _constrained_risk_decision(scene: Mapping[str, Any], selector: Any, *, risk_threshold: float) -> dict[str, Any]:
     scored_rows = []
     for candidate in list(scene.get("candidates", [])):
@@ -637,7 +701,8 @@ def _boundary_intervention_decision(
             {
                 "scene_margin": float(ranked[0]["score"] - ranked[1]["score"]),
                 "score_delta": float(
-                    baseline_selector.predict_score(chosen_features) - baseline_selector.predict_score(baseline_features)
+                    baseline_selector.predict_score(chosen_features)
+                    - baseline_selector.predict_score(baseline_features)
                 ),
                 "progress_delta": float(
                     chosen_features["candidate_final_progress_m"] - baseline_features["candidate_final_progress_m"]
@@ -1744,6 +1809,17 @@ def _selector_comparison_table(scenes: list[dict[str, Any]]) -> list[dict[str, A
             if scene.get("aligned_executed_metric_variants", {}).get("box_clearance_m") is not None
         ]
         aligned_failure_count = sum(1 for clearance in aligned_clearances if clearance < DEFAULT_NEAR_MISS_THRESHOLD_M)
+        progress_values = [
+            float(scene["selected_token_rollout"]["final_progress_m"])
+            for scene in selected
+            if scene.get("selected_token_rollout", {}).get("final_progress_m") is not None
+        ]
+        utilities = [
+            candidate_logged_ego_utility(scene["selected_token_rollout"], scene)
+            for scene in selected
+            if isinstance(scene.get("selected_token_rollout"), Mapping)
+        ]
+        utilities = [utility for utility in utilities if utility is not None]
         rows.append(
             {
                 "selector": selector,
@@ -1762,6 +1838,11 @@ def _selector_comparison_table(scenes: list[dict[str, Any]]) -> list[dict[str, A
                 )
                 if aligned_clearances
                 else None,
+                "mean_selected_progress_m": _optional_round(sum(progress_values) / len(progress_values))
+                if progress_values
+                else None,
+                "mean_ade_3s_m": _mean_utility(utilities, "ade_3s_m"),
+                "mean_fde_3s_m": _mean_utility(utilities, "fde_3s_m"),
             }
         )
     return rows
@@ -1772,6 +1853,9 @@ def markdown_report(report: Mapping[str, Any]) -> str:
         "# nuPlan Closed-Loop Bridge Audit",
         "",
         f"- Bridge scene count: `{report['bridge_scene_count']}`",
+        f"- Bridge base scene count: `{report['bridge_base_scene_count']}`"
+        if "bridge_base_scene_count" in report
+        else "",
         f"- Replay-infeasible scenes: `{report['closed_loop_bridge_summary']['replay_infeasible_scene_count']}`",
         f"- Replay-safe scenes: `{report['closed_loop_bridge_summary']['replay_safe_scene_count']}`",
         f"- Executed failures: `{report['closed_loop_bridge_summary']['executed_failure_count']}`",
@@ -1790,20 +1874,28 @@ def markdown_report(report: Mapping[str, Any]) -> str:
                 "",
                 "## Selector Comparison",
                 "",
+                "Absolute box-clearance failures use nuPlan executed geometry. Aligned replay failures use the "
+                "logged-actor replay-equivalent clearance already used by the replay study, so this table should be "
+                "read as directional transfer evidence rather than absolute closed-loop safety.",
+                "",
                 "| Selector | Scenes | Executed box failures | Box fail rate | Aligned replay failures | "
-                "Aligned fail rate | Mean aligned clearance |",
-                "|---|---:|---:|---:|---:|---:|---:|",
+                "Aligned fail rate | Mean aligned clearance | Progress | ADE3 |",
+                "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
             ]
         )
         for row in report["closed_loop_selector_comparison"]:
             aligned_rate = row["aligned_logged_actor_failure_rate"]
             aligned_clearance = row["mean_aligned_logged_actor_clearance_m"]
+            progress = row.get("mean_selected_progress_m")
+            ade = row.get("mean_ade_3s_m")
             lines.append(
                 f"| {row['selector']} | {row['scene_count']} | {row['executed_failure_count']} | "
                 f"{row['executed_failure_rate']:.3f} | "
                 f"{row['aligned_logged_actor_failure_count']} | "
                 f"{'n/a' if aligned_rate is None else f'{aligned_rate:.3f}'} | "
-                f"{'n/a' if aligned_clearance is None else f'{aligned_clearance:.3f}'} |"
+                f"{'n/a' if aligned_clearance is None else f'{aligned_clearance:.3f}'} | "
+                f"{'n/a' if progress is None else f'{progress:.3f}'} | "
+                f"{'n/a' if ade is None else f'{ade:.3f}'} |"
             )
     return "\n".join(lines)
 
@@ -1905,6 +1997,13 @@ def _optional_round(value: Any) -> float | None:
         return None
     value = float(value)
     return None if not math.isfinite(value) else round(value, 6)
+
+
+def _mean_utility(rows: list[Mapping[str, float]], key: str) -> float | None:
+    values = [float(row[key]) for row in rows if row.get(key) is not None]
+    if not values:
+        return None
+    return _optional_round(sum(values) / len(values))
 
 
 def _nuplan_closed_loop_imports() -> dict[str, Any]:

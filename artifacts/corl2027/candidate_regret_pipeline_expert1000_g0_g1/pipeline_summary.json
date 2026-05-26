@@ -1,0 +1,44 @@
+{
+  "claim_boundary": "Pipeline is analysis-complete only when every candidate stage has evaluator metrics. Generation-ready-only dumps are preserved but not used for regret claims.",
+  "curriculum_available": true,
+  "lifecycle_available": true,
+  "output_dir": "artifacts/corl2027/candidate_regret_pipeline_expert1000_g0_g1",
+  "schema": "candidate_regret_pipeline_v1",
+  "score_config": {
+    "ade_weight": 2.0,
+    "clearance_weight": 0.0,
+    "failure_penalty": 250.0,
+    "fde_weight": 0.0,
+    "near_miss_threshold_m": 1.0,
+    "progress_weight": 1.0
+  },
+  "stages": [
+    {
+      "candidate_count": 9000,
+      "candidate_path": "artifacts/corl2027/nuplan_public_replay_study_interaction1000_expert/replay.json",
+      "generation_gap_count": 281,
+      "mean_recoverable_regret": 79.649275,
+      "metrics_path": null,
+      "name": "g0",
+      "readiness": "analysis_ready",
+      "recoverable_safety_regret_count": 346,
+      "recoverable_utility_regret_count": 44,
+      "scene_count": 1000,
+      "top1_replay_fail_rate": 0.627
+    },
+    {
+      "candidate_count": 9000,
+      "candidate_path": "artifacts/corl2027/nuplan_bootstrap_candidate_loop_expert1000_lambda80_g1_replay.json",
+      "generation_gap_count": 281,
+      "mean_recoverable_regret": 8.055566,
+      "metrics_path": null,
+      "name": "g1",
+      "readiness": "analysis_ready",
+      "recoverable_safety_regret_count": 13,
+      "recoverable_utility_regret_count": 228,
+      "scene_count": 1000,
+      "top1_replay_fail_rate": 0.294
+    }
+  ],
+  "utility_regret_threshold": 0.001
+}

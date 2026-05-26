@@ -1,0 +1,44 @@
+{
+  "deltas": [
+    {
+      "from": "g0_proxy",
+      "generation_gap_delta": 0,
+      "mean_regret_delta": -71.593709,
+      "safety_regret_delta": -333,
+      "to": "g1_bootstrap",
+      "top1_fail_rate_delta": -0.333,
+      "utility_regret_delta": 184
+    }
+  ],
+  "interpretation": "bootstrap closes much of the recoverable safety regret, leaves generation gap unchanged, and exposes utility regret as the next optimization branch",
+  "schema": "candidate_regret_lifecycle_v1",
+  "stage_count": 2,
+  "stages": [
+    {
+      "generation_gap_count": 281,
+      "generation_gap_rate": 0.281,
+      "mean_recoverable_regret": 79.649275,
+      "oracle_at_k_replay_fail_rate": 0.281,
+      "recoverable_safety_regret_count": 346,
+      "recoverable_safety_regret_rate": 0.346,
+      "recoverable_utility_regret_count": 44,
+      "recoverable_utility_regret_rate": 0.044,
+      "scene_count": 1000,
+      "stage": "g0_proxy",
+      "top1_replay_fail_rate": 0.627
+    },
+    {
+      "generation_gap_count": 281,
+      "generation_gap_rate": 0.281,
+      "mean_recoverable_regret": 8.055566,
+      "oracle_at_k_replay_fail_rate": 0.281,
+      "recoverable_safety_regret_count": 13,
+      "recoverable_safety_regret_rate": 0.013,
+      "recoverable_utility_regret_count": 228,
+      "recoverable_utility_regret_rate": 0.228,
+      "scene_count": 1000,
+      "stage": "g1_bootstrap",
+      "top1_replay_fail_rate": 0.294
+    }
+  ]
+}

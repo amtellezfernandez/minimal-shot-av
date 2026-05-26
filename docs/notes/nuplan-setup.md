@@ -44,7 +44,8 @@ This extracts the public nuPlan maps bundle into:
 workspace/nuplan/maps/
 ```
 
-The closed-loop bridge command requires this maps tree.
+The closed-loop bridge uses `workspace/nuplan/maps/maps` as the nuPlan map root, because the public archive
+contains a top-level `maps/` directory.
 
 ## Rollout and selector smoke runs
 
@@ -84,7 +85,7 @@ This command:
 ```bash
 PYTHONPATH=src ./.venv/bin/python scripts/audit_nuplan_closed_loop_bridge.py \
   --input-json artifacts/corl2027/nuplan_public_replay_study/replay.json \
-  --maps-root workspace/nuplan/maps \
+  --maps-root workspace/nuplan/maps/maps \
   --output-json artifacts/corl2027/nuplan_public_replay_study/closed_loop_bridge.json \
   --output-markdown artifacts/corl2027/nuplan_public_replay_study/closed_loop_bridge.md
 ```

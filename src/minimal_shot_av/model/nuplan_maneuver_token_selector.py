@@ -38,6 +38,7 @@ SELECTOR_FEATURE_NAMES = (
 )
 REPLAY_CALIBRATED_MODEL_TYPE = "nuplan_replay_calibrated_selector_v1"
 REPLAY_VALUE_MODEL_TYPE = "nuplan_replay_value_selector_v1"
+REPLAY_VALUE_MLP_MODEL_TYPE = "nuplan_replay_value_mlp_selector_v1"
 
 
 @dataclass(frozen=True)
@@ -261,14 +262,99 @@ class NuPlanReplayValueSelector:
         )
 
 
-def load_selector(path: Path) -> NuPlanMlpSelector | NuPlanReplayCalibratedSelector | NuPlanReplayValueSelector:
-    payload = json.loads(path.read_text(encoding="utf-8"))
+@dataclass(frozen=True)
+class NuPlanReplayValueMlpSelector:
+    feature_names: tuple[str, ...]
+    hidden_dim: int
+    feature_mean: tuple[float, ...]
+    feature_scale: tuple[float, ...]
+    target_mean: float
+    target_scale: float
+    w1: tuple[tuple[float, ...], ...]
+    b1: tuple[float, ...]
+    w2: tuple[float, ...]
+    b2: float
+
+    def predict_score(self, features: Mapping[str, float]) -> float:
+        normalized_value = _predict_mlp_logit(
+            features=features,
+            feature_names=self.feature_names,
+            feature_mean=self.feature_mean,
+            feature_scale=self.feature_scale,
+            w1=self.w1,
+            b1=self.b1,
+            w2=self.w2,
+            b2=self.b2,
+        )
+        return float(float(self.target_mean) + float(self.target_scale) * normalized_value)
+
+    def select_record(self, scene_record: Mapping[str, Any]) -> dict[str, Any]:
+        candidates = list(scene_record["candidates"])
+        scored = [
+            (
+                self.predict_score(selector_feature_row(scene_record, candidate)),
+                candidate,
+            )
+            for candidate in candidates
+        ]
+        _, selected = max(
+            scored,
+            key=lambda item: (
+                item[0],
+                item[1]["min_proxy_clearance_m"],
+                item[1]["final_progress_m"],
+            ),
+        )
+        return dict(selected)
+
+    def to_payload(self) -> dict[str, Any]:
+        return {
+            "model_type": REPLAY_VALUE_MLP_MODEL_TYPE,
+            "feature_names": list(self.feature_names),
+            "hidden_dim": int(self.hidden_dim),
+            "feature_mean": list(self.feature_mean),
+            "feature_scale": list(self.feature_scale),
+            "target_mean": float(self.target_mean),
+            "target_scale": float(self.target_scale),
+            "w1": [list(row) for row in self.w1],
+            "b1": list(self.b1),
+            "w2": list(self.w2),
+            "b2": float(self.b2),
+        }
+
+    @classmethod
+    def from_payload(cls, payload: Mapping[str, Any]) -> "NuPlanReplayValueMlpSelector":
+        return cls(
+            feature_names=tuple(str(name) for name in payload["feature_names"]),
+            hidden_dim=int(payload["hidden_dim"]),
+            feature_mean=tuple(float(value) for value in payload["feature_mean"]),
+            feature_scale=tuple(float(value) for value in payload["feature_scale"]),
+            target_mean=float(payload.get("target_mean", 0.0)),
+            target_scale=float(payload.get("target_scale", 1.0)),
+            w1=tuple(tuple(float(value) for value in row) for row in payload["w1"]),
+            b1=tuple(float(value) for value in payload["b1"]),
+            w2=tuple(float(value) for value in payload["w2"]),
+            b2=float(payload["b2"]),
+        )
+
+
+def selector_from_payload(
+    payload: Mapping[str, Any],
+) -> NuPlanMlpSelector | NuPlanReplayCalibratedSelector | NuPlanReplayValueSelector | NuPlanReplayValueMlpSelector:
     model_type = str(payload.get("model_type", "nuplan_maneuvertoken_selector_mlp_v1"))
     if model_type == REPLAY_CALIBRATED_MODEL_TYPE:
         return NuPlanReplayCalibratedSelector.from_payload(payload)
     if model_type == REPLAY_VALUE_MODEL_TYPE:
         return NuPlanReplayValueSelector.from_payload(payload)
+    if model_type == REPLAY_VALUE_MLP_MODEL_TYPE:
+        return NuPlanReplayValueMlpSelector.from_payload(payload)
     return NuPlanMlpSelector.from_payload(payload)
+
+
+def load_selector(
+    path: Path,
+) -> NuPlanMlpSelector | NuPlanReplayCalibratedSelector | NuPlanReplayValueSelector | NuPlanReplayValueMlpSelector:
+    return selector_from_payload(json.loads(path.read_text(encoding="utf-8")))
 
 
 def selector_feature_row(scene_record: Mapping[str, Any], candidate: Mapping[str, Any]) -> dict[str, float]:
@@ -516,6 +602,56 @@ def fit_replay_value_selector(
     return selector, metrics
 
 
+def fit_replay_value_mlp_selector(
+    examples: list[Mapping[str, Any]],
+    *,
+    hidden_dim: int = 32,
+    epochs: int = 400,
+    learning_rate: float = 0.03,
+    seed: int = 0,
+    feature_names: tuple[str, ...] | None = None,
+) -> tuple[NuPlanReplayValueMlpSelector, dict[str, float]]:
+    if not examples:
+        raise ValueError("cannot train replay-value MLP selector on an empty example set")
+    feature_names = tuple(SELECTOR_FEATURE_NAMES if feature_names is None else feature_names)
+    fitted = _fit_regression_mlp(
+        examples=examples,
+        target_key="objective_value",
+        feature_names=feature_names,
+        hidden_dim=hidden_dim,
+        epochs=epochs,
+        learning_rate=learning_rate,
+        seed=seed,
+    )
+    selector = NuPlanReplayValueMlpSelector(
+        feature_names=feature_names,
+        hidden_dim=int(hidden_dim),
+        feature_mean=fitted["feature_mean"],
+        feature_scale=fitted["feature_scale"],
+        target_mean=float(fitted["target_mean"]),
+        target_scale=float(fitted["target_scale"]),
+        w1=fitted["w1"],
+        b1=fitted["b1"],
+        w2=fitted["w2"],
+        b2=fitted["b2"],
+    )
+    predictions = np.asarray(
+        [selector.predict_score(example["features"]) for example in examples],
+        dtype=np.float64,
+    )
+    targets = np.asarray([float(example["objective_value"]) for example in examples], dtype=np.float64)
+    weights = np.asarray([float(example.get("example_weight", 1.0)) for example in examples], dtype=np.float64)
+    return selector, {
+        "example_count": float(len(examples)),
+        "mean_example_weight": float(weights.mean()),
+        "objective_mean": float(targets.mean()),
+        "objective_mse": float(np.mean((predictions - targets) ** 2)),
+        "objective_mae": float(np.mean(np.abs(predictions - targets))),
+        "target_mean": float(fitted["target_mean"]),
+        "target_scale": float(fitted["target_scale"]),
+    }
+
+
 def evaluate_replay_risk_head(
     selector: NuPlanReplayCalibratedSelector,
     examples: list[Mapping[str, Any]],
@@ -552,6 +688,9 @@ def _fit_binary_mlp(
         dtype=np.float64,
     )
     y = np.asarray([float(example[label_key]) for example in examples], dtype=np.float64).reshape(-1, 1)
+    weights = np.asarray([float(example.get("example_weight", 1.0)) for example in examples], dtype=np.float64)
+    weights = np.clip(weights, 1.0e-6, None).reshape(-1, 1)
+    weights = weights / float(weights.mean())
     feature_mean = x.mean(axis=0)
     feature_scale = x.std(axis=0)
     feature_scale[feature_scale < 1.0e-8] = 1.0
@@ -566,7 +705,7 @@ def _fit_binary_mlp(
         h1 = np.maximum(z1, 0.0)
         logits = h1 @ w2 + b2
         probs = 1.0 / (1.0 + np.exp(-np.clip(logits, -40.0, 40.0)))
-        grad_logits = (probs - y) / x_norm.shape[0]
+        grad_logits = (weights * (probs - y)) / x_norm.shape[0]
         grad_w2 = h1.T @ grad_logits
         grad_b2 = grad_logits.sum(axis=0)
         grad_h1 = grad_logits @ w2.T
@@ -580,6 +719,65 @@ def _fit_binary_mlp(
     return {
         "feature_mean": tuple(float(value) for value in feature_mean),
         "feature_scale": tuple(float(value) for value in feature_scale),
+        "w1": tuple(tuple(float(value) for value in row) for row in w1),
+        "b1": tuple(float(value) for value in b1),
+        "w2": tuple(float(value) for value in w2[:, 0]),
+        "b2": float(b2[0]),
+    }
+
+
+def _fit_regression_mlp(
+    *,
+    examples: list[Mapping[str, Any]],
+    target_key: str,
+    feature_names: tuple[str, ...],
+    hidden_dim: int,
+    epochs: int,
+    learning_rate: float,
+    seed: int,
+) -> dict[str, Any]:
+    x = np.asarray(
+        [[float(example["features"][name]) for name in feature_names] for example in examples],
+        dtype=np.float64,
+    )
+    y_raw = np.asarray([float(example[target_key]) for example in examples], dtype=np.float64).reshape(-1, 1)
+    weights = np.asarray([float(example.get("example_weight", 1.0)) for example in examples], dtype=np.float64)
+    weights = np.clip(weights, 1.0e-6, None).reshape(-1, 1)
+    weights = weights / float(weights.mean())
+    feature_mean = x.mean(axis=0)
+    feature_scale = x.std(axis=0)
+    feature_scale[feature_scale < 1.0e-8] = 1.0
+    target_mean = float(y_raw.mean())
+    target_scale = float(y_raw.std())
+    if target_scale < 1.0e-8:
+        target_scale = 1.0
+    x_norm = (x - feature_mean) / feature_scale
+    y = (y_raw - target_mean) / target_scale
+    rng = np.random.default_rng(seed)
+    w1 = rng.normal(0.0, 0.12, size=(x_norm.shape[1], hidden_dim))
+    b1 = np.zeros((hidden_dim,), dtype=np.float64)
+    w2 = rng.normal(0.0, 0.12, size=(hidden_dim, 1))
+    b2 = np.zeros((1,), dtype=np.float64)
+    for _ in range(max(1, epochs)):
+        z1 = x_norm @ w1 + b1
+        h1 = np.maximum(z1, 0.0)
+        predictions = h1 @ w2 + b2
+        grad_predictions = weights * (predictions - y) / x_norm.shape[0]
+        grad_w2 = h1.T @ grad_predictions
+        grad_b2 = grad_predictions.sum(axis=0)
+        grad_h1 = grad_predictions @ w2.T
+        grad_z1 = grad_h1 * (z1 > 0.0)
+        grad_w1 = x_norm.T @ grad_z1
+        grad_b1 = grad_z1.sum(axis=0)
+        w1 -= learning_rate * grad_w1
+        b1 -= learning_rate * grad_b1
+        w2 -= learning_rate * grad_w2
+        b2 -= learning_rate * grad_b2
+    return {
+        "feature_mean": tuple(float(value) for value in feature_mean),
+        "feature_scale": tuple(float(value) for value in feature_scale),
+        "target_mean": float(target_mean),
+        "target_scale": float(target_scale),
         "w1": tuple(tuple(float(value) for value in row) for row in w1),
         "b1": tuple(float(value) for value in b1),
         "w2": tuple(float(value) for value in w2[:, 0]),

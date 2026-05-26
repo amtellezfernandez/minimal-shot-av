@@ -214,6 +214,46 @@ class AuditNuPlanClosedLoopBridgeTests(unittest.TestCase):
         table = {row["selector"]: row for row in enriched["closed_loop_selector_comparison"]}
         self.assertEqual(0, table["replay_constrained_risk_0.5"]["aligned_logged_actor_failure_count"])
 
+    def test_selector_comparison_can_use_failure_gate_policy(self) -> None:
+        report = {"scenes": [_comparison_scene()]}
+
+        class SafeSelector:
+            def predict_score(self, features):
+                return float(features["rank"])
+
+        def executor(scene):
+            clearance = 2.0 if scene["selected_token"] == "stop" else 0.2
+            return {
+                "selected_token_executed_min_clearance_m": clearance,
+                "selected_token_executed_min_clearance_t": 1.0,
+                "selected_token_executed_near_miss": clearance < 1.0,
+                "selected_token_executed_collision": False,
+                "first_erosion_time_s": None,
+                "time_from_first_erosion_to_impact_s": None,
+                "executed_clearance_source": "nuplan_closed_loop",
+                "aligned_executed_metric_variants": {"box_clearance_m": clearance},
+            }
+
+        policy = {
+            "gate_model": _always_switch_gate_model(self.module, _comparison_scene(), "stop"),
+            "safe_selector": SafeSelector(),
+            "fallback_mode": "score",
+            "fallback_risk_threshold": 0.5,
+            "gate_threshold": 0.5,
+        }
+        enriched = self.module.enrich_report_with_closed_loop_selector_comparison(
+            report,
+            replay_calibrated_selector=None,
+            failure_gate_policy=policy,
+            executor=executor,
+            replay_infeasible_limit=1,
+            safe_match_limit=0,
+            near_miss_threshold_m=1.0,
+        )
+
+        table = {row["selector"]: row for row in enriched["closed_loop_selector_comparison"]}
+        self.assertEqual(0, table["failure_gate"]["aligned_logged_actor_failure_count"])
+
     def test_selector_comparison_can_use_selective_regret_selector(self) -> None:
         report = {"scenes": [_comparison_scene()]}
 
@@ -380,9 +420,30 @@ def _comparison_scene() -> dict[str, object]:
         {
             "safe_token_existed": True,
             "oracle_log_replay_safe_token": "stop",
+            "six_scalar_state": {
+                "obstacle_pressure": 0.8,
+                "route_blockage": 0.5,
+                "corridor_blocked": False,
+                "left_clearance_m": 6.0,
+                "right_clearance_m": 3.0,
+                "vector": [0.8, 0.5, 0.0, 6.0, 3.0, 1.0],
+            },
+            "route_features": {
+                "heading_error_rad": 0.05,
+                "lane_offset_m": 0.0,
+                "route_remaining_m": 20.0,
+            },
+            "actor_summary": {
+                "nearest_actor_distance_m": 3.0,
+                "leading_actor_distance_m": 5.0,
+                "rear_closing_actor_count": 0,
+                "crossing_actor_count": 1,
+            },
             "candidates": [
                 {
                     "token": "maintain",
+                    "speed_scale": 1.0,
+                    "lateral_offset_m": 0.0,
                     "proxy_safe": True,
                     "min_proxy_clearance_m": 1.5,
                     "score": 1.0,
@@ -397,6 +458,8 @@ def _comparison_scene() -> dict[str, object]:
                 },
                 {
                     "token": "stop",
+                    "speed_scale": 0.0,
+                    "lateral_offset_m": 0.0,
                     "proxy_safe": True,
                     "min_proxy_clearance_m": 1.2,
                     "score": 0.5,
@@ -431,6 +494,20 @@ def _comparison_scene() -> dict[str, object]:
         }
     )
     return scene
+
+
+def _always_switch_gate_model(module, scene: dict[str, object], fallback_token: str) -> dict[str, object]:
+    features = module.failure_gate_feature_row(scene, fallback_token)
+    return {
+        "feature_names": list(features),
+        "hidden_dim": 1,
+        "feature_mean": [0.0 for _ in features],
+        "feature_scale": [1.0 for _ in features],
+        "w1": [[0.0] for _ in features],
+        "b1": [1.0],
+        "w2": [0.0],
+        "b2": 10.0,
+    }
 
 
 def _border_scene(scene_id: str, *, maintain_score: float, stop_score: float) -> dict[str, object]:
