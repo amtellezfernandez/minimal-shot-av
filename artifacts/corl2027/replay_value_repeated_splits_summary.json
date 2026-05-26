@@ -1,0 +1,455 @@
+{
+  "holdout_fraction": 0.3,
+  "input_replay_json": "artifacts/corl2027/nuplan_public_replay_study_interaction1000_expanded/replay.json",
+  "near_miss_threshold_m": 1.0,
+  "replay_value_balanced_objective": {
+    "ade_weight": 2.0,
+    "fail_penalty": 250.0,
+    "progress_weight": 2.0
+  },
+  "replay_value_safe_objective": {
+    "ade_weight": 2.0,
+    "fail_penalty": 250.0,
+    "progress_weight": 1.0
+  },
+  "rows": [
+    {
+      "ade_3s_m": {
+        "mean": 3.846757,
+        "std": 0.56266
+      },
+      "entropy": {
+        "mean": 2.100048,
+        "std": 0.345313
+      },
+      "fde_3s_m": {
+        "mean": 6.66042,
+        "std": 0.731622
+      },
+      "id": "proxy_top1",
+      "label": "Proxy top-1",
+      "progress_m": {
+        "mean": 25.792468,
+        "std": 4.551714
+      },
+      "replay_fail_rate": {
+        "mean": 0.601742,
+        "std": 0.129715
+      }
+    },
+    {
+      "ade_3s_m": {
+        "mean": 3.940329,
+        "std": 0.605493
+      },
+      "entropy": {
+        "mean": 2.160933,
+        "std": 0.293852
+      },
+      "fde_3s_m": {
+        "mean": 6.751968,
+        "std": 0.52812
+      },
+      "id": "scene_token_student",
+      "label": "Scene-token student",
+      "progress_m": {
+        "mean": 25.209552,
+        "std": 5.347804
+      },
+      "replay_fail_rate": {
+        "mean": 0.589613,
+        "std": 0.109893
+      }
+    },
+    {
+      "ade_3s_m": {
+        "mean": 7.052236,
+        "std": 1.111687
+      },
+      "entropy": {
+        "mean": 3.248151,
+        "std": 0.513675
+      },
+      "fde_3s_m": {
+        "mean": 11.432177,
+        "std": 1.681907
+      },
+      "id": "replay_value_safe",
+      "label": "Replay-value, safety-heavy",
+      "progress_m": {
+        "mean": 15.856466,
+        "std": 4.44199
+      },
+      "replay_fail_rate": {
+        "mean": 0.217634,
+        "std": 0.176999
+      }
+    },
+    {
+      "ade_3s_m": {
+        "mean": 5.789857,
+        "std": 1.356622
+      },
+      "entropy": {
+        "mean": 3.184854,
+        "std": 0.420529
+      },
+      "fde_3s_m": {
+        "mean": 9.373343,
+        "std": 2.236339
+      },
+      "id": "replay_value_balanced",
+      "label": "Replay-value, balanced",
+      "progress_m": {
+        "mean": 19.511726,
+        "std": 4.512897
+      },
+      "replay_fail_rate": {
+        "mean": 0.288538,
+        "std": 0.163782
+      }
+    },
+    {
+      "ade_3s_m": {
+        "mean": 8.360207,
+        "std": 0.982307
+      },
+      "entropy": {
+        "mean": 3.302405,
+        "std": 0.398303
+      },
+      "fde_3s_m": {
+        "mean": 13.677092,
+        "std": 1.63106
+      },
+      "id": "replay_value_oracle",
+      "label": "Replay-value oracle",
+      "progress_m": {
+        "mean": 12.197079,
+        "std": 2.351684
+      },
+      "replay_fail_rate": {
+        "mean": 0.20785,
+        "std": 0.175362
+      }
+    }
+  ],
+  "scene_token_config": {
+    "changed_target_weight": 2.0,
+    "epochs": 700,
+    "hidden_dim": 48,
+    "iterations": 3,
+    "learning_rate": 0.03,
+    "regret_sample_weight": 4.0
+  },
+  "schema": "corl_replay_value_repeated_splits_v1",
+  "seed_start": 0,
+  "split_count": 5,
+  "splits": [
+    {
+      "seed": 0,
+      "selectors": {
+        "proxy_top1": {
+          "ade_3s_m": 4.695865,
+          "entropy": 2.592351,
+          "fde_3s_m": 7.53564,
+          "progress_m": 23.234746,
+          "replay_fail_rate": 0.483333
+        },
+        "replay_value_balanced": {
+          "ade_3s_m": 8.450089,
+          "entropy": 3.032044,
+          "fde_3s_m": 13.541368,
+          "progress_m": 14.297169,
+          "replay_fail_rate": 0.096667
+        },
+        "replay_value_oracle": {
+          "ade_3s_m": 9.60142,
+          "entropy": 3.052932,
+          "fde_3s_m": 15.488212,
+          "progress_m": 11.257528,
+          "replay_fail_rate": 0.096667
+        },
+        "replay_value_safe": {
+          "ade_3s_m": 9.053061,
+          "entropy": 2.931075,
+          "fde_3s_m": 14.559155,
+          "progress_m": 12.672948,
+          "replay_fail_rate": 0.096667
+        },
+        "scene_token_student": {
+          "ade_3s_m": 4.736898,
+          "entropy": 2.471153,
+          "fde_3s_m": 7.554919,
+          "progress_m": 23.062473,
+          "replay_fail_rate": 0.46
+        }
+      },
+      "split": {
+        "holdout_db_count": 2,
+        "holdout_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db"
+        ],
+        "holdout_fraction": 0.3,
+        "holdout_scene_count": 300,
+        "seed": 0,
+        "split_unit": "source_db_file",
+        "train_db_count": 6,
+        "train_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.12.22.28.35_veh-35_00620_01164.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+        ],
+        "train_scene_count": 700
+      }
+    },
+    {
+      "seed": 1,
+      "selectors": {
+        "proxy_top1": {
+          "ade_3s_m": 3.152876,
+          "entropy": 1.979412,
+          "fde_3s_m": 5.975988,
+          "progress_m": 26.02063,
+          "replay_fail_rate": 0.470968
+        },
+        "replay_value_balanced": {
+          "ade_3s_m": 5.512281,
+          "entropy": 3.646098,
+          "fde_3s_m": 9.372637,
+          "progress_m": 16.459185,
+          "replay_fail_rate": 0.129032
+        },
+        "replay_value_oracle": {
+          "ade_3s_m": 6.737273,
+          "entropy": 3.702053,
+          "fde_3s_m": 11.220189,
+          "progress_m": 12.345428,
+          "replay_fail_rate": 0.090323
+        },
+        "replay_value_safe": {
+          "ade_3s_m": 6.101125,
+          "entropy": 3.765821,
+          "fde_3s_m": 10.143937,
+          "progress_m": 13.994042,
+          "replay_fail_rate": 0.122581
+        },
+        "scene_token_student": {
+          "ade_3s_m": 3.383018,
+          "entropy": 2.292092,
+          "fde_3s_m": 6.262207,
+          "progress_m": 24.686845,
+          "replay_fail_rate": 0.509677
+        }
+      },
+      "split": {
+        "holdout_db_count": 2,
+        "holdout_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db"
+        ],
+        "holdout_fraction": 0.3,
+        "holdout_scene_count": 155,
+        "seed": 1,
+        "split_unit": "source_db_file",
+        "train_db_count": 6,
+        "train_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.12.22.28.35_veh-35_00620_01164.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+        ],
+        "train_scene_count": 845
+      }
+    },
+    {
+      "seed": 2,
+      "selectors": {
+        "proxy_top1": {
+          "ade_3s_m": 3.32937,
+          "entropy": 1.708718,
+          "fde_3s_m": 6.273609,
+          "progress_m": 29.401738,
+          "replay_fail_rate": 0.666667
+        },
+        "replay_value_balanced": {
+          "ade_3s_m": 5.27159,
+          "entropy": 3.611367,
+          "fde_3s_m": 8.905064,
+          "progress_m": 22.936896,
+          "replay_fail_rate": 0.39
+        },
+        "replay_value_oracle": {
+          "ade_3s_m": 8.90073,
+          "entropy": 3.77654,
+          "fde_3s_m": 14.930745,
+          "progress_m": 10.82271,
+          "replay_fail_rate": 0.323333
+        },
+        "replay_value_safe": {
+          "ade_3s_m": 6.745455,
+          "entropy": 3.870082,
+          "fde_3s_m": 11.189064,
+          "progress_m": 17.584823,
+          "replay_fail_rate": 0.323333
+        },
+        "scene_token_student": {
+          "ade_3s_m": 3.307105,
+          "entropy": 1.765454,
+          "fde_3s_m": 6.189218,
+          "progress_m": 29.046656,
+          "replay_fail_rate": 0.67
+        }
+      },
+      "split": {
+        "holdout_db_count": 2,
+        "holdout_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db"
+        ],
+        "holdout_fraction": 0.3,
+        "holdout_scene_count": 300,
+        "seed": 2,
+        "split_unit": "source_db_file",
+        "train_db_count": 6,
+        "train_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.12.22.28.35_veh-35_00620_01164.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+        ],
+        "train_scene_count": 700
+      }
+    },
+    {
+      "seed": 3,
+      "selectors": {
+        "proxy_top1": {
+          "ade_3s_m": 4.181474,
+          "entropy": 1.804954,
+          "fde_3s_m": 7.55626,
+          "progress_m": 31.600514,
+          "replay_fail_rate": 0.82
+        },
+        "replay_value_balanced": {
+          "ade_3s_m": 5.001974,
+          "entropy": 3.130543,
+          "fde_3s_m": 8.059032,
+          "progress_m": 26.508041,
+          "replay_fail_rate": 0.536667
+        },
+        "replay_value_oracle": {
+          "ade_3s_m": 8.696342,
+          "entropy": 3.265556,
+          "fde_3s_m": 14.428821,
+          "progress_m": 16.634979,
+          "replay_fail_rate": 0.496667
+        },
+        "replay_value_safe": {
+          "ade_3s_m": 6.009489,
+          "entropy": 3.172837,
+          "fde_3s_m": 9.805395,
+          "progress_m": 23.702445,
+          "replay_fail_rate": 0.513333
+        },
+        "scene_token_student": {
+          "ade_3s_m": 3.684868,
+          "entropy": 1.854391,
+          "fde_3s_m": 6.592029,
+          "progress_m": 32.458746,
+          "replay_fail_rate": 0.76
+        }
+      },
+      "split": {
+        "holdout_db_count": 2,
+        "holdout_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.12.22.28.35_veh-35_00620_01164.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db"
+        ],
+        "holdout_fraction": 0.3,
+        "holdout_scene_count": 300,
+        "seed": 3,
+        "split_unit": "source_db_file",
+        "train_db_count": 6,
+        "train_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+        ],
+        "train_scene_count": 700
+      }
+    },
+    {
+      "seed": 4,
+      "selectors": {
+        "proxy_top1": {
+          "ade_3s_m": 3.874198,
+          "entropy": 2.414804,
+          "fde_3s_m": 5.960601,
+          "progress_m": 18.704714,
+          "replay_fail_rate": 0.567742
+        },
+        "replay_value_balanced": {
+          "ade_3s_m": 4.713349,
+          "entropy": 2.504219,
+          "fde_3s_m": 6.988613,
+          "progress_m": 17.357341,
+          "replay_fail_rate": 0.290323
+        },
+        "replay_value_oracle": {
+          "ade_3s_m": 7.86527,
+          "entropy": 2.714945,
+          "fde_3s_m": 12.317492,
+          "progress_m": 9.92475,
+          "replay_fail_rate": 0.032258
+        },
+        "replay_value_safe": {
+          "ade_3s_m": 7.352051,
+          "entropy": 2.500942,
+          "fde_3s_m": 11.463335,
+          "progress_m": 11.32807,
+          "replay_fail_rate": 0.032258
+        },
+        "scene_token_student": {
+          "ade_3s_m": 4.589757,
+          "entropy": 2.421573,
+          "fde_3s_m": 7.161465,
+          "progress_m": 16.793038,
+          "replay_fail_rate": 0.548387
+        }
+      },
+      "split": {
+        "holdout_db_count": 2,
+        "holdout_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db"
+        ],
+        "holdout_fraction": 0.3,
+        "holdout_scene_count": 155,
+        "seed": 4,
+        "split_unit": "source_db_file",
+        "train_db_count": 6,
+        "train_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.12.22.28.35_veh-35_00620_01164.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+        ],
+        "train_scene_count": 845
+      }
+    }
+  ]
+}

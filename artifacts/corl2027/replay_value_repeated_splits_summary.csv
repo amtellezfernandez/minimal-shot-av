@@ -1,0 +1,6 @@
+id,label,replay_fail_rate_mean,replay_fail_rate_std,progress_m_mean,progress_m_std,ade_3s_m_mean,ade_3s_m_std,fde_3s_m_mean,fde_3s_m_std,entropy_mean,entropy_std
+proxy_top1,Proxy top-1,0.601742,0.129715,25.792468,4.551714,3.846757,0.562660,6.660420,0.731622,2.100048,0.345313
+scene_token_student,Scene-token student,0.589613,0.109893,25.209552,5.347804,3.940329,0.605493,6.751968,0.528120,2.160933,0.293852
+replay_value_safe,"Replay-value, safety-heavy",0.217634,0.176999,15.856466,4.441990,7.052236,1.111687,11.432177,1.681907,3.248151,0.513675
+replay_value_balanced,"Replay-value, balanced",0.288538,0.163782,19.511726,4.512897,5.789857,1.356622,9.373343,2.236339,3.184854,0.420529
+replay_value_oracle,Replay-value oracle,0.207850,0.175362,12.197079,2.351684,8.360207,0.982307,13.677092,1.631060,3.302405,0.398303
