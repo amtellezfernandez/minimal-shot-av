@@ -231,9 +231,38 @@ def resolve_synthetic_scene_path(synthetic_scenes_dir: Path, token: str) -> Path
     raise FileNotFoundError(f"missing synthetic scene pickle for token {token} under {synthetic_scenes_dir}")
 
 
-def build_synthetic_scene_index(synthetic_scenes_dir: Path) -> dict[str, Path]:
+def synthetic_scene_index_cache_path(synthetic_scenes_dir: Path) -> Path:
+    return synthetic_scenes_dir.parent / "synthetic_scene_pickles_token_index.json"
+
+
+def load_synthetic_scene_index_cache(synthetic_scenes_dir: Path) -> dict[str, Path]:
+    cache_path = synthetic_scene_index_cache_path(synthetic_scenes_dir)
+    if not cache_path.exists():
+        return {}
+    with cache_path.open() as f:
+        data = json.load(f)
     index = {}
+    for token, filename in data.items():
+        path = synthetic_scenes_dir / filename
+        if path.exists():
+            index[str(token)] = path
+    return index
+
+
+def write_synthetic_scene_index_cache(synthetic_scenes_dir: Path, index: dict[str, Path]) -> None:
+    cache_path = synthetic_scene_index_cache_path(synthetic_scenes_dir)
+    serializable = {token: path.name for token, path in sorted(index.items())}
+    cache_path.write_text(json.dumps(serializable, indent=2))
+
+
+def build_synthetic_scene_index(synthetic_scenes_dir: Path, requested_tokens: list[str] | None = None) -> dict[str, Path]:
+    index = load_synthetic_scene_index_cache(synthetic_scenes_dir)
+    requested = {str(token) for token in requested_tokens or []}
+    if requested and requested.issubset(index):
+        return index
     for path in synthetic_scenes_dir.glob("*.pkl"):
+        if path.stem in index:
+            continue
         scene_data = load_pickle(path)
         metadata = scene_data.get("scene_metadata", {})
         for key in ("initial_token", "scene_token"):
@@ -241,6 +270,9 @@ def build_synthetic_scene_index(synthetic_scenes_dir: Path) -> dict[str, Path]:
             if token:
                 index[str(token)] = path
         index[path.stem] = path
+        if requested and requested.issubset(index):
+            break
+    write_synthetic_scene_index_cache(synthetic_scenes_dir, index)
     return index
 
 
@@ -325,7 +357,7 @@ def main() -> None:
     if args.include_stage in {"second", "both"}:
         if args.synthetic_scenes_dir is None or args.synthetic_sensor_root is None:
             raise ValueError("--synthetic-scenes-dir and --synthetic-sensor-root are required for second-stage data")
-        synthetic_scene_index = build_synthetic_scene_index(args.synthetic_scenes_dir)
+        synthetic_scene_index = build_synthetic_scene_index(args.synthetic_scenes_dir, stage_two_tokens)
         for token in stage_two_tokens:
             item = build_synthetic_item(
                 token,
