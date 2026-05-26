@@ -2,11 +2,17 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "${ROOT_DIR}"
 REPO_PYTHON="${REPO_PYTHON:-${ROOT_DIR}/../../.venv/bin/python}"
 NAVSIM_V2_REPO="${NAVSIM_V2_REPO:-${HOME}/dev/navsim-v2}"
 OPENSCENE_DATA_ROOT="${OPENSCENE_DATA_ROOT:-${NAVSIM_V2_REPO}/data}"
 NAVSIM_EXP_ROOT="${NAVSIM_EXP_ROOT:-${HOME}/dev/navsim_v2_workspace}"
 MODEL_PATH="${MODEL_PATH:-models/OneVL_NAVSIM}"
+
+if [[ -f venv/onevl/bin/activate ]]; then
+  source venv/onevl/bin/activate
+fi
+INFER_PYTHON="${INFER_PYTHON:-python}"
 
 MAX_STAGE_ONE="${MAX_STAGE_ONE:-2}"
 MAX_STAGE_TWO="${MAX_STAGE_TWO:-2}"
@@ -43,7 +49,7 @@ PYTHONPATH="${NAVSIM_V2_REPO}" "${REPO_PYTHON}" scripts/build_navsim_v2_onevl_da
   --max-stage-one "${MAX_STAGE_ONE}" \
   --max-stage-two "${MAX_STAGE_TWO}"
 
-"${REPO_PYTHON}" infer_onevl.py \
+"${INFER_PYTHON}" infer_onevl.py \
   --model_path "${MODEL_PATH}" \
   --test_set_path "${DATASET_JSON}" \
   --image_base_path "" \
@@ -59,7 +65,7 @@ PYTHONPATH="${NAVSIM_V2_REPO}" "${REPO_PYTHON}" scripts/build_navsim_v2_onevl_da
   --seed "${SEED}"
 
 if [[ "${K}" -gt 1 ]]; then
-  "${REPO_PYTHON}" infer_onevl.py \
+  "${INFER_PYTHON}" infer_onevl.py \
     --model_path "${MODEL_PATH}" \
     --test_set_path "${DATASET_JSON}" \
     --image_base_path "" \
