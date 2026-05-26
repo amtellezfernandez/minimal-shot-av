@@ -5,6 +5,8 @@ ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "${ROOT_DIR}"
 
 source venv/onevl/bin/activate
+REPO_PYTHON="${ROOT_DIR}/../../.venv/bin/python"
+NAVSIM_PYTHONPATH="${HOME}/dev/navsim"
 
 mkdir -p output/navsim/sweeps
 
@@ -44,7 +46,7 @@ for seed in 0 1 2 3; do
   fi
 
   if [[ ! -f "${oracle_json}" ]]; then
-    python scripts/navsim_eval_pipeline.py \
+    PYTHONPATH="${NAVSIM_PYTHONPATH}" "${REPO_PYTHON}" scripts/navsim_eval_pipeline.py \
       --subset-json test_data/navsim_test200_balanced.json \
       --candidate-json "${hybrid_json}" \
       --navsim-repo "${HOME}/dev/navsim" \
@@ -54,6 +56,7 @@ for seed in 0 1 2 3; do
       --score-dir "${score_dir}" \
       --token-map-out "${token_map}" \
       --oracle-summary-out "${oracle_json}" \
+      --python-bin "${REPO_PYTHON}" \
       --skip-metric-cache
   fi
 done

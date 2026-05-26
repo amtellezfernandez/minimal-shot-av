@@ -28,6 +28,16 @@ def candidate_list_from_item(item: dict):
     return item["candidates"]
 
 
+def resolve_log_pickle(navsim_logs_dir: Path, log_name: str) -> Path:
+    direct = navsim_logs_dir / f"{log_name}.pkl"
+    if direct.exists():
+        return direct
+    nested = navsim_logs_dir / "test" / f"{log_name}.pkl"
+    if nested.exists():
+        return nested
+    raise FileNotFoundError(f"missing NAVSIM log pickle for {log_name} under {navsim_logs_dir}")
+
+
 def map_tokens(subset_path: Path, navsim_logs_dir: Path, output_path: Path) -> dict:
     data = load_json(subset_path)
     by_log = {}
@@ -40,7 +50,7 @@ def map_tokens(subset_path: Path, navsim_logs_dir: Path, output_path: Path) -> d
 
     result = {}
     for log_name, stems in by_log.items():
-        with (navsim_logs_dir / f"{log_name}.pkl").open("rb") as f:
+        with resolve_log_pickle(navsim_logs_dir, log_name).open("rb") as f:
             frames = pickle.load(f)
         for frame in frames:
             stem = Path(frame["cams"]["CAM_F0"]["data_path"]).stem
@@ -239,6 +249,7 @@ def main():
         help="Reuse an existing metric cache instead of rebuilding it.",
     )
     args = parser.parse_args()
+    sys.path.insert(0, str(args.navsim_repo))
 
     env = os.environ.copy()
     token_map = map_tokens(args.subset_json, args.navsim_logs_dir, args.token_map_out)
