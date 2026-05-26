@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+<style>
+.title{font:700 21px sans-serif;fill:#171717}.label{font:13px sans-serif;fill:#333}.tick{font:12px sans-serif;fill:#555}.grid{stroke:#ddd;stroke-width:1}.axis{stroke:#222;stroke-width:1.5}.note{font:12px sans-serif;fill:#555}
+</style>
+<rect x="0" y="0" width="900" height="520" fill="#fffdf7"/>
+<text class="title" x="84" y="30">Expanded-bank replay-value comparison</text>
+<line class="grid" x1="84.01" y1="54" x2="84.01" y2="432"/>
+<text class="tick" x="84.01" y="456" text-anchor="middle">9.7</text>
+<line class="grid" x1="278.99" y1="54" x2="278.99" y2="432"/>
+<text class="tick" x="278.99" y="456" text-anchor="middle">15.4</text>
+<line class="grid" x1="474.00" y1="54" x2="474.00" y2="432"/>
+<text class="tick" x="474.00" y="456" text-anchor="middle">21.2</text>
+<line class="grid" x1="669.01" y1="54" x2="669.01" y2="432"/>
+<text class="tick" x="669.01" y="456" text-anchor="middle">27.0</text>
+<line class="grid" x1="863.98" y1="54" x2="863.98" y2="432"/>
+<text class="tick" x="863.98" y="456" text-anchor="middle">32.8</text>
+<line class="grid" x1="84" y1="432.22" x2="864" y2="432.22"/>
+<text class="tick" x="74" y="436.22" text-anchor="end">0.02</text>
+<line class="grid" x1="84" y1="337.45" x2="864" y2="337.45"/>
+<text class="tick" x="74" y="341.45" text-anchor="end">0.22</text>
+<line class="grid" x1="84" y1="243.16" x2="864" y2="243.16"/>
+<text class="tick" x="74" y="247.16" text-anchor="end">0.42</text>
+<line class="grid" x1="84" y1="148.39" x2="864" y2="148.39"/>
+<text class="tick" x="74" y="152.39" text-anchor="end">0.62</text>
+<line class="grid" x1="84" y1="54.09" x2="864" y2="54.09"/>
+<text class="tick" x="74" y="58.09" text-anchor="end">0.82</text>
+<line class="axis" x1="84" y1="432" x2="864" y2="432"/>
+<line class="axis" x1="84" y1="54" x2="84" y2="432"/>
+<circle cx="810.21" cy="90.58" r="7" fill="#8a1538" stroke="white" stroke-width="2"/>
+<text class="tick" x="820.21" y="80.58">Proxy top-1</text>
+<circle cx="536.22" cy="223.26" r="7" fill="#b85c00" stroke="white" stroke-width="2"/>
+<text class="tick" x="546.22" y="213.26">Scene-token student</text>
+<circle cx="172.15" cy="395.42" r="7" fill="#1d4ed8" stroke="white" stroke-width="2"/>
+<text class="tick" x="182.15" y="385.42">Replay-value, safety-heavy</text>
+<circle cx="239.72" cy="395.42" r="7" fill="#0f766e" stroke="white" stroke-width="2"/>
+<text class="tick" x="249.72" y="385.42">Replay-value, balanced</text>
+<circle cx="137.79" cy="395.42" r="7" fill="#4b5563" stroke="white" stroke-width="2"/>
+<text class="tick" x="147.79" y="385.42">Replay-value oracle</text>
+<text class="label" x="474.00" y="490" text-anchor="middle">Mean selected progress (m), higher is better</text>
+<text class="label" transform="translate(24 243.00) rotate(-90)" text-anchor="middle">Replay-infeasible rate, lower is better</text>
+<text class="note" x="84" y="512">Source JSON files are recorded in the sidecar summary JSON.</text>
+</svg>

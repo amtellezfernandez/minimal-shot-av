@@ -1,0 +1,6 @@
+id,label,replay_fail_count,replay_fail_rate,progress_m,ade_3s_m,fde_3s_m,entropy
+proxy_top1,Proxy top-1,222,0.740000,31.180619,2.714293,4.135876,2.773497
+scene_token_student,Scene-token student,138,0.460000,23.062473,4.736898,7.554919,2.471153
+replay_value_safe,Replay-value, safety-heavy,29,0.096667,12.275539,9.190038,14.804428,3.088583
+replay_value_balanced,Replay-value, balanced,29,0.096667,14.277506,8.450796,13.571234,3.117276
+replay_value_oracle,Replay-value oracle,29,0.096667,11.257528,9.601420,15.488212,3.052932

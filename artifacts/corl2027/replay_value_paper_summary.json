@@ -1,0 +1,60 @@
+{
+  "rows": [
+    {
+      "ade_3s_m": 2.714293,
+      "entropy": 2.773497,
+      "fde_3s_m": 4.135876,
+      "id": "proxy_top1",
+      "label": "Proxy top-1",
+      "progress_m": 31.180619,
+      "replay_fail_count": 222,
+      "replay_fail_rate": 0.74
+    },
+    {
+      "ade_3s_m": 4.736898,
+      "entropy": 2.471153,
+      "fde_3s_m": 7.554919,
+      "id": "scene_token_student",
+      "label": "Scene-token student",
+      "progress_m": 23.062473,
+      "replay_fail_count": 138,
+      "replay_fail_rate": 0.46
+    },
+    {
+      "ade_3s_m": 9.190038,
+      "entropy": 3.088583,
+      "fde_3s_m": 14.804428,
+      "id": "replay_value_safe",
+      "label": "Replay-value, safety-heavy",
+      "progress_m": 12.275539,
+      "replay_fail_count": 29,
+      "replay_fail_rate": 0.096667
+    },
+    {
+      "ade_3s_m": 8.450796,
+      "entropy": 3.117276,
+      "fde_3s_m": 13.571234,
+      "id": "replay_value_balanced",
+      "label": "Replay-value, balanced",
+      "progress_m": 14.277506,
+      "replay_fail_count": 29,
+      "replay_fail_rate": 0.096667
+    },
+    {
+      "ade_3s_m": 9.60142,
+      "entropy": 3.052932,
+      "fde_3s_m": 15.488212,
+      "id": "replay_value_oracle",
+      "label": "Replay-value oracle",
+      "progress_m": 11.257528,
+      "replay_fail_count": 29,
+      "replay_fail_rate": 0.096667
+    }
+  ],
+  "schema": "corl_replay_value_comparison_v1",
+  "sources": {
+    "replay_value_balanced_json": "/home/amdev/sota/minimal-shot-av/artifacts/corl2027/nuplan_replay_value_selector_interaction1000_expanded_balanced_eval.json",
+    "replay_value_safe_json": "/home/amdev/sota/minimal-shot-av/artifacts/corl2027/nuplan_replay_value_selector_interaction1000_expanded_mlp_eval.json",
+    "scene_token_json": "/home/amdev/sota/minimal-shot-av/artifacts/corl2027/nuplan_recoverable_regret_bootstrap_interaction1000_expanded_iter3.json"
+  }
+}
