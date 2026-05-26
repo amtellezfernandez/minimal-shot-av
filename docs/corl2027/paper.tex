@@ -8,8 +8,10 @@
 \usepackage{microtype}
 \usepackage{hyperref}
 \usepackage{multirow}
+\usepackage{pgfplots}
 \usepackage{subcaption}
 \usepackage{tikz}
+\pgfplotsset{compat=1.18}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds}
 \raggedbottom
 
@@ -388,6 +390,56 @@ recoverable by oracle@K. Student design determines how much of that recoverable 
 actually exploited. A scene-only token classifier underuses the richer bank. A
 candidate-level value student can exploit it.
 
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.9\linewidth,
+    height=5.8cm,
+    xmin=10,
+    xmax=32.5,
+    ymin=0.05,
+    ymax=0.78,
+    xlabel={Mean progress (m)},
+    ylabel={Replay failure rate},
+    grid=both,
+    grid style={line width=.1pt, draw=gray!20},
+    major grid style={line width=.2pt, draw=gray!35},
+    tick label style={font=\footnotesize},
+    label style={font=\footnotesize},
+]
+\addplot[
+    only marks,
+    mark=*,
+    mark size=2.8pt,
+    color=black
+] coordinates {
+    (31.181,0.740)
+    (23.062,0.460)
+    (12.276,0.097)
+    (14.278,0.097)
+    (11.258,0.097)
+};
+\node[anchor=west,font=\footnotesize] at (axis cs:31.181,0.740) {proxy};
+\node[anchor=west,font=\footnotesize] at (axis cs:23.062,0.460) {scene-token};
+\node[anchor=east,font=\footnotesize] at (axis cs:12.276,0.097) {RV safety-heavy};
+\node[anchor=west,font=\footnotesize] at (axis cs:14.278,0.097) {RV balanced};
+\node[anchor=east,font=\footnotesize] at (axis cs:11.258,0.097) {oracle};
+\addplot[
+    dashed,
+    color=gray!70,
+    domain=10:32.5,
+    samples=2
+] {0.097};
+\end{axis}
+\end{tikzpicture}
+\caption{Holdout safety--utility border on the expanded 21-token bank. The scene-token
+student remains far above the oracle failure boundary. Candidate-level replay value (RV)
+reaches the same 0.097 failure line as the oracle, and the balanced RV point retains more
+progress than the safety-heavy point while staying on that boundary.}
+\label{fig:rv_frontier}
+\end{figure}
+
 \begin{table}[t]
 \centering
 \caption{Holdout comparison on the expanded 21-token bank. The scene-token student leaves
@@ -408,6 +460,12 @@ replay-value oracle & 0.097 & 11.258 & 9.601 & 3.053 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Figure~\ref{fig:rv_frontier} makes the same result visible as a boundary comparison rather
+than an isolated table lookup. The important point is not that replay value is ``better''
+in the abstract. It is that candidate-level replay value moves the selector onto the
+expanded-bank failure boundary, while the balanced objective dominates the more
+conservative point on progress without giving up failure rate.
 
 \subsection{Curriculum Targets}
 \label{sec:exp:curriculum}
