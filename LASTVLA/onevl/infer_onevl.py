@@ -854,6 +854,9 @@ def main():
 
     for idx, item in enumerate(test_set):
         output_dict = {}
+        for metadata_key in ("idx", "token", "stage", "log_name"):
+            if metadata_key in item:
+                output_dict[metadata_key] = item[metadata_key]
 
         prompt = item["messages"][0]["content"].replace("<image>", "")
         image_paths_raw = item["images"]

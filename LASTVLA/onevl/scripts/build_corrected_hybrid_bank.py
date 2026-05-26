@@ -9,6 +9,20 @@ def load_json(path: Path):
         return json.load(f)
 
 
+METADATA_KEYS = ("idx", "token", "stage", "log_name")
+
+
+def merge_metadata(item: dict, greedy_item: dict, sample_item: dict) -> None:
+    for key in METADATA_KEYS:
+        greedy_value = greedy_item.get(key)
+        sample_value = sample_item.get(key)
+        if greedy_value is not None and sample_value is not None and greedy_value != sample_value:
+            raise ValueError(f"metadata mismatch for {key}: greedy={greedy_value} sample={sample_value}")
+        value = sample_value if sample_value is not None else greedy_value
+        if value is not None:
+            item[key] = value
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--greedy-json", type=Path, required=True)
@@ -30,6 +44,7 @@ def main():
     merged = []
     for greedy_item, sample_item in zip(greedy, sample):
         item = dict(sample_item)
+        merge_metadata(item, greedy_item, sample_item)
         candidates = [dict(greedy_item["candidates"][0])]
         candidates[0]["candidate_id"] = 0
         candidates[0]["source"] = "onevl_top1"
