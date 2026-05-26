@@ -179,11 +179,12 @@ def load_score_rows(score_dir: Path):
 def build_oracle_summary(score_dir: Path, output_path: Path):
     rows_by_candidate, avg_by_candidate = load_score_rows(score_dir)
     tokens = [row["token"] for row in rows_by_candidate[min(rows_by_candidate)]]
+    candidate_ids = sorted(rows_by_candidate)
     per_scene = []
     for token in tokens:
         scores = [
             float(next(row for row in rows_by_candidate[idx] if row["token"] == token)["score"])
-            for idx in sorted(rows_by_candidate)
+            for idx in candidate_ids
         ]
         oracle_score = max(scores)
         oracle_candidate = scores.index(oracle_score)
@@ -205,11 +206,12 @@ def build_oracle_summary(score_dir: Path, output_path: Path):
     oracle_score = sum(row["oracle_score"] for row in per_scene) / len(per_scene)
     summary = {
         "scene_count": len(tokens),
+        "candidate_count": len(candidate_ids),
         "top1_candidate": 0,
         "top1_score": top1_score,
         "best_fixed_candidate": int(best_fixed_candidate),
         "best_fixed_score": best_fixed_score,
-        "oracle_at_4_score": oracle_score,
+        "oracle_at_k_score": oracle_score,
         "oracle_gap": oracle_score - top1_score,
         "candidate_scores": candidate_scores,
         "per_scene": per_scene,
@@ -231,6 +233,11 @@ def main():
     parser.add_argument("--oracle-summary-out", type=Path, required=True)
     parser.add_argument("--python-bin", default=sys.executable)
     parser.add_argument("--team-name", default="codex-onevl")
+    parser.add_argument(
+        "--skip-metric-cache",
+        action="store_true",
+        help="Reuse an existing metric cache instead of rebuilding it.",
+    )
     args = parser.parse_args()
 
     env = os.environ.copy()
@@ -243,14 +250,15 @@ def main():
     )
     unique_logs = sorted({item["log_name"] for item in token_map.values()})
     unique_tokens = [item["token"] for item in token_map.values()]
-    run_metric_cache(
-        args.python_bin,
-        args.navsim_repo,
-        args.metric_cache_path,
-        unique_logs,
-        unique_tokens,
-        env,
-    )
+    if not args.skip_metric_cache:
+        run_metric_cache(
+            args.python_bin,
+            args.navsim_repo,
+            args.metric_cache_path,
+            unique_logs,
+            unique_tokens,
+            env,
+        )
     run_candidate_scores(
         args.python_bin,
         args.navsim_repo,
