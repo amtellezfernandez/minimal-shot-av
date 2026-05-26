@@ -8,6 +8,8 @@ from pathlib import Path
 
 import numpy as np
 
+ORDER_FEATURES = {"candidate_id", "source_top1"}
+
 
 def load_json(path: Path):
     with path.open() as f:
@@ -139,6 +141,13 @@ def predict_ridge(model, X):
     return Xb @ weights
 
 
+def select_feature_names(examples, drop_order_features: bool):
+    feature_names = sorted(examples[0]["features"].keys())
+    if drop_order_features:
+        feature_names = [name for name in feature_names if name not in ORDER_FEATURES]
+    return feature_names
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--candidate-json", type=Path, required=True)
@@ -150,6 +159,11 @@ def main():
         "--alphas",
         default="0.01,0.1,1.0,10.0,100.0",
         help="Comma-separated ridge alphas",
+    )
+    parser.add_argument(
+        "--drop-order-features",
+        action="store_true",
+        help="Remove candidate_id and source_top1 from the probe feature set.",
     )
     args = parser.parse_args()
 
@@ -195,7 +209,7 @@ def main():
                 }
             )
 
-    feature_names = sorted(examples[0]["features"].keys())
+    feature_names = select_feature_names(examples, args.drop_order_features)
     by_token = {}
     for ex in examples:
         by_token.setdefault(ex["token"], []).append(ex)
@@ -251,6 +265,7 @@ def main():
         "scene_count": len(by_token),
         "candidate_count": candidate_count,
         "feature_count": len(feature_names),
+        "drop_order_features": args.drop_order_features,
         "alphas": cv_rows,
         "selected_alpha": alpha,
         "top1_score": top1_score,

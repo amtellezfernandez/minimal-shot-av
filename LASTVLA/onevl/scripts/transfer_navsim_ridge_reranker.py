@@ -14,6 +14,7 @@ from train_navsim_ridge_reranker import (
     parse_prompt_stats,
     predict_ridge,
     prompt_text_from_item,
+    select_feature_names,
     trajectory_features,
 )
 
@@ -102,6 +103,11 @@ def main():
         default="0.01,0.1,1.0,10.0,100.0",
         help="Comma-separated ridge alphas",
     )
+    parser.add_argument(
+        "--drop-order-features",
+        action="store_true",
+        help="Remove candidate_id and source_top1 from the probe feature set.",
+    )
     args = parser.parse_args()
 
     if not (
@@ -122,7 +128,7 @@ def main():
         args.test_candidate_json, args.test_token_map, args.test_score_dir
     )
 
-    feature_names = sorted(train_examples[0]["features"].keys())
+    feature_names = select_feature_names(train_examples, args.drop_order_features)
     train_by_token = {}
     for ex in train_examples:
         train_by_token.setdefault(ex["token"], []).append(ex)
@@ -168,6 +174,7 @@ def main():
         "test_scene_count": len(test_by_token),
         "candidate_count": len(candidate_ids),
         "feature_count": len(feature_names),
+        "drop_order_features": args.drop_order_features,
         "alphas": cv_rows,
         "selected_alpha": alpha,
         "top1_score": top1_score,

@@ -29,4 +29,17 @@ for seed in 0 1 2 3; do
     --test-score-dir "output/navsim/sweeps/holdout100_hybrid_k8_seed${seed}_t08_p095_scores" \
     --summary-out "${summary_json}" \
     --model-out "${model_json}"
+
+  no_order_summary_json="output/navsim/sweeps/train200_pooled_k8_to_holdout100_seed${seed}_zero_perception_transfer.json"
+  no_order_model_json="output/navsim/sweeps/train200_pooled_k8_to_holdout100_seed${seed}_zero_perception_ridge_model.json"
+  python scripts/transfer_navsim_ridge_reranker.py \
+    --train-candidate-json "${train_candidate_args[@]}" \
+    --train-token-map "${train_token_args[@]}" \
+    --train-score-dir "${train_score_args[@]}" \
+    --test-candidate-json "output/navsim/sweeps/holdout100_hybrid_k8_seed${seed}_t08_p095_candidates.json" \
+    --test-token-map "output/navsim/test100_balanced_holdout_token_map.json" \
+    --test-score-dir "output/navsim/sweeps/holdout100_hybrid_k8_seed${seed}_t08_p095_scores" \
+    --summary-out "${no_order_summary_json}" \
+    --model-out "${no_order_model_json}" \
+    --drop-order-features
 done
