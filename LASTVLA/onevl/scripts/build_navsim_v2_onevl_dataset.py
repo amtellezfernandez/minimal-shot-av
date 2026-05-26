@@ -228,15 +228,32 @@ def resolve_synthetic_scene_path(synthetic_scenes_dir: Path, token: str) -> Path
     raise FileNotFoundError(f"missing synthetic scene pickle for token {token} under {synthetic_scenes_dir}")
 
 
+def build_synthetic_scene_index(synthetic_scenes_dir: Path) -> dict[str, Path]:
+    index = {}
+    for path in synthetic_scenes_dir.glob("*.pkl"):
+        scene_data = load_pickle(path)
+        metadata = scene_data.get("scene_metadata", {})
+        for key in ("initial_token", "scene_token"):
+            token = metadata.get(key)
+            if token:
+                index[str(token)] = path
+        index[path.stem] = path
+    return index
+
+
 def build_synthetic_item(
     token: str,
     synthetic_scenes_dir: Path,
     synthetic_sensor_root: Path,
+    synthetic_scene_index: dict[str, Path],
     command_text: str,
     idx: int,
     include_gt: bool,
 ) -> dict | None:
-    scene_data = load_pickle(resolve_synthetic_scene_path(synthetic_scenes_dir, token))
+    scene_path = synthetic_scene_index.get(token)
+    if scene_path is None:
+        scene_path = resolve_synthetic_scene_path(synthetic_scenes_dir, token)
+    scene_data = load_pickle(scene_path)
     metadata = scene_data["scene_metadata"]
     frames = scene_data["frames"]
     history_count = int(metadata.get("num_history_frames", 4))
@@ -305,11 +322,13 @@ def main() -> None:
     if args.include_stage in {"second", "both"}:
         if args.synthetic_scenes_dir is None or args.synthetic_sensor_root is None:
             raise ValueError("--synthetic-scenes-dir and --synthetic-sensor-root are required for second-stage data")
+        synthetic_scene_index = build_synthetic_scene_index(args.synthetic_scenes_dir)
         for token in stage_two_tokens:
             item = build_synthetic_item(
                 token,
                 args.synthetic_scenes_dir,
                 args.synthetic_sensor_root,
+                synthetic_scene_index,
                 args.command_text,
                 idx,
                 args.include_gt,

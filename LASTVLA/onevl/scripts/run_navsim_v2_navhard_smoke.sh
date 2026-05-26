@@ -33,7 +33,7 @@ fi
 
 mkdir -p "${OUT_DIR}" "${NAVSIM_EXP_ROOT}"
 
-"${REPO_PYTHON}" scripts/build_navsim_v2_onevl_dataset.py \
+PYTHONPATH="${NAVSIM_V2_REPO}" "${REPO_PYTHON}" scripts/build_navsim_v2_onevl_dataset.py \
   --scene-filter-yaml "${SCENE_FILTER_YAML}" \
   --navsim-logs-dir "${OPENSCENE_DATA_ROOT}/navsim_logs/test" \
   --original-sensor-root "${OPENSCENE_DATA_ROOT}/sensor_blobs/test" \
