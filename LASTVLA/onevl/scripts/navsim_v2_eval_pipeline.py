@@ -146,7 +146,7 @@ def run_metric_cache(
     if first_stage_tokens and use_cli_filters:
         cmd.append(f"train_test_split.scene_filter.tokens={hydra_list(first_stage_tokens)}")
     if second_stage_tokens and use_cli_filters:
-        cmd.append(f"train_test_split.scene_filter.synthetic_scene_tokens={hydra_list(second_stage_tokens)}")
+        cmd.append(f"train_test_split.scene_filter.reactive_synthetic_initial_tokens={hydra_list(second_stage_tokens)}")
     if not use_cli_filters:
         print(
             "Skipping Hydra CLI token filters because "
