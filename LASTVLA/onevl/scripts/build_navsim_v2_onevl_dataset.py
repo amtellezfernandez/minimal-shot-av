@@ -126,7 +126,10 @@ def front_image_from_original(frame: dict, sensor_root: Path) -> str:
 
 def front_image_from_synthetic(frame: dict, sensor_root: Path) -> str:
     camera_dict = frame.get("camera_dict") or frame.get("cams")
-    return str((sensor_root / camera_dict["CAM_F0"]["data_path"]).resolve())
+    camera = camera_dict.get("CAM_F0") or camera_dict.get("cam_f0")
+    if camera is None:
+        raise KeyError(f"front camera missing from synthetic camera keys: {sorted(camera_dict)}")
+    return str((sensor_root / camera["data_path"]).resolve())
 
 
 def ego_state_from_original(frame: dict) -> tuple[list[float], list[float]]:
