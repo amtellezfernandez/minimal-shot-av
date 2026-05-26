@@ -256,6 +256,54 @@ bash scripts/infer_roadwork.sh     # ROADWork
 bash scripts/infer_impromptu.sh    # Impromptu
 ```
 
+### NAVSIM Candidate Evaluation and Reranking
+
+The repository also includes a minimal path for turning multi-candidate
+`infer_onevl.py` outputs into official NAVSIM scores and a ridge reranker.
+
+1. Generate candidates with `infer_onevl.py` using:
+
+```bash
+--candidate_mode sample --num_candidates 4
+```
+
+2. Build official NAVSIM score artifacts:
+
+```bash
+python scripts/navsim_eval_pipeline.py \
+  --subset-json test_data/navsim_test200_balanced.json \
+  --candidate-json output/navsim/navsim_candidates_test200_balanced_real.json \
+  --navsim-repo /path/to/navsim \
+  --navsim-logs-dir /path/to/navsim/download/test_navsim_logs/test \
+  --metric-cache-path /path/to/exp/metric_cache_test200_balanced_frame1 \
+  --submission-dir output/navsim/test200_balanced_candidate_submissions \
+  --score-dir output/navsim/test200_balanced_candidate_scores \
+  --token-map-out output/navsim/test200_balanced_token_map.json \
+  --oracle-summary-out output/navsim/test200_balanced_oracle_summary.json
+```
+
+This script:
+- maps candidate images to official NAVSIM frame tokens
+- builds submission pickles per candidate
+- runs official metric caching with `frame_interval=1`
+- runs `run_pdm_score_from_submission`
+- writes an oracle summary JSON
+
+3. Fit and evaluate the ridge reranker:
+
+```bash
+python scripts/train_navsim_ridge_reranker.py \
+  --candidate-json output/navsim/navsim_candidates_test200_balanced_real.json \
+  --token-map output/navsim/test200_balanced_token_map.json \
+  --score-dir output/navsim/test200_balanced_candidate_scores \
+  --summary-out output/navsim/test200_balanced_reranker_summary.json \
+  --model-out output/navsim/test200_balanced_ridge_model.json
+```
+
+The reranker uses candidate trajectory geometry plus OneVL decode statistics
+(`avg_entropy`, `seq_confidence`, `avg_log_prob`) and reports leave-one-scene-out
+selection performance against official NAVSIM scores.
+
 ### For visual cot/text cot explain
 ```bash
 bash scripts/infer_ar1_explain.sh  # APR1 (language + visual explanations, use APR1 as example)
