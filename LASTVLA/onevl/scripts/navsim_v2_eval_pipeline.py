@@ -46,6 +46,24 @@ def candidate_count(data: list[dict]) -> int:
     return max(len(candidate_list_from_item(item)) for item in data)
 
 
+def candidate_stage_tokens(candidate_json_path: Path) -> tuple[list[str], list[str]]:
+    first_stage = []
+    second_stage = []
+    for item in load_json(candidate_json_path):
+        token = item.get("token")
+        if not token:
+            raise ValueError("NAVSIM v2 candidate items must contain a token field")
+        if item.get("stage", "first") == "second":
+            second_stage.append(token)
+        else:
+            first_stage.append(token)
+    return sorted(set(first_stage)), sorted(set(second_stage))
+
+
+def hydra_list(values: list[str]) -> str:
+    return "[" + ",".join(values) + "]"
+
+
 def build_submission_pickles(candidate_json_path: Path, output_dir: Path, team_name: str) -> list[Path]:
     from navsim.common.dataclasses import Trajectory
 
@@ -110,6 +128,8 @@ def run_metric_cache(
     navsim_exp_root: Path,
     cache_path: Path,
     split: str,
+    first_stage_tokens: list[str],
+    second_stage_tokens: list[str],
 ):
     cmd = [
         python_bin,
@@ -120,6 +140,10 @@ def run_metric_cache(
         f"metric_cache_path={cache_path}",
         f"output_dir={cache_path / 'metadata'}",
     ]
+    if first_stage_tokens:
+        cmd.append(f"train_test_split.scene_filter.tokens={hydra_list(first_stage_tokens)}")
+    if second_stage_tokens:
+        cmd.append(f"train_test_split.scene_filter.synthetic_scene_tokens={hydra_list(second_stage_tokens)}")
     run_cmd(cmd, navsim_env(navsim_repo, openscene_data_root, navsim_exp_root))
 
 
@@ -255,6 +279,7 @@ def main():
     args = parser.parse_args()
 
     sys.path.insert(0, str(args.navsim_repo))
+    first_stage_tokens, second_stage_tokens = candidate_stage_tokens(args.candidate_json)
     build_submission_pickles(args.candidate_json, args.submission_dir, args.team_name)
     if not args.skip_metric_cache:
         run_metric_cache(
@@ -264,6 +289,8 @@ def main():
             args.navsim_exp_root,
             args.metric_cache_path,
             args.split,
+            first_stage_tokens,
+            second_stage_tokens,
         )
     run_candidate_scores(
         args.python_bin,
