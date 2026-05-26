@@ -14,17 +14,15 @@
 \raggedbottom
 
 \newcommand{\token}[1]{\textsc{#1}}
-\newcommand{\scalar}[1]{\textit{#1}}
-\newtheorem{theorem}{Theorem}
-\newtheorem{proposition}{Proposition}
+\newcommand{\method}{\textsc{RegretBoot}}
+\newcommand{\regret}[1]{\texttt{#1}}
 
-\title{Collision Survives Actor Completion:\\
-       A Diagnostic Ladder for Multi-Axis Simulator Transfer Failure}
+\title{Recoverable-Regret Bootstrapping\\for Tokenized Autonomous Driving}
 
 \author{
   Alba Maria Tellez Fernandez\\
   \texttt{amtellezfernandez@gmail.com}\\
-  Waymo Open Dataset E2E Challenge
+  Independent research prototype
 }
 
 \begin{document}
@@ -32,984 +30,470 @@
 \maketitle
 
 \begin{abstract}
-We present a transfer result that is negative in the useful sense: in external Waymo
-AlpaSim rollouts, collision persists after actor visibility is restored with a
-world-frame actor-completion proxy and after the learned selector is bypassed by direct
-grid replay. The discovery is not that one policy fails, but that two common sufficiency
-stories fail in this matched diagnostic---missing actors alone and learned-selector
-ranking alone. The CoRL-facing substrate is the bounded action-candidate interface
-evaluated through two external/data-backed surfaces: Waymo AlpaSim transfer diagnostics
-and WOD-E2E candidate selection. Waymo AlpaSim validation exposes a non-co-monotone
-transfer structure: clamping,
-hard vetoing, source decay, world-frame actor completion, actor-axis scoring, and
-learned-selector-free direct-grid replay improve different axes but leave collision
-largely unresolved. The canonical 30-scene world-frame actor-completion rerun leaves collision unchanged
-(0.600 to 0.600), even though offroad, wrong-lane, and progress move. On the same 18
-collision clips, learned-selector-free direct-grid replay improves only two paired clips
-(1.000 to 0.889, $p=0.5000$). The audits explain why this is not a weak null result but a
-localization result. At first impact, baseline logs contain zero structured hazards in all
-18 collision clips; same-frame actor-completion reconstructions are actor-positive in all 18,
-and the 17 actor-completion collision clips with selector logs all contain structured hazards.
-Matched non-collision controls have far lower actor load (median actor-proxy hazard count 4
-vs.\ 22, median closest clearance 14.96\,m vs.\ 5.59\,m). Yet once actor visibility is
-restored, the same collision surface remains. The diagnostic ladder therefore localizes
-the residual boundary to components not isolated by actor completion or learned-selector
-removal: candidate feasibility, controller execution, proxy-execution mismatch, or
-per-axis safety definitions. Frozen world/VLA priors on
-the Waymo E2E candidate-selection track reinforce the same placement thesis: scalar-only
-selection reaches 7.695 RFS, generic latent fusion remains weak, a nonlinear Cosmos head
-reaches 7.845 RFS, and adding a latent world-prior plus direct selector reaches 7.848 RFS.
-Single-surface rollout metrics and offline accuracy are therefore weak transfer indicators
-unless geometric disagreement is instrumented at the candidate-ranking interface and
-audited on external/data-backed surfaces.
+Candidate-based autonomous-driving planners fail for different reasons that are often
+collapsed into one aggregate score. Sometimes no generated candidate is safe. Sometimes a
+safe candidate exists but the planner selects an unsafe top-1 action. Sometimes the top-1
+action is safe but leaves substantial progress or imitation value on the table. We call
+these three cases a generation gap, recoverable safety regret, and recoverable utility
+regret. This paper introduces \method, a model-agnostic audit and bootstrapping pipeline
+that turns those distinctions into training targets for candidate generators. The method
+scores every candidate under public log-replay geometry, decomposes each scene by
+oracle@K versus top-1 value, trains first on safety-recovery teachers, then on
+utility-recovery teachers, and emits candidate-expansion requests when no in-bank safe
+teacher exists. On 1,000 interaction-aware public nuPlan scenes with nine ManeuverToken
+candidates per scene, the initial generator has 281 generation gaps, 346 recoverable
+safety regrets, 44 recoverable utility regrets, and a 0.627 top-1 replay-failure rate.
+After one bootstrapped pass, recoverable safety regret falls from 346 to 13 and top-1
+failure falls from 0.627 to 0.294, while the generation gap remains fixed at 281 and
+utility regret rises to 228. This is the central finding: bootstrapping can close the
+selection/safety branch, but it cannot solve scenes whose candidate bank contains no safe
+trajectory; once safety is recovered, a separate utility-recovery branch becomes visible.
+The current evidence is deliberately bounded: it is public nuPlan log replay with a
+ManeuverToken surrogate generator, not proof of closed-loop VLA safety. The contribution
+is the recoverable-regret training loop and the empirical decomposition it exposes.
 \end{abstract}
 
-\keywords{autonomous driving, imitation learning, DAgger, external transfer,
-discrete action space, calibration, ManeuverToken, geometric world-state}
+\keywords{autonomous driving, candidate generation, imitation learning, nuPlan,
+ManeuverToken, replay safety, recoverable regret, bootstrapping}
 
 % =====================================================================
 \section{Introduction}
 % =====================================================================
 
-Long-tail failure is a central open problem in autonomous driving. Modern end-to-end
-policies can perform well on the common driving distribution but degrade on the rare
-scenario compositions that matter most: wrong-way actors, construction corridors, and
-multi-hazard interactions~\citep{dauner2023parting,hu2023planning}. The dominant response
-is scale---more data, more modalities, larger
-models~\citep{chitta2022transfuser,brohan2023rt2}. This paper reports a sharper
-falsification result: a learned policy can look plausible under one evaluation surface,
-but its external collision surface can survive both a world-frame actor-completion proxy and
-learned-selector-free direct-grid replay. The question is therefore not only how to make
-the state more grounded, but how to determine which transfer boundary remains load-bearing
-after actor visibility and learned-selector removal have already been supplied.
+Modern autonomous-driving policies increasingly generate multiple possible futures, score
+them, and execute one candidate. This candidate interface appears in hand-designed token
+planners, imitation-learned trajectory heads, and vision-language-action (VLA) planners.
+It creates an important diagnostic opportunity: when the executed action fails, we can ask
+whether the planner failed to \emph{generate} a good action or merely failed to
+\emph{select} one. Standard aggregate metrics hide that distinction.
 
-\paragraph{Main discovery.}
-The external failure is not explained by two natural sufficiency hypotheses. Missing
-actors are real: at first impact, baseline logs contain zero structured hazards in all 18
-collision clips, while same-frame actor-completion reconstructions are
-actor-positive in all 18. But missing actors are not sufficient in this diagnostic: the
-matched 30-scene world-frame actor-completion rerun leaves collision unchanged at
-0.600 to 0.600. Learned ranking is also not sufficient: on the same 18 collision clips,
-learned-selector-free direct-grid replay improves only two paired clips. The magnitude of
-the result is this double sufficiency failure: the residual collision surface survives
-both actor completion and learned-selector removal.
+This paper argues that the useful unit of analysis is recoverable regret. Given a scene
+$s$, a candidate set $\mathcal{C}(s)=\{\tau_i\}_{i=1}^K$, and the planner's top-1
+candidate $\tau_1$, we compare top-1 to an oracle over the same candidate bank. If
+oracle@K also fails, the generator has a candidate-generation gap. If oracle@K is safe
+but top-1 fails, the failure is recoverable safety regret: the candidate bank already
+contained a safer trajectory. If both are safe but oracle@K has higher value, the failure
+is recoverable utility regret: the planner can preserve more progress or expert
+similarity without changing the generator class. These cases require different fixes, so
+they should not be optimized with one undifferentiated reranking loss.
 
-The central object is not a single pass rate. It is the ordering that a policy induces
-over bounded action candidates under a proxy state, and the way that ordering interacts
-with candidate feasibility and closed-loop execution. A transfer intervention can repair
-route geometry while worsening collision, or repair progress while leaving lane errors
-unchanged. Treating these outcomes as one aggregate robustness score hides the mechanism.
-We therefore build a diagnostic ladder that systematically tests the easiest explanations:
-matched external reruns, first-impact collision audits, selector-side counterfactuals,
-learned-selector-free replay, matched non-collision controls, and controlled proxy-state
-perturbations.
-
-Discrete maneuver tokens provide the controlled substrate for this study. Their appeal is
-topological rather than architectural. In a multi-hazard scene, the safe trajectory set can
-split into disconnected components: for example, pass left, pass right, or stop before the
-conflict. A continuous regressor moving between components can produce an intermediate
-trajectory that belongs to neither component and intersects the unsafe set. A discrete
-selector avoids this interpolation path by choosing among maneuver representatives with
-explicit clearance margins. Policy uncertainty changes which representative is chosen; it
-does not create a new trajectory between representatives.
-
-This makes grounded selection the transfer-critical interface. Recent latent VLA systems
-correctly argue that driving should reason in geometry and dynamics rather than in text.
-The unresolved step is how a grounded state representation is converted into a concrete
-action when the proxy state is incomplete or biased. Our experiments show that this step
-cannot be audited by offline accuracy or one aggregate planning score. It must be measured
-per axis---safety, route, lane, progress---at the point where candidates are ranked.
+\method{} uses this decomposition as a bootstrapping loop. It does not merely rerank a
+fixed bank at inference. It produces stage-specific supervision for the next generator
+iteration: safety-recovery targets where the generator already proposed a safe
+alternative, utility-recovery targets once safety regret is mostly removed, and
+candidate-expansion requests when no safe in-bank teacher exists. The intended VLA use
+case is direct: a VLA planner proposes $K$ trajectory candidates, the replay-value teacher
+selects high-value in-bank targets, and the generator is distilled toward those targets.
+The present paper validates the loop on a controlled ManeuverToken surrogate before
+claiming a large VLA improvement.
 
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}[
-  node distance=0.4cm and 0.7cm,
-  sbox/.style={rectangle,rounded corners=4pt,draw=black!60,fill=blue!8,
-               minimum width=2.0cm,minimum height=0.75cm,font=\small,align=center},
-  mbox/.style={rectangle,rounded corners=4pt,draw=black!60,fill=orange!15,
-               minimum width=2.3cm,minimum height=0.75cm,font=\small,align=center},
-  rbox/.style={rectangle,rounded corners=4pt,draw=black!60,fill=green!10,
-               minimum width=2.0cm,minimum height=0.75cm,font=\small,align=center},
-  obox/.style={rectangle,rounded corners=4pt,draw=black!80,fill=orange!35,
-               minimum width=2.0cm,minimum height=0.75cm,font=\small\bfseries,align=center},
+  node distance=0.52cm and 0.72cm,
+  box/.style={rectangle,rounded corners=4pt,draw=black!60,fill=blue!8,
+              minimum width=2.3cm,minimum height=0.78cm,font=\small,align=center},
+  val/.style={rectangle,rounded corners=4pt,draw=black!60,fill=orange!14,
+              minimum width=2.3cm,minimum height=0.78cm,font=\small,align=center},
+  targetbox/.style={rectangle,rounded corners=4pt,draw=black!70,fill=green!12,
+              minimum width=2.35cm,minimum height=0.78cm,font=\small,align=center},
+  warn/.style={rectangle,rounded corners=4pt,draw=black!70,fill=red!9,
+              minimum width=2.35cm,minimum height=0.78cm,font=\small,align=center},
   arr/.style={-Stealth,thick}
 ]
-  \node[sbox] (obs) {Obstacle\\positions};
-  \node[sbox,right=of obs] (scalars) {6 World-State\\Scalars};
-  \node[mbox,right=of scalars] (tokens) {9 Maneuver\\Tokens};
-  \node[rbox,below=0.55cm of scalars] (rules) {Reference\\Rule Engine};
-  \node[sbox,right=of tokens] (scorer) {Trust-Region\\Scorer};
-  \node[obox,right=of scorer] (sel) {Selected\\Token};
+  \node[box] (scene) {public scene\\context};
+  \node[box,right=of scene] (gen) {candidate\\generator $G_t$};
+  \node[box,right=of gen] (bank) {$K$ candidate\\trajectories};
+  \node[val,below=of bank] (eval) {log-replay\\metrics};
+  \node[val,left=of eval] (oracle) {top-1 vs\\oracle@K};
+  \node[targetbox,below=of oracle] (safe) {safety-recovery\\teachers};
+  \node[targetbox,right=of safe] (util) {utility-recovery\\teachers};
+  \node[warn,right=of util] (expand) {candidate-expansion\\requests};
+  \node[box,below=of safe,xshift=1.55cm] (next) {train next\\generator $G_{t+1}$};
 
-  \draw[arr] (obs) -- (scalars);
-  \draw[arr] (scalars) -- (tokens);
-  \draw[arr] (scalars) -- (rules);
-  \draw[arr] (tokens) -- (scorer);
-  \draw[arr] (rules.east) to[out=0,in=270] (scorer.south);
-  \draw[arr] (scorer) -- (sel);
-
-  \node[sbox,below=0.55cm of obs,xshift=0.3cm] (sensor) {AlpaSim\\(4-ch adapter)};
-  \draw[arr,dashed] (sensor) -- (obs);
+  \draw[arr] (scene) -- (gen);
+  \draw[arr] (gen) -- (bank);
+  \draw[arr] (bank) -- (eval);
+  \draw[arr] (eval) -- (oracle);
+  \draw[arr] (oracle) -- (safe);
+  \draw[arr] (oracle) -- (util);
+  \draw[arr] (oracle) -- (expand);
+  \draw[arr] (safe) -- (next);
+  \draw[arr] (util) -- (next);
+  \draw[arr,dashed] (next.west) to[out=180,in=270] (gen.south);
 \end{tikzpicture}
-\caption{Spotlight Reflex pipeline. Obstacle positions (raw geometry, or via a 4-channel
-AlpaSim adapter) feed six scalar encoders. Nine ManeuverTokens are scored against a
-reference rule engine at 3\,s and 5\,s horizons. The highest-scoring token is executed.
-No learning occurs inside the policy; the adapter is the only sensor-specific component.}
-\label{fig:pipeline}
+\caption{\method{} separates candidate-generation failure from recoverable selection
+regret. Safety and utility cases produce in-bank teacher trajectories for bootstrapping.
+Generation-gap cases do not: they request a richer candidate distribution.}
+\label{fig:loop}
 \end{figure}
 
-We make four contributions (Fig.~\ref{fig:pipeline}):
+The empirical result is intentionally narrow and reproducible. We use public nuPlan
+scenes~\citep{caesar2021nuplan}, an interaction-aware sampler, and logged future actors
+to evaluate the replay clearance of every token. The current generator is a
+ManeuverToken bank of nine canonical responses. This surrogate is useful because every
+candidate can be scored exactly and the top-1 choice can be changed without confounding
+the candidate set. The same JSON/JSONL candidate interface also accepts external VLA
+outputs, but VLA dumps are used for regret claims only after every candidate has replay
+and utility metrics attached.
+
+We make four contributions.
 
 \begin{enumerate}
-  \item \textbf{Non-interpolation theorem (Sec.~\ref{sec:method:topology}).}
-    We state a conditional safety result: if tokens lie inside disconnected safe maneuver
-    classes with clearance margin greater than execution noise, discrete selection cannot
-    enter the unsafe set by interpolation, while continuous transitions between classes must
-    cross it.
+  \item \textbf{Recoverable-regret decomposition.} We define generation gap,
+    recoverable safety regret, and recoverable utility regret for candidate driving
+    planners using top-1 versus oracle@K under the same candidate bank.
 
-  \item \textbf{Geometric World-State Encoding (Sec.~\ref{sec:method:wstate}).}
-    Six O(1) scalars derived from obstacle geometry---with no object identity or semantic
-    labels---provide sufficient discriminative signal for the trust-region scorer, and satisfy
-    a formally stated invariance to object-identity relabelling.
+  \item \textbf{Bootstrapped candidate curriculum.} We turn the decomposition into a
+    generator-training curriculum: safety recovery first, utility recovery second, and
+    candidate expansion for scenes with no safe in-bank teacher.
 
-  \item \textbf{Collision survives actor completion and learned-selector-free replay
-    (Sec.~\ref{sec:exp:alpasim}).}
-    A 10-clip external transfer matrix shows that clamping, source decay, and hard
-    geometric vetoes repair different axes and damage others. A matched world-frame
-    actor-completion rerun removes the stale-frame confound but remains inconclusive for
-    collision causality: full actor completion leaves raw collision unchanged while
-    modestly improving progress and changing lane/offroad behavior in opposite directions.
-    A first-impact audit and matched-control bridge show systematic structured-hazard
-    dropout at the collision-critical frames: baseline impact logs are actor-empty while
-    same-frame actor-completion reconstructions are actor-positive and much denser than
-    lead-to-terminal-matched non-collision controls. Actor completion therefore changes
-    both visibility and action choice on the collision clips, but the residual collision
-    surface still lies beyond learned-selector ranking alone.
-    An explicit actor-axis proxy is likewise inconclusive as a positive method. Transfer
-    failure is therefore not a single scalar degradation, and collision is not explained
-    by either missing actors alone or learned-selector ranking alone in this matched
-    diagnostic: offroad,
-    wrong-lane, collision, progress, and distance-to-ground-truth expose distinct
-    mechanisms.
+  \item \textbf{Public interaction replay audit.} On 1,000 public nuPlan interaction
+    scenes, the initial token generator exposes all three regimes at scale: 281
+    generation gaps, 346 recoverable safety regrets, and 44 utility regrets.
 
-  \item \textbf{Grounded selection evidence from frozen visual/world priors.}
-    In the Waymo E2E candidate-selection track, scalar-only selectors plateau at 7.695
-    RFS, InternVLA-only grounding does not help, and linear fusion of InternVLA with
-    Cosmos remains weak. A nonlinear direct-policy head over frozen Cosmos 64d embeddings
-    reaches 7.845 RFS, while a latent world-prior plus direct selector reaches 7.848
-    RFS with lower regret to oracle. This turns the VLA comparison into a placement
-    result: frozen geometry/world priors help when they participate in the selector that
-    ranks bounded candidates, but not when they are appended as generic latent features.
+  \item \textbf{One-step lifecycle evidence.} A bootstrapped generator pass reduces
+    recoverable safety regret from 346 to 13 and top-1 replay failure from 0.627 to
+    0.294, while leaving the generation gap unchanged. This validates the split: in-bank
+    safety regret is learnable; missing safe candidates require generator expansion.
 \end{enumerate}
-
-Taken together, these contributions form a diagnostic ladder that tests increasingly
-tempting explanations: matched external reruns test actor visibility, first-impact audits
-test what the scorer believes at collision time, selector-side counterfactuals test token
-availability, and learned-selector-free replay tests ranking sufficiency.
-Across the learned-policy variants, the token library, low-level controller, and AlpaSim
-scene set are held fixed; clamping, vetoing, source decay, and axis constraints change
-only the selection interface. In the WOD grounding ablation, the candidate pool and
-validation frames are held fixed while the latent prior and selector head vary. The CoRL
-evidence claim is therefore made from AlpaSim and WOD-E2E, not from internal simulator
-rollouts.
 
 % =====================================================================
 \section{Related Work}
 % =====================================================================
 
-\paragraph{Long-tail failure in imitation learning.}
-\citet{pomerleau1989alvinn} and \citet{ross2011dagger} established covariate shift as the
-core failure mode of behavior cloning. \citet{ho2016gail} mitigated it adversarially but
-retained a continuous action space. \citet{bansal2018chauffeurnet} synthesised worst-case
-training scenarios; \citet{dauner2023parting} showed that rule-based planners outperform
-learned ones on nuPlan~\citep{caesar2021nuplan} in many regimes—supporting the view that
-structural inductive biases matter more than model scale for long-tail coverage.
+\paragraph{Imitation learning and long-tail driving.}
+Behavior cloning suffers from covariate shift~\citep{pomerleau1989alvinn,ross2011dagger},
+and driving systems often degrade on rare interaction compositions even when common-case
+performance is strong~\citep{bansal2018chauffeurnet,hu2023planning}. Larger sensor-fusion
+and VLA models improve representation and scale~\citep{chitta2022transfuser,brohan2023rt2},
+but they do not by themselves answer whether a failure is due to missing candidates or bad
+selection among candidates.
 
-\paragraph{Discrete action spaces.}
-DQN~\citep{mnih2015human} demonstrated that discretizing the action space enables stable
-deep RL where continuous policy gradients fail. Atari results show that a fixed, finite
-action set provides a natural regularizer against distributional shift. We apply this
-structural idea to the planning setting without RL: ManeuverTokens provide a finite,
-semantically grounded action set whose footprints are invariant to scene uncertainty.
+\paragraph{Candidate planners and VLA grounding.}
+Latent VLA driving systems such as LaST-VLA~\citep{luo2026lastvla} argue that planning
+should be grounded in geometry and dynamics rather than only textual reasoning. Our work
+is complementary: it instruments the action-candidate interface that such systems must
+ultimately use. A grounded generator can still fail if its top-1 candidate is not the best
+candidate it generated. Conversely, no reranker can recover a scene where oracle@K is
+unsafe. The paper's core distinction is therefore between generation gap and recoverable
+selection regret.
 
-\paragraph{Potential-field and reactive planners.}
-Potential-field methods~\citep{khatib1986potential} combine attractive (goal) and repulsive
-(obstacle) forces to produce continuous navigation directions. Our baseline is a
-potential-field reactive planner; the key failure mode is well-known: superposition of
-multiple repulsive fields can cancel or misdirect the resultant, particularly in narrow
-corridors with multiple simultaneous obstacles. ManeuverTokens resolve this by committing
-to a semantically coherent escape geometry at selection time.
-
-\paragraph{Geometric abstraction for planning.}
-Conditional imitation learning~\citep{codevilla2018end} uses a route command to condition
-a continuous policy. Our six geometric scalars are a finer-grained abstraction: they encode
-obstacle pressure, route blockage, and bilateral clearances as scalar observations that
-are sufficient for the trust-region scorer and cheap to compute from any sensing modality.
-
-\paragraph{VLA grounding and latent world priors.}
-Recent autonomous-driving VLA work argues that direct trajectory generation and textual
-chain-of-thought are not enough: latent reasoning must be grounded in geometric and
-dynamic priors. LaST-VLA~\citep{luo2026lastvla}, for example, distills 3D geometric
-features and video-world-model dynamics into latent tokens and optimizes trajectory-level
-metrics with RL. Our study is complementary rather than competitive. We do not train a
-large VLA; instead, we test where such priors should enter a transfer-critical driving
-stack. The missing variable is not only representation quality; it is placement. In our
-WOD ablation, InternVLA-only features and linear Cosmos--InternVLA fusion remain below the
-scalar baseline, while a selector-aligned nonlinear Cosmos head and a latent world-prior
-plus direct selector produce the best tracked RFS and regret. The link to LaST-VLA is
-therefore operational: physical latent grounding matters most when it constrains the
-action-ranking operator over bounded candidates, the same stage that fails under AlpaSim
-proxy-state transfer. Without that placement test, aggregate planning scores can hide
-non-co-monotone failures across collision, route geometry, lane adherence, and progress.
-
-\paragraph{Transfer diagnostics and mechanism localization.}
-Most external-transfer evaluations report whether a policy improves under a target
-benchmark. Our goal is narrower: identify which interface changes are load-bearing when
-the same token policy is moved from a source proxy state to reconstructed external
-geometry. This requires paired interventions rather than a single leaderboard row. The
-world-frame actor-completion tests actor visibility, first-impact audits test what the scorer
-believes at collision time, selector-side counterfactuals test whether a safe token was
-available in the logged candidate set, learned-selector-free replay tests whether ranking was the
-bottleneck, and matched non-collision controls test whether impact windows differ from the
-rest of the scene set. The resulting negative evidence is part of the mechanism claim: if
-collision remains after actor completion and selector removal, then the residual transfer
-surface lies beyond the learned selector alone.
-
-\paragraph{Simulator transfer and validation scope.}
-\citet{khurana2022differentiable} and \citet{shi2024motiondiffuser} study trajectory
-prediction in sensor-realistic environments. Our AlpaSim adapter is a transfer diagnostic
-that decouples policy logic from sensor processing; it is not a substitute for physics
-simulation or real-vehicle validation.
+\paragraph{Reranking, self-training, and bootstrapping.}
+Candidate reranking is a known way to improve top-1 decisions. \method{} is not presented
+as a novel scoring head alone. Its contribution is to use replay-measured regret to decide
+which examples should train the next generator iteration and which examples require
+candidate expansion. The safety-recovery and utility-recovery phases produce teacher
+trajectories; generation-gap scenes do not. This prevents the method from treating all
+planner failures as more labels for the same selector.
 
 % =====================================================================
 \section{Method}
 \label{sec:method}
 % =====================================================================
 
-\subsection{Discrete ManeuverToken Space}
-\label{sec:method:tokens}
+\subsection{Candidate Interface}
+\label{sec:method:candidates}
 
-We define nine ManeuverTokens (Table~\ref{tab:tokens}) covering the evaluated
-safety-critical response classes of the SE(2) maneuver manifold. Each token is a pair
-$(\alpha, \delta)$: a speed scale
-$\alpha \in [0,1]$ relative to current ego speed and a signed lateral offset $\delta \in
-\mathbb{R}$ (m), realized as a 20-waypoint, 5-second trajectory at 4~Hz via cubic spline.
+For each scene $s$, a planner or generator $G_t$ emits a finite candidate bank
+\[
+  \mathcal{C}_t(s)=\{\tau_1,\ldots,\tau_K\},
+\]
+where each $\tau_i$ is a trajectory candidate with an identifier, optional token label,
+and per-candidate metrics. The current nuPlan surrogate uses the nine ManeuverTokens in
+Table~\ref{tab:tokens}; the same file format accepts sampled or beam-search trajectories
+from a VLA generator.
 
 \begin{table}[t]
 \centering
-\caption{ManeuverToken definitions. Speed scale $\alpha$ is relative to current cruise
-speed; lateral offset $\delta$ is in vehicle frame. \emph{Early} profile applies offset in
-the first third of the trajectory for fast separation.}
+\caption{ManeuverToken candidate bank used for the public surrogate experiment. The method
+does not depend on these hand-written tokens; it only requires a candidate bank with
+attached replay and utility metrics.}
 \label{tab:tokens}
 \footnotesize
-\begin{tabular}{lccll}
+\begin{tabular}{lccl}
 \toprule
-Token & $\alpha$ & $\delta$ (m) & Profile & Semantic \\
+Token & Speed scale & Lateral offset & Role \\
 \midrule
-\token{stop}          & 0.00 & 0.0  & — & Emergency stop \\
-\token{crawl}         & 0.15 & 0.0  & smooth & Cautious forward \\
-\token{maintain}      & 1.00 & 0.0  & smooth & Current speed, lane centre \\
-\token{slow\_yield}   & 0.50 & 0.0  & smooth & Yield, hold position \\
-\token{nudge\_left}   & 0.80 & +0.9 & smooth & Mild lateral evasion left \\
-\token{nudge\_right}  & 0.80 & $-$0.9 & smooth & Mild lateral evasion right \\
-\token{evasive\_left} & 0.70 & +2.2 & early & Strong evasion left \\
-\token{evasive\_right}& 0.70 & $-$2.2 & early & Strong evasion right \\
-\token{lane\_recover} & 0.90 & 0.0  & smooth & Return to lane centre \\
+\token{stop}           & 0.00 & 0.0  & hard stop \\
+\token{crawl}          & 0.15 & 0.0  & cautious forward \\
+\token{maintain}       & 1.00 & 0.0  & nominal progress \\
+\token{slow\_yield}    & 0.50 & 0.0  & yielding progress \\
+\token{nudge\_left}    & 0.80 & +0.9 & mild left avoidance \\
+\token{nudge\_right}   & 0.80 & -0.9 & mild right avoidance \\
+\token{evasive\_left}  & 0.70 & +2.2 & strong left avoidance \\
+\token{evasive\_right} & 0.70 & -2.2 & strong right avoidance \\
+\token{lane\_recover}  & 0.90 & 0.0  & lane-center recovery \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{Coverage for the evaluated hazard family.}
-The nine tokens are not claimed to be globally optimal. They are a minimal engineering
-instantiation for the hazard family evaluated here: hard stop, cautious forward progress,
-nominal progress, yield-without-stopping, bilateral mild avoidance, bilateral strong
-avoidance, and post-avoidance recovery.
+Each candidate is evaluated against logged future actors. A candidate is replay-failed if
+its minimum replay clearance falls below the near-miss threshold. This is a conservative
+future-geometry test, not a reactive closed-loop simulator: logged actors do not respond
+to the ego candidate.
 
-\begin{proposition}[Token removal induces a maneuver gap]
-For the evaluated multi-hazard family, removing any one response class from the 9-token
-library eliminates at least one feasible safe response mode: longitudinal hard stop,
-cautious progress, mild lateral avoidance, strong lateral avoidance, or recovery. The
-resulting controller must either overreact (e.g., full evasion for a mild obstacle),
-underreact (e.g., nudge where full evasion is required), or fail to re-enter the lane.
-\end{proposition}
+\subsection{Replay Value}
+\label{sec:method:value}
 
-\begin{proposition}[Geometry-Invariance]
-Let $T$ be any bijection on object labels leaving obstacle positions unchanged. Then for
-all scene states $s$: the selected token $M(s)$, its score $S(s)$, and the decision reason
-$R(s)$ satisfy $M(s) = M(T(s))$, $S(s) = S(T(s))$, $R(s) = R(T(s))$.
-\end{proposition}
+We assign each candidate a replay value
+\begin{equation}
+  V(s,\tau) =
+  -\lambda_f \mathbf{1}[\tau\ \text{replay-fails}]
+  + w_p\,p(s,\tau)
+  - w_a\,\mathrm{ADE}_{3s}(s,\tau)
+  - w_f\,\mathrm{FDE}_{3s}(s,\tau)
+  + w_c\,c(s,\tau),
+  \label{eq:value}
+\end{equation}
+where $p$ is route progress, $\mathrm{ADE}_{3s}$ and $\mathrm{FDE}_{3s}$ compare the
+candidate to logged ego motion, and $c$ is optional clearance reward. The main reported
+artifacts use $\lambda_f=250$, $w_p=1$, $w_a=2$, $w_f=0$, and $w_c=0$. These weights are
+not claimed to be universal; they define the replay teacher used for the current audit.
 
-The geometry-invariance proposition follows from the encoding in
-Sec.~\ref{sec:method:wstate}: no token score depends on object labels. The implementation
-tests this directly by relabelling obstacles and asserting equality of token, score, and
-reason outputs.
-
-\subsection{Topological Safety Through Non-Interpolation}
-\label{sec:method:topology}
-
-Let $\mathcal{A}$ denote the action space of 5\,s trajectories, and for scene state $s$
-let $\mathcal{U}(s) \subset \mathcal{A}$ be the unsafe set (trajectories violating the
-clearance constraint). Let $\mathcal{S}(s)=\mathcal{A}\setminus\mathcal{U}(s)$ be the safe
-set. In multi-hazard scenes, $\mathcal{S}(s)$ may decompose into disjoint maneuver classes
-$\mathcal{S}_1(s),\ldots,\mathcal{S}_K(s)$, such as stop-before-conflict, pass-left, and
-pass-right.
-
-We use the trajectory metric
-$d(\tau_a,\tau_b)=\max_t \|\tau_a(t)-\tau_b(t)\|_2$ over the 5\,s horizon. A continuous
-policy outputs $a_c(s)\in\mathcal{A}$ and is executed with bounded decision or actuation
-error $\epsilon$, $\|\epsilon\|\le\eta$. A token policy selects
-$\tau_i\in T=\{\tau_1,\ldots,\tau_N\}$ and executes $\tilde{\tau}_i=\tau_i+\epsilon$.
-
-\begin{theorem}[Safety through non-interpolation]
-\label{thm:noninterp}
-Fix a scene state $s$. Suppose:
-\begin{enumerate}
-\item each selected token $\tau_i$ lies in a safe maneuver class $\mathcal{S}_k(s)$;
-\item each selected token has clearance margin
-  $\mathrm{dist}(\tau_i,\mathcal{U}(s))>\eta$;
-\item there exist two safe maneuver classes $\mathcal{S}_i(s)$ and $\mathcal{S}_j(s)$ such
-  that every continuous path in $\mathcal{A}$ from $\mathcal{S}_i(s)$ to
-  $\mathcal{S}_j(s)$ intersects $\mathcal{U}(s)$.
-\end{enumerate}
-Then every noisy execution of a selected token remains safe, while any continuous
-controller that changes between $\mathcal{S}_i(s)$ and $\mathcal{S}_j(s)$ by interpolation
-must pass through an unsafe trajectory.
-\end{theorem}
-
-\begin{proof}
-For a token, $\mathrm{dist}(\tau_i,\mathcal{U}(s))>\eta$ implies that every perturbation
-with norm at most $\eta$ remains outside $\mathcal{U}(s)$. For the continuous case, let
-$\gamma:[0,1]\to\mathcal{A}$ be any continuous transition from a trajectory in
-$\mathcal{S}_i(s)$ to one in $\mathcal{S}_j(s)$. By assumption, $\gamma$ intersects
-$\mathcal{U}(s)$, so there exists $t^\star$ with $\gamma(t^\star)\in\mathcal{U}(s)$.
-Thus interpolation between disconnected safe maneuver classes necessarily traverses the
-unsafe set, whereas token selection jumps between representatives and does not execute the
-intermediate path.
-\end{proof}
-
-The theorem is conditional: it does not prove that nine tokens are globally optimal, nor
-that the specific numeric offsets in Table~\ref{tab:tokens} are unique. It identifies the
-property we test empirically: safety comes from selecting margin-separated maneuver
-classes, not from continuous interpolation through the action manifold.
-
-\subsection{Metric-Ordering Limits Under Transfer}
-\label{sec:method:ordering}
-
-The external diagnostic requires a second formal distinction. Let $z=\phi(x)$ be a
-source proxy-state representation and $z'=\phi'(x)$ be a transferred proxy
-representation of the same underlying driving scene. For a candidate token $\tau$, define
-axis-specific costs $c_j(z',\tau)$ for collision risk, offroad risk, wrong-lane risk,
-progress loss, and tracking error, with lower values preferred. A selector intervention is
-monotone across axes only if replacing token $\tau_a$ with token $\tau_b$ weakly decreases
-all costs $c_j$ under $z'$.
-
-\begin{proposition}[Non-co-monotone transfer axes]
-\label{prop:noncomonotone}
-If two transfer metrics induce conflicting orderings over the token library, i.e. there
-exist tokens $\tau_a,\tau_b$ and axes $p,q$ such that
+Let
 \[
-c_p(z',\tau_a) < c_p(z',\tau_b)
-\quad\text{and}\quad
-c_q(z',\tau_a) > c_q(z',\tau_b),
+  \tau^\star(s)=\arg\max_{\tau\in\mathcal{C}_t(s)} V(s,\tau)
 \]
-then no intervention that switches from $\tau_b$ to $\tau_a$ can be interpreted as a
-uniform transfer improvement. It improves axis $p$ while worsening axis $q$.
-\end{proposition}
-
-\begin{proof}
-The first inequality states that $\tau_a$ is better than $\tau_b$ on axis $p$; the second
-states that $\tau_a$ is worse than $\tau_b$ on axis $q$. Therefore the switch has opposite
-sign on the two metrics. A scalar rollout score that reports only the improvement on
-$p$, or only an aggregate of $p$ and $q$, can hide this disagreement.
-\end{proof}
-
-Proposition~\ref{prop:noncomonotone} is deliberately modest. It does not claim that
-transfer failure is unsolvable. It states the condition under which a single intervention
-cannot be judged by one scalar success rate. The AlpaSim matrix in
-Table~\ref{tab:alpasim_diag} is an empirical instance: clamping, hard vetoes, and
-source-decayed DAgger each improve at least one transfer axis while worsening or failing to
-move another.
-
-\subsection{Geometric World-State Encoding}
-\label{sec:method:wstate}
-
-At each timestep the policy computes six scalar features from ego position and obstacle
-geometry (no object classification, no learned features, no history):
-
-\begin{align}
-\scalar{pressure}    &= \mathrm{clip}\!\left(\frac{10 - d_{\min}}{10}, 0, 1\right)
-    \label{eq:pressure} \\
-\scalar{blockage}    &\in [0,1], \quad \text{fraction of forward corridor cross-section occupied}
-    \label{eq:blockage} \\
-\scalar{blocked}     &\in \{0,1\}, \quad \text{hard stop within braking distance}
-    \label{eq:blocked} \\
-\scalar{left\_clr}   &= \text{free lateral space left at half vehicle width (m)}
-    \label{eq:lclr} \\
-\scalar{right\_clr}  &= \text{free lateral space right at half vehicle width (m)}
-    \label{eq:rclr} \\
-\scalar{escape}      &= \arg\max(\scalar{left\_clr},\;\scalar{right\_clr})
-    \label{eq:escape}
-\end{align}
-
-All six scalars are $O(1)$ given a sorted obstacle list ($d_\text{min}$ by distance).
-The encoding contains no object identity or semantic labels, so geometry-invariance follows
-directly. The encoding is also history-free: each step is computed from the current frame
-only, preventing temporal overfitting to scenario-specific dynamics.
-
-\subsection{Trust-Region Scoring}
-\label{sec:method:scoring}
-
-Each token is scored against a reference rule engine whose rules are hand-authored from
-safety engineering first principles—not learned from demonstrations.
-
-\paragraph{Speed-scaled tolerance.}
+be oracle@K inside the generated bank, and let $\tau_1(s)$ be the generator's selected
+top-1 candidate. The recoverable regret is
 \begin{equation}
-s(v) = \mathrm{clip}\!\left(\frac{v - 1.4}{11.0 - 1.4},\; 0,\; 1\right) \times 0.5 + 0.5
+  R(s)=\max(0, V(s,\tau^\star)-V(s,\tau_1)).
 \end{equation}
-$s(v) \in [0.5, 1.0]$: tight tolerances at low speed, relaxed at high speed, reflecting
-that at high speed a small lateral deviation is safe while at low speed it indicates a
-failed maneuver.
 
-\paragraph{Trust-region thresholds.} At 3~s horizon: $\pm 1.0 \cdot s(v)$~m lateral,
-$\pm 4.0 \cdot s(v)$~m longitudinal. At 5~s: $\pm 1.8 \cdot s(v)$~m, $\pm 7.2 \cdot s(v)$~m.
+\subsection{Regret Taxonomy}
+\label{sec:method:taxonomy}
 
-\paragraph{Token score.} Let $\delta$ be the normalized overshoot beyond the trust region,
-and $r$ a reference rule with target score $r.\texttt{score} \in [0, 100]$:
-\begin{equation}
-\text{score}_t(\tau, r) = \begin{cases} r.\texttt{score} & \delta = 0 \\ \max(r.\texttt{score}
-\cdot 0.1^{\delta},\; 4.0) & \delta > 0 \end{cases}
-\end{equation}
-\begin{equation}
-S(\tau) = 0.5 \cdot \max_r \text{score}_{3\text{s}}(\tau, r) + 0.5 \cdot \max_r
-\text{score}_{5\text{s}}(\tau, r) + P(\tau)
-\end{equation}
-where $P(\tau)$ adds clearance penalties ($-1000$ if clearance $< 0.55$~m) and progress
-bonuses (+40 max). The token $\tau^* = \arg\max_\tau S(\tau)$ is executed.
+Each valid scene is assigned one of four outcomes:
 
-\paragraph{Reference rules.}
-Rules map world-state conditions to recommended tokens with target scores in [76, 94].
-Key rules: \scalar{pressure}~$< 0.25$ and open corridor $\to$ \token{maintain}~(92);
-\scalar{pressure}~$> 0.20$ with preferred escape $\to$ \token{nudge}$_{\text{escape}}$~(91);
-\scalar{pressure}~$\ge 0.35$ with preferred escape $\to$
-\token{evasive}$_{\text{escape}}$~(94);
-\scalar{blocked}~$= 1 \to$ \token{stop}~(82). Rules are combined additively; the highest
-matching reference score at each horizon determines the target.
+\begin{description}
+  \item[Generation gap.] Oracle@K replay-fails. No candidate in the bank is safe under the
+    replay metric, so there is no in-bank teacher trajectory.
+  \item[Recoverable safety regret.] Oracle@K is replay-safe but top-1 replay-fails. The
+    candidate bank contains a safe teacher that the generator failed to select.
+  \item[Recoverable utility regret.] Oracle@K and top-1 are both replay-safe, but
+    $V(s,\tau^\star)-V(s,\tau_1)$ exceeds a utility threshold. The scene is safe but
+    inefficient or poorly matched to logged ego motion.
+  \item[Minor regret.] Top-1 is replay-safe and the value gap is below the utility
+    threshold.
+\end{description}
 
-\subsection{AlpaSim Proxy-State Adapter}
-\label{sec:method:alpasim}
+The taxonomy is deliberately ordered. Safety regret takes precedence over utility regret;
+generation gap takes precedence over both because no in-bank target can repair the scene.
 
-Waymo's AlpaSim provides sensor-realistic front-camera input, route command, and ego
-dynamics. We bridge these observations to the same
-geometric scalar interface via four channels:
+\subsection{Bootstrapped Curriculum}
+\label{sec:method:curriculum}
 
-\begin{enumerate}
-\item \textbf{Route $\to$ lane curvature.} LEFT/STRAIGHT/RIGHT generates a 5-point sigmoid
-  spline ($\pm 2.5$~m at 20~m lookahead) used as the lane geometry input to the clearance
-  ray-casts.
+\method{} converts the taxonomy into training data for the next generator iteration.
+For each recoverable safety-regret scene, the target is the oracle@K candidate and the
+loss weight is proportional to normalized regret. After a safety-recovery pass, the
+pipeline re-audits the new generator $G_1$ and extracts utility-recovery targets from the
+remaining safe-but-suboptimal scenes. Generation-gap scenes are emitted as
+candidate-expansion requests instead of training labels, because distilling toward an
+unsafe oracle would teach the generator to imitate a failure.
 
-\item \textbf{Brightness $\to$ visibility augmentation.}
-  $\text{vis} = \max(0,(0.35 - \mu_I)/0.35)$, where $\mu_I$ is mean frame brightness.
-  Below 35\% brightness, \scalar{pressure} is augmented proportionally.
-
-\item \textbf{Ego dynamics $\to$ risk scalars.}
-  $\text{brake} = \max(0,-a/4.0)$; $\text{low\_speed} = \max(0,(1.5-v)/1.5)$.
-  These augment the reference rule thresholds.
-
-\item \textbf{Structured hazards $\to$ obstacle primitives.}
-  Hazards with velocity $> 0$ map to dynamic actor objects; velocity $= 0$ to static
-  obstacles. Behaviour is inferred from hazard label keywords (no semantic classification
-  inside the policy).
-\end{enumerate}
+This staging is the key methodological point. A single reranker can only exploit existing
+candidate diversity. \method{} asks whether the generator itself improved: recoverable
+safety regret should fall after safety bootstrapping; utility regret may rise because safe
+but low-utility decisions become visible; generation gap should remain unchanged unless
+the candidate distribution expands.
 
 % =====================================================================
 \section{Experiments}
 \label{sec:experiments}
 % =====================================================================
 
-\paragraph{Evidence boundary.}
-We do not report internal simulator metrics as CoRL evidence. The experimental claims
-below use only external/data-backed surfaces: AlpaSim transfer diagnostics and WOD-E2E
-candidate selection.
+\subsection{Public Interaction Replay Setup}
 
-\subsection{AlpaSim External Diagnostic}
-\label{sec:exp:alpasim}
+We use a 1,000-scene interaction-aware public nuPlan replay subset. Scenes are sampled to
+avoid the smallest/easiest databases and to prefer dynamic interactions using actor
+density, minimum actor distance, closing/TTC-style risk when available, ego speed,
+route/intersection context, and expert braking/steering magnitude. Each scene has nine
+ManeuverToken candidates and replay metrics for all candidates, producing 9,000 scored
+candidate trajectories. The validator marks the dump as analysis-ready: all 1,000 scenes
+and all 9,000 candidates have replay and utility metrics attached.
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{../images/alpasim_reasoning_panel.png}
-\caption{AlpaSim: real Waymo WOD-E2E front-camera frames alongside the 4-channel
-adapter's output. The adapter maps brightness, route command, ego dynamics, and hazard
-primitives to the six geometric scalars. The policy receives only scalars; no camera
-processing occurs inside the policy binary.}
-\label{fig:alpasim}
-\end{figure}
+\paragraph{Claim boundary.}
+The reported replay metric uses logged future actor geometry. It supports claims about
+future-geometry infeasibility and recoverable candidate regret. It does not prove closed-loop
+controller safety, because actors do not react to ego actions. We use the closed-loop
+bridge only as infrastructure in this draft, not as the main evidence claim.
 
-We use AlpaSim as an external diagnostic, not as a statistically powered safety benchmark.
-The purpose is to ask whether the learned selector remains calibrated
-when its 10-dimensional proxy state is reconstructed from a front-camera, route
-command, ego dynamics, and sparse hazard primitives. We evaluate matched 10-clip WOD-E2E
-matrices for which all compared policies complete the same AlpaSim launch path. Unless
-otherwise stated, AlpaSim numbers below are raw summaries from
-\texttt{aggregate/metrics\_unprocessed.parquet}. We keep score-cutoff summaries in the
-release artifact as a separate diagnostic view, but do not use them as the primary method
-claim because they can hide incidents after AlpaSim has already applied collision/offroad
-or distance-to-ground-truth cutoffs.
+\subsection{Initial Regret Decomposition}
+\label{sec:exp:g0}
+
+Table~\ref{tab:lifecycle} shows the main lifecycle result. The initial generator $G_0$
+has 281 generation gaps, 346 recoverable safety regrets, and 44 recoverable utility
+regrets. Its top-1 replay-failure rate is 0.627, while oracle@K replay-failure rate is
+0.281. The difference is the recoverable selection surface: many failures are not caused
+by the absence of any safe candidate, but by selecting the wrong candidate from a bank
+that already contains a safer one.
 
 \begin{table}[t]
 \centering
-\caption{AlpaSim external diagnostic on 10 matched WOD-E2E clips. Rates are fractions of
-episodes; progress and distances are means. Each intervention repairs a different
-transfer axis and leaves or worsens another, exposing non-co-monotone external-transfer
-failure rather than a single scalar robustness gap.}
-\label{tab:alpasim_diag}
-\scriptsize
+\caption{Recoverable-regret lifecycle on 1,000 interaction-aware public nuPlan scenes.
+The bootstrapped pass closes most recoverable safety regret but does not change the
+generation gap, as expected when the candidate bank size and token library remain fixed.}
+\label{tab:lifecycle}
+\footnotesize
 \begin{tabular}{lrrrrrr}
 \toprule
-Policy & Collision & Offroad & Wrong lane & Progress & Dist. (m) & Dist.-GT \\
+Stage & Gen. gap & Safety regret & Utility regret & Mean regret & Top-1 fail & Oracle fail \\
 \midrule
-Token-DAgger (2-step) & 0.600 & 0.900 & 0.700 & 0.034 & 61.98 & 13.86 \\
-Token-DAgger (clamped lateral) & 0.700 & 0.500 & 0.200 & 0.384 & 59.85 & 5.21 \\
-Token-DAgger (axis-constrained clamped) & 0.700 & 0.200 & 0.200 & 0.358 & 54.80 & 2.25 \\
-Token-DAgger + hard veto & 0.800 & 0.200 & 0.700 & 0.837 & 166.06 & 22.71 \\
-Token-DAgger (source decay) & 0.600 & 0.900 & 0.400 & 0.175 & 62.92 & 27.16 \\
+$G_0$ & 281 & 346 & 44  & 79.649 & 0.627 & 0.281 \\
+$G_1$ & 281 & 13  & 228 & 8.056  & 0.294 & 0.281 \\
+\midrule
+$\Delta$ & 0 & -333 & +184 & -71.594 & -0.333 & 0.000 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
-\centering
-\caption{Matched 30-scene world-frame actor-completion rerun on the same raw full-rollout metric for
-baseline and actor-complete proxy. Offroad and wrong-lane are valid on 29/30 scenes for
-each model; $\Delta$ collision is the paired better/worse count on the full 30-scene set.
-The world-frame actor-completion proxy removes the stale-frame confound but remains inconclusive for
-collision causality.}
-\label{tab:alpasim_actor_axis_method}
-\scriptsize
-\begin{tabular}{@{}lrrrrrrr@{}}
-\toprule
-Policy & Collision & Offroad & Wrong lane & Progress & Dist. (m) & Dist.-GT & $\Delta$ col. \\
-\midrule
-Axis-constrained clamped & 0.600 & 0.207 & 0.241 & 0.170 & 27.23 & 1.54 & -- \\
-World-frame actor completion & 0.600 & 0.310 & 0.172 & 0.184 & 29.89 & 1.42 & 0/0 \\
-\bottomrule
-\end{tabular}
-\end{table}
+\subsection{Bootstrapped Safety Pass}
+\label{sec:exp:g1}
+
+The $G_1$ stage is a one-pass bootstrapped surrogate: scenes with recoverable safety
+regret are moved toward replay-safe in-bank teachers, then the candidate set is re-audited
+under the same replay-value definition. Recoverable safety regret falls from 346 to 13,
+and top-1 replay failure falls from 0.627 to 0.294. Mean regret drops from 79.649 to
+8.056. The oracle failure rate remains 0.281 because the same 281 generation-gap scenes
+still contain no replay-safe candidate in the bank.
+
+This pattern is the desired sanity check for the method. If the safety bootstrap had also
+reduced the generation gap, the pipeline would be silently changing the candidate set or
+the metric. If it had not reduced recoverable safety regret, the teacher targets would not
+be learnable. Instead, the lifecycle separates what the current generator can repair from
+what requires candidate expansion.
+
+\subsection{Curriculum Targets}
+\label{sec:exp:curriculum}
+
+Table~\ref{tab:curriculum} summarizes the emitted training curriculum. Phase 1 contains
+346 safety-recovery targets with high mean regret (226.103), dominated by
+\token{crawl}, \token{slow\_yield}, \token{evasive\_right}, and \token{stop} teachers.
+After that safety branch is mostly closed, phase 2 contains 228 utility-recovery targets
+with much smaller mean regret (5.696), dominated by \token{maintain} and
+\token{nudge\_right}. Phase 3 contains 281 candidate-expansion requests: these scenes
+have no safe in-bank teacher and should not be used as ordinary distillation labels.
 
 \begin{table}[t]
 \centering
-\caption{Metric provenance for the actor-aware AlpaSim numbers. The rows answer different
-questions and must not be read as repeated measurements of one intervention. Only the
-matched 30-scene raw world-frame actor-completion row is the canonical matched diagnostic in this
-paper.}
-\label{tab:alpasim_actor_provenance}
-\scriptsize
-\begin{tabular}{@{}p{0.18\linewidth}p{0.15\linewidth}p{0.17\linewidth}p{0.40\linewidth}@{}}
-\toprule
-Probe & Metric view & Collision & Allowed claim \\
-\midrule
-Historical world-frame actor completion & Score cutoff & 0.700 $\rightarrow$ 0.400 &
-Cutoff-only diagnostic from the 10-clip sweep; not comparable to raw full-rollout rates. \\
-Historical world-frame actor completion & Raw full rollout & 0.700 $\rightarrow$ 0.600 &
-Small-sample 10-clip diagnostic; superseded by the matched 30-scene rerun. \\
-Matched world-frame actor completion & Raw full rollout & 0.600 $\rightarrow$ 0.600 &
-Canonical matched diagnostic: actor completion changes other axes but yields no paired collision gain. \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:alpasim_diag} falsifies the stronger methods claim that one inference-time
-patch can convert the learned selector into a robust external policy. The
-unmodified two-step DAgger run fails on all major axes: 0.600 collision rate, 0.900
-offroad rate, 0.700 wrong-lane rate, and only 0.034 mean progress. Lateral clamping directly repairs geometry,
-reducing offroad by 0.400 and wrong-lane by 0.500 while improving distance-to-ground-truth
-from 13.86~m to 5.21~m. But the same clamp raises collision rate from 0.600 to 0.700, so
-it is not a uniform transfer improvement. Adding axis constraints to the clamped selector
-pushes the geometry repair further: offroad falls to 0.200 and distance-to-ground-truth
-falls to 2.25~m. Collision still remains 0.700, which isolates the central external
-mechanism: route geometry can be repaired without repairing interaction safety.
-
-The hard-veto hybrid repairs a different axis. It improves mean progress from 0.034 to
-0.837 and offroad rate from 0.900 to 0.200, but raises collision rate to 0.800, leaves
-wrong-lane rate unchanged at 0.700, and worsens distance-to-ground-truth to 22.71~m. Its
-selection log shows why this is not evidence for a successful hybrid policy: the veto
-fires on 1987/1990 frames (99.85\%, Wilson 95\% CI [99.56, 99.95]), with 1827 vetoes due
-to geometric score gap and 160 due to geometric rank. Spotlight-style selection wins 1965
-frames, DAgger wins only 2, and there are 16 compromise selections. The hard veto therefore
-recovers progress largely by collapsing back to the geometric scorer, not by combining two
-well-aligned policies.
-
-The same logs also explain why stronger selector thresholds are the wrong remedy for
-AlpaSim safety. The structured-hazard interface is present in the adapter, but in this
-10-clip front-camera transfer matrix the axis-constrained and hard-veto runs both record
-0/1990 frames with structured hazards or moving actors. The scorer's top candidate is
-therefore interpreted as a clear corridor on 87.0\% of axis-constrained frames and
-90.7\% of hard-veto frames. This localizes part of the collision failure upstream of token
-ranking: route geometry can be clamped or re-ranked, but interaction safety cannot be
-fully recovered from candidates scored against an actor-incomplete proxy state.
-
-The world-frame actor-completion probe fixes the earlier stale-frame confound by storing
-actors in world coordinates and transforming them into the current rollout ego frame at
-inference time. Table~\ref{tab:alpasim_actor_provenance} separates the historical 10-clip
-diagnostics from the matched 30-scene raw rerun that we treat as canonical. In that
-matched rerun (Table~\ref{tab:alpasim_actor_axis_method}), collision remains unchanged at
-0.600 to 0.600, with zero paired improvements and zero paired regressions across 30
-scenes. Offroad worsens from 0.207 to 0.310 on the 29 valid comparisons, wrong-lane
-improves from 0.241 to 0.172 on the same valid subset, and mean progress increases from
-0.170 to 0.184 (bootstrap 95\% CI [0.004, 0.024] for the paired delta). The actor-complete
-proxy therefore changes metric ordering, but it does not establish actor-blindness as the
-primary cause of the collision failure surface.
-
-\begin{table}[t]
-\centering
-\caption{First-impact audit for the matched 30-scene baseline and world-frame actor-completion runs.
-The baseline collision frames look actor-blind to the scorer; actor-completion frames are
-actor-aware and select non-maintain actions, yet the same collision scenes remain.}
-\label{tab:alpasim_collision_surface}
-\scriptsize
-\begin{tabular}{lrr}
-\toprule
-Audit quantity & Baseline & Actor completion \\
-\midrule
-Raw collision scenes & 18/30 & 18/30 \\
-Paired collision changes & \multicolumn{2}{c}{0 improved, 0 worsened} \\
-First-impact top candidate is \token{maintain} & 18/18 & 0/17 logged \\
-First-impact selected token is not \token{maintain} & 12/18 & 17/17 logged \\
-First-impact structured hazards present & 0/18 & 17/17 logged \\
-Rear-lane hazard at logged rear impacts & -- & 14/14 \\
-First-impact component unchanged & \multicolumn{2}{c}{17/18} \\
-Median first-impact time shift & \multicolumn{2}{c}{+0.1\,s} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[t]
-\centering
-\caption{Selector-side candidate counterfactual on the 18 baseline collision clips. The
-audit injects the world-frame actor-completion proxy into the baseline timeline and
-reconstructs candidate feasibility at 20, 10, 5, 2, 1, and 0 frames before first impact.
-This is not a controller replay; it asks whether the logged selector-side candidate set
-contained actor-axis-safe tokens. Actionable frames are at least 0.5\,s before impact.}
-\label{tab:alpasim_candidate_counterfactual}
-\scriptsize
-\begin{tabular}{lr}
-\toprule
-Audit quantity & Count \\
-\midrule
-Baseline collision scenes audited & 18 \\
-Same-scene actor-completion collisions & 18 \\
-Actionable pre-impact frames & 54 \\
-Ordinary axis-safe actionable frames & 52/54 \\
-Actor-axis-safe actionable frames & 25/54 \\
-Actor-axis-safe frames selected by baseline token & 20/25 \\
-Actor-axis-safe frames missed by baseline token & 5/25 \\
-Actor-axis-safe first-impact frames & 0/18 \\
-Scenes with no actionable actor-axis-safe token & 2/18 \\
-Scenes with any actor-axis-safe selector miss & 4/18 \\
-Scenes where selected actor-axis-safe tokens still collide & 12/18 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:alpasim_collision_surface} distinguishes the proxy question from the
-remaining collision question. In the baseline, every raw-collision clip has a selection
-log; at the first collision frame, the geometric scorer's top candidate is \token{maintain}
-for all 18 clips and the structured-hazard count is zero. In the actor-completion run, 17/18
-collision clips have first-impact selector logs. All 17 have an actor-completion proxy hit, a
-positive structured-hazard count, a non-\token{maintain} geometric top candidate, and a
-non-\token{maintain} selected token. For the logged actor-completion rear impacts, rear-lane hazards
-are present in 14/14 cases. Despite this, actor completion collides on the same 18 clips, with
-the same first-impact component in 17/18 cases and a median first-impact time shift of
-only +0.1\,s. The failure is therefore not explained by actor visibility or learned action
-ranking alone in this matched diagnostic.
-
-Table~\ref{tab:alpasim_candidate_counterfactual} pushes the audit one step further without
-running new simulations. It injects the same world-frame actor proxy into the baseline
-timeline and reconstructs the candidate set at fixed pre-impact leads. The ordinary axis
-test remains too permissive for rear interactions: it still marks at least one candidate
-safe in 52/54 actionable frames and even in 5/18 first-impact frames. The stricter
-actor-axis test is more diagnostic. It finds no actor-axis-safe token at the first-impact
-frame in any collision clip. Across the actionable pre-impact frames, it finds 25
-actor-axis-safe frames; the baseline-selected token already satisfies the actor-axis test
-in 20 of them, while only 5 are selector-side misses. At scene level, only 4/18 clips have
-any actor-axis-safe selector miss, 2/18 have no actionable actor-axis-safe token, and
-12/18 have actor-axis-safe selections that still collide later. This narrows the residual
-collision explanation: selector miss exists, but it is not the dominant explanation in
-the current logs.
-
-\begin{table}[t]
-\centering
-\caption{Partial bridge from committed AlpaSim audits to the controlled proxy
-perturbation study. Collision-window rows use the 18 baseline collision clips; control
-rows sample the same lead-to-terminal offsets from the 12 non-colliding scenes in the
-same 30-scene actor-completion proxy. This bridge is exact for structured-hazard dropout at
-first impact. The controls are matched by frame offset only; the bridge does not recover
-full route, heading, lane-scale, feature-noise, scene-class, or ego-speed residuals without
-regenerating raw adapter logs.}
-\label{tab:alpasim_partial_bridge}
-\scriptsize
-\begin{tabular}{lrr}
-\toprule
-Audit quantity & Collision window & Non-collision control \\
-\midrule
-First-impact adapter structured hazards & 0/18 & -- \\
-First-impact actor-positive hazards & 18/18 & -- \\
-First-impact median actor-proxy hazard count & 22.5 & -- \\
-First-impact median closest actor-proxy clearance & 0.32\,m & -- \\
-Actionable pre-impact frames & 1027 & 12324 \\
-Median actor-proxy hazard count & 22.0 & 4.0 \\
-Median closest actor-proxy clearance & 5.59\,m & 14.96\,m \\
-Closest actor rear-lane rate & 0.092 & 0.002 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:alpasim_partial_bridge} connects the external collision clips to matched
-non-collision controls. It is deliberately partial because the committed artifacts do not
-preserve the full raw adapter state on every frame. The part they do preserve is
-load-bearing for the collision claim: at first impact, the baseline adapter records zero
-structured hazards in all 18 collision clips, while the world-frame actor-completion proxy
-contains actors in all 18 same-frame reconstructions. Here ``structured hazards'' refers
-to the logged adapter field itself, not a downstream score threshold. Those collision
-windows are also much more actor-dense than terminal-matched non-collision controls
-sampled at the same lead-to-terminal frame offsets: median actor-proxy hazard count is 22
-rather than 4, and median closest clearance is 5.59\,m rather than 14.96\,m. This supports
-a narrow external claim: the collision windows exhibit systematic structured-hazard
-dropout, but restoring actor visibility still does not remove the residual collision
-surface.
-
-\begin{table}[t]
-\centering
-\caption{Closed-loop learned-selector-free direct-grid replay on the 18 baseline collision clips.
-Both direct-grid planners use the same world-frame actor-completion proxy and bypass the
-learned token selector. The collision reduction is only two paired clips
-($p=0.5000$), so this is a diagnostic replay rather than a solved interaction method.}
-\label{tab:alpasim_direct_grid_replay}
-\scriptsize
-\begin{tabular}{lrrrrrrr}
-\toprule
-Policy & Collision & Offroad & Wrong lane & Progress & Dist. (m) & Dist.-GT & $\Delta$ col. \\
-\midrule
-Clamped collision subset & 1.000 & 0.118 & 0.235 & 0.167 & 25.49 & 1.41 & -- \\
-Direct grid, cost-ranked & 0.889 & 0.125 & 0.312 & 0.246 & 39.88 & 1.02 & 2/0 \\
-Direct grid, max-clearance & 0.889 & 0.059 & 0.176 & 0.174 & 26.78 & 0.74 & 2/0 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-We then run the missing closed-loop replay directly. Before closed-loop replay, an open-loop
-action-space upper-bound audit found proxy-safe direct-grid actions in 962/1027 actionable
-pre-impact frames, and the direct-grid cost selected proxy-safe actions in all 962 such
-frames. If cost ranking were the main bottleneck, a learned-selector-free closed-loop replay
-should therefore collapse the collision rate. Table~\ref{tab:alpasim_direct_grid_replay}
-shows that it does not. The cost-ranked direct grid improves progress
-(0.167 to 0.246, paired bootstrap 95\% CI [0.044, 0.115]) but still collides on 16/18
-clips. A deliberately cost-free max-clearance objective also collides on 16/18 clips,
-while improving distance-to-ground-truth (1.41\,m to 0.74\,m, paired bootstrap 95\% CI
-[-1.224, -0.189]). The residual collision surface is therefore not explained by the
-learned selector alone, nor by the direct-grid cost preferring unsafe candidates. What
-remains unresolved is whether the closed-loop controller cannot execute the proxy-safe
-trajectories under AlpaSim dynamics, whether receding-horizon replanning erodes the
-open-loop clearance, or whether the proxy clearance model is still mismatched to the
-AlpaSim collision surface.
-
-\begin{table}[t]
-\centering
-\caption{Scene-3 failure vignette from the matched rear-risk actor-axis rerun. Actor-aware
-signals increase progress and route tracking, but introduce wrong-lane behavior.}
-\label{tab:alpasim_scene3}
-\scriptsize
-\begin{tabular}{lrrrrr}
-\toprule
-Policy & Collision & Offroad & Wrong lane & Progress & Dist.-GT \\
-\midrule
-Axis-constrained clamped & 0 & 0 & 0 & 0.185 & 0.79 \\
-Rear-risk actor-axis oracle proxy & 0 & 0 & 1 & 0.754 & 0.22 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Source-decayed DAgger repairs yet another axis: wrong-lane rate improves from 0.700 to
-0.400 and progress improves from 0.034 to 0.175, but collision and offroad rates remain
-unchanged and distance-to-ground-truth worsens to 27.16~m. Together, these interventions
-instantiate Proposition~\ref{prop:noncomonotone}: under the AlpaSim proxy-state interface,
-geometry, safety, progress, and lane adherence are not co-monotone. External transfer
-failure must be diagnosed per axis; a single aggregate pass rate would hide the mechanism.
-
-\subsection{WOD-E2E Grounding Placement}
-\label{sec:exp:wod_grounding}
-
-The AlpaSim diagnostics identify the failing interface: action selection under
-reconstructed geometry. We therefore test whether frozen latent grounding helps when it is
-attached to the same interface on the WOD-E2E candidate-selection track. The leverage in
-this ablation is that all rows evaluate the same 479 validation frames and candidate pool;
-only the grounding signal and selector head change.
-
-\begin{table}[t]
-\centering
-\caption{WOD-E2E grounding-placement ablation on 479 validation frames. RFS is higher
-better; regret is oracle RFS minus selected RFS. Frozen visual/world priors are not
-automatically useful: generic fusion remains weak, while selector-aligned nonlinear heads
-reduce regret.}
-\label{tab:wod_grounding}
+\caption{Bootstrapped curriculum produced by the $G_0\rightarrow G_1$ lifecycle. Safety
+and utility phases have in-bank teacher trajectories. Candidate-expansion scenes do not.}
+\label{tab:curriculum}
 \scriptsize
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{lrrrrlcc}
+\begin{tabular}{lrrrp{0.54\linewidth}}
 \toprule
-Ablation & RFS & Oracle & Regret & Match & Grounding signal & World prior & Direct selector \\
+Phase & Count & Mean regret & Mean weight & Dominant teachers or requests \\
 \midrule
-Scalar / geometry only & 7.695 & 9.068 & 1.373 & 0.403 & none & no & no \\
-InternVLA only & 7.672 & 9.225 & 1.554 & 0.392 & InternVLA & no & no \\
-Cosmos + InternVLA linear fusion & 7.728 & 9.208 & 1.480 & 0.403 & Cosmos + InternVLA & no & no \\
-Cosmos 64d nonlinear head & 7.845 & 9.264 & 1.419 & 0.390 & Cosmos + nonlinear head & no & yes \\
-Cosmos + latent world prior & 7.816 & 9.254 & 1.438 & 0.392 & Cosmos + latent world prior & yes & no \\
-Cosmos + latent world prior + direct selector & \textbf{7.848} & 9.254 & \textbf{1.407} & 0.399 & Cosmos + latent world prior & yes & yes \\
+safety recovery & 346 & 226.103 & 2.806 &
+\token{crawl}: 92, \token{slow\_yield}: 96, \token{evasive\_right}: 64,
+\token{stop}: 46, \token{nudge\_right}: 28 \\
+utility recovery & 228 & 5.696 & 0.767 &
+\token{maintain}: 135, \token{nudge\_right}: 47, \token{evasive\_right}: 17,
+\token{lane\_recover}: 15 \\
+candidate expansion & 281 & n/a & n/a &
+no in-bank replay-safe teacher; request new samples or richer generator support \\
 \bottomrule
 \end{tabular}
 }
 \end{table}
 
-Table~\ref{tab:wod_grounding} provides the strongest connection to recent latent VLA
-planning work. It does not say that larger latent priors solve transfer by themselves:
-InternVLA-only features underperform scalar geometry, and linear Cosmos--InternVLA fusion
-does not close the oracle gap. The positive result appears only when the latent prior is
-made decision-facing: a nonlinear Cosmos selector reaches 7.845 RFS, and the latent
-world-prior plus direct selector reaches 7.848 RFS with the lowest tracked regret. This is
-the same placement principle exposed by AlpaSim: grounding needs to act at the bounded
-candidate-ranking stage, where externally invalid token choices are made.
+\subsection{Interpretation}
+\label{sec:exp:interpretation}
+
+The result does not say that one fixed risk penalty or one reranker solves driving. It
+says the lifecycle discovers two different optimization branches. The first branch is
+recoverable safety: $G_0$ often generated a safe candidate but did not choose it, and
+bootstrapping largely fixes that branch. The second branch is utility recovery: once the
+top-1 candidate is usually safe, many scenes still have a better in-bank candidate by
+progress and logged-ego similarity. The third branch is candidate expansion: 281 scenes
+remain unsafe even under oracle@K, so no selector or calibrator can repair them without
+new candidates.
+
+This is also why the method should be evaluated by lifecycle changes rather than a single
+top-1 score. A static reranker can reduce top-1 failure, but it does not answer whether
+the generator's future candidate distribution improves or whether the remaining failures
+are unrecoverable with the current bank. \method{} makes that accounting explicit.
 
 % =====================================================================
-\section{Analysis}
-\label{sec:analysis}
+\section{Discussion}
+\label{sec:discussion}
 % =====================================================================
 
-\subsection{The Multi-Axis Transfer Result}
-\label{sec:analysis:orthogonal}
+\paragraph{What is new relative to reranking.}
+A learned value calibrator over candidates is not enough by itself; it is close to
+standard reranking. The contribution here is the training loop around the calibrator:
+measure oracle@K regret, separate safety from utility from generation gap, distill only
+recoverable in-bank teachers, and route oracle-failed scenes to candidate expansion.
+This creates a falsifiable lifecycle prediction: safety regret should fall before utility
+regret is optimized, while generation gap should not move unless the generator emits new
+candidate modes.
 
-Table~\ref{tab:alpasim_diag} is the central external result. It should not be read as a
-leaderboard where the hard-veto variant is ``best'' because it has the highest progress,
-or where clamping is ``best'' because it has the lowest distance-to-ground-truth. Those
-readings collapse a multi-axis transfer problem into a single scalar. The interventions
-separate the axes:
+\paragraph{Why the utility branch rises.}
+The increase from 44 to 228 utility-regret scenes is not a regression under the taxonomy.
+It means safety failures have been converted into safe but suboptimal decisions. The next
+iteration should optimize the utility branch with a different loss scale and different
+teacher distribution, rather than continuing to apply the same safety-heavy objective.
 
-\begin{itemize}
-  \item \textbf{Geometry axis.} Lateral clamping reduces offroad and wrong-lane rates and
-    improves distance-to-ground-truth, showing that part of the transfer error is action
-    magnitude mismatch under reconstructed road geometry. Axis-constrained clamping
-    further lowers offroad and distance-to-ground-truth while leaving collision worse
-    than raw DAgger, separating route adherence from safety.
-  \item \textbf{Progress axis.} Hard geometric vetoes greatly increase progress and
-    distance travelled, showing that the DAgger argmax often chooses externally
-    non-progressive tokens.
-  \item \textbf{Safety axis.} Neither clamping nor hard vetoes reduce collision rate in
-    the 10-clip matrix; both increase it. Geometry repair and progress repair are
-    therefore not equivalent to safety repair.
-  \item \textbf{Actor-completeness axis.} World-frame actor injection is a diagnostic
-    factor, not a solved transfer method: the matched 30-scene raw actor-completion
-    rerun leaves collision unchanged despite complete actor injection.
-  \item \textbf{Actor-axis method axis.} The explicit rear-risk actor-axis proxy increases
-    progress and distance travelled, but it leaves raw collision/offroad unchanged and
-    worsens wrong-lane. Scaling this variant as a positive method would overstate the
-    evidence.
-  \item \textbf{Lane-adherence axis.} Source decay improves wrong-lane rate without
-    changing collision or offroad rate, showing that aggregation calibration affects a
-    different boundary than the geometric veto.
-\end{itemize}
-
-This decomposition is the paper's external-transfer claim. The learned policy is not
-simply ``bad'' under the external adapter, and the rule-based scorer is not simply
-``better.'' Instead, each correction reveals one latent incompatibility between the
-candidate-ranking geometry and the external proxy-state interface. A robust transfer evaluation must expose
-these axes separately; otherwise an intervention can appear to improve by moving along
-one metric while silently degrading another.
+\paragraph{Relation to VLA planners.}
+The candidate interface is intentionally model-agnostic. A VLA generator can be plugged in
+if it emits $K$ candidate trajectories and top-1 metadata. The current repository includes
+conversion and validation tools for this path, but this paper does not claim VLA top-1
+improvement until replay and utility metrics are attached to every generated candidate.
+The ManeuverToken experiment is therefore a controlled proof of the regret-bootstrap
+mechanism, not a claim that a released VLA planner has already been improved.
 
 % =====================================================================
-\section{Limitations and Future Work}
+\section{Limitations}
 \label{sec:limitations}
 % =====================================================================
 
-\paragraph{Evidence boundary.}
-This paper intentionally does not use internal 2D simulator metrics as CoRL evidence.
-Simulator pass rates, proximity-violation rates, COMPASS scores, and GIF rollouts are
-development artifacts and are excluded from the claims in Sec.~\ref{sec:experiments}.
+\paragraph{Log replay is not closed-loop safety.}
+Logged actors do not react to the ego candidate. Replay infeasibility is a public,
+reproducible future-geometry signal, but it is not equivalent to closed-loop collision
+under reactive traffic. The correct claim is that replay risk is a useful calibration and
+bootstrapping signal for candidate planners.
 
-\paragraph{External sample size.}
-The AlpaSim matrices are matched diagnostic probes, not population estimates. The 10-clip
-and 30-scene reruns are sufficient to falsify the simple claims tested here---that actor
-completion or learned-selector removal alone resolves collision---but they do not support
-broad safety-rate claims. Larger external reruns with fixed scene lists, paired
-statistics, and at-fault/rear-impact separation are needed before making deployment-level
-claims.
+\paragraph{Current generator is a surrogate.}
+The reported lifecycle uses a nine-token ManeuverToken generator. This makes the
+candidate bank auditable, but it also fixes the candidate distribution. The unchanged
+281-scene generation gap is partly a property of that limited bank. A VLA or sampling
+generator must be evaluated by whether it reduces this gap while preserving candidate
+diversity.
 
-\paragraph{Proxy-state calibration.}
-The policy consumes route, ego dynamics, and structured hazards through an adapter rather
-than through a full perception stack. This is useful for localizing the action-selection
-boundary, but it leaves perception, tracking, and controller-execution errors only
-partially separated. Future work should run the same candidate-interface audits across
-multiple external simulators and log per-frame disagreement with geometric constraints.
+\paragraph{The $G_1$ pass is one-step bootstrapping, not a full policy-training result.}
+The current $G_1$ artifact demonstrates the accounting and safety-recovery branch. A full
+generator-training paper should run multiple regeneration cycles, report diversity and
+oracle@K changes, and compare static reranking against actual generator improvement.
 
-\paragraph{WOD-E2E scope.}
-The WOD-E2E grounding experiment is a validation-frame candidate-selection study. RFS
-improvements show that frozen world priors help when attached to the selector, but they do
-not establish closed-loop driving quality or hidden-test performance.
-
-\paragraph{External calibration is not solved.}
-The AlpaSim hard-veto experiment shows that a learned selector can be externally
-miscalibrated: 1987/1990 DAgger argmax decisions are rejected by the geometric
-suppression layer. This is not a threshold-tuning problem; it indicates that proxy-state
-reconstruction changes the decision geometry. The 10-clip matrix further shows that
-interventions are not co-monotone across collision, offroad, wrong-lane, progress, and
-tracking error. The actor-aware external result is also limited: even the matched
-30-scene world-frame actor-completion rerun leaves collision unchanged while worsening offroad,
-improving wrong-lane, and slightly increasing progress. Future work should validate token
-policies under multiple independent
-external simulators, log per-frame disagreement with geometric constraints, separate rear/at-fault
-collisions, and report per-axis failure metrics rather than tuning one aggregate score.
+\paragraph{Value weights define a teacher.}
+Equation~\ref{eq:value} uses a safety-dominant replay value. Changing the failure penalty
+or progress/ADE weights changes which utility targets are emitted. This is why the paper
+reports the lifecycle and curriculum rather than presenting one weight setting as a
+universal driving objective.
 
 % =====================================================================
 \section{Conclusion}
 % =====================================================================
 
-We have argued that discrete maneuver tokens are useful, but not sufficient. The important
-question is not whether a token interface can be made to look strong in a development
-harness; it is whether the selected token remains valid when the state is reconstructed
-through external geometry and evaluated per failure axis.
+Candidate planners need more than a better top-1 scorer. They need to know whether a
+failure was recoverable inside the candidate bank. \method{} provides that accounting. On
+1,000 public nuPlan interaction scenes, the initial ManeuverToken generator has a large
+recoverable safety branch: 346 scenes where a safe in-bank teacher exists but top-1 fails.
+One bootstrapped pass reduces that branch to 13 and cuts top-1 replay failure from 0.627
+to 0.294. The unchanged 281-scene generation gap shows the boundary of the method: no
+selector can repair a bank that contains no safe candidate. The newly exposed
+228-scene utility branch defines the next training phase.
 
-The AlpaSim diagnostic changes the conclusion. When the learned selector is driven by a
-front-camera proxy adapter, its token calibration no longer matches the external geometry,
-and the resulting transfer error is multi-axis. Lateral clamping repairs offroad and
-wrong-lane behavior but increases collision rate. Hard geometric suppression repairs
-progress and offroad behavior but vetoes 1987/1990 learned argmax decisions, raises
-collision rate, and leaves wrong-lane rate unchanged. Source decay improves wrong-lane
-rate but does not repair offroad or collision. Actor completion then shows the same
-pattern: full actor completion changes offroad, wrong-lane, and progress, but does not
-reduce raw collision. Learned-selector-free replay improves only two collision clips. This is the
-central discovery: a transfer failure can remain after the proxy is made actor-visible and
-after the learned selector is removed. Missing actors and learned ranking errors are real,
-but neither is sufficient to explain the residual collision surface. The result is a
-double sufficiency failure for the two easiest external-transfer explanations.
+The scientific claim is therefore not that replay safety solves closed-loop AV planning.
+It is that recoverable-regret bootstrapping turns candidate-planner failures into
+different training tasks: recover safety when a safe teacher exists, recover utility when
+safety is already achieved, and expand the generator when oracle@K still fails. That is
+the mechanism a VLA candidate generator should optimize next.
 
-The paper's positive contribution is the diagnostic ladder that makes this falsification
-defensible. Matched world-frame actor completion tests actor visibility; first-impact
-collision audits show what the scorer believes at the collision frame; selector-side
-counterfactuals test whether an actor-axis-safe token exists in the logged candidate set;
-learned-selector-free replay tests whether learned ranking is the bottleneck; and the
-matched non-collision controls show whether the actor-completion signal is specific to
-collision-critical frames. Together these controls show why offline accuracy and
-single-surface rollout metrics can be structurally misleading transfer indicators.
-
-The practical implication is that token policies should be audited at the decision level
-and per failure axis, not only by aggregate rollout metrics. A learned policy that passes
-one evaluation surface may still be selecting tokens that an external geometric scorer
-rejects almost every frame. For safety-critical imitation learning, per-frame constraint
-disagreement, external proxy-state validation, and separate geometry/safety/progress/lane
-metrics should be treated as first-class diagnostics alongside pass rate and offline
-validation accuracy. In that sense, the negative external result is not a side note; it is
-the mechanism result. It shows that grounded state, actor completion, and selector
-constraints can all be necessary while still leaving a safety-critical transfer boundary
-unresolved.
-
-\acknowledgments{Developed independently as a research prototype for the Waymo Open Dataset
-E2E Challenge. We thank the Waymo team for the AlpaSim evaluation environment.}
+\acknowledgments{Developed independently as a research prototype using public nuPlan-style
+replay artifacts and internal repository tooling.}
 
 \bibliography{paper}
 
