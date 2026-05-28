@@ -1,0 +1,105 @@
+{
+  "note": "Mapped NAVSIM v2 g1 K=8 smoke LOSO ridge probes. Selection scores use per-token proxy rows, not official combined EPDMS. Smoke-scale diagnostic only.",
+  "rows": [
+    {
+      "seed": 0,
+      "mode": "zero-perception",
+      "feature_count": 35,
+      "proxy_top1_score": 0.6032668181140226,
+      "proxy_oracle_at_k_score": 0.6957756672143193,
+      "loso_proxy_ridge_score": 0.6082522994808547,
+      "gap_closed_vs_top1_proxy": 0.0538919402340299,
+      "selected_alpha": 0.01
+    },
+    {
+      "seed": 0,
+      "mode": "full probe",
+      "feature_count": 37,
+      "proxy_top1_score": 0.6032668181140226,
+      "proxy_oracle_at_k_score": 0.6957756672143193,
+      "loso_proxy_ridge_score": 0.6086503434492724,
+      "gap_closed_vs_top1_proxy": 0.05819470664274547,
+      "selected_alpha": 0.1
+    },
+    {
+      "seed": 1,
+      "mode": "zero-perception",
+      "feature_count": 35,
+      "proxy_top1_score": 0.6032668181140226,
+      "proxy_oracle_at_k_score": 0.7017222312894399,
+      "loso_proxy_ridge_score": 0.6055689982916042,
+      "gap_closed_vs_top1_proxy": 0.023382972081786607,
+      "selected_alpha": 0.1
+    },
+    {
+      "seed": 1,
+      "mode": "full probe",
+      "feature_count": 37,
+      "proxy_top1_score": 0.6032668181140226,
+      "proxy_oracle_at_k_score": 0.7017222312894399,
+      "loso_proxy_ridge_score": 0.6044201179686867,
+      "gap_closed_vs_top1_proxy": 0.011713930371804265,
+      "selected_alpha": 0.1
+    },
+    {
+      "seed": 2,
+      "mode": "zero-perception",
+      "feature_count": 35,
+      "proxy_top1_score": 0.6032668181140226,
+      "proxy_oracle_at_k_score": 0.6597571743139133,
+      "loso_proxy_ridge_score": 0.5848924198925914,
+      "gap_closed_vs_top1_proxy": -0.3252661065972656,
+      "selected_alpha": 1.0
+    },
+    {
+      "seed": 2,
+      "mode": "full probe",
+      "feature_count": 37,
+      "proxy_top1_score": 0.6032668181140226,
+      "proxy_oracle_at_k_score": 0.6597571743139133,
+      "loso_proxy_ridge_score": 0.5894059867538808,
+      "gap_closed_vs_top1_proxy": -0.2453663296279345,
+      "selected_alpha": 1.0
+    },
+    {
+      "seed": 3,
+      "mode": "zero-perception",
+      "feature_count": 35,
+      "proxy_top1_score": 0.6032668181140226,
+      "proxy_oracle_at_k_score": 0.6983386783391312,
+      "loso_proxy_ridge_score": 0.576549848803579,
+      "gap_closed_vs_top1_proxy": -0.28101868678264974,
+      "selected_alpha": 1.0
+    },
+    {
+      "seed": 3,
+      "mode": "full probe",
+      "feature_count": 37,
+      "proxy_top1_score": 0.6032668181140226,
+      "proxy_oracle_at_k_score": 0.6983386783391312,
+      "loso_proxy_ridge_score": 0.5728571980847722,
+      "gap_closed_vs_top1_proxy": -0.3198593143885827,
+      "selected_alpha": 0.1
+    }
+  ],
+  "aggregates": [
+    {
+      "mode": "zero-perception",
+      "seed_count": 4,
+      "feature_count": 35,
+      "loso_proxy_mean": 0.5938158916171573,
+      "loso_proxy_std": 0.013456317945182828,
+      "gap_closed_mean": -0.1322524702660247,
+      "gap_closed_std": 0.1719431471894792
+    },
+    {
+      "mode": "full probe",
+      "seed_count": 4,
+      "feature_count": 37,
+      "loso_proxy_mean": 0.593833411564153,
+      "loso_proxy_std": 0.014064347170836194,
+      "gap_closed_mean": -0.12382925175049188,
+      "gap_closed_std": 0.16178977285806906
+    }
+  ]
+}
