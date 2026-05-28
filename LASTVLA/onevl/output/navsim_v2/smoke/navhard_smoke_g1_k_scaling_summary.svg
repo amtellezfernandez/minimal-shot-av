@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="420" viewBox="0 0 760 420">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="70" y="24" font-family="Arial, sans-serif" font-size="18" font-weight="700">NAVSIM v2 mapped smoke K-scaling</text>
+<text x="70" y="405" font-family="Arial, sans-serif" font-size="12" fill="#555">K candidates (log2 scale)</text>
+<text x="15" y="220" font-family="Arial, sans-serif" font-size="12" fill="#555" transform="rotate(-90 15 220)">EPDMS / proxy score</text>
+<line x1="70" y1="360.0" x2="730" y2="360.0" stroke="#e5e7eb"/>
+<text x="60" y="364.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.0</text>
+<line x1="70" y1="287.8" x2="730" y2="287.8" stroke="#e5e7eb"/>
+<text x="60" y="291.8" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.2</text>
+<line x1="70" y1="215.6" x2="730" y2="215.6" stroke="#e5e7eb"/>
+<text x="60" y="219.6" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.4</text>
+<line x1="70" y1="143.3" x2="730" y2="143.3" stroke="#e5e7eb"/>
+<text x="60" y="147.3" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.6</text>
+<line x1="70" y1="71.1" x2="730" y2="71.1" stroke="#e5e7eb"/>
+<text x="60" y="75.1" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.8</text>
+<line x1="70.0" y1="35" x2="70.0" y2="360" stroke="#f3f4f6"/>
+<text x="70.0" y="382" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#555">1</text>
+<line x1="202.0" y1="35" x2="202.0" y2="360" stroke="#f3f4f6"/>
+<text x="202.0" y="382" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#555">2</text>
+<line x1="334.0" y1="35" x2="334.0" y2="360" stroke="#f3f4f6"/>
+<text x="334.0" y="382" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#555">4</text>
+<line x1="466.0" y1="35" x2="466.0" y2="360" stroke="#f3f4f6"/>
+<text x="466.0" y="382" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#555">8</text>
+<line x1="598.0" y1="35" x2="598.0" y2="360" stroke="#f3f4f6"/>
+<text x="598.0" y="382" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#555">16</text>
+<line x1="730.0" y1="35" x2="730.0" y2="360" stroke="#f3f4f6"/>
+<text x="730.0" y="382" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#555">32</text>
+<polyline points="70.0,142.2 202.0,141.9 334.0,121.1 466.0,108.7 598.0,108.2 730.0,104.4" fill="none" stroke="#0f766e" stroke-width="3"/>
+<polyline points="70.0,360.0 202.0,360.0 334.0,229.3 466.0,70.9 598.0,133.2 730.0,59.5" fill="none" stroke="#b45309" stroke-width="3"/>
+<polyline points="70.0,360.0 202.0,360.0 334.0,360.0 466.0,360.0 598.0,360.0 730.0,360.0" fill="none" stroke="#374151" stroke-width="2" stroke-dasharray="5 4"/>
+<circle cx="70.0" cy="142.2" r="4" fill="#0f766e"/>
+<circle cx="202.0" cy="141.9" r="4" fill="#0f766e"/>
+<circle cx="334.0" cy="121.1" r="4" fill="#0f766e"/>
+<circle cx="466.0" cy="108.7" r="4" fill="#0f766e"/>
+<circle cx="598.0" cy="108.2" r="4" fill="#0f766e"/>
+<circle cx="730.0" cy="104.4" r="4" fill="#0f766e"/>
+<circle cx="70.0" cy="360.0" r="4" fill="#b45309"/>
+<circle cx="202.0" cy="360.0" r="4" fill="#b45309"/>
+<circle cx="334.0" cy="229.3" r="4" fill="#b45309"/>
+<circle cx="466.0" cy="70.9" r="4" fill="#b45309"/>
+<circle cx="598.0" cy="133.2" r="4" fill="#b45309"/>
+<circle cx="730.0" cy="59.5" r="4" fill="#b45309"/>
+<circle cx="70.0" cy="360.0" r="4" fill="#374151"/>
+<circle cx="202.0" cy="360.0" r="4" fill="#374151"/>
+<circle cx="334.0" cy="360.0" r="4" fill="#374151"/>
+<circle cx="466.0" cy="360.0" r="4" fill="#374151"/>
+<circle cx="598.0" cy="360.0" r="4" fill="#374151"/>
+<circle cx="730.0" cy="360.0" r="4" fill="#374151"/>
+<line x1="455" y1="54" x2="487" y2="54" stroke="#0f766e" stroke-width="3"/>
+<text x="495" y="58" font-family="Arial, sans-serif" font-size="12" fill="#222">Token-oracle proxy</text>
+<line x1="455" y1="76" x2="487" y2="76" stroke="#b45309" stroke-width="3"/>
+<text x="495" y="80" font-family="Arial, sans-serif" font-size="12" fill="#222">Best fixed branch</text>
+<line x1="455" y1="98" x2="487" y2="98" stroke="#374151" stroke-width="3" stroke-dasharray="5 4"/>
+<text x="495" y="102" font-family="Arial, sans-serif" font-size="12" fill="#222">Top-1</text>
+</svg>

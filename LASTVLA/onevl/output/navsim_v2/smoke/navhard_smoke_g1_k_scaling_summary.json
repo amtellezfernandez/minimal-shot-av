@@ -1,0 +1,65 @@
+{
+  "note": "Mapped NAVSIM v2 navhard_two_stage smoke group g1: 2 original tokens plus 22 reactive synthetic scenarios. This is a smoke-scale K-scaling artifact, not a full validation result.",
+  "rows": [
+    {
+      "k": 1,
+      "scene_count": 24,
+      "candidate_count": 1,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 0,
+      "best_fixed_epdms": 0.0,
+      "token_oracle_proxy_at_k_score": 0.6032668181140225,
+      "token_oracle_proxy_gap": 0.6032668181140225
+    },
+    {
+      "k": 2,
+      "scene_count": 24,
+      "candidate_count": 2,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 0,
+      "best_fixed_epdms": 0.0,
+      "token_oracle_proxy_at_k_score": 0.6040582465269713,
+      "token_oracle_proxy_gap": 0.6040582465269713
+    },
+    {
+      "k": 4,
+      "scene_count": 24,
+      "candidate_count": 4,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 3,
+      "best_fixed_epdms": 0.362017664334727,
+      "token_oracle_proxy_at_k_score": 0.6614652223499332,
+      "token_oracle_proxy_gap": 0.6614652223499332
+    },
+    {
+      "k": 8,
+      "scene_count": 24,
+      "candidate_count": 8,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 2,
+      "best_fixed_epdms": 0.8006622399329324,
+      "token_oracle_proxy_at_k_score": 0.6957756672143193,
+      "token_oracle_proxy_gap": 0.6957756672143193
+    },
+    {
+      "k": 16,
+      "scene_count": 24,
+      "candidate_count": 16,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 7,
+      "best_fixed_epdms": 0.6279456024225333,
+      "token_oracle_proxy_at_k_score": 0.6972563295941822,
+      "token_oracle_proxy_gap": 0.6972563295941822
+    },
+    {
+      "k": 32,
+      "scene_count": 24,
+      "candidate_count": 32,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 13,
+      "best_fixed_epdms": 0.8320703862421261,
+      "token_oracle_proxy_at_k_score": 0.7079398095074682,
+      "token_oracle_proxy_gap": 0.7079398095074682
+    }
+  ]
+}
