@@ -1,0 +1,29 @@
+{
+  "note": "Matched mapped NAVSIM v2 g2 seed0 K=4 versus K=8 smoke comparison. 48 scenes total. Smoke-scale only.",
+  "rows": [
+    {
+      "k": 4,
+      "scene_count": 48,
+      "candidate_count": 4,
+      "official_top1_epdms": 0.04581082646752237,
+      "official_best_fixed_candidate": 3,
+      "official_best_fixed_epdms": 0.2786596854589903,
+      "token_oracle_proxy_at_k_score": 0.6023335971987615,
+      "token_oracle_proxy_gap": 0.5565227707312391,
+      "zero_perception_loso_proxy": 0.5505180522718734,
+      "zero_perception_gap_closed": 0.08998462112865377
+    },
+    {
+      "k": 8,
+      "scene_count": 48,
+      "candidate_count": 8,
+      "official_top1_epdms": 0.04581082646752237,
+      "official_best_fixed_candidate": 2,
+      "official_best_fixed_epdms": 0.4189085097664613,
+      "token_oracle_proxy_at_k_score": 0.6142062747318405,
+      "token_oracle_proxy_gap": 0.5683954482643182,
+      "zero_perception_loso_proxy": 0.5159413953075745,
+      "zero_perception_gap_closed": -0.4280221269488903
+    }
+  ]
+}
