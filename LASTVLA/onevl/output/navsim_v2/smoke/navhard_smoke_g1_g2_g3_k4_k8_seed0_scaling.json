@@ -1,0 +1,83 @@
+{
+  "note": "Mapped NAVSIM v2 seed0 smoke scaling across g1/g2/g3. Groups are cumulative mapped subsets, not full validation splits.",
+  "rows": [
+    {
+      "group": 1,
+      "k": 4,
+      "scene_count": 24,
+      "candidate_count": 4,
+      "official_top1_epdms": 0.0,
+      "official_best_fixed_candidate": 3,
+      "official_best_fixed_epdms": 0.362017664334727,
+      "token_oracle_proxy_at_k_score": 0.6614652223499332,
+      "token_oracle_proxy_gap": 0.6614652223499332,
+      "zero_perception_loso_proxy": null,
+      "zero_perception_gap_closed": null
+    },
+    {
+      "group": 1,
+      "k": 8,
+      "scene_count": 24,
+      "candidate_count": 8,
+      "official_top1_epdms": 0.0,
+      "official_best_fixed_candidate": 2,
+      "official_best_fixed_epdms": 0.8006622399329324,
+      "token_oracle_proxy_at_k_score": 0.6957756672143193,
+      "token_oracle_proxy_gap": 0.6957756672143193,
+      "zero_perception_loso_proxy": 0.6082522994808547,
+      "zero_perception_gap_closed": 0.0538919402340299
+    },
+    {
+      "group": 2,
+      "k": 4,
+      "scene_count": 48,
+      "candidate_count": 4,
+      "official_top1_epdms": 0.04581082646752237,
+      "official_best_fixed_candidate": 3,
+      "official_best_fixed_epdms": 0.2786596854589903,
+      "token_oracle_proxy_at_k_score": 0.6023335971987615,
+      "token_oracle_proxy_gap": 0.5565227707312391,
+      "zero_perception_loso_proxy": 0.5505180522718734,
+      "zero_perception_gap_closed": 0.08998462112865377
+    },
+    {
+      "group": 2,
+      "k": 8,
+      "scene_count": 48,
+      "candidate_count": 8,
+      "official_top1_epdms": 0.04581082646752237,
+      "official_best_fixed_candidate": 2,
+      "official_best_fixed_epdms": 0.4189085097664613,
+      "token_oracle_proxy_at_k_score": 0.6142062747318405,
+      "token_oracle_proxy_gap": 0.5683954482643182,
+      "zero_perception_loso_proxy": 0.5159413953075745,
+      "zero_perception_gap_closed": -0.4280221269488903
+    },
+    {
+      "group": 3,
+      "k": 4,
+      "scene_count": 64,
+      "candidate_count": 4,
+      "official_top1_epdms": 0.06412786083750617,
+      "official_best_fixed_candidate": 1,
+      "official_best_fixed_epdms": 0.2910941368761574,
+      "token_oracle_proxy_at_k_score": 0.5549947630233079,
+      "token_oracle_proxy_gap": 0.4908669021858017,
+      "zero_perception_loso_proxy": 0.47226809935769754,
+      "zero_perception_gap_closed": -0.39834349305814415
+    },
+    {
+      "group": 3,
+      "k": 8,
+      "scene_count": 64,
+      "candidate_count": 8,
+      "official_top1_epdms": 0.06412786083750617,
+      "official_best_fixed_candidate": 2,
+      "official_best_fixed_epdms": 0.43666210578609954,
+      "token_oracle_proxy_at_k_score": 0.6013868768293672,
+      "token_oracle_proxy_gap": 0.537259015991861,
+      "zero_perception_loso_proxy": 0.46197356847073867,
+      "zero_perception_gap_closed": -0.3207947947453432
+    }
+  ]
+}

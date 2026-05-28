@@ -1,0 +1,8 @@
+[2026-05-28 15:44:18,921][__main__][INFO] - Building SceneLoader
+[2026-05-28 15:44:50,700][__main__][INFO] - 
+        Finished running evaluation.
+            Number of successful scenarios: 64.
+            Number of failed scenarios: 0.
+            Final extended pdm score of valid results: 0.17098441085208793.
+            Results are stored in: output/navsim_v2/smoke/scores_g3_k8_seed0/candidate_3/2026.05.28.15.44.50.csv.
+        
