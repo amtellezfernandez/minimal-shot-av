@@ -1,0 +1,4171 @@
+[
+    {
+        "idx": 0,
+        "token": "4a919f7ea2f65200",
+        "stage": "first",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 11.620775938034058,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim/download/test_sensor_blobs/test/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/7512f7c95e45540e.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [3.7, -0.09]. Acceleration: [0.28, 0.37]. Historical trajectory: [[-5.08, -0.04, 0.04], [-3.5, -0.0, 0.01], [-1.8, 0.0, -0.01]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        1.83,
+                        0.04,
+                        0.04
+                    ],
+                    [
+                        3.63,
+                        0.16,
+                        0.1
+                    ],
+                    [
+                        5.39,
+                        0.39,
+                        0.16
+                    ],
+                    [
+                        7.08,
+                        0.72,
+                        0.23
+                    ],
+                    [
+                        8.7,
+                        1.17,
+                        0.29
+                    ],
+                    [
+                        10.24,
+                        1.69,
+                        0.36
+                    ],
+                    [
+                        11.72,
+                        2.28,
+                        0.41
+                    ],
+                    [
+                        13.14,
+                        2.94,
+                        0.46
+                    ]
+                ],
+                "raw_text": "1.83, 0.04, 0.04], [3.63, 0.16, 0.1], [5.39, 0.39, 0.16], [7.08, 0.72, 0.23], [8.7, 1.17, 0.29], [10.24, 1.69, 0.36], [11.72, 2.28, 0.41], [13.14, 2.94, 0.46]</answer><|im_end|>",
+                "avg_entropy": 0.18188802897930145,
+                "avg_log_prob": -0.18624742329120636,
+                "seq_confidence": 0.8300682306289673
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        1.85,
+                        0.03,
+                        0.04
+                    ],
+                    [
+                        3.7,
+                        0.16,
+                        0.11
+                    ],
+                    [
+                        5.49,
+                        0.42,
+                        0.18
+                    ],
+                    [
+                        7.22,
+                        0.81,
+                        0.25
+                    ],
+                    [
+                        8.89,
+                        1.32,
+                        0.32
+                    ],
+                    [
+                        10.48,
+                        1.93,
+                        0.39
+                    ],
+                    [
+                        12.0,
+                        2.63,
+                        0.45
+                    ],
+                    [
+                        13.44,
+                        3.38,
+                        0.51
+                    ]
+                ],
+                "raw_text": "1.85, 0.03, 0.04], [3.7, 0.16, 0.11], [5.49, 0.42, 0.18], [7.22, 0.81, 0.25], [8.89, 1.32, 0.32], [10.48, 1.93, 0.39], [12.0, 2.63, 0.45], [13.44, 3.38, 0.51]</answer><|im_end|>",
+                "avg_entropy": 0.1804381161928177,
+                "avg_log_prob": -0.1829940229654312,
+                "seq_confidence": 0.8327731490135193
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        1.84,
+                        0.03,
+                        0.03
+                    ],
+                    [
+                        3.68,
+                        0.14,
+                        0.1
+                    ],
+                    [
+                        5.51,
+                        0.39,
+                        0.18
+                    ],
+                    [
+                        7.28,
+                        0.79,
+                        0.25
+                    ],
+                    [
+                        8.99,
+                        1.32,
+                        0.32
+                    ],
+                    [
+                        10.62,
+                        1.94,
+                        0.38
+                    ],
+                    [
+                        12.19,
+                        2.63,
+                        0.44
+                    ],
+                    [
+                        13.68,
+                        3.38,
+                        0.5
+                    ]
+                ],
+                "raw_text": "1.84, 0.03, 0.03], [3.68, 0.14, 0.1], [5.51, 0.39, 0.18], [7.28, 0.79, 0.25], [8.99, 1.32, 0.32], [10.62, 1.94, 0.38], [12.19, 2.63, 0.44], [13.68, 3.38, 0.5]</answer><|im_end|>",
+                "avg_entropy": 0.1804448813199997,
+                "avg_log_prob": -0.1934080570936203,
+                "seq_confidence": 0.8241456151008606
+            }
+        ],
+        "output_text": "1.83, 0.04, 0.04], [3.63, 0.16, 0.1], [5.39, 0.39, 0.16], [7.08, 0.72, 0.23], [8.7, 1.17, 0.29], [10.24, 1.69, 0.36], [11.72, 2.28, 0.41], [13.14, 2.94, 0.46]</answer><|im_end|>",
+        "avg_entropy": 0.18188802897930145,
+        "avg_log_prob": -0.18624742329120636,
+        "seq_confidence": 0.8300682306289673
+    },
+    {
+        "idx": 1,
+        "token": "d715fbc6ea0551f8",
+        "stage": "first",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 11.01441740989685,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim/download/test_sensor_blobs/test/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/7e14832c062f54f2.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [3.51, -0.05]. Acceleration: [0.42, -0.01]. Historical trajectory: [[-4.77, -0.19, 0.08], [-3.28, -0.08, 0.05], [-1.7, -0.02, 0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        1.81,
+                        0.01,
+                        0.0
+                    ],
+                    [
+                        3.71,
+                        0.04,
+                        0.04
+                    ],
+                    [
+                        5.64,
+                        0.18,
+                        0.11
+                    ],
+                    [
+                        7.55,
+                        0.46,
+                        0.18
+                    ],
+                    [
+                        9.38,
+                        0.88,
+                        0.26
+                    ],
+                    [
+                        11.15,
+                        1.43,
+                        0.33
+                    ],
+                    [
+                        12.82,
+                        2.07,
+                        0.38
+                    ],
+                    [
+                        14.32,
+                        2.74,
+                        0.43
+                    ]
+                ],
+                "raw_text": "1.81, 0.01, 0.0], [3.71, 0.04, 0.04], [5.64, 0.18, 0.11], [7.55, 0.46, 0.18], [9.38, 0.88, 0.26], [11.15, 1.43, 0.33], [12.82, 2.07, 0.38], [14.32, 2.74, 0.43]</answer><|im_end|>",
+                "avg_entropy": 0.18756741285324097,
+                "avg_log_prob": -0.21635831892490387,
+                "seq_confidence": 0.8054466247558594
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        3.61,
+                        0.01,
+                        0.02
+                    ],
+                    [
+                        5.41,
+                        0.09,
+                        0.08
+                    ],
+                    [
+                        7.15,
+                        0.29,
+                        0.15
+                    ],
+                    [
+                        8.82,
+                        0.61,
+                        0.22
+                    ],
+                    [
+                        10.43,
+                        1.03,
+                        0.28
+                    ],
+                    [
+                        11.98,
+                        1.53,
+                        0.34
+                    ],
+                    [
+                        13.45,
+                        2.11,
+                        0.4
+                    ]
+                ],
+                "raw_text": "1.78, 0.0, -0.0], [3.61, 0.01, 0.02], [5.41, 0.09, 0.08], [7.15, 0.29, 0.15], [8.82, 0.61, 0.22], [10.43, 1.03, 0.28], [11.98, 1.53, 0.34], [13.45, 2.11, 0.4]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.17293046414852142,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        3.61,
+                        0.03,
+                        0.04
+                    ],
+                    [
+                        5.36,
+                        0.13,
+                        0.09
+                    ],
+                    [
+                        7.05,
+                        0.34,
+                        0.15
+                    ],
+                    [
+                        8.68,
+                        0.65,
+                        0.21
+                    ],
+                    [
+                        10.23,
+                        1.04,
+                        0.27
+                    ],
+                    [
+                        11.71,
+                        1.49,
+                        0.32
+                    ],
+                    [
+                        13.13,
+                        2.01,
+                        0.38
+                    ]
+                ],
+                "raw_text": "1.8, 0.01, 0.0], [3.61, 0.03, 0.04], [5.36, 0.13, 0.09], [7.05, 0.34, 0.15], [8.68, 0.65, 0.21], [10.23, 1.04, 0.27], [11.71, 1.49, 0.32], [13.13, 2.01, 0.38]</answer><|im_end|><|endoftext|>",
+                "avg_entropy": 0.17109845578670502,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "1.81, 0.01, 0.0], [3.71, 0.04, 0.04], [5.64, 0.18, 0.11], [7.55, 0.46, 0.18], [9.38, 0.88, 0.26], [11.15, 1.43, 0.33], [12.82, 2.07, 0.38], [14.32, 2.74, 0.43]</answer><|im_end|>",
+        "avg_entropy": 0.18756741285324097,
+        "avg_log_prob": -0.21635831892490387,
+        "seq_confidence": 0.8054466247558594
+    },
+    {
+        "idx": 2,
+        "token": "5421fa2f2e2b4cb13",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.665831089019775,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/638ec620117f75ec4.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [0.04, -0.01]. Acceleration: [0.37, -0.04]. Historical trajectory: [[-0.04, 0.02, -0.01], [0.04, 0.0, -0.0], [0.01, -0.0, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        0.04,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.32,
+                        0.0,
+                        0.02
+                    ],
+                    [
+                        0.95,
+                        0.03,
+                        0.04
+                    ],
+                    [
+                        1.88,
+                        0.08,
+                        0.07
+                    ],
+                    [
+                        3.04,
+                        0.18,
+                        0.11
+                    ],
+                    [
+                        4.37,
+                        0.35,
+                        0.15
+                    ],
+                    [
+                        5.78,
+                        0.59,
+                        0.2
+                    ],
+                    [
+                        7.18,
+                        0.89,
+                        0.24
+                    ]
+                ],
+                "raw_text": "0.04, 0.0, 0.0], [0.32, 0.0, 0.02], [0.95, 0.03, 0.04], [1.88, 0.08, 0.07], [3.04, 0.18, 0.11], [4.37, 0.35, 0.15], [5.78, 0.59, 0.2], [7.18, 0.89, 0.24]</answer><|im_end|>",
+                "avg_entropy": 0.17109419405460358,
+                "avg_log_prob": -0.18018180131912231,
+                "seq_confidence": 0.8351183533668518
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.06,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.38,
+                        0.0,
+                        0.01
+                    ],
+                    [
+                        1.04,
+                        0.02,
+                        0.03
+                    ],
+                    [
+                        1.91,
+                        0.06,
+                        0.06
+                    ],
+                    [
+                        2.94,
+                        0.14,
+                        0.1
+                    ],
+                    [
+                        4.03,
+                        0.27,
+                        0.14
+                    ],
+                    [
+                        5.09,
+                        0.44,
+                        0.19
+                    ],
+                    [
+                        6.11,
+                        0.66,
+                        0.23
+                    ]
+                ],
+                "raw_text": "0.06, 0.0, 0.0], [0.38, 0.0, 0.01], [1.04, 0.02, 0.03], [1.91, 0.06, 0.06], [2.94, 0.14, 0.1], [4.03, 0.27, 0.14], [5.09, 0.44, 0.19], [6.11, 0.66, 0.23]</answer><|im_end|>",
+                "avg_entropy": 0.15877005457878113,
+                "avg_log_prob": -0.15604408085346222,
+                "seq_confidence": 0.8555215001106262
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.02,
+                        -0.0,
+                        0.0
+                    ],
+                    [
+                        0.23,
+                        0.0,
+                        0.01
+                    ],
+                    [
+                        0.77,
+                        0.02,
+                        0.03
+                    ],
+                    [
+                        1.58,
+                        0.06,
+                        0.05
+                    ],
+                    [
+                        2.59,
+                        0.13,
+                        0.09
+                    ],
+                    [
+                        3.68,
+                        0.24,
+                        0.12
+                    ],
+                    [
+                        4.75,
+                        0.39,
+                        0.16
+                    ],
+                    [
+                        5.79,
+                        0.58,
+                        0.2
+                    ]
+                ],
+                "raw_text": "0.02, -0.0, 0.0], [0.23, 0.0, 0.01], [0.77, 0.02, 0.03], [1.58, 0.06, 0.05], [2.59, 0.13, 0.09], [3.68, 0.24, 0.12], [4.75, 0.39, 0.16], [5.79, 0.58, 0.2]</answer><|im_end|>",
+                "avg_entropy": 0.14908459782600403,
+                "avg_log_prob": -0.1366700977087021,
+                "seq_confidence": 0.8722579479217529
+            }
+        ],
+        "output_text": "0.04, 0.0, 0.0], [0.32, 0.0, 0.02], [0.95, 0.03, 0.04], [1.88, 0.08, 0.07], [3.04, 0.18, 0.11], [4.37, 0.35, 0.15], [5.78, 0.59, 0.2], [7.18, 0.89, 0.24]</answer><|im_end|>",
+        "avg_entropy": 0.17109419405460358,
+        "avg_log_prob": -0.18018180131912231,
+        "seq_confidence": 0.8351183533668518
+    },
+    {
+        "idx": 3,
+        "token": "5634addd2134d1453",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.656663179397583,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/765885a6293f88d54.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [-0.01, -0.01]. Acceleration: [-0.04, -0.09]. Historical trajectory: [[-0.32, 0.02, -0.02], [-0.05, 0.02, -0.0], [0.03, 0.0, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        0.16,
+                        0.0,
+                        0.02
+                    ],
+                    [
+                        0.71,
+                        0.03,
+                        0.05
+                    ],
+                    [
+                        1.66,
+                        0.09,
+                        0.09
+                    ],
+                    [
+                        2.89,
+                        0.23,
+                        0.13
+                    ],
+                    [
+                        4.26,
+                        0.43,
+                        0.18
+                    ],
+                    [
+                        5.65,
+                        0.69,
+                        0.22
+                    ],
+                    [
+                        7.01,
+                        1.0,
+                        0.27
+                    ]
+                ],
+                "raw_text": "0.0, -0.0, 0.0], [0.16, 0.0, 0.02], [0.71, 0.03, 0.05], [1.66, 0.09, 0.09], [2.89, 0.23, 0.13], [4.26, 0.43, 0.18], [5.65, 0.69, 0.22], [7.01, 1.0, 0.27]</answer><|im_end|><|endoftext|>",
+                "avg_entropy": 0.17943218350410461,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.01,
+                        -0.0,
+                        0.0
+                    ],
+                    [
+                        0.19,
+                        0.0,
+                        0.01
+                    ],
+                    [
+                        0.75,
+                        0.02,
+                        0.03
+                    ],
+                    [
+                        1.66,
+                        0.07,
+                        0.06
+                    ],
+                    [
+                        2.79,
+                        0.16,
+                        0.09
+                    ],
+                    [
+                        3.96,
+                        0.29,
+                        0.13
+                    ],
+                    [
+                        5.11,
+                        0.46,
+                        0.18
+                    ],
+                    [
+                        6.2,
+                        0.67,
+                        0.22
+                    ]
+                ],
+                "raw_text": "0.01, -0.0, 0.0], [0.19, 0.0, 0.01], [0.75, 0.02, 0.03], [1.66, 0.07, 0.06], [2.79, 0.16, 0.09], [3.96, 0.29, 0.13], [5.11, 0.46, 0.18], [6.2, 0.67, 0.22]</answer><|im_end|>",
+                "avg_entropy": 0.1526392251253128,
+                "avg_log_prob": -0.1448698192834854,
+                "seq_confidence": 0.8651349544525146
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.2,
+                        0.0,
+                        0.01
+                    ],
+                    [
+                        0.77,
+                        0.01,
+                        0.03
+                    ],
+                    [
+                        1.62,
+                        0.04,
+                        0.05
+                    ],
+                    [
+                        2.61,
+                        0.11,
+                        0.08
+                    ],
+                    [
+                        3.58,
+                        0.21,
+                        0.11
+                    ],
+                    [
+                        4.5,
+                        0.34,
+                        0.15
+                    ],
+                    [
+                        5.39,
+                        0.49,
+                        0.18
+                    ]
+                ],
+                "raw_text": "0.0, -0.0, 0.0], [0.2, 0.0, 0.01], [0.77, 0.01, 0.03], [1.62, 0.04, 0.05], [2.61, 0.11, 0.08], [3.58, 0.21, 0.11], [4.5, 0.34, 0.15], [5.39, 0.49, 0.18]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.15989501774311066,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "0.0, -0.0, 0.0], [0.16, 0.0, 0.02], [0.71, 0.03, 0.05], [1.66, 0.09, 0.09], [2.89, 0.23, 0.13], [4.26, 0.43, 0.18], [5.65, 0.69, 0.22], [7.01, 1.0, 0.27]</answer><|im_end|><|endoftext|>",
+        "avg_entropy": 0.17943218350410461,
+        "avg_log_prob": -Infinity,
+        "seq_confidence": 0.0
+    },
+    {
+        "idx": 4,
+        "token": "13aeb83dad95704fa",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.632545948028564,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/be8dd65468311e01d.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [-0.01, -0.0]. Acceleration: [-0.05, 0.01]. Historical trajectory: [[-0.11, -0.01, -0.01], [0.05, -0.01, -0.0], [0.05, 0.0, 0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        0.01,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.23,
+                        0.0,
+                        0.01
+                    ],
+                    [
+                        0.83,
+                        0.01,
+                        0.03
+                    ],
+                    [
+                        1.75,
+                        0.04,
+                        0.05
+                    ],
+                    [
+                        2.87,
+                        0.11,
+                        0.07
+                    ],
+                    [
+                        4.09,
+                        0.22,
+                        0.11
+                    ],
+                    [
+                        5.28,
+                        0.37,
+                        0.15
+                    ],
+                    [
+                        6.41,
+                        0.55,
+                        0.18
+                    ]
+                ],
+                "raw_text": "0.01, 0.0, 0.0], [0.23, 0.0, 0.01], [0.83, 0.01, 0.03], [1.75, 0.04, 0.05], [2.87, 0.11, 0.07], [4.09, 0.22, 0.11], [5.28, 0.37, 0.15], [6.41, 0.55, 0.18]</answer><|im_end|>",
+                "avg_entropy": 0.17139767110347748,
+                "avg_log_prob": -0.17920276522636414,
+                "seq_confidence": 0.835936427116394
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.13,
+                        0.0,
+                        0.01
+                    ],
+                    [
+                        0.62,
+                        0.02,
+                        0.03
+                    ],
+                    [
+                        1.51,
+                        0.06,
+                        0.05
+                    ],
+                    [
+                        2.67,
+                        0.13,
+                        0.08
+                    ],
+                    [
+                        3.97,
+                        0.25,
+                        0.11
+                    ],
+                    [
+                        5.26,
+                        0.39,
+                        0.14
+                    ],
+                    [
+                        6.47,
+                        0.56,
+                        0.17
+                    ]
+                ],
+                "raw_text": "0.0, -0.0, 0.0], [0.13, 0.0, 0.01], [0.62, 0.02, 0.03], [1.51, 0.06, 0.05], [2.67, 0.13, 0.08], [3.97, 0.25, 0.11], [5.26, 0.39, 0.14], [6.47, 0.56, 0.17]</answer><|im_end|><|endoftext|>",
+                "avg_entropy": 0.16550642251968384,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.09,
+                        0.0,
+                        0.01
+                    ],
+                    [
+                        0.45,
+                        0.01,
+                        0.02
+                    ],
+                    [
+                        1.04,
+                        0.03,
+                        0.04
+                    ],
+                    [
+                        1.79,
+                        0.06,
+                        0.07
+                    ],
+                    [
+                        2.64,
+                        0.12,
+                        0.09
+                    ],
+                    [
+                        3.49,
+                        0.2,
+                        0.12
+                    ],
+                    [
+                        4.34,
+                        0.31,
+                        0.14
+                    ]
+                ],
+                "raw_text": "0.0, 0.0, 0.0], [0.09, 0.0, 0.01], [0.45, 0.01, 0.02], [1.04, 0.03, 0.04], [1.79, 0.06, 0.07], [2.64, 0.12, 0.09], [3.49, 0.2, 0.12], [4.34, 0.31, 0.14]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.16085907816886902,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "0.01, 0.0, 0.0], [0.23, 0.0, 0.01], [0.83, 0.01, 0.03], [1.75, 0.04, 0.05], [2.87, 0.11, 0.07], [4.09, 0.22, 0.11], [5.28, 0.37, 0.15], [6.41, 0.55, 0.18]</answer><|im_end|>",
+        "avg_entropy": 0.17139767110347748,
+        "avg_log_prob": -0.17920276522636414,
+        "seq_confidence": 0.835936427116394
+    },
+    {
+        "idx": 5,
+        "token": "7d4dd35efebf5aa8f",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.660743951797485,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/bfe0227798077958e.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [-0.0, 0.01]. Acceleration: [0.05, 0.06]. Historical trajectory: [[-0.58, 0.0, -0.03], [-0.16, -0.01, -0.01], [0.0, -0.01, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        0.02,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.19,
+                        -0.0,
+                        0.01
+                    ],
+                    [
+                        0.54,
+                        0.0,
+                        0.02
+                    ],
+                    [
+                        1.02,
+                        0.02,
+                        0.03
+                    ],
+                    [
+                        1.56,
+                        0.04,
+                        0.04
+                    ],
+                    [
+                        2.13,
+                        0.06,
+                        0.05
+                    ],
+                    [
+                        2.72,
+                        0.09,
+                        0.06
+                    ],
+                    [
+                        3.34,
+                        0.14,
+                        0.08
+                    ]
+                ],
+                "raw_text": "0.02, 0.0, 0.0], [0.19, -0.0, 0.01], [0.54, 0.0, 0.02], [1.02, 0.02, 0.03], [1.56, 0.04, 0.04], [2.13, 0.06, 0.05], [2.72, 0.09, 0.06], [3.34, 0.14, 0.08]</answer><|im_end|>",
+                "avg_entropy": 0.16998662054538727,
+                "avg_log_prob": -0.167911097407341,
+                "seq_confidence": 0.845429003238678
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.17,
+                        0.0,
+                        0.01
+                    ],
+                    [
+                        0.5,
+                        0.01,
+                        0.02
+                    ],
+                    [
+                        1.01,
+                        0.03,
+                        0.03
+                    ],
+                    [
+                        1.7,
+                        0.06,
+                        0.06
+                    ],
+                    [
+                        2.54,
+                        0.12,
+                        0.09
+                    ],
+                    [
+                        3.52,
+                        0.23,
+                        0.13
+                    ],
+                    [
+                        4.53,
+                        0.39,
+                        0.18
+                    ]
+                ],
+                "raw_text": "0.02, 0.0, 0.0], [0.17, 0.0, 0.01], [0.5, 0.01, 0.02], [1.01, 0.03, 0.03], [1.7, 0.06, 0.06], [2.54, 0.12, 0.09], [3.52, 0.23, 0.13], [4.53, 0.39, 0.18]</answer><|im_end|><|endoftext|>",
+                "avg_entropy": 0.18975284695625305,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.02,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.22,
+                        0.0,
+                        0.01
+                    ],
+                    [
+                        0.77,
+                        0.01,
+                        0.03
+                    ],
+                    [
+                        1.52,
+                        0.03,
+                        0.05
+                    ],
+                    [
+                        2.34,
+                        0.08,
+                        0.08
+                    ],
+                    [
+                        3.2,
+                        0.15,
+                        0.11
+                    ],
+                    [
+                        4.05,
+                        0.25,
+                        0.13
+                    ],
+                    [
+                        4.88,
+                        0.38,
+                        0.16
+                    ]
+                ],
+                "raw_text": "0.02, 0.0, 0.0], [0.22, 0.0, 0.01], [0.77, 0.01, 0.03], [1.52, 0.03, 0.05], [2.34, 0.08, 0.08], [3.2, 0.15, 0.11], [4.05, 0.25, 0.13], [4.88, 0.38, 0.16]</answer><|im_end|>",
+                "avg_entropy": 0.17604316771030426,
+                "avg_log_prob": -0.1717420518398285,
+                "seq_confidence": 0.8421964049339294
+            }
+        ],
+        "output_text": "0.02, 0.0, 0.0], [0.19, -0.0, 0.01], [0.54, 0.0, 0.02], [1.02, 0.02, 0.03], [1.56, 0.04, 0.04], [2.13, 0.06, 0.05], [2.72, 0.09, 0.06], [3.34, 0.14, 0.08]</answer><|im_end|>",
+        "avg_entropy": 0.16998662054538727,
+        "avg_log_prob": -0.167911097407341,
+        "seq_confidence": 0.845429003238678
+    },
+    {
+        "idx": 6,
+        "token": "46ccc7e9752595671",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.64684247970581,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/399bcc9a2e7cd1571.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [-0.01, 0.0]. Acceleration: [-0.04, 0.01]. Historical trajectory: [[0.07, -0.0, 0.0], [0.04, -0.0, -0.0], [0.01, -0.0, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        0.06,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.42,
+                        0.0,
+                        0.02
+                    ],
+                    [
+                        1.18,
+                        0.03,
+                        0.06
+                    ],
+                    [
+                        2.3,
+                        0.13,
+                        0.12
+                    ],
+                    [
+                        3.7,
+                        0.33,
+                        0.19
+                    ],
+                    [
+                        5.32,
+                        0.68,
+                        0.27
+                    ],
+                    [
+                        7.08,
+                        1.21,
+                        0.35
+                    ]
+                ],
+                "raw_text": "0.0, 0.0, -0.0], [0.06, 0.0, 0.0], [0.42, 0.0, 0.02], [1.18, 0.03, 0.06], [2.3, 0.13, 0.12], [3.7, 0.33, 0.19], [5.32, 0.68, 0.27], [7.08, 1.21, 0.35]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.12449145317077637,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.11,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.53,
+                        0.0,
+                        0.02
+                    ],
+                    [
+                        1.3,
+                        0.03,
+                        0.06
+                    ],
+                    [
+                        2.36,
+                        0.11,
+                        0.11
+                    ],
+                    [
+                        3.65,
+                        0.29,
+                        0.18
+                    ],
+                    [
+                        5.11,
+                        0.62,
+                        0.26
+                    ],
+                    [
+                        6.63,
+                        1.1,
+                        0.34
+                    ]
+                ],
+                "raw_text": "0.01, 0.0, 0.0], [0.11, 0.0, 0.0], [0.53, 0.0, 0.02], [1.3, 0.03, 0.06], [2.36, 0.11, 0.11], [3.65, 0.29, 0.18], [5.11, 0.62, 0.26], [6.63, 1.1, 0.34]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.14574220776557922,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.01,
+                        0.0,
+                        -0.0
+                    ],
+                    [
+                        0.12,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.61,
+                        0.01,
+                        0.02
+                    ],
+                    [
+                        1.53,
+                        0.04,
+                        0.06
+                    ],
+                    [
+                        2.82,
+                        0.14,
+                        0.12
+                    ],
+                    [
+                        4.4,
+                        0.36,
+                        0.19
+                    ],
+                    [
+                        6.09,
+                        0.73,
+                        0.26
+                    ],
+                    [
+                        7.78,
+                        1.23,
+                        0.33
+                    ]
+                ],
+                "raw_text": "0.01, 0.0, -0.0], [0.12, 0.0, 0.0], [0.61, 0.01, 0.02], [1.53, 0.04, 0.06], [2.82, 0.14, 0.12], [4.4, 0.36, 0.19], [6.09, 0.73, 0.26], [7.78, 1.23, 0.33]</answer><|im_end|>",
+                "avg_entropy": 0.13760682940483093,
+                "avg_log_prob": -0.14936062693595886,
+                "seq_confidence": 0.8612584471702576
+            }
+        ],
+        "output_text": "0.0, 0.0, -0.0], [0.06, 0.0, 0.0], [0.42, 0.0, 0.02], [1.18, 0.03, 0.06], [2.3, 0.13, 0.12], [3.7, 0.33, 0.19], [5.32, 0.68, 0.27], [7.08, 1.21, 0.35]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|>",
+        "avg_entropy": 0.12449145317077637,
+        "avg_log_prob": -Infinity,
+        "seq_confidence": 0.0
+    },
+    {
+        "idx": 7,
+        "token": "b7f53c6ea01b7cbc9",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.747942447662354,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/a6f24f55b437d2939.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [-0.01, -0.0]. Acceleration: [-0.06, -0.04]. Historical trajectory: [[0.01, 0.02, 0.0], [0.06, -0.0, 0.0], [0.03, -0.0, 0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        0.01,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.15,
+                        0.0,
+                        0.01
+                    ],
+                    [
+                        0.62,
+                        0.01,
+                        0.03
+                    ],
+                    [
+                        1.43,
+                        0.04,
+                        0.07
+                    ],
+                    [
+                        2.53,
+                        0.13,
+                        0.12
+                    ],
+                    [
+                        3.84,
+                        0.32,
+                        0.18
+                    ],
+                    [
+                        5.32,
+                        0.63,
+                        0.25
+                    ],
+                    [
+                        6.93,
+                        1.09,
+                        0.33
+                    ]
+                ],
+                "raw_text": "0.01, 0.0, 0.0], [0.15, 0.0, 0.01], [0.62, 0.01, 0.03], [1.43, 0.04, 0.07], [2.53, 0.13, 0.12], [3.84, 0.32, 0.18], [5.32, 0.63, 0.25], [6.93, 1.09, 0.33]</answer><|im_end|>",
+                "avg_entropy": 0.15759696066379547,
+                "avg_log_prob": -0.15083149075508118,
+                "seq_confidence": 0.8599925637245178
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.11,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.56,
+                        0.01,
+                        0.02
+                    ],
+                    [
+                        1.36,
+                        0.04,
+                        0.06
+                    ],
+                    [
+                        2.49,
+                        0.12,
+                        0.11
+                    ],
+                    [
+                        3.86,
+                        0.31,
+                        0.18
+                    ],
+                    [
+                        5.41,
+                        0.63,
+                        0.26
+                    ],
+                    [
+                        7.07,
+                        1.13,
+                        0.34
+                    ]
+                ],
+                "raw_text": "0.0, 0.0, -0.0], [0.11, 0.0, 0.0], [0.56, 0.01, 0.02], [1.36, 0.04, 0.06], [2.49, 0.12, 0.11], [3.86, 0.31, 0.18], [5.41, 0.63, 0.26], [7.07, 1.13, 0.34]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.14492344856262207,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.04,
+                        0.0,
+                        -0.0
+                    ],
+                    [
+                        0.31,
+                        -0.0,
+                        0.0
+                    ],
+                    [
+                        0.92,
+                        0.0,
+                        0.02
+                    ],
+                    [
+                        1.83,
+                        0.04,
+                        0.05
+                    ],
+                    [
+                        3.01,
+                        0.13,
+                        0.1
+                    ],
+                    [
+                        4.4,
+                        0.3,
+                        0.17
+                    ],
+                    [
+                        5.85,
+                        0.61,
+                        0.26
+                    ]
+                ],
+                "raw_text": "0.0, 0.0, -0.0], [0.04, 0.0, -0.0], [0.31, -0.0, 0.0], [0.92, 0.0, 0.02], [1.83, 0.04, 0.05], [3.01, 0.13, 0.1], [4.4, 0.3, 0.17], [5.85, 0.61, 0.26]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.14863425493240356,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "0.01, 0.0, 0.0], [0.15, 0.0, 0.01], [0.62, 0.01, 0.03], [1.43, 0.04, 0.07], [2.53, 0.13, 0.12], [3.84, 0.32, 0.18], [5.32, 0.63, 0.25], [6.93, 1.09, 0.33]</answer><|im_end|>",
+        "avg_entropy": 0.15759696066379547,
+        "avg_log_prob": -0.15083149075508118,
+        "seq_confidence": 0.8599925637245178
+    },
+    {
+        "idx": 8,
+        "token": "c864abb5afff1f7f4",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.876482963562012,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/f71b113ee7dd89905.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [0.67, 0.0]. Acceleration: [-0.6, 0.13]. Historical trajectory: [[-1.93, 0.08, -0.1], [-1.0, 0.02, -0.05], [-0.39, 0.0, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        0.23,
+                        -0.01,
+                        0.01
+                    ],
+                    [
+                        0.44,
+                        -0.01,
+                        0.02
+                    ],
+                    [
+                        0.73,
+                        0.01,
+                        0.03
+                    ],
+                    [
+                        1.13,
+                        0.02,
+                        0.04
+                    ],
+                    [
+                        1.62,
+                        0.04,
+                        0.05
+                    ],
+                    [
+                        2.21,
+                        0.07,
+                        0.06
+                    ],
+                    [
+                        2.87,
+                        0.11,
+                        0.07
+                    ],
+                    [
+                        3.57,
+                        0.17,
+                        0.09
+                    ]
+                ],
+                "raw_text": "0.23, -0.01, 0.01], [0.44, -0.01, 0.02], [0.73, 0.01, 0.03], [1.13, 0.02, 0.04], [1.62, 0.04, 0.05], [2.21, 0.07, 0.06], [2.87, 0.11, 0.07], [3.57, 0.17, 0.09]</answer><|im_end|>",
+                "avg_entropy": 0.18729448318481445,
+                "avg_log_prob": -0.17677652835845947,
+                "seq_confidence": 0.837967038154602
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.23,
+                        0.01,
+                        0.01
+                    ],
+                    [
+                        0.39,
+                        0.02,
+                        0.02
+                    ],
+                    [
+                        0.54,
+                        0.01,
+                        0.03
+                    ],
+                    [
+                        0.68,
+                        0.01,
+                        0.03
+                    ],
+                    [
+                        0.83,
+                        0.01,
+                        0.03
+                    ],
+                    [
+                        0.98,
+                        0.02,
+                        0.04
+                    ],
+                    [
+                        1.13,
+                        0.03,
+                        0.04
+                    ],
+                    [
+                        1.27,
+                        0.03,
+                        0.04
+                    ]
+                ],
+                "raw_text": "0.23, 0.01, 0.01], [0.39, 0.02, 0.02], [0.54, 0.01, 0.03], [0.68, 0.01, 0.03], [0.83, 0.01, 0.03], [0.98, 0.02, 0.04], [1.13, 0.03, 0.04], [1.27, 0.03, 0.04]</answer><|im_end|>",
+                "avg_entropy": 0.1595221906900406,
+                "avg_log_prob": -0.1573529988527298,
+                "seq_confidence": 0.8544024229049683
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.38,
+                        0.01,
+                        0.02
+                    ],
+                    [
+                        0.54,
+                        0.02,
+                        0.03
+                    ],
+                    [
+                        0.74,
+                        0.03,
+                        0.04
+                    ],
+                    [
+                        0.97,
+                        0.04,
+                        0.05
+                    ],
+                    [
+                        1.22,
+                        0.05,
+                        0.06
+                    ],
+                    [
+                        1.4,
+                        0.06,
+                        0.06
+                    ],
+                    [
+                        1.5,
+                        0.07,
+                        0.06
+                    ]
+                ],
+                "raw_text": "0.23, 0.01, 0.01], [0.38, 0.01, 0.02], [0.54, 0.02, 0.03], [0.74, 0.03, 0.04], [0.97, 0.04, 0.05], [1.22, 0.05, 0.06], [1.4, 0.06, 0.06], [1.5, 0.07, 0.06]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.16566751897335052,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "0.23, -0.01, 0.01], [0.44, -0.01, 0.02], [0.73, 0.01, 0.03], [1.13, 0.02, 0.04], [1.62, 0.04, 0.05], [2.21, 0.07, 0.06], [2.87, 0.11, 0.07], [3.57, 0.17, 0.09]</answer><|im_end|>",
+        "avg_entropy": 0.18729448318481445,
+        "avg_log_prob": -0.17677652835845947,
+        "seq_confidence": 0.837967038154602
+    },
+    {
+        "idx": 9,
+        "token": "6b912a3796564dd7e",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.883550643920898,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/438b7670eac804f33.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [1.07, -0.02]. Acceleration: [-0.74, 0.08]. Historical trajectory: [[-2.75, 0.2, -0.15], [-1.54, 0.05, -0.08], [-0.61, 0.01, -0.03]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        0.42,
+                        0.01,
+                        0.02
+                    ],
+                    [
+                        0.78,
+                        0.03,
+                        0.04
+                    ],
+                    [
+                        1.15,
+                        0.04,
+                        0.05
+                    ],
+                    [
+                        1.56,
+                        0.05,
+                        0.07
+                    ],
+                    [
+                        2.0,
+                        0.08,
+                        0.08
+                    ],
+                    [
+                        2.48,
+                        0.13,
+                        0.09
+                    ],
+                    [
+                        3.01,
+                        0.19,
+                        0.11
+                    ],
+                    [
+                        3.59,
+                        0.26,
+                        0.12
+                    ]
+                ],
+                "raw_text": "0.42, 0.01, 0.02], [0.78, 0.03, 0.04], [1.15, 0.04, 0.05], [1.56, 0.05, 0.07], [2.0, 0.08, 0.08], [2.48, 0.13, 0.09], [3.01, 0.19, 0.11], [3.59, 0.26, 0.12]</answer><|im_end|>",
+                "avg_entropy": 0.1861380785703659,
+                "avg_log_prob": -0.1854860633611679,
+                "seq_confidence": 0.8307004570960999
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.38,
+                        0.01,
+                        0.02
+                    ],
+                    [
+                        0.61,
+                        0.01,
+                        0.03
+                    ],
+                    [
+                        0.77,
+                        0.01,
+                        0.04
+                    ],
+                    [
+                        0.94,
+                        0.02,
+                        0.05
+                    ],
+                    [
+                        1.14,
+                        0.03,
+                        0.06
+                    ],
+                    [
+                        1.38,
+                        0.04,
+                        0.07
+                    ],
+                    [
+                        1.64,
+                        0.07,
+                        0.08
+                    ],
+                    [
+                        1.93,
+                        0.1,
+                        0.09
+                    ]
+                ],
+                "raw_text": "0.38, 0.01, 0.02], [0.61, 0.01, 0.03], [0.77, 0.01, 0.04], [0.94, 0.02, 0.05], [1.14, 0.03, 0.06], [1.38, 0.04, 0.07], [1.64, 0.07, 0.08], [1.93, 0.1, 0.09]</answer><|im_end|>",
+                "avg_entropy": 0.17650723457336426,
+                "avg_log_prob": -0.16148224472999573,
+                "seq_confidence": 0.8508816361427307
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.4,
+                        0.02,
+                        0.02
+                    ],
+                    [
+                        0.64,
+                        0.02,
+                        0.03
+                    ],
+                    [
+                        0.79,
+                        0.02,
+                        0.04
+                    ],
+                    [
+                        0.89,
+                        0.04,
+                        0.05
+                    ],
+                    [
+                        0.95,
+                        0.04,
+                        0.05
+                    ],
+                    [
+                        0.94,
+                        0.04,
+                        0.05
+                    ],
+                    [
+                        0.93,
+                        0.04,
+                        0.05
+                    ],
+                    [
+                        0.92,
+                        0.04,
+                        0.05
+                    ]
+                ],
+                "raw_text": "0.4, 0.02, 0.02], [0.64, 0.02, 0.03], [0.79, 0.02, 0.04], [0.89, 0.04, 0.05], [0.95, 0.04, 0.05], [0.94, 0.04, 0.05], [0.93, 0.04, 0.05], [0.92, 0.04, 0.05]</answer><|im_end|>",
+                "avg_entropy": 0.13678525388240814,
+                "avg_log_prob": -0.16317367553710938,
+                "seq_confidence": 0.8494436740875244
+            }
+        ],
+        "output_text": "0.42, 0.01, 0.02], [0.78, 0.03, 0.04], [1.15, 0.04, 0.05], [1.56, 0.05, 0.07], [2.0, 0.08, 0.08], [2.48, 0.13, 0.09], [3.01, 0.19, 0.11], [3.59, 0.26, 0.12]</answer><|im_end|>",
+        "avg_entropy": 0.1861380785703659,
+        "avg_log_prob": -0.1854860633611679,
+        "seq_confidence": 0.8307004570960999
+    },
+    {
+        "idx": 10,
+        "token": "6b5b128424d5357b0",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.70595645904541,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/0bf867be04b39b943.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [0.07, 0.02]. Acceleration: [-0.32, 0.17]. Historical trajectory: [[-0.73, 0.01, -0.07], [-0.3, -0.01, -0.03], [-0.07, -0.0, -0.01]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        0.01,
+                        -0.01,
+                        0.0
+                    ],
+                    [
+                        0.01,
+                        -0.01,
+                        0.0
+                    ],
+                    [
+                        0.24,
+                        -0.0,
+                        0.01
+                    ],
+                    [
+                        0.87,
+                        0.02,
+                        0.03
+                    ],
+                    [
+                        1.86,
+                        0.08,
+                        0.05
+                    ],
+                    [
+                        3.12,
+                        0.15,
+                        0.06
+                    ],
+                    [
+                        4.42,
+                        0.23,
+                        0.07
+                    ],
+                    [
+                        5.69,
+                        0.33,
+                        0.09
+                    ]
+                ],
+                "raw_text": "0.01, -0.01, 0.0], [0.01, -0.01, 0.0], [0.24, -0.0, 0.01], [0.87, 0.02, 0.03], [1.86, 0.08, 0.05], [3.12, 0.15, 0.06], [4.42, 0.23, 0.07], [5.69, 0.33, 0.09]</answer><|im_end|>",
+                "avg_entropy": 0.17158032953739166,
+                "avg_log_prob": -0.18566538393497467,
+                "seq_confidence": 0.8305515050888062
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.02,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.25,
+                        0.0,
+                        0.01
+                    ],
+                    [
+                        0.86,
+                        0.01,
+                        0.02
+                    ],
+                    [
+                        1.78,
+                        0.04,
+                        0.04
+                    ],
+                    [
+                        2.85,
+                        0.09,
+                        0.06
+                    ],
+                    [
+                        3.92,
+                        0.17,
+                        0.08
+                    ],
+                    [
+                        5.0,
+                        0.27,
+                        0.11
+                    ]
+                ],
+                "raw_text": "0.01, 0.0, 0.0], [0.02, 0.0, 0.0], [0.25, 0.0, 0.01], [0.86, 0.01, 0.02], [1.78, 0.04, 0.04], [2.85, 0.09, 0.06], [3.92, 0.17, 0.08], [5.0, 0.27, 0.11]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.17171145975589752,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        -0.01,
+                        -0.01,
+                        0.0
+                    ],
+                    [
+                        -0.01,
+                        -0.01,
+                        0.0
+                    ],
+                    [
+                        0.01,
+                        -0.01,
+                        0.0
+                    ],
+                    [
+                        0.21,
+                        0.0,
+                        0.01
+                    ],
+                    [
+                        0.66,
+                        0.01,
+                        0.03
+                    ],
+                    [
+                        1.35,
+                        0.03,
+                        0.05
+                    ],
+                    [
+                        2.18,
+                        0.08,
+                        0.07
+                    ]
+                ],
+                "raw_text": "0.01, -0.01, 0.0], [-0.01, -0.01, 0.0], [-0.01, -0.01, 0.0], [0.01, -0.01, 0.0], [0.21, 0.0, 0.01], [0.66, 0.01, 0.03], [1.35, 0.03, 0.05], [2.18, 0.08, 0.07]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.151288241147995,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "0.01, -0.01, 0.0], [0.01, -0.01, 0.0], [0.24, -0.0, 0.01], [0.87, 0.02, 0.03], [1.86, 0.08, 0.05], [3.12, 0.15, 0.06], [4.42, 0.23, 0.07], [5.69, 0.33, 0.09]</answer><|im_end|>",
+        "avg_entropy": 0.17158032953739166,
+        "avg_log_prob": -0.18566538393497467,
+        "seq_confidence": 0.8305515050888062
+    },
+    {
+        "idx": 11,
+        "token": "3b9a4be29bdd2c8ae",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.442029237747192,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/bc86217e7519e1403.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [0.35, 0.02]. Acceleration: [-0.77, 0.08]. Historical trajectory: [[-1.31, 0.06, -0.13], [-0.66, 0.01, -0.06], [-0.23, -0.01, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        0.06,
+                        0.01,
+                        0.0
+                    ],
+                    [
+                        0.04,
+                        0.01,
+                        0.0
+                    ],
+                    [
+                        0.03,
+                        0.01,
+                        0.0
+                    ],
+                    [
+                        0.02,
+                        0.01,
+                        0.0
+                    ],
+                    [
+                        0.02,
+                        0.01,
+                        0.0
+                    ],
+                    [
+                        0.01,
+                        0.01,
+                        0.0
+                    ],
+                    [
+                        0.01,
+                        0.01,
+                        0.0
+                    ],
+                    [
+                        0.01,
+                        0.01,
+                        0.0
+                    ]
+                ],
+                "raw_text": "0.06, 0.01, 0.0], [0.04, 0.01, 0.0], [0.03, 0.01, 0.0], [0.02, 0.01, 0.0], [0.02, 0.01, 0.0], [0.01, 0.01, 0.0], [0.01, 0.01, 0.0], [0.01, 0.01, 0.0]</answer><|im_end|>",
+                "avg_entropy": 0.04066508635878563,
+                "avg_log_prob": -0.02553969994187355,
+                "seq_confidence": 0.9747836589813232
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.04,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.03,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.03,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.02,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.02,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.02,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.02,
+                        0.0,
+                        0.0
+                    ]
+                ],
+                "raw_text": "0.06, 0.0, 0.0], [0.04, 0.0, 0.0], [0.03, 0.0, 0.0], [0.03, 0.0, 0.0], [0.02, 0.0, 0.0], [0.02, 0.0, 0.0], [0.02, 0.0, 0.0], [0.02, 0.0, 0.0]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.048876650631427765,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.04,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.03,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.02,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.02,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.01,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.01,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.01,
+                        0.0,
+                        0.0
+                    ]
+                ],
+                "raw_text": "0.06, 0.0, 0.0], [0.04, 0.0, 0.0], [0.03, 0.0, 0.0], [0.02, 0.0, 0.0], [0.02, 0.0, 0.0], [0.01, 0.0, 0.0], [0.01, 0.0, 0.0], [0.01, 0.0, 0.0]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.05005667358636856,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "0.06, 0.01, 0.0], [0.04, 0.01, 0.0], [0.03, 0.01, 0.0], [0.02, 0.01, 0.0], [0.02, 0.01, 0.0], [0.01, 0.01, 0.0], [0.01, 0.01, 0.0], [0.01, 0.01, 0.0]</answer><|im_end|>",
+        "avg_entropy": 0.04066508635878563,
+        "avg_log_prob": -0.02553969994187355,
+        "seq_confidence": 0.9747836589813232
+    },
+    {
+        "idx": 12,
+        "token": "7be779b9f100e6373",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.833877325057983,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/7d15dfc7128ac7c60.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [2.92, -0.03]. Acceleration: [-0.34, -0.01]. Historical trajectory: [[-4.31, 0.15, -0.1], [-2.9, 0.04, -0.05], [-1.45, -0.01, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        2.72,
+                        0.05,
+                        0.05
+                    ],
+                    [
+                        4.0,
+                        0.13,
+                        0.07
+                    ],
+                    [
+                        5.18,
+                        0.23,
+                        0.1
+                    ],
+                    [
+                        6.11,
+                        0.34,
+                        0.13
+                    ],
+                    [
+                        6.66,
+                        0.42,
+                        0.14
+                    ],
+                    [
+                        6.85,
+                        0.44,
+                        0.15
+                    ],
+                    [
+                        6.84,
+                        0.44,
+                        0.15
+                    ]
+                ],
+                "raw_text": "1.39, 0.01, 0.02], [2.72, 0.05, 0.05], [4.0, 0.13, 0.07], [5.18, 0.23, 0.1], [6.11, 0.34, 0.13], [6.66, 0.42, 0.14], [6.85, 0.44, 0.15], [6.84, 0.44, 0.15]</answer><|im_end|><|endoftext|>",
+                "avg_entropy": 0.18724960088729858,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        1.36,
+                        0.01,
+                        0.02
+                    ],
+                    [
+                        2.48,
+                        0.02,
+                        0.03
+                    ],
+                    [
+                        3.24,
+                        0.04,
+                        0.04
+                    ],
+                    [
+                        3.6,
+                        0.06,
+                        0.05
+                    ],
+                    [
+                        3.67,
+                        0.06,
+                        0.05
+                    ],
+                    [
+                        3.64,
+                        0.06,
+                        0.05
+                    ],
+                    [
+                        3.62,
+                        0.05,
+                        0.05
+                    ],
+                    [
+                        3.61,
+                        0.05,
+                        0.05
+                    ]
+                ],
+                "raw_text": "1.36, 0.01, 0.02], [2.48, 0.02, 0.03], [3.24, 0.04, 0.04], [3.6, 0.06, 0.05], [3.67, 0.06, 0.05], [3.64, 0.06, 0.05], [3.62, 0.05, 0.05], [3.61, 0.05, 0.05]</answer><|im_end|>",
+                "avg_entropy": 0.14045381546020508,
+                "avg_log_prob": -0.15471412241458893,
+                "seq_confidence": 0.8566600680351257
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        2.6,
+                        0.03,
+                        0.04
+                    ],
+                    [
+                        3.59,
+                        0.08,
+                        0.07
+                    ],
+                    [
+                        4.4,
+                        0.15,
+                        0.09
+                    ],
+                    [
+                        5.04,
+                        0.21,
+                        0.11
+                    ],
+                    [
+                        5.5,
+                        0.26,
+                        0.12
+                    ],
+                    [
+                        5.74,
+                        0.3,
+                        0.13
+                    ],
+                    [
+                        5.79,
+                        0.31,
+                        0.13
+                    ]
+                ],
+                "raw_text": "1.39, 0.01, 0.02], [2.6, 0.03, 0.04], [3.59, 0.08, 0.07], [4.4, 0.15, 0.09], [5.04, 0.21, 0.11], [5.5, 0.26, 0.12], [5.74, 0.3, 0.13], [5.79, 0.31, 0.13]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.20066367089748383,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "1.39, 0.01, 0.02], [2.72, 0.05, 0.05], [4.0, 0.13, 0.07], [5.18, 0.23, 0.1], [6.11, 0.34, 0.13], [6.66, 0.42, 0.14], [6.85, 0.44, 0.15], [6.84, 0.44, 0.15]</answer><|im_end|><|endoftext|>",
+        "avg_entropy": 0.18724960088729858,
+        "avg_log_prob": -Infinity,
+        "seq_confidence": 0.0
+    },
+    {
+        "idx": 13,
+        "token": "e2ea1000f4e2d0904",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.843363523483276,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/049e8224ae2a6fd91.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [2.92, -0.04]. Acceleration: [-0.05, 0.25]. Historical trajectory: [[-4.24, 0.27, -0.16], [-2.86, 0.1, -0.08], [-1.45, 0.02, -0.03]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        2.66,
+                        0.05,
+                        0.05
+                    ],
+                    [
+                        3.59,
+                        0.11,
+                        0.08
+                    ],
+                    [
+                        4.23,
+                        0.16,
+                        0.09
+                    ],
+                    [
+                        4.56,
+                        0.2,
+                        0.1
+                    ],
+                    [
+                        4.65,
+                        0.22,
+                        0.1
+                    ],
+                    [
+                        4.62,
+                        0.23,
+                        0.1
+                    ],
+                    [
+                        4.61,
+                        0.22,
+                        0.1
+                    ]
+                ],
+                "raw_text": "1.42, 0.01, 0.03], [2.66, 0.05, 0.05], [3.59, 0.11, 0.08], [4.23, 0.16, 0.09], [4.56, 0.2, 0.1], [4.65, 0.22, 0.1], [4.62, 0.23, 0.1], [4.61, 0.22, 0.1]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.1643691062927246,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        2.7,
+                        0.05,
+                        0.04
+                    ],
+                    [
+                        3.75,
+                        0.1,
+                        0.06
+                    ],
+                    [
+                        4.54,
+                        0.16,
+                        0.08
+                    ],
+                    [
+                        5.07,
+                        0.21,
+                        0.09
+                    ],
+                    [
+                        5.35,
+                        0.23,
+                        0.1
+                    ],
+                    [
+                        5.4,
+                        0.23,
+                        0.1
+                    ],
+                    [
+                        5.39,
+                        0.23,
+                        0.1
+                    ]
+                ],
+                "raw_text": "1.42, 0.01, 0.02], [2.7, 0.05, 0.04], [3.75, 0.1, 0.06], [4.54, 0.16, 0.08], [5.07, 0.21, 0.09], [5.35, 0.23, 0.1], [5.4, 0.23, 0.1], [5.39, 0.23, 0.1]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.185765340924263,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        1.41,
+                        0.03,
+                        0.03
+                    ],
+                    [
+                        2.66,
+                        0.07,
+                        0.06
+                    ],
+                    [
+                        3.75,
+                        0.14,
+                        0.08
+                    ],
+                    [
+                        4.55,
+                        0.21,
+                        0.1
+                    ],
+                    [
+                        5.16,
+                        0.28,
+                        0.12
+                    ],
+                    [
+                        5.68,
+                        0.35,
+                        0.13
+                    ],
+                    [
+                        6.08,
+                        0.4,
+                        0.14
+                    ],
+                    [
+                        6.32,
+                        0.43,
+                        0.15
+                    ]
+                ],
+                "raw_text": "1.41, 0.03, 0.03], [2.66, 0.07, 0.06], [3.75, 0.14, 0.08], [4.55, 0.21, 0.1], [5.16, 0.28, 0.12], [5.68, 0.35, 0.13], [6.08, 0.4, 0.14], [6.32, 0.43, 0.15]</answer><|im_end|>",
+                "avg_entropy": 0.21373771131038666,
+                "avg_log_prob": -0.2731573283672333,
+                "seq_confidence": 0.7609730362892151
+            }
+        ],
+        "output_text": "1.42, 0.01, 0.03], [2.66, 0.05, 0.05], [3.59, 0.11, 0.08], [4.23, 0.16, 0.09], [4.56, 0.2, 0.1], [4.65, 0.22, 0.1], [4.62, 0.23, 0.1], [4.61, 0.22, 0.1]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|>",
+        "avg_entropy": 0.1643691062927246,
+        "avg_log_prob": -Infinity,
+        "seq_confidence": 0.0
+    },
+    {
+        "idx": 14,
+        "token": "0e55c21e09e86d8ba",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.85591745376587,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/d126d7ee9e7a625fe.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [3.07, -0.09]. Acceleration: [-0.13, 0.28]. Historical trajectory: [[-4.44, 0.32, -0.15], [-2.98, 0.16, -0.08], [-1.5, 0.04, -0.04]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        1.49,
+                        0.02,
+                        0.03
+                    ],
+                    [
+                        2.83,
+                        0.08,
+                        0.05
+                    ],
+                    [
+                        3.85,
+                        0.13,
+                        0.07
+                    ],
+                    [
+                        4.4,
+                        0.18,
+                        0.07
+                    ],
+                    [
+                        4.53,
+                        0.18,
+                        0.07
+                    ],
+                    [
+                        4.51,
+                        0.19,
+                        0.07
+                    ],
+                    [
+                        4.49,
+                        0.19,
+                        0.07
+                    ],
+                    [
+                        4.48,
+                        0.19,
+                        0.07
+                    ]
+                ],
+                "raw_text": "1.49, 0.02, 0.03], [2.83, 0.08, 0.05], [3.85, 0.13, 0.07], [4.4, 0.18, 0.07], [4.53, 0.18, 0.07], [4.51, 0.19, 0.07], [4.49, 0.19, 0.07], [4.48, 0.19, 0.07]</answer><|im_end|>",
+                "avg_entropy": 0.16030554473400116,
+                "avg_log_prob": -0.15976248681545258,
+                "seq_confidence": 0.8523462414741516
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        1.49,
+                        0.02,
+                        0.03
+                    ],
+                    [
+                        2.94,
+                        0.08,
+                        0.04
+                    ],
+                    [
+                        4.23,
+                        0.13,
+                        0.05
+                    ],
+                    [
+                        5.2,
+                        0.18,
+                        0.05
+                    ],
+                    [
+                        5.72,
+                        0.21,
+                        0.06
+                    ],
+                    [
+                        5.86,
+                        0.23,
+                        0.06
+                    ],
+                    [
+                        5.84,
+                        0.24,
+                        0.06
+                    ],
+                    [
+                        5.81,
+                        0.23,
+                        0.06
+                    ]
+                ],
+                "raw_text": "1.49, 0.02, 0.03], [2.94, 0.08, 0.04], [4.23, 0.13, 0.05], [5.2, 0.18, 0.05], [5.72, 0.21, 0.06], [5.86, 0.23, 0.06], [5.84, 0.24, 0.06], [5.81, 0.23, 0.06]</answer><|im_end|>",
+                "avg_entropy": 0.17325609922409058,
+                "avg_log_prob": -0.16998279094696045,
+                "seq_confidence": 0.8436793684959412
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        2.94,
+                        0.1,
+                        0.05
+                    ],
+                    [
+                        4.26,
+                        0.19,
+                        0.07
+                    ],
+                    [
+                        5.35,
+                        0.26,
+                        0.08
+                    ],
+                    [
+                        6.29,
+                        0.33,
+                        0.08
+                    ],
+                    [
+                        7.12,
+                        0.4,
+                        0.09
+                    ],
+                    [
+                        7.8,
+                        0.46,
+                        0.09
+                    ],
+                    [
+                        8.22,
+                        0.5,
+                        0.09
+                    ]
+                ],
+                "raw_text": "1.49, 0.03, 0.03], [2.94, 0.1, 0.05], [4.26, 0.19, 0.07], [5.35, 0.26, 0.08], [6.29, 0.33, 0.08], [7.12, 0.4, 0.09], [7.8, 0.46, 0.09], [8.22, 0.5, 0.09]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.22577925026416779,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "1.49, 0.02, 0.03], [2.83, 0.08, 0.05], [3.85, 0.13, 0.07], [4.4, 0.18, 0.07], [4.53, 0.18, 0.07], [4.51, 0.19, 0.07], [4.49, 0.19, 0.07], [4.48, 0.19, 0.07]</answer><|im_end|>",
+        "avg_entropy": 0.16030554473400116,
+        "avg_log_prob": -0.15976248681545258,
+        "seq_confidence": 0.8523462414741516
+    },
+    {
+        "idx": 15,
+        "token": "0a8cbe192f3d3dfba",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.724494218826294,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/3e64661f7e813b897.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [3.05, -0.1]. Acceleration: [0.18, 0.4]. Historical trajectory: [[-4.41, 0.37, -0.2], [-2.95, 0.16, -0.11], [-1.48, 0.06, -0.04]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        1.5,
+                        0.0,
+                        0.03
+                    ],
+                    [
+                        3.01,
+                        0.06,
+                        0.05
+                    ],
+                    [
+                        4.5,
+                        0.14,
+                        0.07
+                    ],
+                    [
+                        5.95,
+                        0.25,
+                        0.08
+                    ],
+                    [
+                        7.23,
+                        0.37,
+                        0.09
+                    ],
+                    [
+                        8.29,
+                        0.46,
+                        0.1
+                    ],
+                    [
+                        9.19,
+                        0.54,
+                        0.11
+                    ],
+                    [
+                        10.04,
+                        0.62,
+                        0.12
+                    ]
+                ],
+                "raw_text": "1.5, 0.0, 0.03], [3.01, 0.06, 0.05], [4.5, 0.14, 0.07], [5.95, 0.25, 0.08], [7.23, 0.37, 0.09], [8.29, 0.46, 0.1], [9.19, 0.54, 0.11], [10.04, 0.62, 0.12]</answer><|im_end|>",
+                "avg_entropy": 0.21626262366771698,
+                "avg_log_prob": -0.20531824231147766,
+                "seq_confidence": 0.81438809633255
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        2.9,
+                        0.09,
+                        0.06
+                    ],
+                    [
+                        4.27,
+                        0.17,
+                        0.07
+                    ],
+                    [
+                        5.5,
+                        0.25,
+                        0.08
+                    ],
+                    [
+                        6.5,
+                        0.33,
+                        0.09
+                    ],
+                    [
+                        7.28,
+                        0.41,
+                        0.1
+                    ],
+                    [
+                        7.98,
+                        0.47,
+                        0.11
+                    ],
+                    [
+                        8.54,
+                        0.51,
+                        0.12
+                    ]
+                ],
+                "raw_text": "1.47, 0.02, 0.04], [2.9, 0.09, 0.06], [4.27, 0.17, 0.07], [5.5, 0.25, 0.08], [6.5, 0.33, 0.09], [7.28, 0.41, 0.1], [7.98, 0.47, 0.11], [8.54, 0.51, 0.12]</answer><|im_end|><|endoftext|>",
+                "avg_entropy": 0.23220308125019073,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        2.94,
+                        0.08,
+                        0.05
+                    ],
+                    [
+                        4.18,
+                        0.16,
+                        0.07
+                    ],
+                    [
+                        5.18,
+                        0.23,
+                        0.08
+                    ],
+                    [
+                        5.88,
+                        0.29,
+                        0.09
+                    ],
+                    [
+                        6.3,
+                        0.32,
+                        0.09
+                    ],
+                    [
+                        6.52,
+                        0.35,
+                        0.1
+                    ],
+                    [
+                        6.59,
+                        0.35,
+                        0.1
+                    ]
+                ],
+                "raw_text": "1.5, 0.01, 0.03], [2.94, 0.08, 0.05], [4.18, 0.16, 0.07], [5.18, 0.23, 0.08], [5.88, 0.29, 0.09], [6.3, 0.32, 0.09], [6.52, 0.35, 0.1], [6.59, 0.35, 0.1]</answer><|im_end|><|endoftext|>",
+                "avg_entropy": 0.21100527048110962,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "1.5, 0.0, 0.03], [3.01, 0.06, 0.05], [4.5, 0.14, 0.07], [5.95, 0.25, 0.08], [7.23, 0.37, 0.09], [8.29, 0.46, 0.1], [9.19, 0.54, 0.11], [10.04, 0.62, 0.12]</answer><|im_end|>",
+        "avg_entropy": 0.21626262366771698,
+        "avg_log_prob": -0.20531824231147766,
+        "seq_confidence": 0.81438809633255
+    },
+    {
+        "idx": 16,
+        "token": "778f661244251a842",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.775014638900757,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/8fa9b98cacdc2413b.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [3.22, -0.05]. Acceleration: [-0.18, 0.03]. Historical trajectory: [[-4.95, 0.14, -0.07], [-3.28, 0.04, -0.04], [-1.61, -0.0, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        1.53,
+                        0.01,
+                        0.03
+                    ],
+                    [
+                        2.91,
+                        0.05,
+                        0.06
+                    ],
+                    [
+                        4.04,
+                        0.13,
+                        0.1
+                    ],
+                    [
+                        4.8,
+                        0.22,
+                        0.13
+                    ],
+                    [
+                        5.18,
+                        0.29,
+                        0.14
+                    ],
+                    [
+                        5.26,
+                        0.32,
+                        0.15
+                    ],
+                    [
+                        5.24,
+                        0.31,
+                        0.15
+                    ],
+                    [
+                        5.22,
+                        0.31,
+                        0.15
+                    ]
+                ],
+                "raw_text": "1.53, 0.01, 0.03], [2.91, 0.05, 0.06], [4.04, 0.13, 0.1], [4.8, 0.22, 0.13], [5.18, 0.29, 0.14], [5.26, 0.32, 0.15], [5.24, 0.31, 0.15], [5.22, 0.31, 0.15]</answer><|im_end|>",
+                "avg_entropy": 0.1767297387123108,
+                "avg_log_prob": -0.18191248178482056,
+                "seq_confidence": 0.8336743116378784
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        2.91,
+                        0.06,
+                        0.04
+                    ],
+                    [
+                        4.07,
+                        0.12,
+                        0.06
+                    ],
+                    [
+                        4.9,
+                        0.2,
+                        0.09
+                    ],
+                    [
+                        5.4,
+                        0.26,
+                        0.11
+                    ],
+                    [
+                        5.6,
+                        0.28,
+                        0.11
+                    ],
+                    [
+                        5.6,
+                        0.28,
+                        0.11
+                    ],
+                    [
+                        5.58,
+                        0.27,
+                        0.11
+                    ]
+                ],
+                "raw_text": "1.53, 0.01, 0.02], [2.91, 0.06, 0.04], [4.07, 0.12, 0.06], [4.9, 0.2, 0.09], [5.4, 0.26, 0.11], [5.6, 0.28, 0.11], [5.6, 0.28, 0.11], [5.58, 0.27, 0.11]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.1817420870065689,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        2.82,
+                        0.05,
+                        0.05
+                    ],
+                    [
+                        3.82,
+                        0.1,
+                        0.07
+                    ],
+                    [
+                        4.51,
+                        0.15,
+                        0.09
+                    ],
+                    [
+                        4.89,
+                        0.2,
+                        0.1
+                    ],
+                    [
+                        5.01,
+                        0.22,
+                        0.1
+                    ],
+                    [
+                        5.0,
+                        0.22,
+                        0.1
+                    ],
+                    [
+                        4.98,
+                        0.21,
+                        0.1
+                    ]
+                ],
+                "raw_text": "1.52, 0.01, 0.02], [2.82, 0.05, 0.05], [3.82, 0.1, 0.07], [4.51, 0.15, 0.09], [4.89, 0.2, 0.1], [5.01, 0.22, 0.1], [5.0, 0.22, 0.1], [4.98, 0.21, 0.1]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.16613377630710602,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "1.53, 0.01, 0.03], [2.91, 0.05, 0.06], [4.04, 0.13, 0.1], [4.8, 0.22, 0.13], [5.18, 0.29, 0.14], [5.26, 0.32, 0.15], [5.24, 0.31, 0.15], [5.22, 0.31, 0.15]</answer><|im_end|>",
+        "avg_entropy": 0.1767297387123108,
+        "avg_log_prob": -0.18191248178482056,
+        "seq_confidence": 0.8336743116378784
+    },
+    {
+        "idx": 17,
+        "token": "18dbdfb5b9fe301f4",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.802290916442871,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/ae0a62e993117b34f.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [3.32, -0.06]. Acceleration: [0.04, 0.2]. Historical trajectory: [[-4.98, 0.23, -0.11], [-3.34, 0.09, -0.06], [-1.67, 0.02, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        1.6,
+                        0.03,
+                        0.04
+                    ],
+                    [
+                        3.12,
+                        0.11,
+                        0.09
+                    ],
+                    [
+                        4.52,
+                        0.26,
+                        0.14
+                    ],
+                    [
+                        5.6,
+                        0.44,
+                        0.18
+                    ],
+                    [
+                        6.29,
+                        0.58,
+                        0.21
+                    ],
+                    [
+                        6.55,
+                        0.65,
+                        0.22
+                    ],
+                    [
+                        6.56,
+                        0.65,
+                        0.22
+                    ],
+                    [
+                        6.53,
+                        0.64,
+                        0.22
+                    ]
+                ],
+                "raw_text": "1.6, 0.03, 0.04], [3.12, 0.11, 0.09], [4.52, 0.26, 0.14], [5.6, 0.44, 0.18], [6.29, 0.58, 0.21], [6.55, 0.65, 0.22], [6.56, 0.65, 0.22], [6.53, 0.64, 0.22]</answer><|im_end|>",
+                "avg_entropy": 0.19636006653308868,
+                "avg_log_prob": -0.2293221652507782,
+                "seq_confidence": 0.7950723171234131
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        3.13,
+                        0.09,
+                        0.06
+                    ],
+                    [
+                        4.44,
+                        0.19,
+                        0.1
+                    ],
+                    [
+                        5.4,
+                        0.31,
+                        0.14
+                    ],
+                    [
+                        5.93,
+                        0.4,
+                        0.16
+                    ],
+                    [
+                        6.08,
+                        0.44,
+                        0.16
+                    ],
+                    [
+                        6.06,
+                        0.43,
+                        0.16
+                    ],
+                    [
+                        6.03,
+                        0.42,
+                        0.16
+                    ]
+                ],
+                "raw_text": "1.6, 0.02, 0.02], [3.13, 0.09, 0.06], [4.44, 0.19, 0.1], [5.4, 0.31, 0.14], [5.93, 0.4, 0.16], [6.08, 0.44, 0.16], [6.06, 0.43, 0.16], [6.03, 0.42, 0.16]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.1776604950428009,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        3.19,
+                        0.09,
+                        0.06
+                    ],
+                    [
+                        4.67,
+                        0.22,
+                        0.1
+                    ],
+                    [
+                        5.94,
+                        0.38,
+                        0.14
+                    ],
+                    [
+                        6.94,
+                        0.54,
+                        0.17
+                    ],
+                    [
+                        7.59,
+                        0.66,
+                        0.19
+                    ],
+                    [
+                        7.88,
+                        0.72,
+                        0.2
+                    ],
+                    [
+                        7.91,
+                        0.73,
+                        0.2
+                    ]
+                ],
+                "raw_text": "1.61, 0.03, 0.03], [3.19, 0.09, 0.06], [4.67, 0.22, 0.1], [5.94, 0.38, 0.14], [6.94, 0.54, 0.17], [7.59, 0.66, 0.19], [7.88, 0.72, 0.2], [7.91, 0.73, 0.2]</answer><|im_end|><|endoftext|>",
+                "avg_entropy": 0.20305147767066956,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "1.6, 0.03, 0.04], [3.12, 0.11, 0.09], [4.52, 0.26, 0.14], [5.6, 0.44, 0.18], [6.29, 0.58, 0.21], [6.55, 0.65, 0.22], [6.56, 0.65, 0.22], [6.53, 0.64, 0.22]</answer><|im_end|>",
+        "avg_entropy": 0.19636006653308868,
+        "avg_log_prob": -0.2293221652507782,
+        "seq_confidence": 0.7950723171234131
+    },
+    {
+        "idx": 18,
+        "token": "530edf0e35aa025b6",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.886734247207642,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/7f1feac45db668870.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [3.39, -0.07]. Acceleration: [-0.01, 0.61]. Historical trajectory: [[-4.76, 0.48, -0.19], [-3.3, 0.22, -0.13], [-1.69, 0.06, -0.06]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        3.27,
+                        0.19,
+                        0.11
+                    ],
+                    [
+                        4.75,
+                        0.41,
+                        0.16
+                    ],
+                    [
+                        6.01,
+                        0.65,
+                        0.2
+                    ],
+                    [
+                        6.94,
+                        0.86,
+                        0.22
+                    ],
+                    [
+                        7.49,
+                        1.0,
+                        0.24
+                    ],
+                    [
+                        7.68,
+                        1.06,
+                        0.24
+                    ],
+                    [
+                        7.67,
+                        1.05,
+                        0.24
+                    ]
+                ],
+                "raw_text": "1.67, 0.05, 0.06], [3.27, 0.19, 0.11], [4.75, 0.41, 0.16], [6.01, 0.65, 0.2], [6.94, 0.86, 0.22], [7.49, 1.0, 0.24], [7.68, 1.06, 0.24], [7.67, 1.05, 0.24]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.18042409420013428,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        3.24,
+                        0.19,
+                        0.12
+                    ],
+                    [
+                        4.64,
+                        0.4,
+                        0.17
+                    ],
+                    [
+                        5.8,
+                        0.64,
+                        0.22
+                    ],
+                    [
+                        6.64,
+                        0.84,
+                        0.25
+                    ],
+                    [
+                        7.12,
+                        0.98,
+                        0.26
+                    ],
+                    [
+                        7.28,
+                        1.03,
+                        0.26
+                    ],
+                    [
+                        7.27,
+                        1.03,
+                        0.26
+                    ]
+                ],
+                "raw_text": "1.67, 0.05, 0.06], [3.24, 0.19, 0.12], [4.64, 0.4, 0.17], [5.8, 0.64, 0.22], [6.64, 0.84, 0.25], [7.12, 0.98, 0.26], [7.28, 1.03, 0.26], [7.27, 1.03, 0.26]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.19161036610603333,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        1.65,
+                        0.03,
+                        0.06
+                    ],
+                    [
+                        3.22,
+                        0.18,
+                        0.12
+                    ],
+                    [
+                        4.65,
+                        0.41,
+                        0.17
+                    ],
+                    [
+                        5.84,
+                        0.63,
+                        0.21
+                    ],
+                    [
+                        6.69,
+                        0.81,
+                        0.24
+                    ],
+                    [
+                        7.18,
+                        0.92,
+                        0.25
+                    ],
+                    [
+                        7.37,
+                        0.96,
+                        0.26
+                    ],
+                    [
+                        7.36,
+                        0.95,
+                        0.26
+                    ]
+                ],
+                "raw_text": "1.65, 0.03, 0.06], [3.22, 0.18, 0.12], [4.65, 0.41, 0.17], [5.84, 0.63, 0.21], [6.69, 0.81, 0.24], [7.18, 0.92, 0.25], [7.37, 0.96, 0.26], [7.36, 0.95, 0.26]</answer><|im_end|>",
+                "avg_entropy": 0.20130230486392975,
+                "avg_log_prob": -0.22916968166828156,
+                "seq_confidence": 0.795193612575531
+            }
+        ],
+        "output_text": "1.67, 0.05, 0.06], [3.27, 0.19, 0.11], [4.75, 0.41, 0.16], [6.01, 0.65, 0.2], [6.94, 0.86, 0.22], [7.49, 1.0, 0.24], [7.68, 1.06, 0.24], [7.67, 1.05, 0.24]</answer><|im_end|><|endoftext|><|endoftext|>",
+        "avg_entropy": 0.18042409420013428,
+        "avg_log_prob": -Infinity,
+        "seq_confidence": 0.0
+    },
+    {
+        "idx": 19,
+        "token": "3dd919c5a93fd6754",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.851932048797607,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/2c4773f3bc167902b.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [3.35, -0.09]. Acceleration: [-0.03, 0.7]. Historical trajectory: [[-4.53, 0.49, -0.19], [-3.1, 0.23, -0.13], [-1.62, 0.07, -0.07]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        1.63,
+                        0.06,
+                        0.07
+                    ],
+                    [
+                        3.12,
+                        0.22,
+                        0.13
+                    ],
+                    [
+                        4.32,
+                        0.41,
+                        0.17
+                    ],
+                    [
+                        5.14,
+                        0.58,
+                        0.21
+                    ],
+                    [
+                        5.57,
+                        0.7,
+                        0.22
+                    ],
+                    [
+                        5.68,
+                        0.74,
+                        0.23
+                    ],
+                    [
+                        5.64,
+                        0.74,
+                        0.23
+                    ],
+                    [
+                        5.61,
+                        0.73,
+                        0.23
+                    ]
+                ],
+                "raw_text": "1.63, 0.06, 0.07], [3.12, 0.22, 0.13], [4.32, 0.41, 0.17], [5.14, 0.58, 0.21], [5.57, 0.7, 0.22], [5.68, 0.74, 0.23], [5.64, 0.74, 0.23], [5.61, 0.73, 0.23]</answer><|im_end|>",
+                "avg_entropy": 0.17222031950950623,
+                "avg_log_prob": -0.17383304238319397,
+                "seq_confidence": 0.8404371738433838
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        1.68,
+                        0.06,
+                        0.07
+                    ],
+                    [
+                        3.31,
+                        0.22,
+                        0.13
+                    ],
+                    [
+                        4.88,
+                        0.49,
+                        0.19
+                    ],
+                    [
+                        6.32,
+                        0.8,
+                        0.23
+                    ],
+                    [
+                        7.62,
+                        1.13,
+                        0.28
+                    ],
+                    [
+                        8.68,
+                        1.46,
+                        0.32
+                    ],
+                    [
+                        9.45,
+                        1.72,
+                        0.35
+                    ],
+                    [
+                        9.91,
+                        1.89,
+                        0.37
+                    ]
+                ],
+                "raw_text": "1.68, 0.06, 0.07], [3.31, 0.22, 0.13], [4.88, 0.49, 0.19], [6.32, 0.8, 0.23], [7.62, 1.13, 0.28], [8.68, 1.46, 0.32], [9.45, 1.72, 0.35], [9.91, 1.89, 0.37]</answer><|im_end|>",
+                "avg_entropy": 0.23271767795085907,
+                "avg_log_prob": -0.2596342861652374,
+                "seq_confidence": 0.771333634853363
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        3.22,
+                        0.21,
+                        0.13
+                    ],
+                    [
+                        4.56,
+                        0.42,
+                        0.17
+                    ],
+                    [
+                        5.53,
+                        0.6,
+                        0.21
+                    ],
+                    [
+                        6.03,
+                        0.7,
+                        0.22
+                    ],
+                    [
+                        6.14,
+                        0.72,
+                        0.22
+                    ],
+                    [
+                        6.11,
+                        0.71,
+                        0.22
+                    ],
+                    [
+                        6.09,
+                        0.7,
+                        0.22
+                    ]
+                ],
+                "raw_text": "1.65, 0.05, 0.07], [3.22, 0.21, 0.13], [4.56, 0.42, 0.17], [5.53, 0.6, 0.21], [6.03, 0.7, 0.22], [6.14, 0.72, 0.22], [6.11, 0.71, 0.22], [6.09, 0.7, 0.22]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.1717701405286789,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "1.63, 0.06, 0.07], [3.12, 0.22, 0.13], [4.32, 0.41, 0.17], [5.14, 0.58, 0.21], [5.57, 0.7, 0.22], [5.68, 0.74, 0.23], [5.64, 0.74, 0.23], [5.61, 0.73, 0.23]</answer><|im_end|>",
+        "avg_entropy": 0.17222031950950623,
+        "avg_log_prob": -0.17383304238319397,
+        "seq_confidence": 0.8404371738433838
+    },
+    {
+        "idx": 20,
+        "token": "ea1bac206caf8d18e",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.779047727584839,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/7dd83a56557bf1c3c.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [2.06, -0.01]. Acceleration: [-2.94, 0.28]. Historical trajectory: [[-4.1, 0.4, -0.19], [-2.64, 0.16, -0.13], [-1.24, 0.03, -0.06]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        1.1,
+                        0.01,
+                        0.06
+                    ],
+                    [
+                        1.16,
+                        0.02,
+                        0.06
+                    ],
+                    [
+                        1.13,
+                        0.02,
+                        0.06
+                    ],
+                    [
+                        1.11,
+                        0.02,
+                        0.06
+                    ],
+                    [
+                        1.1,
+                        0.02,
+                        0.06
+                    ],
+                    [
+                        1.1,
+                        0.02,
+                        0.06
+                    ],
+                    [
+                        1.1,
+                        0.02,
+                        0.06
+                    ]
+                ],
+                "raw_text": "0.76, 0.0, 0.04], [1.1, 0.01, 0.06], [1.16, 0.02, 0.06], [1.13, 0.02, 0.06], [1.11, 0.02, 0.06], [1.1, 0.02, 0.06], [1.1, 0.02, 0.06], [1.1, 0.02, 0.06]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.09033067524433136,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        1.14,
+                        0.02,
+                        0.06
+                    ],
+                    [
+                        1.26,
+                        0.03,
+                        0.07
+                    ],
+                    [
+                        1.25,
+                        0.04,
+                        0.07
+                    ],
+                    [
+                        1.22,
+                        0.03,
+                        0.07
+                    ],
+                    [
+                        1.21,
+                        0.03,
+                        0.07
+                    ],
+                    [
+                        1.2,
+                        0.03,
+                        0.07
+                    ],
+                    [
+                        1.2,
+                        0.03,
+                        0.07
+                    ]
+                ],
+                "raw_text": "0.78, 0.0, 0.04], [1.14, 0.02, 0.06], [1.26, 0.03, 0.07], [1.25, 0.04, 0.07], [1.22, 0.03, 0.07], [1.21, 0.03, 0.07], [1.2, 0.03, 0.07], [1.2, 0.03, 0.07]</answer><|im_end|><|endoftext|>",
+                "avg_entropy": 0.11115483194589615,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        0.75,
+                        0.01,
+                        0.04
+                    ],
+                    [
+                        1.06,
+                        0.03,
+                        0.05
+                    ],
+                    [
+                        1.08,
+                        0.04,
+                        0.05
+                    ],
+                    [
+                        1.03,
+                        0.04,
+                        0.05
+                    ],
+                    [
+                        1.01,
+                        0.03,
+                        0.05
+                    ],
+                    [
+                        1.0,
+                        0.03,
+                        0.05
+                    ],
+                    [
+                        1.0,
+                        0.03,
+                        0.05
+                    ],
+                    [
+                        0.99,
+                        0.03,
+                        0.05
+                    ]
+                ],
+                "raw_text": "0.75, 0.01, 0.04], [1.06, 0.03, 0.05], [1.08, 0.04, 0.05], [1.03, 0.04, 0.05], [1.01, 0.03, 0.05], [1.0, 0.03, 0.05], [1.0, 0.03, 0.05], [0.99, 0.03, 0.05]</answer><|im_end|>",
+                "avg_entropy": 0.09361582249403,
+                "avg_log_prob": -0.08139105886220932,
+                "seq_confidence": 0.9218331575393677
+            }
+        ],
+        "output_text": "0.76, 0.0, 0.04], [1.1, 0.01, 0.06], [1.16, 0.02, 0.06], [1.13, 0.02, 0.06], [1.11, 0.02, 0.06], [1.1, 0.02, 0.06], [1.1, 0.02, 0.06], [1.1, 0.02, 0.06]</answer><|im_end|><|endoftext|><|endoftext|><|endoftext|>",
+        "avg_entropy": 0.09033067524433136,
+        "avg_log_prob": -Infinity,
+        "seq_confidence": 0.0
+    },
+    {
+        "idx": 21,
+        "token": "3b8808368bea4771a",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 10.907919883728027,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/ef05760ea0be8fe47.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [2.81, -0.06]. Acceleration: [-0.75, 0.4]. Historical trajectory: [[-4.36, 0.46, -0.2], [-2.87, 0.2, -0.13], [-1.4, 0.05, -0.07]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        1.25,
+                        0.04,
+                        0.06
+                    ],
+                    [
+                        2.27,
+                        0.13,
+                        0.11
+                    ],
+                    [
+                        3.0,
+                        0.23,
+                        0.14
+                    ],
+                    [
+                        3.45,
+                        0.32,
+                        0.16
+                    ],
+                    [
+                        3.64,
+                        0.36,
+                        0.17
+                    ],
+                    [
+                        3.64,
+                        0.35,
+                        0.16
+                    ],
+                    [
+                        3.61,
+                        0.34,
+                        0.16
+                    ],
+                    [
+                        3.59,
+                        0.33,
+                        0.16
+                    ]
+                ],
+                "raw_text": "1.25, 0.04, 0.06], [2.27, 0.13, 0.11], [3.0, 0.23, 0.14], [3.45, 0.32, 0.16], [3.64, 0.36, 0.17], [3.64, 0.35, 0.16], [3.61, 0.34, 0.16], [3.59, 0.33, 0.16]</answer><|im_end|>",
+                "avg_entropy": 0.14608050882816315,
+                "avg_log_prob": -0.13677456974983215,
+                "seq_confidence": 0.8721668124198914
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        1.24,
+                        0.04,
+                        0.06
+                    ],
+                    [
+                        2.19,
+                        0.11,
+                        0.1
+                    ],
+                    [
+                        2.81,
+                        0.18,
+                        0.13
+                    ],
+                    [
+                        3.14,
+                        0.23,
+                        0.15
+                    ],
+                    [
+                        3.23,
+                        0.26,
+                        0.15
+                    ],
+                    [
+                        3.21,
+                        0.26,
+                        0.15
+                    ],
+                    [
+                        3.19,
+                        0.26,
+                        0.15
+                    ],
+                    [
+                        3.18,
+                        0.25,
+                        0.15
+                    ]
+                ],
+                "raw_text": "1.24, 0.04, 0.06], [2.19, 0.11, 0.1], [2.81, 0.18, 0.13], [3.14, 0.23, 0.15], [3.23, 0.26, 0.15], [3.21, 0.26, 0.15], [3.19, 0.26, 0.15], [3.18, 0.25, 0.15]</answer><|im_end|>",
+                "avg_entropy": 0.13554134964942932,
+                "avg_log_prob": -0.14782050251960754,
+                "seq_confidence": 0.8625859618186951
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        2.23,
+                        0.1,
+                        0.09
+                    ],
+                    [
+                        2.9,
+                        0.18,
+                        0.11
+                    ],
+                    [
+                        3.29,
+                        0.24,
+                        0.13
+                    ],
+                    [
+                        3.44,
+                        0.26,
+                        0.13
+                    ],
+                    [
+                        3.42,
+                        0.26,
+                        0.13
+                    ],
+                    [
+                        3.4,
+                        0.25,
+                        0.13
+                    ],
+                    [
+                        3.39,
+                        0.25,
+                        0.13
+                    ]
+                ],
+                "raw_text": "1.26, 0.03, 0.05], [2.23, 0.1, 0.09], [2.9, 0.18, 0.11], [3.29, 0.24, 0.13], [3.44, 0.26, 0.13], [3.42, 0.26, 0.13], [3.4, 0.25, 0.13], [3.39, 0.25, 0.13]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.13518978655338287,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "1.25, 0.04, 0.06], [2.27, 0.13, 0.11], [3.0, 0.23, 0.14], [3.45, 0.32, 0.16], [3.64, 0.36, 0.17], [3.64, 0.35, 0.16], [3.61, 0.34, 0.16], [3.59, 0.33, 0.16]</answer><|im_end|>",
+        "avg_entropy": 0.14608050882816315,
+        "avg_log_prob": -0.13677456974983215,
+        "seq_confidence": 0.8721668124198914
+    },
+    {
+        "idx": 22,
+        "token": "b4750fa326ea1085b",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 11.009730815887451,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/cba8c357c3de9c9ca.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [4.86, -0.09]. Acceleration: [0.05, -0.14]. Historical trajectory: [[-6.97, 0.82, -0.24], [-4.69, 0.37, -0.16], [-2.37, 0.1, -0.08]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        2.37,
+                        0.1,
+                        0.08
+                    ],
+                    [
+                        4.7,
+                        0.36,
+                        0.15
+                    ],
+                    [
+                        6.96,
+                        0.81,
+                        0.22
+                    ],
+                    [
+                        9.15,
+                        1.37,
+                        0.28
+                    ],
+                    [
+                        11.22,
+                        2.05,
+                        0.35
+                    ],
+                    [
+                        13.21,
+                        2.86,
+                        0.42
+                    ],
+                    [
+                        15.09,
+                        3.77,
+                        0.48
+                    ],
+                    [
+                        16.87,
+                        4.77,
+                        0.54
+                    ]
+                ],
+                "raw_text": "2.37, 0.1, 0.08], [4.7, 0.36, 0.15], [6.96, 0.81, 0.22], [9.15, 1.37, 0.28], [11.22, 2.05, 0.35], [13.21, 2.86, 0.42], [15.09, 3.77, 0.48], [16.87, 4.77, 0.54]</answer><|im_end|>",
+                "avg_entropy": 0.21396243572235107,
+                "avg_log_prob": -0.27728256583213806,
+                "seq_confidence": 0.7578403353691101
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        2.38,
+                        0.08,
+                        0.07
+                    ],
+                    [
+                        4.77,
+                        0.33,
+                        0.14
+                    ],
+                    [
+                        7.14,
+                        0.76,
+                        0.22
+                    ],
+                    [
+                        9.46,
+                        1.38,
+                        0.3
+                    ],
+                    [
+                        11.71,
+                        2.18,
+                        0.38
+                    ],
+                    [
+                        13.88,
+                        3.14,
+                        0.44
+                    ],
+                    [
+                        15.95,
+                        4.22,
+                        0.5
+                    ],
+                    [
+                        17.92,
+                        5.43,
+                        0.57
+                    ]
+                ],
+                "raw_text": "2.38, 0.08, 0.07], [4.77, 0.33, 0.14], [7.14, 0.76, 0.22], [9.46, 1.38, 0.3], [11.71, 2.18, 0.38], [13.88, 3.14, 0.44], [15.95, 4.22, 0.5], [17.92, 5.43, 0.57]</answer><|im_end|>",
+                "avg_entropy": 0.23769448697566986,
+                "avg_log_prob": -0.2336810976266861,
+                "seq_confidence": 0.7916142344474792
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        4.71,
+                        0.37,
+                        0.15
+                    ],
+                    [
+                        6.97,
+                        0.81,
+                        0.22
+                    ],
+                    [
+                        9.12,
+                        1.4,
+                        0.3
+                    ],
+                    [
+                        11.18,
+                        2.15,
+                        0.38
+                    ],
+                    [
+                        13.14,
+                        3.04,
+                        0.45
+                    ],
+                    [
+                        15.0,
+                        4.03,
+                        0.52
+                    ],
+                    [
+                        16.76,
+                        5.15,
+                        0.59
+                    ]
+                ],
+                "raw_text": "2.37, 0.1, 0.08], [4.71, 0.37, 0.15], [6.97, 0.81, 0.22], [9.12, 1.4, 0.3], [11.18, 2.15, 0.38], [13.14, 3.04, 0.45], [15.0, 4.03, 0.52], [16.76, 5.15, 0.59]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.2235431671142578,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "2.37, 0.1, 0.08], [4.7, 0.36, 0.15], [6.96, 0.81, 0.22], [9.15, 1.37, 0.28], [11.22, 2.05, 0.35], [13.21, 2.86, 0.42], [15.09, 3.77, 0.48], [16.87, 4.77, 0.54]</answer><|im_end|>",
+        "avg_entropy": 0.21396243572235107,
+        "avg_log_prob": -0.27728256583213806,
+        "seq_confidence": 0.7578403353691101
+    },
+    {
+        "idx": 23,
+        "token": "bba03402f6222135f",
+        "stage": "second",
+        "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
+        "latency": 11.067492485046387,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/15e7fe9a95afd9db2.jpg"
+                    },
+                    {
+                        "type": "text",
+                        "text": " is the front view. Command: MOVE FORWARD. Velocity: [4.85, -0.06]. Acceleration: [-0.05, 1.18]. Historical trajectory: [[-6.98, 0.83, -0.24], [-4.65, 0.36, -0.16], [-2.33, 0.08, -0.08]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+                    }
+                ]
+            }
+        ],
+        "GT": "",
+        "candidate_mode": "sample",
+        "num_candidates": 3,
+        "candidates": [
+            {
+                "candidate_id": 0,
+                "source": "onevl_top1",
+                "trajectory": [
+                    [
+                        2.35,
+                        0.09,
+                        0.08
+                    ],
+                    [
+                        4.67,
+                        0.36,
+                        0.15
+                    ],
+                    [
+                        6.96,
+                        0.78,
+                        0.21
+                    ],
+                    [
+                        9.2,
+                        1.33,
+                        0.28
+                    ],
+                    [
+                        11.34,
+                        2.03,
+                        0.34
+                    ],
+                    [
+                        13.34,
+                        2.84,
+                        0.41
+                    ],
+                    [
+                        15.22,
+                        3.74,
+                        0.48
+                    ],
+                    [
+                        16.98,
+                        4.73,
+                        0.55
+                    ]
+                ],
+                "raw_text": "2.35, 0.09, 0.08], [4.67, 0.36, 0.15], [6.96, 0.78, 0.21], [9.2, 1.33, 0.28], [11.34, 2.03, 0.34], [13.34, 2.84, 0.41], [15.22, 3.74, 0.48], [16.98, 4.73, 0.55]</answer><|im_end|>",
+                "avg_entropy": 0.22408519685268402,
+                "avg_log_prob": -0.23019373416900635,
+                "seq_confidence": 0.7943796515464783
+            },
+            {
+                "candidate_id": 1,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        2.33,
+                        0.11,
+                        0.09
+                    ],
+                    [
+                        4.64,
+                        0.42,
+                        0.17
+                    ],
+                    [
+                        6.92,
+                        0.9,
+                        0.25
+                    ],
+                    [
+                        9.13,
+                        1.56,
+                        0.33
+                    ],
+                    [
+                        11.26,
+                        2.38,
+                        0.41
+                    ],
+                    [
+                        13.31,
+                        3.36,
+                        0.48
+                    ],
+                    [
+                        15.26,
+                        4.48,
+                        0.56
+                    ],
+                    [
+                        17.12,
+                        5.77,
+                        0.64
+                    ]
+                ],
+                "raw_text": "2.33, 0.11, 0.09], [4.64, 0.42, 0.17], [6.92, 0.9, 0.25], [9.13, 1.56, 0.33], [11.26, 2.38, 0.41], [13.31, 3.36, 0.48], [15.26, 4.48, 0.56], [17.12, 5.77, 0.64]</answer><|im_end|>",
+                "avg_entropy": 0.219147726893425,
+                "avg_log_prob": -0.21733646094799042,
+                "seq_confidence": 0.8046591877937317
+            },
+            {
+                "candidate_id": 2,
+                "source": "onevl_sample",
+                "trajectory": [
+                    [
+                        4.64,
+                        0.28,
+                        0.1
+                    ],
+                    [
+                        6.92,
+                        0.59,
+                        0.16
+                    ],
+                    [
+                        9.17,
+                        1.03,
+                        0.23
+                    ],
+                    [
+                        11.36,
+                        1.63,
+                        0.3
+                    ],
+                    [
+                        13.47,
+                        2.4,
+                        0.38
+                    ],
+                    [
+                        15.45,
+                        3.29,
+                        0.46
+                    ],
+                    [
+                        17.28,
+                        4.31,
+                        0.55
+                    ]
+                ],
+                "raw_text": "2.33, 0.08, 0.06], [4.64, 0.28, 0.1], [6.92, 0.59, 0.16], [9.17, 1.03, 0.23], [11.36, 1.63, 0.3], [13.47, 2.4, 0.38], [15.45, 3.29, 0.46], [17.28, 4.31, 0.55]</answer><|im_end|><|endoftext|><|endoftext|>",
+                "avg_entropy": 0.23296622931957245,
+                "avg_log_prob": -Infinity,
+                "seq_confidence": 0.0
+            }
+        ],
+        "output_text": "2.35, 0.09, 0.08], [4.67, 0.36, 0.15], [6.96, 0.78, 0.21], [9.2, 1.33, 0.28], [11.34, 2.03, 0.34], [13.34, 2.84, 0.41], [15.22, 3.74, 0.48], [16.98, 4.73, 0.55]</answer><|im_end|>",
+        "avg_entropy": 0.22408519685268402,
+        "avg_log_prob": -0.23019373416900635,
+        "seq_confidence": 0.7943796515464783
+    }
+]
