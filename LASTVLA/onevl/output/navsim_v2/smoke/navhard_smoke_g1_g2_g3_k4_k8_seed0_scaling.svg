@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="78" y="28" font-family="Arial, sans-serif" font-size="19" font-weight="700">NAVSIM v2 mapped smoke: candidate-bank density</text>
+<text x="78" y="48" font-family="Arial, sans-serif" font-size="12" fill="#555">Seed 0, cumulative mapped groups; smoke-scale, not full validation</text>
+<line x1="78" y1="434.0" x2="864" y2="434.0" stroke="#e5e7eb"/>
+<text x="68" y="438.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.0</text>
+<line x1="78" y1="343.2" x2="864" y2="343.2" stroke="#e5e7eb"/>
+<text x="68" y="347.2" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.2</text>
+<line x1="78" y1="252.4" x2="864" y2="252.4" stroke="#e5e7eb"/>
+<text x="68" y="256.4" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.4</text>
+<line x1="78" y1="161.5" x2="864" y2="161.5" stroke="#e5e7eb"/>
+<text x="68" y="165.5" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.6</text>
+<line x1="78" y1="70.7" x2="864" y2="70.7" stroke="#e5e7eb"/>
+<text x="68" y="74.7" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.8</text>
+<text x="209.0" y="484" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#222">g1</text>
+<text x="209.0" y="501" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#555">24 scenes</text>
+<text x="143.5" y="462" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">Best</text>
+<rect x="116.5" y="269.6" width="24" height="164.4" fill="#b45309"/>
+<text x="128.5" y="264.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#333">0.36</text>
+<rect x="146.5" y="70.4" width="24" height="363.6" fill="#0f766e"/>
+<text x="158.5" y="65.4" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#333">0.80</text>
+<text x="274.5" y="462" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">Token-oracle</text>
+<rect x="247.5" y="133.6" width="24" height="300.4" fill="#b45309"/>
+<text x="259.5" y="128.6" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#333">0.66</text>
+<rect x="277.5" y="118.0" width="24" height="316.0" fill="#0f766e"/>
+<text x="289.5" y="113.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#333">0.70</text>
+<text x="471.0" y="484" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#222">g2</text>
+<text x="471.0" y="501" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#555">48 scenes</text>
+<text x="405.5" y="462" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">Best</text>
+<rect x="378.5" y="307.5" width="24" height="126.5" fill="#b45309"/>
+<text x="390.5" y="302.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#333">0.28</text>
+<rect x="408.5" y="243.8" width="24" height="190.2" fill="#0f766e"/>
+<text x="420.5" y="238.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#333">0.42</text>
+<text x="536.5" y="462" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">Token-oracle</text>
+<rect x="509.5" y="160.5" width="24" height="273.5" fill="#b45309"/>
+<text x="521.5" y="155.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#333">0.60</text>
+<rect x="539.5" y="155.1" width="24" height="278.9" fill="#0f766e"/>
+<text x="551.5" y="150.1" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#333">0.61</text>
+<text x="733.0" y="484" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#222">g3</text>
+<text x="733.0" y="501" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#555">64 scenes</text>
+<text x="667.5" y="462" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">Best</text>
+<rect x="640.5" y="301.8" width="24" height="132.2" fill="#b45309"/>
+<text x="652.5" y="296.8" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#333">0.29</text>
+<rect x="670.5" y="235.7" width="24" height="198.3" fill="#0f766e"/>
+<text x="682.5" y="230.7" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#333">0.44</text>
+<text x="798.5" y="462" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">Token-oracle</text>
+<rect x="771.5" y="182.0" width="24" height="252.0" fill="#b45309"/>
+<text x="783.5" y="177.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#333">0.55</text>
+<rect x="801.5" y="160.9" width="24" height="273.1" fill="#0f766e"/>
+<text x="813.5" y="155.9" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#333">0.60</text>
+<line x1="666" y1="70" x2="704" y2="70" stroke="#b45309" stroke-width="8"/><text x="712" y="74" font-family="Arial, sans-serif" font-size="12">K=4</text>
+<line x1="666" y1="92" x2="704" y2="92" stroke="#0f766e" stroke-width="8"/><text x="712" y="96" font-family="Arial, sans-serif" font-size="12">K=8</text>
+<text x="18" y="270" font-family="Arial, sans-serif" font-size="12" fill="#555" transform="rotate(-90 18 270)">Score</text>
+</svg>
