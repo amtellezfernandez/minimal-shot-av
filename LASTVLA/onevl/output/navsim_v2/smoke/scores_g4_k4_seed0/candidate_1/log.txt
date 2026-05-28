@@ -1,0 +1,8 @@
+2026-05-28 16:31:21,390 INFO {/home/atellez/dev/navsim-v2/navsim/planning/script/run_pdm_score_from_submission.py:53}  Building SceneLoader
+2026-05-28 16:32:08,947 INFO {/home/atellez/dev/navsim-v2/navsim/planning/script/run_pdm_score_from_submission.py:426}  
+        Finished running evaluation.
+            Number of successful scenarios: 92.
+            Number of failed scenarios: 0.
+            Final extended pdm score of valid results: 0.25633889489032147.
+            Results are stored in: output/navsim_v2/smoke/scores_g4_k4_seed0/candidate_1/2026.05.28.16.32.08.csv.
+        
