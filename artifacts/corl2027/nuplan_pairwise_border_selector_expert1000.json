@@ -1,0 +1,45 @@
+{
+  "feature_names": [
+    "score_delta",
+    "progress_delta",
+    "proxy_safe_delta",
+    "clearance_delta",
+    "speed_scale_delta",
+    "lateral_offset_delta",
+    "obstacle_pressure_delta",
+    "route_blockage_delta",
+    "nearest_actor_distance_delta",
+    "rear_closing_delta",
+    "crossing_delta"
+  ],
+  "margin_threshold": 0.75,
+  "model_type": "nuplan_pairwise_border_selector_v1",
+  "top_k": 3,
+  "training": {
+    "iterations": 600,
+    "l2": 0.001,
+    "learning_rate": 0.1,
+    "margin_threshold": 0.75,
+    "max_pairs_per_scene": 6,
+    "objective": {
+      "ade_weight": 2.0,
+      "fail_penalty": 250.0,
+      "progress_weight": 1.0
+    },
+    "pair_count": 168,
+    "top_k": 3
+  },
+  "weights": [
+    0.18936383615763203,
+    0.15941214679101937,
+    -0.014482071224978646,
+    -0.9052973728871758,
+    0.23724045911344124,
+    -0.7485982887732909,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ]
+}

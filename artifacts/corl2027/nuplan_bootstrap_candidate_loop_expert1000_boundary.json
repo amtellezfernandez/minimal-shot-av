@@ -1,0 +1,210 @@
+{
+  "g0_candidate_distribution": {
+    "candidate_token_entropy": 3.169925,
+    "candidate_token_histogram": {
+      "crawl": 1000,
+      "evasive_left": 1000,
+      "evasive_right": 1000,
+      "lane_recover": 1000,
+      "maintain": 1000,
+      "nudge_left": 1000,
+      "nudge_right": 1000,
+      "slow_yield": 1000,
+      "stop": 1000
+    },
+    "max_candidate_count": 9,
+    "mean_candidate_count": 9.0,
+    "mean_pairwise_final_pose_distance_m": 13.280919,
+    "min_candidate_count": 9
+  },
+  "g1_application": {
+    "applied_count": 1000,
+    "applied_rate": 1.0,
+    "changed_token_count": 560,
+    "changed_token_rate": 0.56,
+    "missing_candidate_count": 0,
+    "missing_target_count": 0,
+    "scene_count": 1000,
+    "strategy": "promote_teacher_top1",
+    "target_count": 1000,
+    "teacher_token_histogram": {
+      "crawl": 116,
+      "evasive_left": 133,
+      "evasive_right": 150,
+      "lane_recover": 83,
+      "maintain": 177,
+      "nudge_left": 11,
+      "nudge_right": 41,
+      "slow_yield": 229,
+      "stop": 60
+    },
+    "unchanged_token_count": 440
+  },
+  "g1_candidate_distribution": {
+    "candidate_token_entropy": 3.169925,
+    "candidate_token_histogram": {
+      "crawl": 1000,
+      "evasive_left": 1000,
+      "evasive_right": 1000,
+      "lane_recover": 1000,
+      "maintain": 1000,
+      "nudge_left": 1000,
+      "nudge_right": 1000,
+      "slow_yield": 1000,
+      "stop": 1000
+    },
+    "max_candidate_count": 9,
+    "mean_candidate_count": 9.0,
+    "mean_pairwise_final_pose_distance_m": 13.280919,
+    "min_candidate_count": 9
+  },
+  "gap_report": {
+    "g0": {
+      "generation_gap_count": 281,
+      "generation_gap_rate": 0.281,
+      "oracle_at_k_safe_count": 719,
+      "oracle_at_k_safe_rate": 0.719,
+      "per_selector": {
+        "replay_oracle": {
+          "regressed_generation_gap_count": 0,
+          "resolved_selection_gap_count": 346,
+          "resolved_selection_gap_rate": 1.0
+        }
+      },
+      "proxy_selection_gap_count": 346,
+      "proxy_selection_gap_rate": 0.346,
+      "proxy_top1_safe_count": 373,
+      "proxy_top1_safe_rate": 0.373
+    },
+    "g1": {
+      "generation_gap_count": 281,
+      "generation_gap_rate": 0.281,
+      "oracle_at_k_safe_count": 719,
+      "oracle_at_k_safe_rate": 0.719,
+      "per_selector": {
+        "replay_oracle": {
+          "regressed_generation_gap_count": 0,
+          "resolved_selection_gap_count": 13,
+          "resolved_selection_gap_rate": 1.0
+        }
+      },
+      "proxy_selection_gap_count": 13,
+      "proxy_selection_gap_rate": 0.013,
+      "proxy_top1_safe_count": 706,
+      "proxy_top1_safe_rate": 0.706
+    },
+    "generation_gap_delta_count": 0,
+    "selection_gap_closed_count": 333,
+    "selection_gap_closure_rate": 0.962428
+  },
+  "input_replay_json": "artifacts/corl2027/nuplan_public_replay_study_interaction1000_expert/replay.json",
+  "method": {
+    "claim_boundary": "Promotes an existing teacher-selected candidate to G1 top-1. It measures selection-gap closure, not new-candidate generation.",
+    "name": "teacher_promoted_g1_surrogate"
+  },
+  "near_miss_threshold_m": 1.0,
+  "schema": "nuplan_bootstrap_candidate_loop_v1",
+  "selector_metrics": {
+    "g0_proxy_top1": {
+      "expert_distance_available_count": 1000,
+      "mean_ade_3s_m": 2.471803,
+      "mean_fde_3s_m": 4.299164,
+      "mean_heading_error_3s_rad": 0.188279,
+      "mean_selected_progress_m": 27.961809,
+      "mean_selected_proxy_score": 23.70327,
+      "no_replay_safe_token_count": 281,
+      "proxy_safe_selected_count": 774,
+      "proxy_safe_selected_rate": 0.774,
+      "recoverable_proxy_optimism_count": 346,
+      "recoverable_proxy_optimism_fixed_count": 0,
+      "recoverable_proxy_optimism_recovery_rate": 0.0,
+      "scene_count": 1000,
+      "selected_replay_infeasible_count": 627,
+      "selected_replay_infeasible_rate": 0.627,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 373,
+      "selected_token_entropy": 2.374541,
+      "selected_token_histogram": {
+        "evasive_left": 99,
+        "evasive_right": 112,
+        "lane_recover": 129,
+        "maintain": 435,
+        "nudge_left": 23,
+        "nudge_right": 80,
+        "slow_yield": 122
+      },
+      "selector_name": "g0_proxy_top1"
+    },
+    "g1_teacher_promoted_top1": {
+      "expert_distance_available_count": 1000,
+      "mean_ade_3s_m": 4.788784,
+      "mean_fde_3s_m": 7.844341,
+      "mean_heading_error_3s_rad": 0.185114,
+      "mean_selected_progress_m": 20.697572,
+      "mean_selected_proxy_score": 19.126701,
+      "no_replay_safe_token_count": 281,
+      "proxy_safe_selected_count": 858,
+      "proxy_safe_selected_rate": 0.858,
+      "recoverable_proxy_optimism_count": 346,
+      "recoverable_proxy_optimism_fixed_count": 333,
+      "recoverable_proxy_optimism_recovery_rate": 0.962428,
+      "scene_count": 1000,
+      "selected_replay_infeasible_count": 294,
+      "selected_replay_infeasible_rate": 0.294,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 706,
+      "selected_token_entropy": 2.889384,
+      "selected_token_histogram": {
+        "crawl": 116,
+        "evasive_left": 133,
+        "evasive_right": 150,
+        "lane_recover": 83,
+        "maintain": 177,
+        "nudge_left": 11,
+        "nudge_right": 41,
+        "slow_yield": 229,
+        "stop": 60
+      },
+      "selector_name": "g1_teacher_promoted_top1"
+    },
+    "replay_oracle": {
+      "expert_distance_available_count": 1000,
+      "mean_ade_3s_m": 7.936626,
+      "mean_fde_3s_m": 13.1259,
+      "mean_heading_error_3s_rad": 0.185577,
+      "mean_selected_progress_m": 12.534206,
+      "mean_selected_proxy_score": 12.215438,
+      "no_replay_safe_token_count": 281,
+      "proxy_safe_selected_count": 905,
+      "proxy_safe_selected_rate": 0.905,
+      "recoverable_proxy_optimism_count": 346,
+      "recoverable_proxy_optimism_fixed_count": 346,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 1000,
+      "selected_replay_infeasible_count": 281,
+      "selected_replay_infeasible_rate": 0.281,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 719,
+      "selected_token_entropy": 2.693553,
+      "selected_token_histogram": {
+        "crawl": 155,
+        "evasive_left": 139,
+        "evasive_right": 166,
+        "lane_recover": 25,
+        "maintain": 63,
+        "nudge_left": 10,
+        "nudge_right": 18,
+        "slow_yield": 125,
+        "stop": 299
+      },
+      "selector_name": "replay_oracle"
+    }
+  },
+  "teacher_supervision": {
+    "changed_token_count": 560,
+    "mean_final_pose_shift_m": 13.206623,
+    "mean_teacher_minus_proxy_ade_3s_m": 4.137465,
+    "mean_teacher_minus_proxy_progress_m": -12.971852
+  },
+  "teacher_targets_jsonl": "artifacts/corl2027/nuplan_bootstrap_boundary_teacher_targets_expert1000.jsonl"
+}

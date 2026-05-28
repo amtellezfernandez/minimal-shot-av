@@ -1,0 +1,524 @@
+{
+  "candidate_distribution": {
+    "candidate_token_entropy": 3.169925,
+    "candidate_token_histogram": {
+      "crawl": 1000,
+      "evasive_left": 1000,
+      "evasive_right": 1000,
+      "lane_recover": 1000,
+      "maintain": 1000,
+      "nudge_left": 1000,
+      "nudge_right": 1000,
+      "slow_yield": 1000,
+      "stop": 1000
+    },
+    "max_candidate_count": 9,
+    "mean_candidate_count": 9.0,
+    "mean_pairwise_final_pose_distance_m": 13.280919,
+    "min_candidate_count": 9
+  },
+  "claim_boundary": "This is a ManeuverToken surrogate for VLA candidate bootstrapping: G1 changes top-1 selection from recovered oracle@K targets, but does not yet regenerate new trajectory candidates.",
+  "holdout": {
+    "g0_proxy_top1": {
+      "expert_distance_available_count": 155,
+      "gap_summary": {
+        "generation_gap_count": 5,
+        "generation_gap_rate": 0.032258,
+        "mean_recoverable_regret": 114.133784,
+        "median_recoverable_regret": 207.032722,
+        "positive_regret_count": 83,
+        "positive_regret_rate": 0.535484,
+        "scene_count": 155
+      },
+      "mean_ade_3s_m": 2.159096,
+      "mean_fde_3s_m": 3.629182,
+      "mean_heading_error_3s_rad": 0.192454,
+      "mean_selected_progress_m": 23.481885,
+      "mean_selected_proxy_score": 19.585193,
+      "no_replay_safe_token_count": 5,
+      "proxy_safe_selected_count": 125,
+      "proxy_safe_selected_rate": 0.806452,
+      "recoverable_proxy_optimism_count": 82,
+      "recoverable_proxy_optimism_fixed_count": 0,
+      "recoverable_proxy_optimism_recovery_rate": 0.0,
+      "scene_count": 155,
+      "score_summary": {
+        "mean_score": -121.158887,
+        "median_score": -224.267628,
+        "scored_scene_count": 155
+      },
+      "selected_replay_infeasible_count": 87,
+      "selected_replay_infeasible_rate": 0.56129,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 68,
+      "selected_token_entropy": 2.253257,
+      "selected_token_histogram": {
+        "evasive_left": 6,
+        "lane_recover": 12,
+        "maintain": 36,
+        "nudge_left": 11,
+        "nudge_right": 52,
+        "slow_yield": 38
+      },
+      "selector_name": "g0_proxy_top1"
+    },
+    "g1_student_top1": {
+      "expert_distance_available_count": 155,
+      "gap_summary": {
+        "generation_gap_count": 5,
+        "generation_gap_rate": 0.032258,
+        "mean_recoverable_regret": 41.558216,
+        "median_recoverable_regret": 9.71424,
+        "positive_regret_count": 108,
+        "positive_regret_rate": 0.696774,
+        "scene_count": 155
+      },
+      "mean_ade_3s_m": 7.030304,
+      "mean_fde_3s_m": 11.477489,
+      "mean_heading_error_3s_rad": 0.176121,
+      "mean_selected_progress_m": 10.638581,
+      "mean_selected_proxy_score": 8.469106,
+      "no_replay_safe_token_count": 5,
+      "proxy_safe_selected_count": 132,
+      "proxy_safe_selected_rate": 0.851613,
+      "recoverable_proxy_optimism_count": 82,
+      "recoverable_proxy_optimism_fixed_count": 62,
+      "recoverable_proxy_optimism_recovery_rate": 0.756098,
+      "scene_count": 155,
+      "score_summary": {
+        "mean_score": -48.583318,
+        "median_score": -19.79113,
+        "scored_scene_count": 155
+      },
+      "selected_replay_infeasible_count": 28,
+      "selected_replay_infeasible_rate": 0.180645,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 127,
+      "selected_token_entropy": 2.443551,
+      "selected_token_histogram": {
+        "crawl": 27,
+        "evasive_left": 5,
+        "lane_recover": 8,
+        "maintain": 21,
+        "nudge_right": 8,
+        "slow_yield": 35,
+        "stop": 51
+      },
+      "selector_name": "g1_student_top1"
+    },
+    "oracle_at_k": {
+      "expert_distance_available_count": 155,
+      "gap_summary": {
+        "generation_gap_count": 5,
+        "generation_gap_rate": 0.032258,
+        "mean_recoverable_regret": 0.0,
+        "median_recoverable_regret": 0.0,
+        "positive_regret_count": 0,
+        "positive_regret_rate": 0.0,
+        "scene_count": 155
+      },
+      "mean_ade_3s_m": 6.009452,
+      "mean_fde_3s_m": 9.654348,
+      "mean_heading_error_3s_rad": 0.172364,
+      "mean_selected_progress_m": 13.058317,
+      "mean_selected_proxy_score": 13.012705,
+      "no_replay_safe_token_count": 5,
+      "proxy_safe_selected_count": 150,
+      "proxy_safe_selected_rate": 0.967742,
+      "recoverable_proxy_optimism_count": 82,
+      "recoverable_proxy_optimism_fixed_count": 82,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 155,
+      "score_summary": {
+        "mean_score": -7.025103,
+        "median_score": 5.278872,
+        "scored_scene_count": 155
+      },
+      "selected_replay_infeasible_count": 5,
+      "selected_replay_infeasible_rate": 0.032258,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 150,
+      "selected_token_entropy": 1.986708,
+      "selected_token_histogram": {
+        "crawl": 71,
+        "evasive_left": 5,
+        "lane_recover": 4,
+        "maintain": 26,
+        "nudge_right": 9,
+        "slow_yield": 40
+      },
+      "selector_name": "oracle_at_k"
+    },
+    "replay_oracle_safe_only": {
+      "expert_distance_available_count": 155,
+      "gap_summary": {
+        "generation_gap_count": 5,
+        "generation_gap_rate": 0.032258,
+        "mean_recoverable_regret": 7.054868,
+        "median_recoverable_regret": 8.255673,
+        "positive_regret_count": 92,
+        "positive_regret_rate": 0.593548,
+        "scene_count": 155
+      },
+      "mean_ade_3s_m": 7.570459,
+      "mean_fde_3s_m": 12.097679,
+      "mean_heading_error_3s_rad": 0.178268,
+      "mean_selected_progress_m": 9.125464,
+      "mean_selected_proxy_score": 9.450177,
+      "no_replay_safe_token_count": 5,
+      "proxy_safe_selected_count": 150,
+      "proxy_safe_selected_rate": 0.967742,
+      "recoverable_proxy_optimism_count": 82,
+      "recoverable_proxy_optimism_fixed_count": 82,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 155,
+      "score_summary": {
+        "mean_score": -14.079971,
+        "median_score": -13.410544,
+        "scored_scene_count": 155
+      },
+      "selected_replay_infeasible_count": 5,
+      "selected_replay_infeasible_rate": 0.032258,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 150,
+      "selected_token_entropy": 2.217972,
+      "selected_token_histogram": {
+        "crawl": 26,
+        "evasive_left": 29,
+        "lane_recover": 1,
+        "maintain": 6,
+        "nudge_left": 3,
+        "slow_yield": 31,
+        "stop": 59
+      },
+      "selector_name": "replay_oracle_safe_only"
+    },
+    "teacher_promoted_upper_bound": {
+      "expert_distance_available_count": 155,
+      "gap_summary": {
+        "generation_gap_count": 5,
+        "generation_gap_rate": 0.032258,
+        "mean_recoverable_regret": 0.0,
+        "median_recoverable_regret": 0.0,
+        "positive_regret_count": 0,
+        "positive_regret_rate": 0.0,
+        "scene_count": 155
+      },
+      "mean_ade_3s_m": 6.009452,
+      "mean_fde_3s_m": 9.654348,
+      "mean_heading_error_3s_rad": 0.172364,
+      "mean_selected_progress_m": 13.058317,
+      "mean_selected_proxy_score": 13.012705,
+      "no_replay_safe_token_count": 5,
+      "proxy_safe_selected_count": 150,
+      "proxy_safe_selected_rate": 0.967742,
+      "recoverable_proxy_optimism_count": 82,
+      "recoverable_proxy_optimism_fixed_count": 82,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 155,
+      "score_summary": {
+        "mean_score": -7.025103,
+        "median_score": 5.278872,
+        "scored_scene_count": 155
+      },
+      "selected_replay_infeasible_count": 5,
+      "selected_replay_infeasible_rate": 0.032258,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 150,
+      "selected_token_entropy": 1.986708,
+      "selected_token_histogram": {
+        "crawl": 71,
+        "evasive_left": 5,
+        "lane_recover": 4,
+        "maintain": 26,
+        "nudge_right": 9,
+        "slow_yield": 40
+      },
+      "selector_name": "teacher_promoted_upper_bound"
+    }
+  },
+  "input_replay_json": "artifacts/corl2027/nuplan_public_replay_study_interaction1000_expert/replay.json",
+  "schema": "nuplan_recoverable_regret_bootstrap_v1",
+  "score_config": {
+    "ade_weight": 2.0,
+    "clearance_weight": 0.0,
+    "fail_penalty": 250.0,
+    "near_miss_threshold_m": 1.0,
+    "progress_weight": 1.0
+  },
+  "split": {
+    "holdout_db_count": 2,
+    "holdout_dbs": [
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db"
+    ],
+    "holdout_fraction": 0.3,
+    "holdout_scene_count": 155,
+    "seed": 4,
+    "split_unit": "source_db_file",
+    "train_db_count": 6,
+    "train_dbs": [
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.12.22.28.35_veh-35_00620_01164.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+    ],
+    "train_scene_count": 845
+  },
+  "student_fit_metrics": {
+    "example_count": 845.0,
+    "example_log_loss": 0.523357880718491,
+    "scene_accuracy": 0.7822485207100591,
+    "scene_count": 845.0
+  },
+  "target_summary": {
+    "mean_recoverable_regret": 79.649275,
+    "median_recoverable_regret": 0.080345,
+    "target_count": 1000,
+    "teacher_changes_proxy_count": 509,
+    "teacher_changes_proxy_rate": 0.509,
+    "token_histogram": {
+      "crawl": 92,
+      "evasive_left": 40,
+      "evasive_right": 99,
+      "lane_recover": 18,
+      "maintain": 457,
+      "nudge_left": 4,
+      "nudge_right": 69,
+      "slow_yield": 175,
+      "stop": 46
+    }
+  },
+  "train": {
+    "g0_proxy_top1": {
+      "expert_distance_available_count": 845,
+      "gap_summary": {
+        "generation_gap_count": 276,
+        "generation_gap_rate": 0.326627,
+        "mean_recoverable_regret": 73.323714,
+        "median_recoverable_regret": 0.031097,
+        "positive_regret_count": 426,
+        "positive_regret_rate": 0.504142,
+        "scene_count": 845
+      },
+      "mean_ade_3s_m": 2.529164,
+      "mean_fde_3s_m": 4.422061,
+      "mean_heading_error_3s_rad": 0.187514,
+      "mean_selected_progress_m": 28.78357,
+      "mean_selected_proxy_score": 24.458657,
+      "no_replay_safe_token_count": 276,
+      "proxy_safe_selected_count": 649,
+      "proxy_safe_selected_rate": 0.768047,
+      "recoverable_proxy_optimism_count": 264,
+      "recoverable_proxy_optimism_fixed_count": 0,
+      "recoverable_proxy_optimism_recovery_rate": 0.0,
+      "scene_count": 845,
+      "score_summary": {
+        "mean_score": -136.038071,
+        "median_score": -211.034066,
+        "scored_scene_count": 845
+      },
+      "selected_replay_infeasible_count": 540,
+      "selected_replay_infeasible_rate": 0.639053,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 305,
+      "selected_token_entropy": 2.224067,
+      "selected_token_histogram": {
+        "evasive_left": 93,
+        "evasive_right": 112,
+        "lane_recover": 117,
+        "maintain": 399,
+        "nudge_left": 12,
+        "nudge_right": 28,
+        "slow_yield": 84
+      },
+      "selector_name": "g0_proxy_top1"
+    },
+    "g1_student_top1": {
+      "expert_distance_available_count": 845,
+      "gap_summary": {
+        "generation_gap_count": 276,
+        "generation_gap_rate": 0.326627,
+        "mean_recoverable_regret": 10.555773,
+        "median_recoverable_regret": 0.0,
+        "positive_regret_count": 184,
+        "positive_regret_rate": 0.217751,
+        "scene_count": 845
+      },
+      "mean_ade_3s_m": 4.616926,
+      "mean_fde_3s_m": 7.857954,
+      "mean_heading_error_3s_rad": 0.184077,
+      "mean_selected_progress_m": 22.945969,
+      "mean_selected_proxy_score": 18.889458,
+      "no_replay_safe_token_count": 276,
+      "proxy_safe_selected_count": 655,
+      "proxy_safe_selected_rate": 0.775148,
+      "recoverable_proxy_optimism_count": 264,
+      "recoverable_proxy_optimism_fixed_count": 256,
+      "recoverable_proxy_optimism_recovery_rate": 0.969697,
+      "scene_count": 845,
+      "score_summary": {
+        "mean_score": -73.27013,
+        "median_score": 6.888365,
+        "scored_scene_count": 845
+      },
+      "selected_replay_infeasible_count": 294,
+      "selected_replay_infeasible_rate": 0.347929,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 551,
+      "selected_token_entropy": 2.733791,
+      "selected_token_histogram": {
+        "crawl": 45,
+        "evasive_left": 40,
+        "evasive_right": 126,
+        "lane_recover": 30,
+        "maintain": 286,
+        "nudge_left": 15,
+        "nudge_right": 79,
+        "slow_yield": 130,
+        "stop": 94
+      },
+      "selector_name": "g1_student_top1"
+    },
+    "oracle_at_k": {
+      "expert_distance_available_count": 845,
+      "gap_summary": {
+        "generation_gap_count": 276,
+        "generation_gap_rate": 0.326627,
+        "mean_recoverable_regret": 0.0,
+        "median_recoverable_regret": 0.0,
+        "positive_regret_count": 0,
+        "positive_regret_rate": 0.0,
+        "scene_count": 845
+      },
+      "mean_ade_3s_m": 3.648889,
+      "mean_fde_3s_m": 6.334999,
+      "mean_heading_error_3s_rad": 0.184642,
+      "mean_selected_progress_m": 26.240225,
+      "mean_selected_proxy_score": 20.501012,
+      "no_replay_safe_token_count": 276,
+      "proxy_safe_selected_count": 593,
+      "proxy_safe_selected_rate": 0.701775,
+      "recoverable_proxy_optimism_count": 264,
+      "recoverable_proxy_optimism_fixed_count": 264,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 845,
+      "score_summary": {
+        "mean_score": -62.714358,
+        "median_score": 7.164877,
+        "scored_scene_count": 845
+      },
+      "selected_replay_infeasible_count": 276,
+      "selected_replay_infeasible_rate": 0.326627,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 569,
+      "selected_token_entropy": 2.237416,
+      "selected_token_histogram": {
+        "crawl": 21,
+        "evasive_left": 35,
+        "evasive_right": 99,
+        "lane_recover": 14,
+        "maintain": 431,
+        "nudge_left": 4,
+        "nudge_right": 60,
+        "slow_yield": 135,
+        "stop": 46
+      },
+      "selector_name": "oracle_at_k"
+    },
+    "replay_oracle_safe_only": {
+      "expert_distance_available_count": 845,
+      "gap_summary": {
+        "generation_gap_count": 276,
+        "generation_gap_rate": 0.326627,
+        "mean_recoverable_regret": 21.790554,
+        "median_recoverable_regret": 9.320115,
+        "positive_regret_count": 566,
+        "positive_regret_rate": 0.669822,
+        "scene_count": 845
+      },
+      "mean_ade_3s_m": 8.003792,
+      "mean_fde_3s_m": 13.314508,
+      "mean_heading_error_3s_rad": 0.186918,
+      "mean_selected_progress_m": 13.159479,
+      "mean_selected_proxy_score": 12.722676,
+      "no_replay_safe_token_count": 276,
+      "proxy_safe_selected_count": 755,
+      "proxy_safe_selected_rate": 0.893491,
+      "recoverable_proxy_optimism_count": 264,
+      "recoverable_proxy_optimism_fixed_count": 264,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 845,
+      "score_summary": {
+        "mean_score": -84.504911,
+        "median_score": -14.70874,
+        "scored_scene_count": 845
+      },
+      "selected_replay_infeasible_count": 276,
+      "selected_replay_infeasible_rate": 0.326627,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 569,
+      "selected_token_entropy": 2.710188,
+      "selected_token_histogram": {
+        "crawl": 129,
+        "evasive_left": 110,
+        "evasive_right": 166,
+        "lane_recover": 24,
+        "maintain": 57,
+        "nudge_left": 7,
+        "nudge_right": 18,
+        "slow_yield": 94,
+        "stop": 240
+      },
+      "selector_name": "replay_oracle_safe_only"
+    },
+    "teacher_promoted_upper_bound": {
+      "expert_distance_available_count": 845,
+      "gap_summary": {
+        "generation_gap_count": 276,
+        "generation_gap_rate": 0.326627,
+        "mean_recoverable_regret": 0.0,
+        "median_recoverable_regret": 0.0,
+        "positive_regret_count": 0,
+        "positive_regret_rate": 0.0,
+        "scene_count": 845
+      },
+      "mean_ade_3s_m": 3.648889,
+      "mean_fde_3s_m": 6.334999,
+      "mean_heading_error_3s_rad": 0.184642,
+      "mean_selected_progress_m": 26.240225,
+      "mean_selected_proxy_score": 20.501012,
+      "no_replay_safe_token_count": 276,
+      "proxy_safe_selected_count": 593,
+      "proxy_safe_selected_rate": 0.701775,
+      "recoverable_proxy_optimism_count": 264,
+      "recoverable_proxy_optimism_fixed_count": 264,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 845,
+      "score_summary": {
+        "mean_score": -62.714358,
+        "median_score": 7.164877,
+        "scored_scene_count": 845
+      },
+      "selected_replay_infeasible_count": 276,
+      "selected_replay_infeasible_rate": 0.326627,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 569,
+      "selected_token_entropy": 2.237416,
+      "selected_token_histogram": {
+        "crawl": 21,
+        "evasive_left": 35,
+        "evasive_right": 99,
+        "lane_recover": 14,
+        "maintain": 431,
+        "nudge_left": 4,
+        "nudge_right": 60,
+        "slow_yield": 135,
+        "stop": 46
+      },
+      "selector_name": "teacher_promoted_upper_bound"
+    }
+  }
+}

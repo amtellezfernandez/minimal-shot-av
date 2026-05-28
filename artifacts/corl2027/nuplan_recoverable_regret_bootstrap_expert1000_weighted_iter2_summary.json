@@ -1,0 +1,171 @@
+{
+  "iterations": [
+    {
+      "iteration": 1,
+      "policies": {
+        "g0_proxy_top1": {
+          "mean_ade_3s_m": {
+            "mean": 2.442718,
+            "std": 0.30033
+          },
+          "mean_recoverable_regret": {
+            "mean": 89.217306,
+            "std": 25.822474
+          },
+          "mean_score": {
+            "mean": -139.879983,
+            "std": 23.405798
+          },
+          "mean_selected_progress_m": {
+            "mean": 28.043088,
+            "std": 3.406693
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.65215,
+            "std": 0.107859
+          },
+          "selected_token_entropy": {
+            "mean": 2.010422,
+            "std": 0.247178
+          }
+        },
+        "g1_student_top1": {
+          "mean_ade_3s_m": {
+            "mean": 5.586327,
+            "std": 1.144252
+          },
+          "mean_recoverable_regret": {
+            "mean": 59.657435,
+            "std": 23.502809
+          },
+          "mean_score": {
+            "mean": -110.320112,
+            "std": 45.541638
+          },
+          "mean_selected_progress_m": {
+            "mean": 19.051468,
+            "std": 6.770688
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.472796,
+            "std": 0.213054
+          },
+          "selected_token_entropy": {
+            "mean": 2.261185,
+            "std": 0.111369
+          }
+        },
+        "teacher_promoted_upper_bound": {
+          "mean_ade_3s_m": {
+            "mean": 4.431798,
+            "std": 1.057111
+          },
+          "mean_recoverable_regret": {
+            "mean": 0.0,
+            "std": 0.0
+          },
+          "mean_score": {
+            "mean": -50.662677,
+            "std": 43.276411
+          },
+          "mean_selected_progress_m": {
+            "mean": 22.953608,
+            "std": 6.419164
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.259011,
+            "std": 0.204246
+          },
+          "selected_token_entropy": {
+            "mean": 1.985914,
+            "std": 0.26887
+          }
+        }
+      }
+    },
+    {
+      "iteration": 2,
+      "policies": {
+        "g0_proxy_top1": {
+          "mean_ade_3s_m": {
+            "mean": 5.586327,
+            "std": 1.144252
+          },
+          "mean_recoverable_regret": {
+            "mean": 59.657435,
+            "std": 23.502809
+          },
+          "mean_score": {
+            "mean": -110.320112,
+            "std": 45.541638
+          },
+          "mean_selected_progress_m": {
+            "mean": 19.051468,
+            "std": 6.770688
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.472796,
+            "std": 0.213054
+          },
+          "selected_token_entropy": {
+            "mean": 2.261185,
+            "std": 0.111369
+          }
+        },
+        "g1_student_top1": {
+          "mean_ade_3s_m": {
+            "mean": 4.229821,
+            "std": 1.09536
+          },
+          "mean_recoverable_regret": {
+            "mean": 66.580319,
+            "std": 23.856239
+          },
+          "mean_score": {
+            "mean": -117.242996,
+            "std": 36.281217
+          },
+          "mean_selected_progress_m": {
+            "mean": 23.851055,
+            "std": 6.430786
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.530538,
+            "std": 0.177229
+          },
+          "selected_token_entropy": {
+            "mean": 1.920361,
+            "std": 0.304633
+          }
+        },
+        "teacher_promoted_upper_bound": {
+          "mean_ade_3s_m": {
+            "mean": 4.431798,
+            "std": 1.057111
+          },
+          "mean_recoverable_regret": {
+            "mean": 0.0,
+            "std": 0.0
+          },
+          "mean_score": {
+            "mean": -50.662677,
+            "std": 43.276411
+          },
+          "mean_selected_progress_m": {
+            "mean": 22.953608,
+            "std": 6.419164
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.259011,
+            "std": 0.204246
+          },
+          "selected_token_entropy": {
+            "mean": 1.985914,
+            "std": 0.26887
+          }
+        }
+      }
+    }
+  ],
+  "schema": "nuplan_recoverable_regret_iter2_summary_v1"
+}

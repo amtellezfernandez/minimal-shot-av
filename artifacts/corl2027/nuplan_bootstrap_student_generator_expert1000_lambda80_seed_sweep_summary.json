@@ -1,0 +1,157 @@
+{
+  "mean_std": {
+    "holdout_scenes": {
+      "mean": 242,
+      "std": 71.03520254071216
+    },
+    "oracle_rate": {
+      "mean": 0.2590106,
+      "std": 0.2042462173070532
+    },
+    "proxy_ade": {
+      "mean": 2.4427179999999997,
+      "std": 0.3003304745409629
+    },
+    "proxy_progress": {
+      "mean": 28.0430884,
+      "std": 3.4066927075734084
+    },
+    "proxy_rate": {
+      "mean": 0.6521504,
+      "std": 0.10785888401721948
+    },
+    "proxy_selection_gap": {
+      "mean": 91,
+      "std": 35.28172331391991
+    },
+    "student_ade": {
+      "mean": 4.2094028,
+      "std": 0.5831730281771954
+    },
+    "student_progress": {
+      "mean": 22.372277,
+      "std": 2.9614159283793287
+    },
+    "student_rate": {
+      "mean": 0.4644516,
+      "std": 0.18325064799623494
+    },
+    "student_selection_gap": {
+      "mean": 47.6,
+      "std": 10.818502669038816
+    },
+    "student_teacher_agree": {
+      "mean": 0.5853118,
+      "std": 0.054556046845056515
+    },
+    "teacher_ade": {
+      "mean": 5.0252698,
+      "std": 0.9186664919378307
+    },
+    "teacher_progress": {
+      "mean": 20.0646564,
+      "std": 5.042235235080157
+    },
+    "teacher_rate": {
+      "mean": 0.2761718,
+      "std": 0.21453219105337082
+    },
+    "teacher_selection_gap": {
+      "mean": 4.4,
+      "std": 4.029888335921977
+    }
+  },
+  "rows": [
+    {
+      "holdout_scenes": 300,
+      "oracle_rate": 0.163333,
+      "proxy_ade": 2.250885,
+      "proxy_progress": 29.383353,
+      "proxy_rate": 0.696667,
+      "proxy_selection_gap": 160,
+      "seed": 0,
+      "student_ade": 5.156173,
+      "student_progress": 20.769424,
+      "student_rate": 0.356667,
+      "student_selection_gap": 58,
+      "student_teacher_agree": 0.586667,
+      "teacher_ade": 5.932839,
+      "teacher_progress": 19.474114,
+      "teacher_rate": 0.163333,
+      "teacher_selection_gap": 0
+    },
+    {
+      "holdout_scenes": 155,
+      "oracle_rate": 0.116129,
+      "proxy_ade": 2.929124,
+      "proxy_progress": 25.17955,
+      "proxy_rate": 0.516129,
+      "proxy_selection_gap": 62,
+      "seed": 1,
+      "student_ade": 3.769394,
+      "student_progress": 21.109813,
+      "student_rate": 0.309677,
+      "student_selection_gap": 30,
+      "student_teacher_agree": 0.483871,
+      "teacher_ade": 4.305368,
+      "teacher_progress": 18.294182,
+      "teacher_rate": 0.141935,
+      "teacher_selection_gap": 4
+    },
+    {
+      "holdout_scenes": 300,
+      "oracle_rate": 0.393333,
+      "proxy_ade": 2.657583,
+      "proxy_progress": 28.997672,
+      "proxy_rate": 0.663333,
+      "proxy_selection_gap": 81,
+      "seed": 2,
+      "student_ade": 4.392496,
+      "student_progress": 23.878115,
+      "student_rate": 0.543333,
+      "student_selection_gap": 45,
+      "student_teacher_agree": 0.643333,
+      "teacher_ade": 4.399682,
+      "teacher_progress": 22.829778,
+      "teacher_rate": 0.423333,
+      "teacher_selection_gap": 9
+    },
+    {
+      "holdout_scenes": 300,
+      "oracle_rate": 0.59,
+      "proxy_ade": 2.216902,
+      "proxy_progress": 33.172982,
+      "proxy_rate": 0.823333,
+      "proxy_selection_gap": 70,
+      "seed": 3,
+      "student_ade": 4.276179,
+      "student_progress": 27.323745,
+      "student_rate": 0.79,
+      "student_selection_gap": 60,
+      "student_teacher_agree": 0.593333,
+      "teacher_ade": 4.150943,
+      "teacher_progress": 27.475416,
+      "teacher_rate": 0.62,
+      "teacher_selection_gap": 9
+    },
+    {
+      "holdout_scenes": 155,
+      "oracle_rate": 0.032258,
+      "proxy_ade": 2.159096,
+      "proxy_progress": 23.481885,
+      "proxy_rate": 0.56129,
+      "proxy_selection_gap": 82,
+      "seed": 4,
+      "student_ade": 3.452772,
+      "student_progress": 18.780288,
+      "student_rate": 0.322581,
+      "student_selection_gap": 45,
+      "student_teacher_agree": 0.619355,
+      "teacher_ade": 6.337517,
+      "teacher_progress": 12.249792,
+      "teacher_rate": 0.032258,
+      "teacher_selection_gap": 0
+    }
+  ],
+  "schema": "nuplan_bootstrap_student_seed_sweep_summary_v1"
+}

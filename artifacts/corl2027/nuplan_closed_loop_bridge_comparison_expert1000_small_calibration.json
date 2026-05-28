@@ -1,0 +1,1691 @@
+{
+  "class_summary_table": [
+    {
+      "count": 15,
+      "executed_fail": 15,
+      "median_executed_clearance_m": -3.978823,
+      "median_replay_clearance_m": 1.727401,
+      "replay_class": "replay_safe"
+    },
+    {
+      "count": 15,
+      "executed_fail": 15,
+      "median_executed_clearance_m": -1.519263,
+      "median_replay_clearance_m": 0.337895,
+      "replay_class": "replay_infeasible"
+    }
+  ],
+  "horizon_alignment_table": [
+    {
+      "metric": "median_replay_horizon_s",
+      "value": 4.0
+    },
+    {
+      "metric": "median_executed_horizon_s",
+      "value": 3.949361
+    },
+    {
+      "metric": "median_dt_replay_s",
+      "value": 0.5
+    },
+    {
+      "metric": "median_dt_executed_s",
+      "value": 0.050001
+    }
+  ],
+  "metric_variant_table": [
+    {
+      "metric_variant": "center distance, no footprint",
+      "replay_infeasible_failed": 5,
+      "replay_safe_controls_failed": 0,
+      "surface": "executed_observation"
+    },
+    {
+      "metric_variant": "box clearance, no inflation",
+      "replay_infeasible_failed": 15,
+      "replay_safe_controls_failed": 15,
+      "surface": "executed_observation"
+    },
+    {
+      "metric_variant": "box clearance + 0.0m buffer",
+      "replay_infeasible_failed": 15,
+      "replay_safe_controls_failed": 15,
+      "surface": "executed_observation"
+    },
+    {
+      "metric_variant": "box clearance + 0.5m buffer",
+      "replay_infeasible_failed": 15,
+      "replay_safe_controls_failed": 15,
+      "surface": "executed_observation"
+    },
+    {
+      "metric_variant": "box clearance + 1.0m buffer",
+      "replay_infeasible_failed": 15,
+      "replay_safe_controls_failed": 15,
+      "surface": "executed_observation"
+    },
+    {
+      "metric_variant": "center distance, no footprint",
+      "replay_infeasible_failed": 0,
+      "replay_safe_controls_failed": 0,
+      "surface": "aligned_logged_actors"
+    },
+    {
+      "metric_variant": "box clearance, no inflation",
+      "replay_infeasible_failed": 15,
+      "replay_safe_controls_failed": 15,
+      "surface": "aligned_logged_actors"
+    },
+    {
+      "metric_variant": "box clearance + 0.0m buffer",
+      "replay_infeasible_failed": 15,
+      "replay_safe_controls_failed": 15,
+      "surface": "aligned_logged_actors"
+    },
+    {
+      "metric_variant": "box clearance + 0.5m buffer",
+      "replay_infeasible_failed": 15,
+      "replay_safe_controls_failed": 15,
+      "surface": "aligned_logged_actors"
+    },
+    {
+      "metric_variant": "box clearance + 1.0m buffer",
+      "replay_infeasible_failed": 15,
+      "replay_safe_controls_failed": 15,
+      "surface": "aligned_logged_actors"
+    }
+  ],
+  "nearest_actor_agreement_table": [
+    {
+      "agreement": "same_actor",
+      "count": 0
+    },
+    {
+      "agreement": "different_actor",
+      "count": 30
+    },
+    {
+      "agreement": "missing_actor_id",
+      "count": 0
+    }
+  ],
+  "scene_count": 30,
+  "scene_rows": [
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.754293,
+        "center_distance_m": 1.66086,
+        "inflated_box_clearance_0_0m": -1.754293,
+        "inflated_box_clearance_0_5m": -2.254293,
+        "inflated_box_clearance_1_0m": -2.754293
+      },
+      "dt_executed_s": 0.049983,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949782,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.510431,
+        "center_distance_m": 1.548303,
+        "inflated_box_clearance_0_0m": -1.510431,
+        "inflated_box_clearance_0_5m": -2.010431,
+        "inflated_box_clearance_1_0m": -2.510431
+      },
+      "executed_min_clearance_m": -1.510431,
+      "executed_min_clearance_t": 3.550146,
+      "executed_nearest_actor_id": "e81066c381985152",
+      "executed_nearest_actor_type": "generic_object",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054395.058614,
+        "center_distance_m": 4054398.766303,
+        "inflated_box_clearance_0_0m": 4054395.058614,
+        "inflated_box_clearance_0_5m": 4054394.558614,
+        "inflated_box_clearance_1_0m": 4054394.058614
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 0.31078,
+      "replay_min_clearance_t": 2.0,
+      "replay_nearest_actor_id": "383a3e4196d554f4",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:80f9de41c38d566e",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.345237,
+        "max_trajectory_deviation_m": 1.72032,
+        "mean_trajectory_deviation_m": 0.870887
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.754293,
+        "center_distance_m": 1.66086,
+        "inflated_box_clearance_0_0m": -1.754293,
+        "inflated_box_clearance_0_5m": -2.254293,
+        "inflated_box_clearance_1_0m": -2.754293
+      },
+      "dt_executed_s": 0.049983,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949782,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.510431,
+        "center_distance_m": 1.548303,
+        "inflated_box_clearance_0_0m": -1.510431,
+        "inflated_box_clearance_0_5m": -2.010431,
+        "inflated_box_clearance_1_0m": -2.510431
+      },
+      "executed_min_clearance_m": -1.510431,
+      "executed_min_clearance_t": 3.550146,
+      "executed_nearest_actor_id": "e81066c381985152",
+      "executed_nearest_actor_type": "generic_object",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054395.058614,
+        "center_distance_m": 4054398.766303,
+        "inflated_box_clearance_0_0m": 4054395.058614,
+        "inflated_box_clearance_0_5m": 4054394.558614,
+        "inflated_box_clearance_1_0m": 4054394.058614
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 0.31078,
+      "replay_min_clearance_t": 2.0,
+      "replay_nearest_actor_id": "383a3e4196d554f4",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:80f9de41c38d566e",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.345237,
+        "max_trajectory_deviation_m": 1.72032,
+        "mean_trajectory_deviation_m": 0.870887
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.495082,
+        "center_distance_m": 2.56942,
+        "inflated_box_clearance_0_0m": -0.495082,
+        "inflated_box_clearance_0_5m": -0.995082,
+        "inflated_box_clearance_1_0m": -1.495082
+      },
+      "dt_executed_s": 0.049983,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949782,
+      "executed_metric_variants": {
+        "box_clearance_m": -4.905693,
+        "center_distance_m": 0.362695,
+        "inflated_box_clearance_0_0m": -4.905693,
+        "inflated_box_clearance_0_5m": -5.405693,
+        "inflated_box_clearance_1_0m": -5.905693
+      },
+      "executed_min_clearance_m": -4.905693,
+      "executed_min_clearance_t": 2.100397,
+      "executed_nearest_actor_id": "1a727998ba8f5234",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "threshold_or_geometry_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054397.735426,
+        "center_distance_m": 4054401.443115,
+        "inflated_box_clearance_0_0m": 4054397.735426,
+        "inflated_box_clearance_0_5m": 4054397.235426,
+        "inflated_box_clearance_1_0m": 4054396.735426
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.323789,
+      "replay_min_clearance_t": 1.0,
+      "replay_nearest_actor_id": "887fe121cae35b9b",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:80f9de41c38d566e",
+      "selected_token": "crawl",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.064727,
+        "max_trajectory_deviation_m": 0.322211,
+        "mean_trajectory_deviation_m": 0.163164
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.800719,
+        "center_distance_m": 1.681357,
+        "inflated_box_clearance_0_0m": -1.800719,
+        "inflated_box_clearance_0_5m": -2.300719,
+        "inflated_box_clearance_1_0m": -2.800719
+      },
+      "dt_executed_s": 0.049991,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949912,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.535048,
+        "center_distance_m": 1.523686,
+        "inflated_box_clearance_0_0m": -1.535048,
+        "inflated_box_clearance_0_5m": -2.035048,
+        "inflated_box_clearance_1_0m": -2.535048
+      },
+      "executed_min_clearance_m": -1.535048,
+      "executed_min_clearance_t": 3.750105,
+      "executed_nearest_actor_id": "e81066c381985152",
+      "executed_nearest_actor_type": "generic_object",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054393.445662,
+        "center_distance_m": 4054397.074656,
+        "inflated_box_clearance_0_0m": 4054393.445662,
+        "inflated_box_clearance_0_5m": 4054392.945662,
+        "inflated_box_clearance_1_0m": 4054392.445662
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 0.414619,
+      "replay_min_clearance_t": 2.0,
+      "replay_nearest_actor_id": "e92c226d3e8156f6",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:f7587a9a78aa556e",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.346481,
+        "max_trajectory_deviation_m": 1.73081,
+        "mean_trajectory_deviation_m": 0.876259
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.800719,
+        "center_distance_m": 1.681357,
+        "inflated_box_clearance_0_0m": -1.800719,
+        "inflated_box_clearance_0_5m": -2.300719,
+        "inflated_box_clearance_1_0m": -2.800719
+      },
+      "dt_executed_s": 0.049991,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949912,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.535048,
+        "center_distance_m": 1.523686,
+        "inflated_box_clearance_0_0m": -1.535048,
+        "inflated_box_clearance_0_5m": -2.035048,
+        "inflated_box_clearance_1_0m": -2.535048
+      },
+      "executed_min_clearance_m": -1.535048,
+      "executed_min_clearance_t": 3.750105,
+      "executed_nearest_actor_id": "e81066c381985152",
+      "executed_nearest_actor_type": "generic_object",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054393.445662,
+        "center_distance_m": 4054397.074656,
+        "inflated_box_clearance_0_0m": 4054393.445662,
+        "inflated_box_clearance_0_5m": 4054392.945662,
+        "inflated_box_clearance_1_0m": 4054392.445662
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 0.414619,
+      "replay_min_clearance_t": 2.0,
+      "replay_nearest_actor_id": "e92c226d3e8156f6",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:f7587a9a78aa556e",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.346481,
+        "max_trajectory_deviation_m": 1.73081,
+        "mean_trajectory_deviation_m": 0.876259
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.50768,
+        "center_distance_m": 2.554432,
+        "inflated_box_clearance_0_0m": -0.50768,
+        "inflated_box_clearance_0_5m": -1.00768,
+        "inflated_box_clearance_1_0m": -1.50768
+      },
+      "dt_executed_s": 0.049991,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949912,
+      "executed_metric_variants": {
+        "box_clearance_m": -4.927211,
+        "center_distance_m": 0.356052,
+        "inflated_box_clearance_0_0m": -4.927211,
+        "inflated_box_clearance_0_5m": -5.427211,
+        "inflated_box_clearance_1_0m": -5.927211
+      },
+      "executed_min_clearance_m": -4.927211,
+      "executed_min_clearance_t": 2.100263,
+      "executed_nearest_actor_id": "1a727998ba8f5234",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "threshold_or_geometry_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054396.145212,
+        "center_distance_m": 4054399.774206,
+        "inflated_box_clearance_0_0m": 4054396.145212,
+        "inflated_box_clearance_0_5m": 4054395.645212,
+        "inflated_box_clearance_1_0m": 4054395.145212
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.299286,
+      "replay_min_clearance_t": 1.0,
+      "replay_nearest_actor_id": "a90c343903055917",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:f7587a9a78aa556e",
+      "selected_token": "crawl",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.06496,
+        "max_trajectory_deviation_m": 0.324157,
+        "mean_trajectory_deviation_m": 0.164172
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.74999,
+        "center_distance_m": 1.68095,
+        "inflated_box_clearance_0_0m": -1.74999,
+        "inflated_box_clearance_0_5m": -2.24999,
+        "inflated_box_clearance_1_0m": -2.74999
+      },
+      "dt_executed_s": 0.049985,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949811,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.519263,
+        "center_distance_m": 1.53947,
+        "inflated_box_clearance_0_0m": -1.519263,
+        "inflated_box_clearance_0_5m": -2.019263,
+        "inflated_box_clearance_1_0m": -2.519263
+      },
+      "executed_min_clearance_m": -1.519263,
+      "executed_min_clearance_t": 3.600133,
+      "executed_nearest_actor_id": "e81066c381985152",
+      "executed_nearest_actor_type": "generic_object",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054394.677402,
+        "center_distance_m": 4054398.36254,
+        "inflated_box_clearance_0_0m": 4054394.677402,
+        "inflated_box_clearance_0_5m": 4054394.177402,
+        "inflated_box_clearance_1_0m": 4054393.677402
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 0.337895,
+      "replay_min_clearance_t": 2.0,
+      "replay_nearest_actor_id": "e92c226d3e8156f6",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:5876e4def8615813",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.345617,
+        "max_trajectory_deviation_m": 1.722949,
+        "mean_trajectory_deviation_m": 0.872349
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.74999,
+        "center_distance_m": 1.68095,
+        "inflated_box_clearance_0_0m": -1.74999,
+        "inflated_box_clearance_0_5m": -2.24999,
+        "inflated_box_clearance_1_0m": -2.74999
+      },
+      "dt_executed_s": 0.049985,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949811,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.519263,
+        "center_distance_m": 1.53947,
+        "inflated_box_clearance_0_0m": -1.519263,
+        "inflated_box_clearance_0_5m": -2.019263,
+        "inflated_box_clearance_1_0m": -2.519263
+      },
+      "executed_min_clearance_m": -1.519263,
+      "executed_min_clearance_t": 3.600133,
+      "executed_nearest_actor_id": "e81066c381985152",
+      "executed_nearest_actor_type": "generic_object",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054394.677402,
+        "center_distance_m": 4054398.36254,
+        "inflated_box_clearance_0_0m": 4054394.677402,
+        "inflated_box_clearance_0_5m": 4054394.177402,
+        "inflated_box_clearance_1_0m": 4054393.677402
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 0.337895,
+      "replay_min_clearance_t": 2.0,
+      "replay_nearest_actor_id": "e92c226d3e8156f6",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:5876e4def8615813",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.345617,
+        "max_trajectory_deviation_m": 1.722949,
+        "mean_trajectory_deviation_m": 0.872349
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.518807,
+        "center_distance_m": 2.539187,
+        "inflated_box_clearance_0_0m": -0.518807,
+        "inflated_box_clearance_0_5m": -1.018807,
+        "inflated_box_clearance_1_0m": -1.518807
+      },
+      "dt_executed_s": 0.049985,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949811,
+      "executed_metric_variants": {
+        "box_clearance_m": -4.906379,
+        "center_distance_m": 0.364486,
+        "inflated_box_clearance_0_0m": -4.906379,
+        "inflated_box_clearance_0_5m": -5.406379,
+        "inflated_box_clearance_1_0m": -5.906379
+      },
+      "executed_min_clearance_m": -4.906379,
+      "executed_min_clearance_t": 2.100365,
+      "executed_nearest_actor_id": "1a727998ba8f5234",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "threshold_or_geometry_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054397.360367,
+        "center_distance_m": 4054401.045505,
+        "inflated_box_clearance_0_0m": 4054397.360367,
+        "inflated_box_clearance_0_5m": 4054396.860367,
+        "inflated_box_clearance_1_0m": 4054396.360367
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.31057,
+      "replay_min_clearance_t": 1.5,
+      "replay_nearest_actor_id": "887fe121cae35b9b",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:5876e4def8615813",
+      "selected_token": "crawl",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.064798,
+        "max_trajectory_deviation_m": 0.322753,
+        "mean_trajectory_deviation_m": 0.163438
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.66234,
+        "center_distance_m": 1.691878,
+        "inflated_box_clearance_0_0m": -1.66234,
+        "inflated_box_clearance_0_5m": -2.16234,
+        "inflated_box_clearance_1_0m": -2.66234
+      },
+      "dt_executed_s": 0.049994,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949661,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.460146,
+        "center_distance_m": 1.592373,
+        "inflated_box_clearance_0_0m": -1.460146,
+        "inflated_box_clearance_0_5m": -1.960146,
+        "inflated_box_clearance_1_0m": -2.460146
+      },
+      "executed_min_clearance_m": -1.460146,
+      "executed_min_clearance_t": 3.550017,
+      "executed_nearest_actor_id": "827139f0540b519b",
+      "executed_nearest_actor_type": "generic_object",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054396.634648,
+        "center_distance_m": 4054400.302864,
+        "inflated_box_clearance_0_0m": 4054396.634648,
+        "inflated_box_clearance_0_5m": 4054396.134648,
+        "inflated_box_clearance_1_0m": 4054395.634648
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 0.18665,
+      "replay_min_clearance_t": 2.0,
+      "replay_nearest_actor_id": "3bd196444f455cbc",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:6c42f16f723f50af",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.344229,
+        "max_trajectory_deviation_m": 1.710167,
+        "mean_trajectory_deviation_m": 0.866252
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.66234,
+        "center_distance_m": 1.691878,
+        "inflated_box_clearance_0_0m": -1.66234,
+        "inflated_box_clearance_0_5m": -2.16234,
+        "inflated_box_clearance_1_0m": -2.66234
+      },
+      "dt_executed_s": 0.049994,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949661,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.460146,
+        "center_distance_m": 1.592373,
+        "inflated_box_clearance_0_0m": -1.460146,
+        "inflated_box_clearance_0_5m": -1.960146,
+        "inflated_box_clearance_1_0m": -2.460146
+      },
+      "executed_min_clearance_m": -1.460146,
+      "executed_min_clearance_t": 3.550017,
+      "executed_nearest_actor_id": "827139f0540b519b",
+      "executed_nearest_actor_type": "generic_object",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054396.634648,
+        "center_distance_m": 4054400.302864,
+        "inflated_box_clearance_0_0m": 4054396.634648,
+        "inflated_box_clearance_0_5m": 4054396.134648,
+        "inflated_box_clearance_1_0m": 4054395.634648
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 0.18665,
+      "replay_min_clearance_t": 2.0,
+      "replay_nearest_actor_id": "3bd196444f455cbc",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:6c42f16f723f50af",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.344229,
+        "max_trajectory_deviation_m": 1.710167,
+        "mean_trajectory_deviation_m": 0.866252
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.485336,
+        "center_distance_m": 2.580838,
+        "inflated_box_clearance_0_0m": -0.485336,
+        "inflated_box_clearance_0_5m": -0.985336,
+        "inflated_box_clearance_1_0m": -1.485336
+      },
+      "dt_executed_s": 0.049994,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949661,
+      "executed_metric_variants": {
+        "box_clearance_m": -4.942145,
+        "center_distance_m": 0.33123,
+        "inflated_box_clearance_0_0m": -4.942145,
+        "inflated_box_clearance_0_5m": -5.442145,
+        "inflated_box_clearance_1_0m": -5.942145
+      },
+      "executed_min_clearance_m": -4.942145,
+      "executed_min_clearance_t": 2.150538,
+      "executed_nearest_actor_id": "1a727998ba8f5234",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "threshold_or_geometry_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054399.291986,
+        "center_distance_m": 4054402.960202,
+        "inflated_box_clearance_0_0m": 4054399.291986,
+        "inflated_box_clearance_0_5m": 4054398.791986,
+        "inflated_box_clearance_1_0m": 4054398.291986
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.330422,
+      "replay_min_clearance_t": 1.5,
+      "replay_nearest_actor_id": "36b18b0b82c457ce",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:6c42f16f723f50af",
+      "selected_token": "crawl",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.064538,
+        "max_trajectory_deviation_m": 0.32049,
+        "mean_trajectory_deviation_m": 0.162294
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.660383,
+        "center_distance_m": 1.76073,
+        "inflated_box_clearance_0_0m": -1.660383,
+        "inflated_box_clearance_0_5m": -2.160383,
+        "inflated_box_clearance_1_0m": -2.660383
+      },
+      "dt_executed_s": 0.049989,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949696,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.469626,
+        "center_distance_m": 1.585561,
+        "inflated_box_clearance_0_0m": -1.469626,
+        "inflated_box_clearance_0_5m": -1.969626,
+        "inflated_box_clearance_1_0m": -2.469626
+      },
+      "executed_min_clearance_m": -1.469626,
+      "executed_min_clearance_t": 3.350251,
+      "executed_nearest_actor_id": "e81066c381985152",
+      "executed_nearest_actor_type": "generic_object",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054396.257194,
+        "center_distance_m": 4054399.917423,
+        "inflated_box_clearance_0_0m": 4054396.257194,
+        "inflated_box_clearance_0_5m": 4054395.757194,
+        "inflated_box_clearance_1_0m": 4054395.257194
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 0.236395,
+      "replay_min_clearance_t": 2.0,
+      "replay_nearest_actor_id": "383a3e4196d554f4",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:cc4a6da539955fe8",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.344515,
+        "max_trajectory_deviation_m": 1.713027,
+        "mean_trajectory_deviation_m": 0.867565
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.660383,
+        "center_distance_m": 1.76073,
+        "inflated_box_clearance_0_0m": -1.660383,
+        "inflated_box_clearance_0_5m": -2.160383,
+        "inflated_box_clearance_1_0m": -2.660383
+      },
+      "dt_executed_s": 0.049989,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949696,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.469626,
+        "center_distance_m": 1.585561,
+        "inflated_box_clearance_0_0m": -1.469626,
+        "inflated_box_clearance_0_5m": -1.969626,
+        "inflated_box_clearance_1_0m": -2.469626
+      },
+      "executed_min_clearance_m": -1.469626,
+      "executed_min_clearance_t": 3.350251,
+      "executed_nearest_actor_id": "e81066c381985152",
+      "executed_nearest_actor_type": "generic_object",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054396.257194,
+        "center_distance_m": 4054399.917423,
+        "inflated_box_clearance_0_0m": 4054396.257194,
+        "inflated_box_clearance_0_5m": 4054395.757194,
+        "inflated_box_clearance_1_0m": 4054395.257194
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 0.236395,
+      "replay_min_clearance_t": 2.0,
+      "replay_nearest_actor_id": "383a3e4196d554f4",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:cc4a6da539955fe8",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.344515,
+        "max_trajectory_deviation_m": 1.713027,
+        "mean_trajectory_deviation_m": 0.867565
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.420191,
+        "center_distance_m": 2.641966,
+        "inflated_box_clearance_0_0m": -0.420191,
+        "inflated_box_clearance_0_5m": -0.920191,
+        "inflated_box_clearance_1_0m": -1.420191
+      },
+      "dt_executed_s": 0.049989,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949696,
+      "executed_metric_variants": {
+        "box_clearance_m": -4.909502,
+        "center_distance_m": 0.370631,
+        "inflated_box_clearance_0_0m": -4.909502,
+        "inflated_box_clearance_0_5m": -5.409502,
+        "inflated_box_clearance_1_0m": -5.909502
+      },
+      "executed_min_clearance_m": -4.909502,
+      "executed_min_clearance_t": 1.800379,
+      "executed_nearest_actor_id": "1a727998ba8f5234",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "threshold_or_geometry_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054399.762261,
+        "center_distance_m": 4054403.422491,
+        "inflated_box_clearance_0_0m": 4054399.762261,
+        "inflated_box_clearance_0_5m": 4054399.262261,
+        "inflated_box_clearance_1_0m": 4054398.762261
+      },
+      "replay_class": "replay_infeasible",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.316537,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "887fe121cae35b9b",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:cc4a6da539955fe8",
+      "selected_token": "stop",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.0,
+        "max_trajectory_deviation_m": 0.0,
+        "mean_trajectory_deviation_m": 0.0
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.782056,
+        "center_distance_m": 2.711253,
+        "inflated_box_clearance_0_0m": -1.782056,
+        "inflated_box_clearance_0_5m": -2.282056,
+        "inflated_box_clearance_1_0m": -2.782056
+      },
+      "dt_executed_s": 0.050012,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949061,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.099642,
+        "center_distance_m": 2.394523,
+        "inflated_box_clearance_0_0m": -1.099642,
+        "inflated_box_clearance_0_5m": -1.599642,
+        "inflated_box_clearance_1_0m": -2.099642
+      },
+      "executed_min_clearance_m": -1.099642,
+      "executed_min_clearance_t": 1.349953,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054440.52477,
+        "center_distance_m": 4054442.041846,
+        "inflated_box_clearance_0_0m": 4054440.52477,
+        "inflated_box_clearance_0_5m": 4054440.02477,
+        "inflated_box_clearance_1_0m": 4054439.52477
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.084784,
+      "replay_min_clearance_t": 4.0,
+      "replay_nearest_actor_id": "66ff547cb4ae5b1c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:047922130cf05e89",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.196318,
+        "max_trajectory_deviation_m": 0.967555,
+        "mean_trajectory_deviation_m": 0.489233
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.533735,
+        "center_distance_m": 3.554539,
+        "inflated_box_clearance_0_0m": -0.533735,
+        "inflated_box_clearance_0_5m": -1.033735,
+        "inflated_box_clearance_1_0m": -1.533735
+      },
+      "dt_executed_s": 0.050012,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949061,
+      "executed_metric_variants": {
+        "box_clearance_m": -4.236287,
+        "center_distance_m": 1.179087,
+        "inflated_box_clearance_0_0m": -4.236287,
+        "inflated_box_clearance_0_5m": -4.736287,
+        "inflated_box_clearance_1_0m": -5.236287
+      },
+      "executed_min_clearance_m": -4.236287,
+      "executed_min_clearance_t": 1.349953,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054437.486672,
+        "center_distance_m": 4054439.003748,
+        "inflated_box_clearance_0_0m": 4054437.486672,
+        "inflated_box_clearance_0_5m": 4054436.986672,
+        "inflated_box_clearance_1_0m": 4054436.486672
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.737396,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:047922130cf05e89",
+      "selected_token": "evasive_left",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.171727,
+        "max_trajectory_deviation_m": 0.989657,
+        "mean_trajectory_deviation_m": 0.443165
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.533735,
+        "center_distance_m": 3.554539,
+        "inflated_box_clearance_0_0m": -0.533735,
+        "inflated_box_clearance_0_5m": -1.033735,
+        "inflated_box_clearance_1_0m": -1.533735
+      },
+      "dt_executed_s": 0.050012,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949061,
+      "executed_metric_variants": {
+        "box_clearance_m": -4.236287,
+        "center_distance_m": 1.179087,
+        "inflated_box_clearance_0_0m": -4.236287,
+        "inflated_box_clearance_0_5m": -4.736287,
+        "inflated_box_clearance_1_0m": -5.236287
+      },
+      "executed_min_clearance_m": -4.236287,
+      "executed_min_clearance_t": 1.349953,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054437.486672,
+        "center_distance_m": 4054439.003748,
+        "inflated_box_clearance_0_0m": 4054437.486672,
+        "inflated_box_clearance_0_5m": 4054436.986672,
+        "inflated_box_clearance_1_0m": 4054436.486672
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.737396,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:047922130cf05e89",
+      "selected_token": "evasive_left",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.171727,
+        "max_trajectory_deviation_m": 0.989657,
+        "mean_trajectory_deviation_m": 0.443165
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.288217,
+        "center_distance_m": 2.746002,
+        "inflated_box_clearance_0_0m": -1.288217,
+        "inflated_box_clearance_0_5m": -1.788217,
+        "inflated_box_clearance_1_0m": -2.288217
+      },
+      "dt_executed_s": 0.050009,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949034,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.042909,
+        "center_distance_m": 2.393076,
+        "inflated_box_clearance_0_0m": -1.042909,
+        "inflated_box_clearance_0_5m": -1.542909,
+        "inflated_box_clearance_1_0m": -2.042909
+      },
+      "executed_min_clearance_m": -1.042909,
+      "executed_min_clearance_t": 1.2999,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054440.405782,
+        "center_distance_m": 4054441.922555,
+        "inflated_box_clearance_0_0m": 4054440.405782,
+        "inflated_box_clearance_0_5m": 4054439.905782,
+        "inflated_box_clearance_1_0m": 4054439.405782
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.147398,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:0b0e086a4c7f59cf",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.196389,
+        "max_trajectory_deviation_m": 0.966986,
+        "mean_trajectory_deviation_m": 0.489155
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.259941,
+        "center_distance_m": 3.685427,
+        "inflated_box_clearance_0_0m": -0.259941,
+        "inflated_box_clearance_0_5m": -0.759941,
+        "inflated_box_clearance_1_0m": -1.259941
+      },
+      "dt_executed_s": 0.050009,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949034,
+      "executed_metric_variants": {
+        "box_clearance_m": -4.06901,
+        "center_distance_m": 1.346364,
+        "inflated_box_clearance_0_0m": -4.06901,
+        "inflated_box_clearance_0_5m": -4.56901,
+        "inflated_box_clearance_1_0m": -5.06901
+      },
+      "executed_min_clearance_m": -4.06901,
+      "executed_min_clearance_t": 1.249923,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054437.367633,
+        "center_distance_m": 4054438.884405,
+        "inflated_box_clearance_0_0m": 4054437.367633,
+        "inflated_box_clearance_0_5m": 4054436.867633,
+        "inflated_box_clearance_1_0m": 4054436.367633
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.703927,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:0b0e086a4c7f59cf",
+      "selected_token": "evasive_left",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.171789,
+        "max_trajectory_deviation_m": 0.989661,
+        "mean_trajectory_deviation_m": 0.4431
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.259941,
+        "center_distance_m": 3.685427,
+        "inflated_box_clearance_0_0m": -0.259941,
+        "inflated_box_clearance_0_5m": -0.759941,
+        "inflated_box_clearance_1_0m": -1.259941
+      },
+      "dt_executed_s": 0.050009,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949034,
+      "executed_metric_variants": {
+        "box_clearance_m": -4.06901,
+        "center_distance_m": 1.346364,
+        "inflated_box_clearance_0_0m": -4.06901,
+        "inflated_box_clearance_0_5m": -4.56901,
+        "inflated_box_clearance_1_0m": -5.06901
+      },
+      "executed_min_clearance_m": -4.06901,
+      "executed_min_clearance_t": 1.249923,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054437.367633,
+        "center_distance_m": 4054438.884405,
+        "inflated_box_clearance_0_0m": 4054437.367633,
+        "inflated_box_clearance_0_5m": 4054436.867633,
+        "inflated_box_clearance_1_0m": 4054436.367633
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.703927,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:0b0e086a4c7f59cf",
+      "selected_token": "evasive_left",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.171789,
+        "max_trajectory_deviation_m": 0.989661,
+        "mean_trajectory_deviation_m": 0.4431
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.52296,
+        "center_distance_m": 2.775608,
+        "inflated_box_clearance_0_0m": -1.52296,
+        "inflated_box_clearance_0_5m": -2.02296,
+        "inflated_box_clearance_1_0m": -2.52296
+      },
+      "dt_executed_s": 0.05001,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949044,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.071557,
+        "center_distance_m": 2.392714,
+        "inflated_box_clearance_0_0m": -1.071557,
+        "inflated_box_clearance_0_5m": -1.571557,
+        "inflated_box_clearance_1_0m": -2.071557
+      },
+      "executed_min_clearance_m": -1.071557,
+      "executed_min_clearance_t": 1.349912,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054440.468247,
+        "center_distance_m": 4054441.984669,
+        "inflated_box_clearance_0_0m": 4054440.468247,
+        "inflated_box_clearance_0_5m": 4054439.968247,
+        "inflated_box_clearance_1_0m": 4054439.468247
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.150329,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:016dc853a7015243",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.196379,
+        "max_trajectory_deviation_m": 0.967325,
+        "mean_trajectory_deviation_m": 0.489223
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.38307,
+        "center_distance_m": 3.632266,
+        "inflated_box_clearance_0_0m": -0.38307,
+        "inflated_box_clearance_0_5m": -0.88307,
+        "inflated_box_clearance_1_0m": -1.38307
+      },
+      "dt_executed_s": 0.05001,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949044,
+      "executed_metric_variants": {
+        "box_clearance_m": -4.156748,
+        "center_distance_m": 1.258626,
+        "inflated_box_clearance_0_0m": -4.156748,
+        "inflated_box_clearance_0_5m": -4.656748,
+        "inflated_box_clearance_1_0m": -5.156748
+      },
+      "executed_min_clearance_m": -4.156748,
+      "executed_min_clearance_t": 1.299935,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054437.430142,
+        "center_distance_m": 4054438.946565,
+        "inflated_box_clearance_0_0m": 4054437.430142,
+        "inflated_box_clearance_0_5m": 4054436.930142,
+        "inflated_box_clearance_1_0m": 4054436.430142
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.727401,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:016dc853a7015243",
+      "selected_token": "evasive_left",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.17178,
+        "max_trajectory_deviation_m": 0.9897,
+        "mean_trajectory_deviation_m": 0.443157
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.38307,
+        "center_distance_m": 3.632266,
+        "inflated_box_clearance_0_0m": -0.38307,
+        "inflated_box_clearance_0_5m": -0.88307,
+        "inflated_box_clearance_1_0m": -1.38307
+      },
+      "dt_executed_s": 0.05001,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949044,
+      "executed_metric_variants": {
+        "box_clearance_m": -4.156748,
+        "center_distance_m": 1.258626,
+        "inflated_box_clearance_0_0m": -4.156748,
+        "inflated_box_clearance_0_5m": -4.656748,
+        "inflated_box_clearance_1_0m": -5.156748
+      },
+      "executed_min_clearance_m": -4.156748,
+      "executed_min_clearance_t": 1.299935,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054437.430142,
+        "center_distance_m": 4054438.946565,
+        "inflated_box_clearance_0_0m": 4054437.430142,
+        "inflated_box_clearance_0_5m": 4054436.930142,
+        "inflated_box_clearance_1_0m": 4054436.430142
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.727401,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:016dc853a7015243",
+      "selected_token": "evasive_left",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.17178,
+        "max_trajectory_deviation_m": 0.9897,
+        "mean_trajectory_deviation_m": 0.443157
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -1.019344,
+        "center_distance_m": 2.742019,
+        "inflated_box_clearance_0_0m": -1.019344,
+        "inflated_box_clearance_0_5m": -1.519344,
+        "inflated_box_clearance_1_0m": -2.019344
+      },
+      "dt_executed_s": 0.050009,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949027,
+      "executed_metric_variants": {
+        "box_clearance_m": -1.015905,
+        "center_distance_m": 2.395524,
+        "inflated_box_clearance_0_0m": -1.015905,
+        "inflated_box_clearance_0_5m": -1.515905,
+        "inflated_box_clearance_1_0m": -2.015905
+      },
+      "executed_min_clearance_m": -1.015905,
+      "executed_min_clearance_t": 1.24989,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054440.361154,
+        "center_distance_m": 4054441.877588,
+        "inflated_box_clearance_0_0m": 4054440.361154,
+        "inflated_box_clearance_0_5m": 4054439.861154,
+        "inflated_box_clearance_1_0m": 4054439.361154
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.197496,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:0641660914695dfe",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.19598,
+        "max_trajectory_deviation_m": 0.96467,
+        "mean_trajectory_deviation_m": 0.488079
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.088837,
+        "center_distance_m": 3.785707,
+        "inflated_box_clearance_0_0m": -0.088837,
+        "inflated_box_clearance_0_5m": -0.588837,
+        "inflated_box_clearance_1_0m": -1.088837
+      },
+      "dt_executed_s": 0.050009,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949027,
+      "executed_metric_variants": {
+        "box_clearance_m": -3.978823,
+        "center_distance_m": 1.436551,
+        "inflated_box_clearance_0_0m": -3.978823,
+        "inflated_box_clearance_0_5m": -4.478823,
+        "inflated_box_clearance_1_0m": -4.978823
+      },
+      "executed_min_clearance_m": -3.978823,
+      "executed_min_clearance_t": 1.199913,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054437.322303,
+        "center_distance_m": 4054438.838737,
+        "inflated_box_clearance_0_0m": 4054437.322303,
+        "inflated_box_clearance_0_5m": 4054436.822303,
+        "inflated_box_clearance_1_0m": 4054436.322303
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.730251,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:0641660914695dfe",
+      "selected_token": "evasive_left",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.171431,
+        "max_trajectory_deviation_m": 0.988149,
+        "mean_trajectory_deviation_m": 0.442188
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.088837,
+        "center_distance_m": 3.785707,
+        "inflated_box_clearance_0_0m": -0.088837,
+        "inflated_box_clearance_0_5m": -0.588837,
+        "inflated_box_clearance_1_0m": -1.088837
+      },
+      "dt_executed_s": 0.050009,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949027,
+      "executed_metric_variants": {
+        "box_clearance_m": -3.978823,
+        "center_distance_m": 1.436551,
+        "inflated_box_clearance_0_0m": -3.978823,
+        "inflated_box_clearance_0_5m": -4.478823,
+        "inflated_box_clearance_1_0m": -4.978823
+      },
+      "executed_min_clearance_m": -3.978823,
+      "executed_min_clearance_t": 1.199913,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054437.322303,
+        "center_distance_m": 4054438.838737,
+        "inflated_box_clearance_0_0m": 4054437.322303,
+        "inflated_box_clearance_0_5m": 4054436.822303,
+        "inflated_box_clearance_1_0m": 4054436.322303
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.730251,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:0641660914695dfe",
+      "selected_token": "evasive_left",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.171431,
+        "max_trajectory_deviation_m": 0.988149,
+        "mean_trajectory_deviation_m": 0.442188
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": -0.762698,
+        "center_distance_m": 2.753868,
+        "inflated_box_clearance_0_0m": -0.762698,
+        "inflated_box_clearance_0_5m": -1.262698,
+        "inflated_box_clearance_1_0m": -1.762698
+      },
+      "dt_executed_s": 0.050007,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949022,
+      "executed_metric_variants": {
+        "box_clearance_m": -0.989472,
+        "center_distance_m": 2.424445,
+        "inflated_box_clearance_0_0m": -0.989472,
+        "inflated_box_clearance_0_5m": -1.489472,
+        "inflated_box_clearance_1_0m": -1.989472
+      },
+      "executed_min_clearance_m": -0.989472,
+      "executed_min_clearance_t": 1.199881,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054443.759637,
+        "center_distance_m": 4054445.019915,
+        "inflated_box_clearance_0_0m": 4054443.759637,
+        "inflated_box_clearance_0_5m": 4054443.259637,
+        "inflated_box_clearance_1_0m": 4054442.759637
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.237951,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:bb959d292be15753",
+      "selected_token": "nudge_right",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.195966,
+        "max_trajectory_deviation_m": 0.964334,
+        "mean_trajectory_deviation_m": 0.487998
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": 0.061168,
+        "center_distance_m": 3.771583,
+        "inflated_box_clearance_0_0m": 0.061168,
+        "inflated_box_clearance_0_5m": -0.438832,
+        "inflated_box_clearance_1_0m": -0.938832
+      },
+      "dt_executed_s": 0.050007,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949022,
+      "executed_metric_variants": {
+        "box_clearance_m": -3.884664,
+        "center_distance_m": 1.53071,
+        "inflated_box_clearance_0_0m": -3.884664,
+        "inflated_box_clearance_0_5m": -4.384664,
+        "inflated_box_clearance_1_0m": -4.884664
+      },
+      "executed_min_clearance_m": -3.884664,
+      "executed_min_clearance_t": 1.149904,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054440.720731,
+        "center_distance_m": 4054441.98101,
+        "inflated_box_clearance_0_0m": 4054440.720731,
+        "inflated_box_clearance_0_5m": 4054440.220731,
+        "inflated_box_clearance_1_0m": 4054439.720731
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.739671,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:bb959d292be15753",
+      "selected_token": "evasive_left",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.171419,
+        "max_trajectory_deviation_m": 0.988109,
+        "mean_trajectory_deviation_m": 0.442121
+      }
+    },
+    {
+      "actor_footprint_geometry": "oriented_box",
+      "actor_geometry_source": "nuplan_tracked_object_oriented_box",
+      "aligned_executed_metric_variants": {
+        "box_clearance_m": 0.061168,
+        "center_distance_m": 3.771583,
+        "inflated_box_clearance_0_0m": 0.061168,
+        "inflated_box_clearance_0_5m": -0.438832,
+        "inflated_box_clearance_1_0m": -0.938832
+      },
+      "dt_executed_s": 0.050007,
+      "dt_replay_s": 0.5,
+      "ego_footprint_geometry": "pacifica_oriented_box",
+      "ego_pose_source": "selected_token_rollout_rear_axle",
+      "executed_failed": true,
+      "executed_horizon_s": 3.949022,
+      "executed_metric_variants": {
+        "box_clearance_m": -3.884664,
+        "center_distance_m": 1.53071,
+        "inflated_box_clearance_0_0m": -3.884664,
+        "inflated_box_clearance_0_5m": -4.384664,
+        "inflated_box_clearance_1_0m": -4.884664
+      },
+      "executed_min_clearance_m": -3.884664,
+      "executed_min_clearance_t": 1.149904,
+      "executed_nearest_actor_id": "0d4d1c69fa465f40",
+      "executed_nearest_actor_type": "vehicle",
+      "failure_reason": "footprint_inflation_mismatch",
+      "num_executed_steps": 79,
+      "num_replay_steps": 8,
+      "proxy_metric_variants": {
+        "box_clearance_m": 4054440.720731,
+        "center_distance_m": 4054441.98101,
+        "inflated_box_clearance_0_0m": 4054440.720731,
+        "inflated_box_clearance_0_5m": 4054440.220731,
+        "inflated_box_clearance_1_0m": 4054439.720731
+      },
+      "replay_class": "replay_safe",
+      "replay_horizon_s": 4.0,
+      "replay_min_clearance_m": 1.739671,
+      "replay_min_clearance_t": 0.5,
+      "replay_nearest_actor_id": "edd828f8738b568c",
+      "replay_nearest_actor_type": null,
+      "scene_id": "2021.05.25.14.16.10_veh-35_01690_02183:bb959d292be15753",
+      "selected_token": "evasive_left",
+      "threshold_m": 1.0,
+      "trajectory_agreement": {
+        "final_pose_deviation_m": 0.171419,
+        "max_trajectory_deviation_m": 0.988109,
+        "mean_trajectory_deviation_m": 0.442121
+      }
+    }
+  ],
+  "schema": "nuplan_selected_token_closed_loop_bridge_calibration_v1",
+  "threshold_m": 1.0,
+  "trajectory_agreement_table": [
+    {
+      "metric": "median_mean_trajectory_deviation_m",
+      "value": 0.465581
+    },
+    {
+      "metric": "median_max_trajectory_deviation_m",
+      "value": 0.989657
+    },
+    {
+      "metric": "median_final_pose_deviation_m",
+      "value": 0.183877
+    }
+  ]
+}

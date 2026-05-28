@@ -1,0 +1,2361 @@
+{
+  "ablation_summary": [
+    {
+      "mean_selected_progress_m": {
+        "mean": 28.644528,
+        "std": 2.776934
+      },
+      "name": "proxy_selector",
+      "recoverable_proxy_optimism_recovery_rate": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "selected_replay_infeasible_rate": {
+        "mean": 0.621,
+        "std": 0.149546
+      },
+      "selected_token_entropy": {
+        "mean": 1.484967,
+        "std": 0.165647
+      }
+    },
+    {
+      "mean_selected_progress_m": {
+        "mean": 10.817233,
+        "std": 5.215408
+      },
+      "name": "risk_only",
+      "recoverable_proxy_optimism_recovery_rate": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "selected_replay_infeasible_rate": {
+        "mean": 0.258,
+        "std": 0.260132
+      },
+      "selected_token_entropy": {
+        "mean": 1.398956,
+        "std": 0.361836
+      }
+    },
+    {
+      "mean_selected_progress_m": {
+        "mean": 28.671869,
+        "std": 2.794957
+      },
+      "name": "proxy_plus_progress",
+      "recoverable_proxy_optimism_recovery_rate": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "selected_replay_infeasible_rate": {
+        "mean": 0.621,
+        "std": 0.149546
+      },
+      "selected_token_entropy": {
+        "mean": 1.484683,
+        "std": 0.175484
+      }
+    },
+    {
+      "mean_selected_progress_m": {
+        "mean": 24.066086,
+        "std": 3.299658
+      },
+      "name": "proxy_plus_risk",
+      "recoverable_proxy_optimism_recovery_rate": {
+        "mean": 0.599988,
+        "std": 0.351568
+      },
+      "selected_replay_infeasible_rate": {
+        "mean": 0.428,
+        "std": 0.208683
+      },
+      "selected_token_entropy": {
+        "mean": 1.693163,
+        "std": 0.168858
+      }
+    },
+    {
+      "mean_selected_progress_m": {
+        "mean": 24.079971,
+        "std": 3.287517
+      },
+      "name": "proxy_plus_progress_plus_risk",
+      "recoverable_proxy_optimism_recovery_rate": {
+        "mean": 0.594988,
+        "std": 0.35595
+      },
+      "selected_replay_infeasible_rate": {
+        "mean": 0.4305,
+        "std": 0.207806
+      },
+      "selected_token_entropy": {
+        "mean": 1.692035,
+        "std": 0.166982
+      }
+    },
+    {
+      "mean_selected_progress_m": {
+        "mean": 11.076198,
+        "std": 2.954154
+      },
+      "name": "replay_oracle",
+      "recoverable_proxy_optimism_recovery_rate": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "selected_replay_infeasible_rate": {
+        "mean": 0.2005,
+        "std": 0.26077
+      },
+      "selected_token_entropy": {
+        "mean": 2.089309,
+        "std": 0.258293
+      }
+    }
+  ],
+  "expert_distance_available": false,
+  "expert_distance_note": "The replay artifact does not include expert_trajectory, so expert deviation is n/a.",
+  "holdout_fraction": 0.3,
+  "input_replay_json": "artifacts/corl2027/nuplan_public_replay_study_interaction250/replay.json",
+  "near_miss_threshold_m": 1.0,
+  "risk_weight_sweep_summary": [
+    {
+      "mean_selected_progress_m": {
+        "mean": 28.671869,
+        "std": 2.794957
+      },
+      "recoverable_proxy_optimism_recovery_rate": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "risk_weight": 0.0,
+      "selected_replay_infeasible_rate": {
+        "mean": 0.621,
+        "std": 0.149546
+      },
+      "selected_token_entropy": {
+        "mean": 1.484683,
+        "std": 0.175484
+      }
+    },
+    {
+      "mean_selected_progress_m": {
+        "mean": 28.618679,
+        "std": 2.792521
+      },
+      "recoverable_proxy_optimism_recovery_rate": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "risk_weight": 5.0,
+      "selected_replay_infeasible_rate": {
+        "mean": 0.621,
+        "std": 0.149546
+      },
+      "selected_token_entropy": {
+        "mean": 1.545551,
+        "std": 0.216124
+      }
+    },
+    {
+      "mean_selected_progress_m": {
+        "mean": 28.044587,
+        "std": 2.629978
+      },
+      "recoverable_proxy_optimism_recovery_rate": {
+        "mean": 0.101746,
+        "std": 0.144315
+      },
+      "risk_weight": 10.0,
+      "selected_replay_infeasible_rate": {
+        "mean": 0.5885,
+        "std": 0.164177
+      },
+      "selected_token_entropy": {
+        "mean": 1.732434,
+        "std": 0.291693
+      }
+    },
+    {
+      "mean_selected_progress_m": {
+        "mean": 26.390905,
+        "std": 2.602867
+      },
+      "recoverable_proxy_optimism_recovery_rate": {
+        "mean": 0.448486,
+        "std": 0.30038
+      },
+      "risk_weight": 20.0,
+      "selected_replay_infeasible_rate": {
+        "mean": 0.4775,
+        "std": 0.163248
+      },
+      "selected_token_entropy": {
+        "mean": 1.869073,
+        "std": 0.347579
+      }
+    },
+    {
+      "mean_selected_progress_m": {
+        "mean": 24.079971,
+        "std": 3.287517
+      },
+      "recoverable_proxy_optimism_recovery_rate": {
+        "mean": 0.594988,
+        "std": 0.35595
+      },
+      "risk_weight": 40.0,
+      "selected_replay_infeasible_rate": {
+        "mean": 0.4305,
+        "std": 0.207806
+      },
+      "selected_token_entropy": {
+        "mean": 1.692035,
+        "std": 0.166982
+      }
+    },
+    {
+      "mean_selected_progress_m": {
+        "mean": 22.58965,
+        "std": 3.879064
+      },
+      "recoverable_proxy_optimism_recovery_rate": {
+        "mean": 0.645659,
+        "std": 0.383454
+      },
+      "risk_weight": 80.0,
+      "selected_replay_infeasible_rate": {
+        "mean": 0.423,
+        "std": 0.225673
+      },
+      "selected_token_entropy": {
+        "mean": 1.578171,
+        "std": 0.227299
+      }
+    }
+  ],
+  "scene_count": 250,
+  "schema": "nuplan_replay_calibration_experiments_v1",
+  "split_count": 5,
+  "split_results": [
+    {
+      "ablations": [
+        {
+          "config": {
+            "name": "proxy_selector"
+          },
+          "holdout": {
+            "mean_selected_progress_m": 31.89386,
+            "mean_selected_proxy_score": 23.562825,
+            "no_replay_safe_token_count": 29,
+            "proxy_safe_selected_count": 47,
+            "proxy_safe_selected_rate": 0.5875,
+            "recoverable_proxy_optimism_count": 21,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 50,
+            "selected_replay_infeasible_rate": 0.625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 30,
+            "selected_token_entropy": 1.274366,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "lane_recover": 4,
+              "maintain": 59,
+              "nudge_left": 10,
+              "slow_yield": 6
+            },
+            "selector_name": "proxy_selector"
+          }
+        },
+        {
+          "config": {
+            "name": "risk_only",
+            "progress_weight": 0.0,
+            "proxy_score_weight": 0.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 0.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 4.282995,
+            "mean_selected_proxy_score": -0.255277,
+            "no_replay_safe_token_count": 29,
+            "proxy_safe_selected_count": 54,
+            "proxy_safe_selected_rate": 0.675,
+            "recoverable_proxy_optimism_count": 21,
+            "recoverable_proxy_optimism_fixed_count": 21,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 40,
+            "selected_replay_infeasible_rate": 0.5,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 40,
+            "selected_token_entropy": 1.405118,
+            "selected_token_histogram": {
+              "crawl": 26,
+              "evasive_left": 1,
+              "slow_yield": 8,
+              "stop": 45
+            },
+            "selector_name": "risk_only"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_progress",
+            "progress_weight": 0.02,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 0.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 31.937239,
+            "mean_selected_proxy_score": 23.5625,
+            "no_replay_safe_token_count": 29,
+            "proxy_safe_selected_count": 47,
+            "proxy_safe_selected_rate": 0.5875,
+            "recoverable_proxy_optimism_count": 21,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 50,
+            "selected_replay_infeasible_rate": 0.625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 30,
+            "selected_token_entropy": 1.28787,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "lane_recover": 5,
+              "maintain": 59,
+              "nudge_left": 9,
+              "slow_yield": 6
+            },
+            "selector_name": "proxy_plus_progress"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_risk",
+            "progress_weight": 0.0,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 22.69344,
+            "mean_selected_proxy_score": 16.845012,
+            "no_replay_safe_token_count": 29,
+            "proxy_safe_selected_count": 54,
+            "proxy_safe_selected_rate": 0.675,
+            "recoverable_proxy_optimism_count": 21,
+            "recoverable_proxy_optimism_fixed_count": 16,
+            "recoverable_proxy_optimism_recovery_rate": 0.761905,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 39,
+            "selected_replay_infeasible_rate": 0.4875,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 41,
+            "selected_token_entropy": 1.459474,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "maintain": 26,
+              "nudge_left": 1,
+              "slow_yield": 45,
+              "stop": 7
+            },
+            "selector_name": "proxy_plus_risk"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_progress_plus_risk",
+            "progress_weight": 0.02,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 22.69344,
+            "mean_selected_proxy_score": 16.845012,
+            "no_replay_safe_token_count": 29,
+            "proxy_safe_selected_count": 54,
+            "proxy_safe_selected_rate": 0.675,
+            "recoverable_proxy_optimism_count": 21,
+            "recoverable_proxy_optimism_fixed_count": 16,
+            "recoverable_proxy_optimism_recovery_rate": 0.761905,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 39,
+            "selected_replay_infeasible_rate": 0.4875,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 41,
+            "selected_token_entropy": 1.459474,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "maintain": 26,
+              "nudge_left": 1,
+              "slow_yield": 45,
+              "stop": 7
+            },
+            "selector_name": "proxy_plus_progress_plus_risk"
+          }
+        },
+        {
+          "config": {
+            "name": "replay_oracle"
+          },
+          "holdout": {
+            "mean_selected_progress_m": 11.520082,
+            "mean_selected_proxy_score": 7.026813,
+            "no_replay_safe_token_count": 29,
+            "proxy_safe_selected_count": 54,
+            "proxy_safe_selected_rate": 0.675,
+            "recoverable_proxy_optimism_count": 21,
+            "recoverable_proxy_optimism_fixed_count": 21,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 29,
+            "selected_replay_infeasible_rate": 0.3625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 51,
+            "selected_token_entropy": 2.216575,
+            "selected_token_histogram": {
+              "crawl": 13,
+              "evasive_left": 1,
+              "lane_recover": 8,
+              "maintain": 12,
+              "slow_yield": 14,
+              "stop": 32
+            },
+            "selector_name": "replay_oracle"
+          }
+        }
+      ],
+      "risk_weight_sweep": [
+        {
+          "holdout": {
+            "mean_selected_progress_m": 31.937239,
+            "mean_selected_proxy_score": 23.5625,
+            "no_replay_safe_token_count": 29,
+            "proxy_safe_selected_count": 47,
+            "proxy_safe_selected_rate": 0.5875,
+            "recoverable_proxy_optimism_count": 21,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 50,
+            "selected_replay_infeasible_rate": 0.625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 30,
+            "selected_token_entropy": 1.28787,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "lane_recover": 5,
+              "maintain": 59,
+              "nudge_left": 9,
+              "slow_yield": 6
+            },
+            "selector_name": "lambda_0"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.984967320261438,
+            "risk_log_loss": 0.07523062557797937,
+            "risk_positive_rate": 0.565359477124183
+          },
+          "risk_weight": 0.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 31.804589,
+            "mean_selected_proxy_score": 23.50886,
+            "no_replay_safe_token_count": 29,
+            "proxy_safe_selected_count": 47,
+            "proxy_safe_selected_rate": 0.5875,
+            "recoverable_proxy_optimism_count": 21,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 50,
+            "selected_replay_infeasible_rate": 0.625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 30,
+            "selected_token_entropy": 1.402023,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "lane_recover": 7,
+              "maintain": 56,
+              "nudge_left": 10,
+              "slow_yield": 6
+            },
+            "selector_name": "lambda_5"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.984967320261438,
+            "risk_log_loss": 0.07523062557797937,
+            "risk_positive_rate": 0.565359477124183
+          },
+          "risk_weight": 5.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 30.081524,
+            "mean_selected_proxy_score": 22.671282,
+            "no_replay_safe_token_count": 29,
+            "proxy_safe_selected_count": 49,
+            "proxy_safe_selected_rate": 0.6125,
+            "recoverable_proxy_optimism_count": 21,
+            "recoverable_proxy_optimism_fixed_count": 8,
+            "recoverable_proxy_optimism_recovery_rate": 0.380952,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 42,
+            "selected_replay_infeasible_rate": 0.525,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 38,
+            "selected_token_entropy": 2.023646,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "lane_recover": 17,
+              "maintain": 38,
+              "nudge_left": 14,
+              "nudge_right": 1,
+              "slow_yield": 7,
+              "stop": 2
+            },
+            "selector_name": "lambda_10"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.984967320261438,
+            "risk_log_loss": 0.07523062557797937,
+            "risk_positive_rate": 0.565359477124183
+          },
+          "risk_weight": 10.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 26.985666,
+            "mean_selected_proxy_score": 21.092696,
+            "no_replay_safe_token_count": 29,
+            "proxy_safe_selected_count": 54,
+            "proxy_safe_selected_rate": 0.675,
+            "recoverable_proxy_optimism_count": 21,
+            "recoverable_proxy_optimism_fixed_count": 17,
+            "recoverable_proxy_optimism_recovery_rate": 0.809524,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 33,
+            "selected_replay_infeasible_rate": 0.4125,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 47,
+            "selected_token_entropy": 2.344687,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "lane_recover": 17,
+              "maintain": 29,
+              "nudge_left": 11,
+              "nudge_right": 2,
+              "slow_yield": 13,
+              "stop": 7
+            },
+            "selector_name": "lambda_20"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.984967320261438,
+            "risk_log_loss": 0.07523062557797937,
+            "risk_positive_rate": 0.565359477124183
+          },
+          "risk_weight": 20.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 22.69344,
+            "mean_selected_proxy_score": 16.845012,
+            "no_replay_safe_token_count": 29,
+            "proxy_safe_selected_count": 54,
+            "proxy_safe_selected_rate": 0.675,
+            "recoverable_proxy_optimism_count": 21,
+            "recoverable_proxy_optimism_fixed_count": 16,
+            "recoverable_proxy_optimism_recovery_rate": 0.761905,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 39,
+            "selected_replay_infeasible_rate": 0.4875,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 41,
+            "selected_token_entropy": 1.459474,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "maintain": 26,
+              "nudge_left": 1,
+              "slow_yield": 45,
+              "stop": 7
+            },
+            "selector_name": "lambda_40"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.984967320261438,
+            "risk_log_loss": 0.07523062557797937,
+            "risk_positive_rate": 0.565359477124183
+          },
+          "risk_weight": 40.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 21.779992,
+            "mean_selected_proxy_score": 15.924615,
+            "no_replay_safe_token_count": 29,
+            "proxy_safe_selected_count": 54,
+            "proxy_safe_selected_rate": 0.675,
+            "recoverable_proxy_optimism_count": 21,
+            "recoverable_proxy_optimism_fixed_count": 18,
+            "recoverable_proxy_optimism_recovery_rate": 0.857143,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 37,
+            "selected_replay_infeasible_rate": 0.4625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 43,
+            "selected_token_entropy": 1.726364,
+            "selected_token_histogram": {
+              "crawl": 7,
+              "evasive_left": 1,
+              "maintain": 26,
+              "slow_yield": 39,
+              "stop": 7
+            },
+            "selector_name": "lambda_80"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.984967320261438,
+            "risk_log_loss": 0.07523062557797937,
+            "risk_positive_rate": 0.565359477124183
+          },
+          "risk_weight": 80.0
+        }
+      ],
+      "seed": 0,
+      "split": {
+        "holdout_db_count": 2,
+        "holdout_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db"
+        ],
+        "holdout_fraction": 0.3,
+        "holdout_scene_count": 80,
+        "seed": 0,
+        "split_unit": "source_db_file",
+        "train_db_count": 5,
+        "train_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+        ],
+        "train_scene_count": 170
+      }
+    },
+    {
+      "ablations": [
+        {
+          "config": {
+            "name": "proxy_selector"
+          },
+          "holdout": {
+            "mean_selected_progress_m": 23.748545,
+            "mean_selected_proxy_score": 24.276154,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 36,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 36,
+            "selected_replay_infeasible_rate": 0.45,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 44,
+            "selected_token_entropy": 1.511829,
+            "selected_token_histogram": {
+              "evasive_left": 39,
+              "lane_recover": 21,
+              "maintain": 20
+            },
+            "selector_name": "proxy_selector"
+          }
+        },
+        {
+          "config": {
+            "name": "risk_only",
+            "progress_weight": 0.0,
+            "proxy_score_weight": 0.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 0.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 15.528082,
+            "mean_selected_proxy_score": 17.676896,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 36,
+            "recoverable_proxy_optimism_fixed_count": 36,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 0,
+            "selected_replay_infeasible_rate": 0.0,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 80,
+            "selected_token_entropy": 1.139275,
+            "selected_token_histogram": {
+              "evasive_left": 21,
+              "slow_yield": 54,
+              "stop": 5
+            },
+            "selector_name": "risk_only"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_progress",
+            "progress_weight": 0.02,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 0.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 23.748545,
+            "mean_selected_proxy_score": 24.276154,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 36,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 36,
+            "selected_replay_infeasible_rate": 0.45,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 44,
+            "selected_token_entropy": 1.511829,
+            "selected_token_histogram": {
+              "evasive_left": 39,
+              "lane_recover": 21,
+              "maintain": 20
+            },
+            "selector_name": "proxy_plus_progress"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_risk",
+            "progress_weight": 0.0,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 18.669946,
+            "mean_selected_proxy_score": 20.645454,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 36,
+            "recoverable_proxy_optimism_fixed_count": 31,
+            "recoverable_proxy_optimism_recovery_rate": 0.861111,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 5,
+            "selected_replay_infeasible_rate": 0.0625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 75,
+            "selected_token_entropy": 1.632889,
+            "selected_token_histogram": {
+              "evasive_left": 23,
+              "lane_recover": 22,
+              "nudge_right": 1,
+              "slow_yield": 34
+            },
+            "selector_name": "proxy_plus_risk"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_progress_plus_risk",
+            "progress_weight": 0.02,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 18.710598,
+            "mean_selected_proxy_score": 20.681355,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 36,
+            "recoverable_proxy_optimism_fixed_count": 31,
+            "recoverable_proxy_optimism_recovery_rate": 0.861111,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 5,
+            "selected_replay_infeasible_rate": 0.0625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 75,
+            "selected_token_entropy": 1.632889,
+            "selected_token_histogram": {
+              "evasive_left": 22,
+              "lane_recover": 23,
+              "nudge_right": 1,
+              "slow_yield": 34
+            },
+            "selector_name": "proxy_plus_progress_plus_risk"
+          }
+        },
+        {
+          "config": {
+            "name": "replay_oracle"
+          },
+          "holdout": {
+            "mean_selected_progress_m": 10.933141,
+            "mean_selected_proxy_score": 12.933506,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 36,
+            "recoverable_proxy_optimism_fixed_count": 36,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 0,
+            "selected_replay_infeasible_rate": 0.0,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 80,
+            "selected_token_entropy": 1.726019,
+            "selected_token_histogram": {
+              "crawl": 7,
+              "evasive_left": 41,
+              "slow_yield": 14,
+              "stop": 18
+            },
+            "selector_name": "replay_oracle"
+          }
+        }
+      ],
+      "risk_weight_sweep": [
+        {
+          "holdout": {
+            "mean_selected_progress_m": 23.748545,
+            "mean_selected_proxy_score": 24.276154,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 36,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 36,
+            "selected_replay_infeasible_rate": 0.45,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 44,
+            "selected_token_entropy": 1.511829,
+            "selected_token_histogram": {
+              "evasive_left": 39,
+              "lane_recover": 21,
+              "maintain": 20
+            },
+            "selector_name": "lambda_0"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9575163398692811,
+            "risk_log_loss": 0.11948295381366617,
+            "risk_positive_rate": 0.7215686274509804
+          },
+          "risk_weight": 0.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 23.67759,
+            "mean_selected_proxy_score": 24.271167,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 36,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 36,
+            "selected_replay_infeasible_rate": 0.45,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 44,
+            "selected_token_entropy": 1.50122,
+            "selected_token_histogram": {
+              "evasive_left": 39,
+              "lane_recover": 24,
+              "maintain": 17
+            },
+            "selector_name": "lambda_5"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9575163398692811,
+            "risk_log_loss": 0.11948295381366617,
+            "risk_positive_rate": 0.7215686274509804
+          },
+          "risk_weight": 5.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 23.320132,
+            "mean_selected_proxy_score": 24.13931,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 36,
+            "recoverable_proxy_optimism_fixed_count": 1,
+            "recoverable_proxy_optimism_recovery_rate": 0.027778,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 35,
+            "selected_replay_infeasible_rate": 0.4375,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 45,
+            "selected_token_entropy": 1.421347,
+            "selected_token_histogram": {
+              "evasive_left": 38,
+              "lane_recover": 34,
+              "maintain": 7,
+              "slow_yield": 1
+            },
+            "selector_name": "lambda_10"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9575163398692811,
+            "risk_log_loss": 0.11948295381366617,
+            "risk_positive_rate": 0.7215686274509804
+          },
+          "risk_weight": 10.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 21.589152,
+            "mean_selected_proxy_score": 22.92549,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 36,
+            "recoverable_proxy_optimism_fixed_count": 16,
+            "recoverable_proxy_optimism_recovery_rate": 0.444444,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 20,
+            "selected_replay_infeasible_rate": 0.25,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 60,
+            "selected_token_entropy": 1.56044,
+            "selected_token_histogram": {
+              "evasive_left": 23,
+              "lane_recover": 40,
+              "maintain": 1,
+              "slow_yield": 16
+            },
+            "selector_name": "lambda_20"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9575163398692811,
+            "risk_log_loss": 0.11948295381366617,
+            "risk_positive_rate": 0.7215686274509804
+          },
+          "risk_weight": 20.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 18.710598,
+            "mean_selected_proxy_score": 20.681355,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 36,
+            "recoverable_proxy_optimism_fixed_count": 31,
+            "recoverable_proxy_optimism_recovery_rate": 0.861111,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 5,
+            "selected_replay_infeasible_rate": 0.0625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 75,
+            "selected_token_entropy": 1.632889,
+            "selected_token_histogram": {
+              "evasive_left": 22,
+              "lane_recover": 23,
+              "nudge_right": 1,
+              "slow_yield": 34
+            },
+            "selector_name": "lambda_40"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9575163398692811,
+            "risk_log_loss": 0.11948295381366617,
+            "risk_positive_rate": 0.7215686274509804
+          },
+          "risk_weight": 40.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 17.176704,
+            "mean_selected_proxy_score": 19.408589,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 36,
+            "recoverable_proxy_optimism_fixed_count": 36,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 0,
+            "selected_replay_infeasible_rate": 0.0,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 80,
+            "selected_token_entropy": 1.143198,
+            "selected_token_histogram": {
+              "evasive_left": 38,
+              "lane_recover": 2,
+              "slow_yield": 40
+            },
+            "selector_name": "lambda_80"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9575163398692811,
+            "risk_log_loss": 0.11948295381366617,
+            "risk_positive_rate": 0.7215686274509804
+          },
+          "risk_weight": 80.0
+        }
+      ],
+      "seed": 1,
+      "split": {
+        "holdout_db_count": 2,
+        "holdout_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+        ],
+        "holdout_fraction": 0.3,
+        "holdout_scene_count": 80,
+        "seed": 1,
+        "split_unit": "source_db_file",
+        "train_db_count": 5,
+        "train_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db"
+        ],
+        "train_scene_count": 170
+      }
+    },
+    {
+      "ablations": [
+        {
+          "config": {
+            "name": "proxy_selector"
+          },
+          "holdout": {
+            "mean_selected_progress_m": 29.187723,
+            "mean_selected_proxy_score": 29.255415,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 52,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 52,
+            "selected_replay_infeasible_rate": 0.65,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 28,
+            "selected_token_entropy": 1.389251,
+            "selected_token_histogram": {
+              "evasive_left": 39,
+              "lane_recover": 1,
+              "maintain": 34,
+              "nudge_left": 6
+            },
+            "selector_name": "proxy_selector"
+          }
+        },
+        {
+          "config": {
+            "name": "risk_only",
+            "progress_weight": 0.0,
+            "proxy_score_weight": 0.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 0.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 7.066848,
+            "mean_selected_proxy_score": 9.009908,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 52,
+            "recoverable_proxy_optimism_fixed_count": 52,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 5,
+            "selected_replay_infeasible_rate": 0.0625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 75,
+            "selected_token_entropy": 0.924748,
+            "selected_token_histogram": {
+              "crawl": 64,
+              "evasive_left": 1,
+              "slow_yield": 12,
+              "stop": 3
+            },
+            "selector_name": "risk_only"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_progress",
+            "progress_weight": 0.02,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 0.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 29.187723,
+            "mean_selected_proxy_score": 29.255415,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 52,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 52,
+            "selected_replay_infeasible_rate": 0.65,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 28,
+            "selected_token_entropy": 1.389251,
+            "selected_token_histogram": {
+              "evasive_left": 39,
+              "lane_recover": 1,
+              "maintain": 34,
+              "nudge_left": 6
+            },
+            "selector_name": "proxy_plus_progress"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_risk",
+            "progress_weight": 0.0,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 28.590384,
+            "mean_selected_proxy_score": 28.898049,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 52,
+            "recoverable_proxy_optimism_fixed_count": 4,
+            "recoverable_proxy_optimism_recovery_rate": 0.076923,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 48,
+            "selected_replay_infeasible_rate": 0.6,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 32,
+            "selected_token_entropy": 1.649397,
+            "selected_token_histogram": {
+              "evasive_left": 40,
+              "lane_recover": 5,
+              "maintain": 25,
+              "nudge_left": 10
+            },
+            "selector_name": "proxy_plus_risk"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_progress_plus_risk",
+            "progress_weight": 0.02,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 28.590384,
+            "mean_selected_proxy_score": 28.898049,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 52,
+            "recoverable_proxy_optimism_fixed_count": 4,
+            "recoverable_proxy_optimism_recovery_rate": 0.076923,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 48,
+            "selected_replay_infeasible_rate": 0.6,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 32,
+            "selected_token_entropy": 1.649397,
+            "selected_token_histogram": {
+              "evasive_left": 40,
+              "lane_recover": 5,
+              "maintain": 25,
+              "nudge_left": 10
+            },
+            "selector_name": "proxy_plus_progress_plus_risk"
+          }
+        },
+        {
+          "config": {
+            "name": "replay_oracle"
+          },
+          "holdout": {
+            "mean_selected_progress_m": 13.249372,
+            "mean_selected_proxy_score": 14.777082,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 52,
+            "recoverable_proxy_optimism_fixed_count": 52,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 0,
+            "selected_replay_infeasible_rate": 0.0,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 80,
+            "selected_token_entropy": 2.196822,
+            "selected_token_histogram": {
+              "crawl": 8,
+              "evasive_left": 1,
+              "lane_recover": 8,
+              "maintain": 12,
+              "slow_yield": 22,
+              "stop": 29
+            },
+            "selector_name": "replay_oracle"
+          }
+        }
+      ],
+      "risk_weight_sweep": [
+        {
+          "holdout": {
+            "mean_selected_progress_m": 29.187723,
+            "mean_selected_proxy_score": 29.255415,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 52,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 52,
+            "selected_replay_infeasible_rate": 0.65,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 28,
+            "selected_token_entropy": 1.389251,
+            "selected_token_histogram": {
+              "evasive_left": 39,
+              "lane_recover": 1,
+              "maintain": 34,
+              "nudge_left": 6
+            },
+            "selector_name": "lambda_0"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9784313725490196,
+            "risk_log_loss": 0.07413948193828708,
+            "risk_positive_rate": 0.6320261437908496
+          },
+          "risk_weight": 0.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 29.187723,
+            "mean_selected_proxy_score": 29.255415,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 52,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 52,
+            "selected_replay_infeasible_rate": 0.65,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 28,
+            "selected_token_entropy": 1.389251,
+            "selected_token_histogram": {
+              "evasive_left": 39,
+              "lane_recover": 1,
+              "maintain": 34,
+              "nudge_left": 6
+            },
+            "selector_name": "lambda_5"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9784313725490196,
+            "risk_log_loss": 0.07413948193828708,
+            "risk_positive_rate": 0.6320261437908496
+          },
+          "risk_weight": 5.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 29.149351,
+            "mean_selected_proxy_score": 29.236131,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 52,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 52,
+            "selected_replay_infeasible_rate": 0.65,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 28,
+            "selected_token_entropy": 1.337479,
+            "selected_token_histogram": {
+              "evasive_left": 39,
+              "maintain": 34,
+              "nudge_left": 7
+            },
+            "selector_name": "lambda_10"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9784313725490196,
+            "risk_log_loss": 0.07413948193828708,
+            "risk_positive_rate": 0.6320261437908496
+          },
+          "risk_weight": 10.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 28.996344,
+            "mean_selected_proxy_score": 29.152149,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 52,
+            "recoverable_proxy_optimism_fixed_count": 2,
+            "recoverable_proxy_optimism_recovery_rate": 0.038462,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 50,
+            "selected_replay_infeasible_rate": 0.625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 30,
+            "selected_token_entropy": 1.388678,
+            "selected_token_histogram": {
+              "evasive_left": 39,
+              "maintain": 32,
+              "nudge_left": 9
+            },
+            "selector_name": "lambda_20"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9784313725490196,
+            "risk_log_loss": 0.07413948193828708,
+            "risk_positive_rate": 0.6320261437908496
+          },
+          "risk_weight": 20.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 28.590384,
+            "mean_selected_proxy_score": 28.898049,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 52,
+            "recoverable_proxy_optimism_fixed_count": 4,
+            "recoverable_proxy_optimism_recovery_rate": 0.076923,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 48,
+            "selected_replay_infeasible_rate": 0.6,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 32,
+            "selected_token_entropy": 1.649397,
+            "selected_token_histogram": {
+              "evasive_left": 40,
+              "lane_recover": 5,
+              "maintain": 25,
+              "nudge_left": 10
+            },
+            "selector_name": "lambda_40"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9784313725490196,
+            "risk_log_loss": 0.07413948193828708,
+            "risk_positive_rate": 0.6320261437908496
+          },
+          "risk_weight": 40.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 28.094328,
+            "mean_selected_proxy_score": 28.572585,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 52,
+            "recoverable_proxy_optimism_fixed_count": 5,
+            "recoverable_proxy_optimism_recovery_rate": 0.096154,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 47,
+            "selected_replay_infeasible_rate": 0.5875,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 33,
+            "selected_token_entropy": 1.771805,
+            "selected_token_histogram": {
+              "evasive_left": 40,
+              "lane_recover": 9,
+              "maintain": 16,
+              "nudge_left": 15
+            },
+            "selector_name": "lambda_80"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9784313725490196,
+            "risk_log_loss": 0.07413948193828708,
+            "risk_positive_rate": 0.6320261437908496
+          },
+          "risk_weight": 80.0
+        }
+      ],
+      "seed": 2,
+      "split": {
+        "holdout_db_count": 2,
+        "holdout_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db"
+        ],
+        "holdout_fraction": 0.3,
+        "holdout_scene_count": 80,
+        "seed": 2,
+        "split_unit": "source_db_file",
+        "train_db_count": 5,
+        "train_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+        ],
+        "train_scene_count": 170
+      }
+    },
+    {
+      "ablations": [
+        {
+          "config": {
+            "name": "proxy_selector"
+          },
+          "holdout": {
+            "mean_selected_progress_m": 27.946429,
+            "mean_selected_proxy_score": 27.537632,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 40,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 40,
+            "selected_replay_infeasible_rate": 0.5,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 40,
+            "selected_token_entropy": 1.476519,
+            "selected_token_histogram": {
+              "lane_recover": 4,
+              "maintain": 46,
+              "nudge_left": 6,
+              "nudge_right": 24
+            },
+            "selector_name": "proxy_selector"
+          }
+        },
+        {
+          "config": {
+            "name": "risk_only",
+            "progress_weight": 0.0,
+            "proxy_score_weight": 0.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 0.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 9.048072,
+            "mean_selected_proxy_score": 10.120151,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 40,
+            "recoverable_proxy_optimism_fixed_count": 40,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 7,
+            "selected_replay_infeasible_rate": 0.0875,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 73,
+            "selected_token_entropy": 1.542042,
+            "selected_token_histogram": {
+              "crawl": 43,
+              "evasive_left": 12,
+              "slow_yield": 23,
+              "stop": 2
+            },
+            "selector_name": "risk_only"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_progress",
+            "progress_weight": 0.02,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 0.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 27.970348,
+            "mean_selected_proxy_score": 27.537578,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 40,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 40,
+            "selected_replay_infeasible_rate": 0.5,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 40,
+            "selected_token_entropy": 1.42981,
+            "selected_token_histogram": {
+              "lane_recover": 3,
+              "maintain": 47,
+              "nudge_left": 6,
+              "nudge_right": 24
+            },
+            "selector_name": "proxy_plus_progress"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_risk",
+            "progress_weight": 0.0,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 24.715003,
+            "mean_selected_proxy_score": 25.262048,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 40,
+            "recoverable_proxy_optimism_fixed_count": 12,
+            "recoverable_proxy_optimism_recovery_rate": 0.3,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 28,
+            "selected_replay_infeasible_rate": 0.35,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 52,
+            "selected_token_entropy": 1.974669,
+            "selected_token_histogram": {
+              "lane_recover": 33,
+              "maintain": 4,
+              "nudge_left": 8,
+              "nudge_right": 25,
+              "slow_yield": 10
+            },
+            "selector_name": "proxy_plus_risk"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_progress_plus_risk",
+            "progress_weight": 0.02,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 24.743776,
+            "mean_selected_proxy_score": 25.280665,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 40,
+            "recoverable_proxy_optimism_fixed_count": 11,
+            "recoverable_proxy_optimism_recovery_rate": 0.275,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 29,
+            "selected_replay_infeasible_rate": 0.3625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 51,
+            "selected_token_entropy": 1.969027,
+            "selected_token_histogram": {
+              "lane_recover": 34,
+              "maintain": 4,
+              "nudge_left": 8,
+              "nudge_right": 24,
+              "slow_yield": 10
+            },
+            "selector_name": "proxy_plus_progress_plus_risk"
+          }
+        },
+        {
+          "config": {
+            "name": "replay_oracle"
+          },
+          "holdout": {
+            "mean_selected_progress_m": 14.060251,
+            "mean_selected_proxy_score": 14.804757,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 40,
+            "recoverable_proxy_optimism_fixed_count": 40,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 0,
+            "selected_replay_infeasible_rate": 0.0,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 80,
+            "selected_token_entropy": 2.4413,
+            "selected_token_histogram": {
+              "crawl": 10,
+              "evasive_left": 12,
+              "lane_recover": 8,
+              "maintain": 16,
+              "slow_yield": 8,
+              "stop": 26
+            },
+            "selector_name": "replay_oracle"
+          }
+        }
+      ],
+      "risk_weight_sweep": [
+        {
+          "holdout": {
+            "mean_selected_progress_m": 27.970348,
+            "mean_selected_proxy_score": 27.537578,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 40,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 40,
+            "selected_replay_infeasible_rate": 0.5,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 40,
+            "selected_token_entropy": 1.42981,
+            "selected_token_histogram": {
+              "lane_recover": 3,
+              "maintain": 47,
+              "nudge_left": 6,
+              "nudge_right": 24
+            },
+            "selector_name": "lambda_0"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9810457516339869,
+            "risk_log_loss": 0.07268747866979326,
+            "risk_positive_rate": 0.6647058823529411
+          },
+          "risk_weight": 0.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 27.908057,
+            "mean_selected_proxy_score": 27.518348,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 40,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 40,
+            "selected_replay_infeasible_rate": 0.5,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 40,
+            "selected_token_entropy": 1.465312,
+            "selected_token_histogram": {
+              "lane_recover": 3,
+              "maintain": 46,
+              "nudge_left": 7,
+              "nudge_right": 24
+            },
+            "selector_name": "lambda_5"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9810457516339869,
+            "risk_log_loss": 0.07268747866979326,
+            "risk_positive_rate": 0.6647058823529411
+          },
+          "risk_weight": 5.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 27.156489,
+            "mean_selected_proxy_score": 27.135416,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 40,
+            "recoverable_proxy_optimism_fixed_count": 4,
+            "recoverable_proxy_optimism_recovery_rate": 0.1,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 36,
+            "selected_replay_infeasible_rate": 0.45,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 44,
+            "selected_token_entropy": 1.909749,
+            "selected_token_histogram": {
+              "lane_recover": 16,
+              "maintain": 29,
+              "nudge_left": 11,
+              "nudge_right": 24
+            },
+            "selector_name": "lambda_10"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9810457516339869,
+            "risk_log_loss": 0.07268747866979326,
+            "risk_positive_rate": 0.6647058823529411
+          },
+          "risk_weight": 10.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 26.097783,
+            "mean_selected_proxy_score": 26.414753,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 40,
+            "recoverable_proxy_optimism_fixed_count": 8,
+            "recoverable_proxy_optimism_recovery_rate": 0.2,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 32,
+            "selected_replay_infeasible_rate": 0.4,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 48,
+            "selected_token_entropy": 2.062518,
+            "selected_token_histogram": {
+              "lane_recover": 29,
+              "maintain": 14,
+              "nudge_left": 9,
+              "nudge_right": 24,
+              "slow_yield": 4
+            },
+            "selector_name": "lambda_20"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9810457516339869,
+            "risk_log_loss": 0.07268747866979326,
+            "risk_positive_rate": 0.6647058823529411
+          },
+          "risk_weight": 20.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 24.743776,
+            "mean_selected_proxy_score": 25.280665,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 40,
+            "recoverable_proxy_optimism_fixed_count": 11,
+            "recoverable_proxy_optimism_recovery_rate": 0.275,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 29,
+            "selected_replay_infeasible_rate": 0.3625,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 51,
+            "selected_token_entropy": 1.969027,
+            "selected_token_histogram": {
+              "lane_recover": 34,
+              "maintain": 4,
+              "nudge_left": 8,
+              "nudge_right": 24,
+              "slow_yield": 10
+            },
+            "selector_name": "lambda_40"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9810457516339869,
+            "risk_log_loss": 0.07268747866979326,
+            "risk_positive_rate": 0.6647058823529411
+          },
+          "risk_weight": 40.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 20.23559,
+            "mean_selected_proxy_score": 20.840473,
+            "no_replay_safe_token_count": 0,
+            "proxy_safe_selected_count": 80,
+            "proxy_safe_selected_rate": 1.0,
+            "recoverable_proxy_optimism_count": 40,
+            "recoverable_proxy_optimism_fixed_count": 11,
+            "recoverable_proxy_optimism_recovery_rate": 0.275,
+            "scene_count": 80,
+            "selected_replay_infeasible_count": 34,
+            "selected_replay_infeasible_rate": 0.425,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 46,
+            "selected_token_entropy": 1.676362,
+            "selected_token_histogram": {
+              "lane_recover": 10,
+              "nudge_left": 6,
+              "nudge_right": 24,
+              "slow_yield": 40
+            },
+            "selector_name": "lambda_80"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1530.0,
+            "risk_accuracy": 0.9810457516339869,
+            "risk_log_loss": 0.07268747866979326,
+            "risk_positive_rate": 0.6647058823529411
+          },
+          "risk_weight": 80.0
+        }
+      ],
+      "seed": 3,
+      "split": {
+        "holdout_db_count": 2,
+        "holdout_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db"
+        ],
+        "holdout_fraction": 0.3,
+        "holdout_scene_count": 80,
+        "seed": 3,
+        "split_unit": "source_db_file",
+        "train_db_count": 5,
+        "train_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+        ],
+        "train_scene_count": 170
+      }
+    },
+    {
+      "ablations": [
+        {
+          "config": {
+            "name": "proxy_selector"
+          },
+          "holdout": {
+            "mean_selected_progress_m": 30.446083,
+            "mean_selected_proxy_score": 17.284258,
+            "no_replay_safe_token_count": 32,
+            "proxy_safe_selected_count": 17,
+            "proxy_safe_selected_rate": 0.34,
+            "recoverable_proxy_optimism_count": 12,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 50,
+            "selected_replay_infeasible_count": 44,
+            "selected_replay_infeasible_rate": 0.88,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 6,
+            "selected_token_entropy": 1.772868,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "lane_recover": 3,
+              "maintain": 26,
+              "nudge_left": 11,
+              "slow_yield": 9
+            },
+            "selector_name": "proxy_selector"
+          }
+        },
+        {
+          "config": {
+            "name": "risk_only",
+            "progress_weight": 0.0,
+            "proxy_score_weight": 0.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 0.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 18.160168,
+            "mean_selected_proxy_score": 9.166377,
+            "no_replay_safe_token_count": 32,
+            "proxy_safe_selected_count": 24,
+            "proxy_safe_selected_rate": 0.48,
+            "recoverable_proxy_optimism_count": 12,
+            "recoverable_proxy_optimism_fixed_count": 12,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 50,
+            "selected_replay_infeasible_count": 32,
+            "selected_replay_infeasible_rate": 0.64,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 18,
+            "selected_token_entropy": 1.983599,
+            "selected_token_histogram": {
+              "crawl": 9,
+              "evasive_left": 1,
+              "maintain": 17,
+              "slow_yield": 6,
+              "stop": 17
+            },
+            "selector_name": "risk_only"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_progress",
+            "progress_weight": 0.02,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 0.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 30.515489,
+            "mean_selected_proxy_score": 17.283738,
+            "no_replay_safe_token_count": 32,
+            "proxy_safe_selected_count": 17,
+            "proxy_safe_selected_rate": 0.34,
+            "recoverable_proxy_optimism_count": 12,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 50,
+            "selected_replay_infeasible_count": 44,
+            "selected_replay_infeasible_rate": 0.88,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 6,
+            "selected_token_entropy": 1.804655,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "lane_recover": 4,
+              "maintain": 26,
+              "nudge_left": 10,
+              "slow_yield": 9
+            },
+            "selector_name": "proxy_plus_progress"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_risk",
+            "progress_weight": 0.0,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 25.661658,
+            "mean_selected_proxy_score": 15.571351,
+            "no_replay_safe_token_count": 32,
+            "proxy_safe_selected_count": 24,
+            "proxy_safe_selected_rate": 0.48,
+            "recoverable_proxy_optimism_count": 12,
+            "recoverable_proxy_optimism_fixed_count": 12,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 50,
+            "selected_replay_infeasible_count": 32,
+            "selected_replay_infeasible_rate": 0.64,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 18,
+            "selected_token_entropy": 1.749386,
+            "selected_token_histogram": {
+              "crawl": 3,
+              "evasive_left": 1,
+              "maintain": 26,
+              "slow_yield": 13,
+              "stop": 7
+            },
+            "selector_name": "proxy_plus_risk"
+          }
+        },
+        {
+          "config": {
+            "name": "proxy_plus_progress_plus_risk",
+            "progress_weight": 0.02,
+            "proxy_score_weight": 1.0,
+            "risk_weight": 40.0,
+            "unsafe_penalty": 2.0
+          },
+          "holdout": {
+            "mean_selected_progress_m": 25.661658,
+            "mean_selected_proxy_score": 15.571351,
+            "no_replay_safe_token_count": 32,
+            "proxy_safe_selected_count": 24,
+            "proxy_safe_selected_rate": 0.48,
+            "recoverable_proxy_optimism_count": 12,
+            "recoverable_proxy_optimism_fixed_count": 12,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 50,
+            "selected_replay_infeasible_count": 32,
+            "selected_replay_infeasible_rate": 0.64,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 18,
+            "selected_token_entropy": 1.749386,
+            "selected_token_histogram": {
+              "crawl": 3,
+              "evasive_left": 1,
+              "maintain": 26,
+              "slow_yield": 13,
+              "stop": 7
+            },
+            "selector_name": "proxy_plus_progress_plus_risk"
+          }
+        },
+        {
+          "config": {
+            "name": "replay_oracle"
+          },
+          "holdout": {
+            "mean_selected_progress_m": 5.618142,
+            "mean_selected_proxy_score": -2.175678,
+            "no_replay_safe_token_count": 32,
+            "proxy_safe_selected_count": 24,
+            "proxy_safe_selected_rate": 0.48,
+            "recoverable_proxy_optimism_count": 12,
+            "recoverable_proxy_optimism_fixed_count": 12,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 50,
+            "selected_replay_infeasible_count": 32,
+            "selected_replay_infeasible_rate": 0.64,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 18,
+            "selected_token_entropy": 1.865827,
+            "selected_token_histogram": {
+              "crawl": 12,
+              "evasive_left": 1,
+              "maintain": 3,
+              "slow_yield": 12,
+              "stop": 22
+            },
+            "selector_name": "replay_oracle"
+          }
+        }
+      ],
+      "risk_weight_sweep": [
+        {
+          "holdout": {
+            "mean_selected_progress_m": 30.515489,
+            "mean_selected_proxy_score": 17.283738,
+            "no_replay_safe_token_count": 32,
+            "proxy_safe_selected_count": 17,
+            "proxy_safe_selected_rate": 0.34,
+            "recoverable_proxy_optimism_count": 12,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 50,
+            "selected_replay_infeasible_count": 44,
+            "selected_replay_infeasible_rate": 0.88,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 6,
+            "selected_token_entropy": 1.804655,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "lane_recover": 4,
+              "maintain": 26,
+              "nudge_left": 10,
+              "slow_yield": 9
+            },
+            "selector_name": "lambda_0"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1800.0,
+            "risk_accuracy": 0.9633333333333334,
+            "risk_log_loss": 0.12017243299763884,
+            "risk_positive_rate": 0.5522222222222222
+          },
+          "risk_weight": 0.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 30.515437,
+            "mean_selected_proxy_score": 17.283679,
+            "no_replay_safe_token_count": 32,
+            "proxy_safe_selected_count": 17,
+            "proxy_safe_selected_rate": 0.34,
+            "recoverable_proxy_optimism_count": 12,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 50,
+            "selected_replay_infeasible_count": 44,
+            "selected_replay_infeasible_rate": 0.88,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 6,
+            "selected_token_entropy": 1.969949,
+            "selected_token_histogram": {
+              "crawl": 3,
+              "evasive_left": 1,
+              "lane_recover": 4,
+              "maintain": 26,
+              "nudge_left": 10,
+              "slow_yield": 6
+            },
+            "selector_name": "lambda_5"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1800.0,
+            "risk_accuracy": 0.9633333333333334,
+            "risk_log_loss": 0.12017243299763884,
+            "risk_positive_rate": 0.5522222222222222
+          },
+          "risk_weight": 5.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 30.515437,
+            "mean_selected_proxy_score": 17.283679,
+            "no_replay_safe_token_count": 32,
+            "proxy_safe_selected_count": 17,
+            "proxy_safe_selected_rate": 0.34,
+            "recoverable_proxy_optimism_count": 12,
+            "recoverable_proxy_optimism_fixed_count": 0,
+            "recoverable_proxy_optimism_recovery_rate": 0.0,
+            "scene_count": 50,
+            "selected_replay_infeasible_count": 44,
+            "selected_replay_infeasible_rate": 0.88,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 6,
+            "selected_token_entropy": 1.969949,
+            "selected_token_histogram": {
+              "crawl": 3,
+              "evasive_left": 1,
+              "lane_recover": 4,
+              "maintain": 26,
+              "nudge_left": 10,
+              "slow_yield": 6
+            },
+            "selector_name": "lambda_10"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1800.0,
+            "risk_accuracy": 0.9633333333333334,
+            "risk_log_loss": 0.12017243299763884,
+            "risk_positive_rate": 0.5522222222222222
+          },
+          "risk_weight": 10.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 28.285579,
+            "mean_selected_proxy_score": 16.447545,
+            "no_replay_safe_token_count": 32,
+            "proxy_safe_selected_count": 20,
+            "proxy_safe_selected_rate": 0.4,
+            "recoverable_proxy_optimism_count": 12,
+            "recoverable_proxy_optimism_fixed_count": 9,
+            "recoverable_proxy_optimism_recovery_rate": 0.75,
+            "scene_count": 50,
+            "selected_replay_infeasible_count": 35,
+            "selected_replay_infeasible_rate": 0.7,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 15,
+            "selected_token_entropy": 1.989041,
+            "selected_token_histogram": {
+              "crawl": 3,
+              "evasive_left": 1,
+              "lane_recover": 4,
+              "maintain": 26,
+              "nudge_left": 1,
+              "slow_yield": 12,
+              "stop": 3
+            },
+            "selector_name": "lambda_20"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1800.0,
+            "risk_accuracy": 0.9633333333333334,
+            "risk_log_loss": 0.12017243299763884,
+            "risk_positive_rate": 0.5522222222222222
+          },
+          "risk_weight": 20.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 25.661658,
+            "mean_selected_proxy_score": 15.571351,
+            "no_replay_safe_token_count": 32,
+            "proxy_safe_selected_count": 24,
+            "proxy_safe_selected_rate": 0.48,
+            "recoverable_proxy_optimism_count": 12,
+            "recoverable_proxy_optimism_fixed_count": 12,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 50,
+            "selected_replay_infeasible_count": 32,
+            "selected_replay_infeasible_rate": 0.64,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 18,
+            "selected_token_entropy": 1.749386,
+            "selected_token_histogram": {
+              "crawl": 3,
+              "evasive_left": 1,
+              "maintain": 26,
+              "slow_yield": 13,
+              "stop": 7
+            },
+            "selector_name": "lambda_40"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1800.0,
+            "risk_accuracy": 0.9633333333333334,
+            "risk_log_loss": 0.12017243299763884,
+            "risk_positive_rate": 0.5522222222222222
+          },
+          "risk_weight": 40.0
+        },
+        {
+          "holdout": {
+            "mean_selected_progress_m": 25.661636,
+            "mean_selected_proxy_score": 15.481326,
+            "no_replay_safe_token_count": 32,
+            "proxy_safe_selected_count": 24,
+            "proxy_safe_selected_rate": 0.48,
+            "recoverable_proxy_optimism_count": 12,
+            "recoverable_proxy_optimism_fixed_count": 12,
+            "recoverable_proxy_optimism_recovery_rate": 1.0,
+            "scene_count": 50,
+            "selected_replay_infeasible_count": 32,
+            "selected_replay_infeasible_rate": 0.64,
+            "selected_replay_missing_count": 0,
+            "selected_replay_safe_count": 18,
+            "selected_token_entropy": 1.573128,
+            "selected_token_histogram": {
+              "evasive_left": 1,
+              "maintain": 26,
+              "slow_yield": 13,
+              "stop": 10
+            },
+            "selector_name": "lambda_80"
+          },
+          "risk_head_train_metrics": {
+            "example_count": 1800.0,
+            "risk_accuracy": 0.9633333333333334,
+            "risk_log_loss": 0.12017243299763884,
+            "risk_positive_rate": 0.5522222222222222
+          },
+          "risk_weight": 80.0
+        }
+      ],
+      "seed": 4,
+      "split": {
+        "holdout_db_count": 2,
+        "holdout_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db"
+        ],
+        "holdout_fraction": 0.3,
+        "holdout_scene_count": 50,
+        "seed": 4,
+        "split_unit": "source_db_file",
+        "train_db_count": 5,
+        "train_dbs": [
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+          "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+        ],
+        "train_scene_count": 200
+      }
+    }
+  ],
+  "token_shift_summary": [
+    {
+      "name": "proxy_plus_progress",
+      "token_histogram": {
+        "evasive_left": 80,
+        "lane_recover": 34,
+        "maintain": 186,
+        "nudge_left": 31,
+        "nudge_right": 24,
+        "slow_yield": 15
+      }
+    },
+    {
+      "name": "proxy_plus_progress_plus_risk",
+      "token_histogram": {
+        "crawl": 3,
+        "evasive_left": 64,
+        "lane_recover": 62,
+        "maintain": 81,
+        "nudge_left": 19,
+        "nudge_right": 25,
+        "slow_yield": 102,
+        "stop": 14
+      }
+    },
+    {
+      "name": "proxy_plus_risk",
+      "token_histogram": {
+        "crawl": 3,
+        "evasive_left": 65,
+        "lane_recover": 60,
+        "maintain": 81,
+        "nudge_left": 19,
+        "nudge_right": 26,
+        "slow_yield": 102,
+        "stop": 14
+      }
+    },
+    {
+      "name": "proxy_selector",
+      "token_histogram": {
+        "evasive_left": 80,
+        "lane_recover": 33,
+        "maintain": 185,
+        "nudge_left": 33,
+        "nudge_right": 24,
+        "slow_yield": 15
+      }
+    },
+    {
+      "name": "replay_oracle",
+      "token_histogram": {
+        "crawl": 50,
+        "evasive_left": 56,
+        "lane_recover": 24,
+        "maintain": 43,
+        "slow_yield": 70,
+        "stop": 127
+      }
+    },
+    {
+      "name": "risk_only",
+      "token_histogram": {
+        "crawl": 142,
+        "evasive_left": 36,
+        "maintain": 17,
+        "slow_yield": 103,
+        "stop": 72
+      }
+    }
+  ]
+}

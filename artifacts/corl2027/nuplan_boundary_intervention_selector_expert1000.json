@@ -1,0 +1,115 @@
+{
+  "bias": 7.101531439717652,
+  "feature_mean": [
+    0.27591141229274363,
+    -0.27591141229274363,
+    -2.5002744761904765,
+    0.07142857142857142,
+    0.21848911904761906,
+    -0.03809523809523804,
+    -0.07142857142857142,
+    0.6643955227992951,
+    0.00018896447467876037,
+    3.356044772007048,
+    11.404761904761905,
+    4.333333333333333,
+    17.701423952380953,
+    1.6391478333333336
+  ],
+  "feature_names": [
+    "scene_margin",
+    "score_delta",
+    "progress_delta",
+    "proxy_safe_delta",
+    "clearance_delta",
+    "speed_scale_delta",
+    "lateral_offset_delta",
+    "obstacle_pressure",
+    "route_blockage",
+    "nearest_actor_distance_m",
+    "rear_closing_actor_count",
+    "crossing_actor_count",
+    "baseline_progress_m",
+    "baseline_proxy_clearance_m"
+  ],
+  "feature_scale": [
+    0.11835722253846366,
+    0.11835722253846366,
+    10.718324003117216,
+    0.2575393768188565,
+    0.7332053385016988,
+    0.2961678907328304,
+    0.9557559247815842,
+    0.10922415001902068,
+    0.0012099630078293365,
+    1.092241500190207,
+    6.42932094396084,
+    5.849976258261413,
+    10.355724688221164,
+    1.2412295781006815
+  ],
+  "intervention_threshold": 0.0,
+  "margin_threshold": 0.5,
+  "model_type": "nuplan_boundary_intervention_selector_v1",
+  "top_k": 2,
+  "training": {
+    "baseline_selector_model": "artifacts/corl2027/nuplan_replay_calibrated_selector_expert1000_lambda80.json",
+    "config": {
+      "fail_penalty": 250.0,
+      "intervention_threshold": 0.0,
+      "margin_temperature": 0.5,
+      "margin_threshold": 0.5,
+      "objective_ade_weight": 2.0,
+      "objective_progress_weight": 1.0,
+      "positive_weight": 4.0,
+      "top_k": 2
+    },
+    "input_replay_json": "artifacts/corl2027/nuplan_public_replay_study_interaction1000_expert/replay.json",
+    "split": {
+      "holdout_db_count": 2,
+      "holdout_dbs": [
+        "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+        "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db"
+      ],
+      "holdout_fraction": 0.3,
+      "holdout_scene_count": 300,
+      "seed": 0,
+      "split_unit": "source_db_file",
+      "train_db_count": 6,
+      "train_dbs": [
+        "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.12.22.28.35_veh-35_00620_01164.db",
+        "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+        "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+        "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db",
+        "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db",
+        "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+      ],
+      "train_scene_count": 700
+    },
+    "train_example_count": 42,
+    "train_fit_metrics": {
+      "example_count": 42.0,
+      "mean_example_weight": 4.776741305431186,
+      "objective_mae": 17.736097491050153,
+      "objective_mean": 0.8805949523809536,
+      "objective_mse": 769.531464592864,
+      "positive_delta_rate": 0.6666666666666666
+    }
+  },
+  "weights": [
+    -4.7900001345243854,
+    4.790000134534623,
+    261.9809747454365,
+    77.23142038110258,
+    1.6096132211088385,
+    -200.5043659140824,
+    -17.821928632889627,
+    1.5652079007183928,
+    9.778957714119363,
+    -1.565207899800071,
+    1.4453728793180842,
+    1.468169289556542,
+    -33.251890349668805,
+    -2.9502699506889325
+  ]
+}

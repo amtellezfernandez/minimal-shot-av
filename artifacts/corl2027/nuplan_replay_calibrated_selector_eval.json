@@ -1,0 +1,183 @@
+{
+  "holdout": {
+    "proxy_selector": {
+      "mean_selected_progress_m": 15.539406,
+      "mean_selected_proxy_score": 15.927341,
+      "no_replay_safe_token_count": 3,
+      "proxy_safe_selected_count": 50,
+      "proxy_safe_selected_rate": 1.0,
+      "recoverable_proxy_optimism_count": 7,
+      "recoverable_proxy_optimism_fixed_count": 0,
+      "recoverable_proxy_optimism_recovery_rate": 0.0,
+      "scene_count": 50,
+      "selected_replay_infeasible_count": 10,
+      "selected_replay_infeasible_rate": 0.2,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 40,
+      "selected_token_entropy": 1.696743,
+      "selected_token_histogram": {
+        "lane_recover": 21,
+        "maintain": 19,
+        "nudge_left": 7,
+        "slow_yield": 3
+      },
+      "selector_name": "proxy_selector"
+    },
+    "replay_calibrated": {
+      "mean_selected_progress_m": 12.595159,
+      "mean_selected_proxy_score": 14.075269,
+      "no_replay_safe_token_count": 3,
+      "proxy_safe_selected_count": 50,
+      "proxy_safe_selected_rate": 1.0,
+      "recoverable_proxy_optimism_count": 7,
+      "recoverable_proxy_optimism_fixed_count": 7,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 50,
+      "selected_replay_infeasible_count": 3,
+      "selected_replay_infeasible_rate": 0.06,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 47,
+      "selected_token_entropy": 1.696743,
+      "selected_token_histogram": {
+        "crawl": 3,
+        "evasive_left": 21,
+        "lane_recover": 19,
+        "slow_yield": 7
+      },
+      "selector_name": "replay_calibrated"
+    },
+    "replay_oracle": {
+      "mean_selected_progress_m": 11.055335,
+      "mean_selected_proxy_score": 12.522966,
+      "no_replay_safe_token_count": 3,
+      "proxy_safe_selected_count": 50,
+      "proxy_safe_selected_rate": 1.0,
+      "recoverable_proxy_optimism_count": 7,
+      "recoverable_proxy_optimism_fixed_count": 7,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 50,
+      "selected_replay_infeasible_count": 3,
+      "selected_replay_infeasible_rate": 0.06,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 47,
+      "selected_token_entropy": 0.98102,
+      "selected_token_histogram": {
+        "evasive_left": 40,
+        "maintain": 3,
+        "slow_yield": 6,
+        "stop": 1
+      },
+      "selector_name": "replay_oracle"
+    }
+  },
+  "holdout_example_count": 450,
+  "input_replay_json": "artifacts/corl2027/nuplan_public_replay_study_interaction250/replay.json",
+  "near_miss_threshold_m": 1.0,
+  "risk_head_train_metrics": {
+    "example_count": 1800.0,
+    "risk_accuracy": 0.9722222222222222,
+    "risk_log_loss": 0.09840357537029845,
+    "risk_positive_rate": 0.7072222222222222
+  },
+  "schema": "nuplan_replay_calibrated_selector_eval_v1",
+  "split": {
+    "holdout_db_count": 2,
+    "holdout_dbs": [
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+    ],
+    "holdout_fraction": 0.3,
+    "holdout_scene_count": 50,
+    "seed": 7,
+    "split_unit": "source_db_file",
+    "train_db_count": 5,
+    "train_dbs": [
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db"
+    ],
+    "train_scene_count": 200
+  },
+  "train": {
+    "proxy_selector": {
+      "mean_selected_progress_m": 31.468493,
+      "mean_selected_proxy_score": 26.041644,
+      "no_replay_safe_token_count": 41,
+      "proxy_safe_selected_count": 149,
+      "proxy_safe_selected_rate": 0.745,
+      "recoverable_proxy_optimism_count": 88,
+      "recoverable_proxy_optimism_fixed_count": 0,
+      "recoverable_proxy_optimism_recovery_rate": 0.0,
+      "scene_count": 200,
+      "selected_replay_infeasible_count": 129,
+      "selected_replay_infeasible_rate": 0.645,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 71,
+      "selected_token_entropy": 2.130845,
+      "selected_token_histogram": {
+        "evasive_left": 40,
+        "lane_recover": 7,
+        "maintain": 91,
+        "nudge_left": 10,
+        "nudge_right": 24,
+        "slow_yield": 28
+      },
+      "selector_name": "proxy_selector"
+    },
+    "replay_calibrated": {
+      "mean_selected_progress_m": 23.118786,
+      "mean_selected_proxy_score": 20.363868,
+      "no_replay_safe_token_count": 41,
+      "proxy_safe_selected_count": 164,
+      "proxy_safe_selected_rate": 0.82,
+      "recoverable_proxy_optimism_count": 88,
+      "recoverable_proxy_optimism_fixed_count": 85,
+      "recoverable_proxy_optimism_recovery_rate": 0.965909,
+      "scene_count": 200,
+      "selected_replay_infeasible_count": 44,
+      "selected_replay_infeasible_rate": 0.22,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 156,
+      "selected_token_entropy": 2.278549,
+      "selected_token_histogram": {
+        "crawl": 24,
+        "evasive_left": 2,
+        "lane_recover": 18,
+        "maintain": 58,
+        "nudge_left": 3,
+        "nudge_right": 4,
+        "slow_yield": 76,
+        "stop": 15
+      },
+      "selector_name": "replay_calibrated"
+    },
+    "replay_oracle": {
+      "mean_selected_progress_m": 9.935258,
+      "mean_selected_proxy_score": 8.999091,
+      "no_replay_safe_token_count": 41,
+      "proxy_safe_selected_count": 174,
+      "proxy_safe_selected_rate": 0.87,
+      "recoverable_proxy_optimism_count": 88,
+      "recoverable_proxy_optimism_fixed_count": 88,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 200,
+      "selected_replay_infeasible_count": 41,
+      "selected_replay_infeasible_rate": 0.205,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 159,
+      "selected_token_entropy": 2.154033,
+      "selected_token_histogram": {
+        "crawl": 34,
+        "evasive_left": 14,
+        "lane_recover": 8,
+        "maintain": 16,
+        "slow_yield": 38,
+        "stop": 90
+      },
+      "selector_name": "replay_oracle"
+    }
+  },
+  "train_example_count": 1800
+}

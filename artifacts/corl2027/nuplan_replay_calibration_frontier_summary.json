@@ -1,0 +1,132 @@
+{
+  "bridge_note": "Bridge box-clearance fails all selectors; aligned bridge uses replay-equivalent logged-actor clearance.",
+  "input_replay": "artifacts/corl2027/nuplan_public_replay_study_interaction1000_expert/replay.json",
+  "rows": [
+    {
+      "bridge_aligned_failure_rate": 0.5,
+      "bridge_aligned_failures": 20,
+      "bridge_box_failures": 40,
+      "bridge_mean_aligned_clearance_m": 0.82676,
+      "bridge_scene_count": 40,
+      "holdout_ade3_m": 2.250885,
+      "holdout_fde3_m": 3.479377,
+      "holdout_progress_m": 29.383353,
+      "holdout_recovery": "0/160",
+      "holdout_replay_infeasible_count": 209,
+      "holdout_replay_infeasible_rate": 0.696667,
+      "holdout_scene_count": 300,
+      "holdout_token_entropy": 2.239771,
+      "selector": "proxy",
+      "token_groups": {
+        "crawl": 0,
+        "evasive": 83,
+        "lane_recover": 20,
+        "maintain": 98,
+        "nudge": 61,
+        "slow_yield": 38,
+        "stop": 0
+      }
+    },
+    {
+      "bridge_aligned_failure_rate": 0.5,
+      "bridge_aligned_failures": 20,
+      "bridge_box_failures": 40,
+      "bridge_mean_aligned_clearance_m": 0.913327,
+      "bridge_scene_count": 40,
+      "holdout_ade3_m": 3.562973,
+      "holdout_fde3_m": 5.480816,
+      "holdout_progress_m": 25.42896,
+      "holdout_recovery": "94/160",
+      "holdout_replay_infeasible_count": 115,
+      "holdout_replay_infeasible_rate": 0.383333,
+      "holdout_scene_count": 300,
+      "holdout_token_entropy": 2.530916,
+      "selector": "lambda20",
+      "token_groups": {
+        "crawl": 26,
+        "evasive": 56,
+        "lane_recover": 7,
+        "maintain": 80,
+        "nudge": 45,
+        "slow_yield": 86,
+        "stop": 0
+      }
+    },
+    {
+      "bridge_aligned_failure_rate": 0.5,
+      "bridge_aligned_failures": 20,
+      "bridge_box_failures": 40,
+      "bridge_mean_aligned_clearance_m": 1.042034,
+      "bridge_scene_count": 40,
+      "holdout_ade3_m": 3.970982,
+      "holdout_fde3_m": 6.167545,
+      "holdout_progress_m": 24.294877,
+      "holdout_recovery": "115/160",
+      "holdout_replay_infeasible_count": 94,
+      "holdout_replay_infeasible_rate": 0.313333,
+      "holdout_scene_count": 300,
+      "holdout_token_entropy": 2.45652,
+      "selector": "lambda40",
+      "token_groups": {
+        "crawl": 32,
+        "evasive": 58,
+        "lane_recover": 5,
+        "maintain": 70,
+        "nudge": 41,
+        "slow_yield": 94,
+        "stop": 0
+      }
+    },
+    {
+      "bridge_aligned_failure_rate": 0.0,
+      "bridge_aligned_failures": 0,
+      "bridge_box_failures": 40,
+      "bridge_mean_aligned_clearance_m": 1.583741,
+      "bridge_scene_count": 40,
+      "holdout_ade3_m": 5.932839,
+      "holdout_fde3_m": 9.457033,
+      "holdout_progress_m": 19.474114,
+      "holdout_recovery": "160/160",
+      "holdout_replay_infeasible_count": 49,
+      "holdout_replay_infeasible_rate": 0.163333,
+      "holdout_scene_count": 300,
+      "holdout_token_entropy": 2.179016,
+      "selector": "lambda80",
+      "token_groups": {
+        "crawl": 86,
+        "evasive": 69,
+        "lane_recover": 3,
+        "maintain": 48,
+        "nudge": 0,
+        "slow_yield": 94,
+        "stop": 0
+      }
+    },
+    {
+      "bridge_aligned_failure_rate": 0.0,
+      "bridge_aligned_failures": 0,
+      "bridge_box_failures": 40,
+      "bridge_mean_aligned_clearance_m": 1.639037,
+      "bridge_scene_count": 40,
+      "holdout_ade3_m": 9.328638,
+      "holdout_fde3_m": 15.254823,
+      "holdout_progress_m": 10.889235,
+      "holdout_recovery": "160/160",
+      "holdout_replay_infeasible_count": 49,
+      "holdout_replay_infeasible_rate": 0.163333,
+      "holdout_scene_count": 300,
+      "holdout_token_entropy": 2.344412,
+      "selector": "oracle",
+      "token_groups": {
+        "crawl": 82,
+        "evasive": 53,
+        "lane_recover": 4,
+        "maintain": 10,
+        "nudge": 3,
+        "slow_yield": 54,
+        "stop": 94
+      }
+    }
+  ],
+  "schema": "nuplan_replay_calibration_frontier_summary_v1"
+}

@@ -1,0 +1,166 @@
+{
+  "mean_std": {
+    "gate_ade": {
+      "mean": 3.5300212,
+      "std": 0.4574597273205151
+    },
+    "gate_fp": {
+      "mean": 35.6,
+      "std": 14.92112596287559
+    },
+    "gate_introduced": {
+      "mean": 0,
+      "std": 0.0
+    },
+    "gate_missed": {
+      "mean": 34.8,
+      "std": 13.347658970770867
+    },
+    "gate_progress": {
+      "mean": 24.5818628,
+      "std": 3.60024036380425
+    },
+    "gate_rate": {
+      "mean": 0.4426882,
+      "std": 0.14916389169420327
+    },
+    "gate_switch_rate": {
+      "mean": 0.3580646,
+      "std": 0.14298492358091464
+    },
+    "gate_tp": {
+      "mean": 51.8,
+      "std": 38.306135278829686
+    },
+    "holdout_scenes": {
+      "mean": 242,
+      "std": 71.03520254071216
+    },
+    "oracle_rate": {
+      "mean": 0.2590106,
+      "std": 0.2042462173070532
+    },
+    "proxy_ade": {
+      "mean": 2.4427179999999997,
+      "std": 0.3003304745409629
+    },
+    "proxy_progress": {
+      "mean": 28.0430884,
+      "std": 3.4066927075734084
+    },
+    "proxy_rate": {
+      "mean": 0.6521504,
+      "std": 0.10785888401721948
+    },
+    "safe_ade": {
+      "mean": 5.0252698,
+      "std": 0.9186664919378307
+    },
+    "safe_progress": {
+      "mean": 20.0646564,
+      "std": 5.042235235080157
+    },
+    "safe_rate": {
+      "mean": 0.2761718,
+      "std": 0.21453219105337082
+    }
+  },
+  "rows": [
+    {
+      "gate_ade": 4.393771,
+      "gate_fp": 51,
+      "gate_introduced": 0,
+      "gate_missed": 34,
+      "gate_progress": 23.164284,
+      "gate_rate": 0.276667,
+      "gate_switch_rate": 0.59,
+      "gate_tp": 126,
+      "holdout_scenes": 300,
+      "oracle_rate": 0.163333,
+      "proxy_ade": 2.250885,
+      "proxy_progress": 29.383353,
+      "proxy_rate": 0.696667,
+      "safe_ade": 5.932839,
+      "safe_progress": 19.474114,
+      "safe_rate": 0.163333,
+      "seed": 0
+    },
+    {
+      "gate_ade": 3.352319,
+      "gate_fp": 20,
+      "gate_introduced": 0,
+      "gate_missed": 34,
+      "gate_progress": 23.451433,
+      "gate_rate": 0.36129,
+      "gate_switch_rate": 0.283871,
+      "gate_tp": 24,
+      "holdout_scenes": 155,
+      "oracle_rate": 0.116129,
+      "proxy_ade": 2.929124,
+      "proxy_progress": 25.17955,
+      "proxy_rate": 0.516129,
+      "safe_ade": 4.305368,
+      "safe_progress": 18.294182,
+      "safe_rate": 0.141935,
+      "seed": 1
+    },
+    {
+      "gate_ade": 3.046733,
+      "gate_fp": 23,
+      "gate_introduced": 0,
+      "gate_missed": 48,
+      "gate_progress": 27.686129,
+      "gate_rate": 0.583333,
+      "gate_switch_rate": 0.156667,
+      "gate_tp": 24,
+      "holdout_scenes": 300,
+      "oracle_rate": 0.393333,
+      "proxy_ade": 2.657583,
+      "proxy_progress": 28.997672,
+      "proxy_rate": 0.663333,
+      "safe_ade": 4.399682,
+      "safe_progress": 22.829778,
+      "safe_rate": 0.423333,
+      "seed": 2
+    },
+    {
+      "gate_ade": 3.514029,
+      "gate_fp": 56,
+      "gate_introduced": 0,
+      "gate_missed": 11,
+      "gate_progress": 29.389502,
+      "gate_rate": 0.656667,
+      "gate_switch_rate": 0.353333,
+      "gate_tp": 50,
+      "holdout_scenes": 300,
+      "oracle_rate": 0.59,
+      "proxy_ade": 2.216902,
+      "proxy_progress": 33.172982,
+      "proxy_rate": 0.823333,
+      "safe_ade": 4.150943,
+      "safe_progress": 27.475416,
+      "safe_rate": 0.62,
+      "seed": 3
+    },
+    {
+      "gate_ade": 3.343254,
+      "gate_fp": 28,
+      "gate_introduced": 0,
+      "gate_missed": 47,
+      "gate_progress": 19.217966,
+      "gate_rate": 0.335484,
+      "gate_switch_rate": 0.406452,
+      "gate_tp": 35,
+      "holdout_scenes": 155,
+      "oracle_rate": 0.032258,
+      "proxy_ade": 2.159096,
+      "proxy_progress": 23.481885,
+      "proxy_rate": 0.56129,
+      "safe_ade": 6.337517,
+      "safe_progress": 12.249792,
+      "safe_rate": 0.032258,
+      "seed": 4
+    }
+  ],
+  "schema": "nuplan_failure_gate_seed_sweep_summary_v1"
+}

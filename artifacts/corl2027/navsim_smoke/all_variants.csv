@@ -1,0 +1,5 @@
+no_at_fault_collisions,drivable_area_compliance,driving_direction_compliance,traffic_light_compliance,ego_progress,time_to_collision_within_bound,lane_keeping,history_comfort,multiplicative_metrics_prod,weighted_metrics,weighted_metrics_array,pdm_score,scene_id,variant
+1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,[1. 1. 1. 1. 0.],[5. 5. 2. 2. 2.],0.0,2b18807eb18b5b7a,raw
+1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,[1. 1. 1. 1. 0.],[5. 5. 2. 2. 2.],0.0,2b18807eb18b5b7a,clamped
+1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,[1. 1. 1. 1. 0.],[5. 5. 2. 2. 2.],0.0,2b18807eb18b5b7a,hard_veto
+1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,[1. 1. 1. 1. 0.],[5. 5. 2. 2. 2.],0.0,2b18807eb18b5b7a,source_decay

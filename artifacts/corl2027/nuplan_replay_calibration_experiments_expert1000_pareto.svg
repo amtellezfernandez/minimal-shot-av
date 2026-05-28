@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="480" viewBox="0 0 760 480">
+<style>
+.title{font:700 20px sans-serif;fill:#171717}.label{font:13px sans-serif;fill:#333}.tick{font:12px sans-serif;fill:#555}.grid{stroke:#ddd;stroke-width:1}.axis{stroke:#222;stroke-width:1.5}.line{fill:none;stroke:#0b7285;stroke-width:3}.point{fill:#0b7285;stroke:white;stroke-width:2}.note{font:12px sans-serif;fill:#555}
+</style>
+<rect x="0" y="0" width="760" height="480" fill="#fffdf7"/>
+<text class="title" x="86" y="30">Replay-calibrated selector safety-progress frontier</text>
+<line class="grid" x1="86.00" y1="52" x2="86.00" y2="402"/>
+<text class="tick" x="86.00" y="426" text-anchor="middle">19.0</text>
+<line class="grid" x1="245.50" y1="52" x2="245.50" y2="402"/>
+<text class="tick" x="245.50" y="426" text-anchor="middle">21.4</text>
+<line class="grid" x1="405.00" y1="52" x2="405.00" y2="402"/>
+<text class="tick" x="405.00" y="426" text-anchor="middle">23.9</text>
+<line class="grid" x1="564.50" y1="52" x2="564.50" y2="402"/>
+<text class="tick" x="564.50" y="426" text-anchor="middle">26.3</text>
+<line class="grid" x1="724.00" y1="52" x2="724.00" y2="402"/>
+<text class="tick" x="724.00" y="426" text-anchor="middle">28.7</text>
+<line class="grid" x1="86" y1="402.00" x2="724" y2="402.00"/>
+<text class="tick" x="76" y="406.00" text-anchor="end">0.33</text>
+<line class="grid" x1="86" y1="314.50" x2="724" y2="314.50"/>
+<text class="tick" x="76" y="318.50" text-anchor="end">0.42</text>
+<line class="grid" x1="86" y1="227.00" x2="724" y2="227.00"/>
+<text class="tick" x="76" y="231.00" text-anchor="end">0.51</text>
+<line class="grid" x1="86" y1="139.50" x2="724" y2="139.50"/>
+<text class="tick" x="76" y="143.50" text-anchor="end">0.60</text>
+<line class="grid" x1="86" y1="52.00" x2="724" y2="52.00"/>
+<text class="tick" x="76" y="56.00" text-anchor="end">0.68</text>
+<line class="axis" x1="86" y1="402" x2="724" y2="402"/>
+<line class="axis" x1="86" y1="52" x2="86" y2="402"/>
+<polyline class="line" points="130.00,368.13 347.65,325.55 473.71,275.26 560.42,194.50 621.03,139.26 680.00,85.87"/>
+<circle class="point" cx="680.00" cy="85.87" r="6"/>
+<text class="tick" x="689.00" y="76.87">lambda=0</text>
+<circle class="point" cx="621.03" cy="139.26" r="6"/>
+<text class="tick" x="630.03" y="130.26">lambda=5</text>
+<circle class="point" cx="560.42" cy="194.50" r="6"/>
+<text class="tick" x="569.42" y="185.50">lambda=10</text>
+<circle class="point" cx="473.71" cy="275.26" r="6"/>
+<text class="tick" x="482.71" y="266.26">lambda=20</text>
+<circle class="point" cx="347.65" cy="325.55" r="6"/>
+<text class="tick" x="356.65" y="316.55">lambda=40</text>
+<circle class="point" cx="130.00" cy="368.13" r="6"/>
+<text class="tick" x="139.00" y="359.13">lambda=80</text>
+<text class="label" x="405.00" y="452" text-anchor="middle">Mean selected progress (m), higher is better</text>
+<text class="label" transform="translate(24 227.00) rotate(-90)" text-anchor="middle">Replay-infeasible rate, lower is better</text>
+<text class="note" x="86" y="472">Each point is mean over DB-level splits; CSV sidecar contains mean/std and expert-distance metrics.</text>
+</svg>

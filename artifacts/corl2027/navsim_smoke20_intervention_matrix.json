@@ -1,0 +1,265 @@
+{
+  "baseline": "raw",
+  "benchmark_scope": "NAVSIM public non-reactive/pseudo-closed-loop metric surface. This supports public verification of per-axis non-co-monotonicity, not controller-proxy mismatch.",
+  "common_scene_count": 20,
+  "comparisons_vs_baseline": {
+    "clamped": {
+      "axis_conflict_counts": {
+        "offroad_down_collision_up": 0,
+        "progress_up_collision_up": 0,
+        "progress_up_offroad_up": 0,
+        "score_up_collision_up": 0
+      },
+      "axis_delta": {
+        "class": "tradeoff",
+        "improved_axes": [
+          "offroad",
+          "score"
+        ],
+        "raw_candidate_minus_baseline": {
+          "collision": 0.0,
+          "offroad": -0.05,
+          "progress": -0.005154630696054929,
+          "score": 0.04213917790748278,
+          "ttc": 0.0
+        },
+        "unchanged_axes": [
+          "collision",
+          "ttc"
+        ],
+        "worsened_axes": [
+          "progress"
+        ]
+      },
+      "paired_delta_summary": {
+        "collision": {
+          "count": 20,
+          "max": 0.0,
+          "mean": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "negative_count": 0,
+          "positive_count": 0
+        },
+        "offroad": {
+          "count": 20,
+          "max": 0.0,
+          "mean": -0.05,
+          "median": 0.0,
+          "min": -1.0,
+          "negative_count": 1,
+          "positive_count": 0
+        },
+        "progress": {
+          "count": 20,
+          "max": 0.0,
+          "mean": -0.005154630696055001,
+          "median": 0.0,
+          "min": -0.035384267131787994,
+          "negative_count": 3,
+          "positive_count": 0
+        },
+        "score": {
+          "count": 20,
+          "max": 0.875,
+          "mean": 0.042139177907482804,
+          "median": 0.0,
+          "min": -0.011057583478683797,
+          "negative_count": 3,
+          "positive_count": 1
+        }
+      },
+      "scene_count": 20
+    },
+    "hard_veto": {
+      "axis_conflict_counts": {
+        "offroad_down_collision_up": 0,
+        "progress_up_collision_up": 0,
+        "progress_up_offroad_up": 0,
+        "score_up_collision_up": 0
+      },
+      "axis_delta": {
+        "class": "tradeoff",
+        "improved_axes": [
+          "offroad",
+          "score"
+        ],
+        "raw_candidate_minus_baseline": {
+          "collision": 0.0,
+          "offroad": -0.05,
+          "progress": -0.03608875304587322,
+          "score": 0.03247226467316455,
+          "ttc": 0.0
+        },
+        "unchanged_axes": [
+          "collision",
+          "ttc"
+        ],
+        "worsened_axes": [
+          "progress"
+        ]
+      },
+      "paired_delta_summary": {
+        "collision": {
+          "count": 20,
+          "max": 0.0,
+          "mean": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "negative_count": 0,
+          "positive_count": 0
+        },
+        "offroad": {
+          "count": 20,
+          "max": 0.0,
+          "mean": -0.05,
+          "median": 0.0,
+          "min": -1.0,
+          "negative_count": 1,
+          "positive_count": 0
+        },
+        "progress": {
+          "count": 20,
+          "max": 0.0,
+          "mean": -0.03608875304587339,
+          "median": 0.0,
+          "min": -0.24781548081308946,
+          "negative_count": 3,
+          "positive_count": 0
+        },
+        "score": {
+          "count": 20,
+          "max": 0.875,
+          "mean": 0.032472264673164566,
+          "median": 0.0,
+          "min": -0.07744233775409048,
+          "negative_count": 3,
+          "positive_count": 1
+        }
+      },
+      "scene_count": 20
+    },
+    "source_decay": {
+      "axis_conflict_counts": {
+        "offroad_down_collision_up": 0,
+        "progress_up_collision_up": 0,
+        "progress_up_offroad_up": 0,
+        "score_up_collision_up": 0
+      },
+      "axis_delta": {
+        "class": "tradeoff",
+        "improved_axes": [
+          "offroad",
+          "score"
+        ],
+        "raw_candidate_minus_baseline": {
+          "collision": 0.0,
+          "offroad": -0.05,
+          "progress": -0.01855876480361862,
+          "score": 0.03795038599886924,
+          "ttc": 0.0
+        },
+        "unchanged_axes": [
+          "collision",
+          "ttc"
+        ],
+        "worsened_axes": [
+          "progress"
+        ]
+      },
+      "paired_delta_summary": {
+        "collision": {
+          "count": 20,
+          "max": 0.0,
+          "mean": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "negative_count": 0,
+          "positive_count": 0
+        },
+        "offroad": {
+          "count": 20,
+          "max": 0.0,
+          "mean": -0.05,
+          "median": 0.0,
+          "min": -1.0,
+          "negative_count": 1,
+          "positive_count": 0
+        },
+        "progress": {
+          "count": 20,
+          "max": 0.0,
+          "mean": -0.01855876480361878,
+          "median": 0.0,
+          "min": -0.12742481405633654,
+          "negative_count": 3,
+          "positive_count": 0
+        },
+        "score": {
+          "count": 20,
+          "max": 0.875,
+          "mean": 0.037950385998869136,
+          "median": 0.0,
+          "min": -0.03982025439260517,
+          "negative_count": 3,
+          "positive_count": 1
+        }
+      },
+      "scene_count": 20
+    }
+  },
+  "limitations": [
+    "NAVSIM is not a fully reactive closed-loop controller-proxy surface.",
+    "Use this report for public per-axis intervention validation; keep AlpaSim for controller-proxy localization."
+  ],
+  "non_co_monotone_intervention_count": 3,
+  "per_model": {
+    "clamped": {
+      "metrics": {
+        "collision": 0.0,
+        "offroad": 0.0,
+        "progress": 0.9870453827211758,
+        "score": 0.8709516821003674,
+        "ttc": 1.0
+      },
+      "scene_count": 20
+    },
+    "hard_veto": {
+      "metrics": {
+        "collision": 0.0,
+        "offroad": 0.0,
+        "progress": 0.9561112603713575,
+        "score": 0.8612847688660492,
+        "ttc": 1.0
+      },
+      "scene_count": 20
+    },
+    "raw": {
+      "metrics": {
+        "collision": 0.0,
+        "offroad": 0.05,
+        "progress": 0.9922000134172307,
+        "score": 0.8288125041928847,
+        "ttc": 1.0
+      },
+      "scene_count": 20
+    },
+    "source_decay": {
+      "metrics": {
+        "collision": 0.0,
+        "offroad": 0.0,
+        "progress": 0.9736412486136121,
+        "score": 0.8667628901917539,
+        "ttc": 1.0
+      },
+      "scene_count": 20
+    }
+  },
+  "run_paths": {
+    "clamped": "artifacts/corl2027/navsim_smoke20/clamped.csv",
+    "hard_veto": "artifacts/corl2027/navsim_smoke20/hard_veto.csv",
+    "raw": "artifacts/corl2027/navsim_smoke20/raw.csv",
+    "source_decay": "artifacts/corl2027/navsim_smoke20/source_decay.csv"
+  },
+  "schema": "navsim_intervention_matrix_v1"
+}

@@ -1,0 +1,54 @@
+{
+  "rows": [
+    {
+      "bridge_gate_aligned_failures": 0,
+      "bridge_gate_progress_m": 9.988301,
+      "bridge_proxy_aligned_failures": 20,
+      "bridge_proxy_progress_m": 23.294766,
+      "config": "no_guard",
+      "replay_gate_ade3_m": 5.449659,
+      "replay_gate_fail_rate": 0.22,
+      "replay_gate_progress_m": 20.805365,
+      "replay_proxy_fail_rate": 0.696667,
+      "replay_proxy_progress_m": 29.383353
+    },
+    {
+      "bridge_gate_aligned_failures": 20,
+      "bridge_gate_progress_m": 21.693843,
+      "bridge_proxy_aligned_failures": 20,
+      "bridge_proxy_progress_m": 23.294766,
+      "config": "retention_0.25",
+      "replay_gate_ade3_m": 3.15244,
+      "replay_gate_fail_rate": 0.456667,
+      "replay_gate_progress_m": 26.855778,
+      "replay_proxy_fail_rate": 0.696667,
+      "replay_proxy_progress_m": 29.383353
+    },
+    {
+      "bridge_gate_aligned_failures": 20,
+      "bridge_gate_progress_m": 22.188806,
+      "bridge_proxy_aligned_failures": 20,
+      "bridge_proxy_progress_m": 23.294766,
+      "config": "retention_0.50",
+      "replay_gate_ade3_m": 2.973163,
+      "replay_gate_fail_rate": 0.493333,
+      "replay_gate_progress_m": 27.38607,
+      "replay_proxy_fail_rate": 0.696667,
+      "replay_proxy_progress_m": 29.383353
+    },
+    {
+      "bridge_gate_aligned_failures": null,
+      "bridge_gate_progress_m": null,
+      "bridge_proxy_aligned_failures": null,
+      "bridge_proxy_progress_m": null,
+      "config": "retention_0.75",
+      "replay_gate_ade3_m": 2.333883,
+      "replay_gate_fail_rate": 0.673333,
+      "replay_gate_progress_m": 29.212145,
+      "replay_proxy_fail_rate": 0.696667,
+      "replay_proxy_progress_m": 29.383353
+    }
+  ],
+  "schema": "nuplan_failure_gate_progress_retention_ablation_v1",
+  "seed": 0
+}

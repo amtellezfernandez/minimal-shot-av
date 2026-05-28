@@ -1,0 +1,139 @@
+{
+  "mean_std": {
+    "gate_precision": {
+      "mean": 0.7749466,
+      "std": 0.12043829839814245
+    },
+    "gate_progress": {
+      "mean": 21.7498688,
+      "std": 6.264069045110579
+    },
+    "gate_rate": {
+      "mean": 0.352796,
+      "std": 0.21745251227980789
+    },
+    "gate_recall": {
+      "mean": 0.8123626,
+      "std": 0.19393562374416928
+    },
+    "oracle_gate_progress": {
+      "mean": 21.6750596,
+      "std": 6.3625666778113255
+    },
+    "oracle_gate_rate": {
+      "mean": 0.3004518,
+      "std": 0.21935587733853862
+    },
+    "progress_oracle_gate_progress": {
+      "mean": 21.8950924,
+      "std": 5.502187168483951
+    },
+    "progress_oracle_gate_rate": {
+      "mean": 0.2590106,
+      "std": 0.2042462173070532
+    },
+    "proxy_progress": {
+      "mean": 28.0430884,
+      "std": 3.4066927075734084
+    },
+    "proxy_rate": {
+      "mean": 0.6521504,
+      "std": 0.10785888401721948
+    },
+    "replay_oracle_rate": {
+      "mean": 0.2590106,
+      "std": 0.2042462173070532
+    },
+    "safe_progress": {
+      "mean": 20.450749000000002,
+      "std": 5.613389431646694
+    },
+    "safe_rate": {
+      "mean": 0.3063654,
+      "std": 0.21745306717229812
+    }
+  },
+  "rows": [
+    {
+      "gate_precision": 0.849162,
+      "gate_progress": 18.8933,
+      "gate_rate": 0.19,
+      "gate_recall": 0.955975,
+      "oracle_gate_progress": 19.370859,
+      "oracle_gate_rate": 0.166667,
+      "progress_oracle_gate_progress": 21.114019,
+      "progress_oracle_gate_rate": 0.163333,
+      "proxy_progress": 29.383353,
+      "proxy_rate": 0.696667,
+      "replay_oracle_rate": 0.163333,
+      "safe_progress": 18.690156,
+      "safe_rate": 0.173333,
+      "seed": 0
+    },
+    {
+      "gate_precision": 0.625,
+      "gate_progress": 22.699499,
+      "gate_rate": 0.322581,
+      "gate_recall": 0.612245,
+      "oracle_gate_progress": 21.242657,
+      "oracle_gate_rate": 0.2,
+      "progress_oracle_gate_progress": 20.496545,
+      "progress_oracle_gate_rate": 0.116129,
+      "proxy_progress": 25.17955,
+      "proxy_rate": 0.516129,
+      "replay_oracle_rate": 0.116129,
+      "safe_progress": 20.294625,
+      "safe_rate": 0.2,
+      "seed": 1
+    },
+    {
+      "gate_precision": 0.680851,
+      "gate_progress": 26.264934,
+      "gate_rate": 0.556667,
+      "gate_recall": 0.542373,
+      "oracle_gate_progress": 25.873642,
+      "oracle_gate_rate": 0.466667,
+      "progress_oracle_gate_progress": 25.209371,
+      "progress_oracle_gate_rate": 0.393333,
+      "proxy_progress": 28.997672,
+      "proxy_rate": 0.663333,
+      "replay_oracle_rate": 0.393333,
+      "safe_progress": 24.19106,
+      "safe_rate": 0.473333,
+      "seed": 2
+    },
+    {
+      "gate_precision": 0.756757,
+      "gate_progress": 29.483063,
+      "gate_rate": 0.636667,
+      "gate_recall": 1.0,
+      "oracle_gate_progress": 30.383831,
+      "oracle_gate_rate": 0.636667,
+      "progress_oracle_gate_progress": 29.609555,
+      "progress_oracle_gate_rate": 0.59,
+      "proxy_progress": 33.172982,
+      "proxy_rate": 0.823333,
+      "replay_oracle_rate": 0.59,
+      "safe_progress": 27.868837,
+      "safe_rate": 0.64,
+      "seed": 3
+    },
+    {
+      "gate_precision": 0.962963,
+      "gate_progress": 11.408548,
+      "gate_rate": 0.058065,
+      "gate_recall": 0.95122,
+      "oracle_gate_progress": 11.504309,
+      "oracle_gate_rate": 0.032258,
+      "progress_oracle_gate_progress": 13.045972,
+      "progress_oracle_gate_rate": 0.032258,
+      "proxy_progress": 23.481885,
+      "proxy_rate": 0.56129,
+      "replay_oracle_rate": 0.032258,
+      "safe_progress": 11.209067,
+      "safe_rate": 0.045161,
+      "seed": 4
+    }
+  ],
+  "schema": "nuplan_failure_gate_value_fallback_summary_v1"
+}

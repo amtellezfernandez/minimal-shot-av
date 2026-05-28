@@ -1,0 +1,181 @@
+{
+  "base_scenes_per_seed": 40,
+  "input_pattern": "nuplan_closed_loop_bridge_comparison_expert1000_valuemlp_gate_seed{seed}_40.json",
+  "mean_std": {
+    "failure_gate_ade_3s_m": {
+      "mean": 5.0014412,
+      "std": 1.9870444050830267
+    },
+    "failure_gate_aligned_failures": {
+      "mean": 5.8,
+      "std": 7.4404300950953095
+    },
+    "failure_gate_progress_m": {
+      "mean": 16.7194356,
+      "std": 5.771660223899934
+    },
+    "failure_gate_progress_retained_vs_proxy": {
+      "mean": 0.6847584,
+      "std": 0.21579987611729531
+    },
+    "proxy_ade_3s_m": {
+      "mean": 2.2501458,
+      "std": 0.21324541046634507
+    },
+    "proxy_aligned_failures": {
+      "mean": 20.0,
+      "std": 0.0
+    },
+    "proxy_progress_m": {
+      "mean": 24.1109164,
+      "std": 2.1379554026418415
+    },
+    "recoverable_failures_closed_by_gate": {
+      "mean": 14.2,
+      "std": 7.4404300950953095
+    },
+    "recoverable_gap_closed_rate": {
+      "count": 4,
+      "mean": 0.9558822499999999,
+      "std": 0.07641418451562186
+    },
+    "recoverable_proxy_failures": {
+      "mean": 14.8,
+      "std": 7.520638270785266
+    },
+    "replay_oracle_ade_3s_m": {
+      "mean": 6.5504804000000005,
+      "std": 2.7449577162745222
+    },
+    "replay_oracle_aligned_failures": {
+      "mean": 5.2,
+      "std": 7.520638270785266
+    },
+    "replay_oracle_progress_m": {
+      "mean": 12.15881,
+      "std": 6.691092167605615
+    }
+  },
+  "metric_boundary": "absolute nuPlan box-clearance fails for all selectors; aligned replay-equivalent clearance is the directional transfer metric summarized here",
+  "rows": [
+    {
+      "absolute_box_failures_all_selectors": {
+        "failure_gate": 40,
+        "proxy_selector": 40,
+        "replay_oracle": 40
+      },
+      "base_scene_count": 40,
+      "failure_gate_ade_3s_m": 7.680388,
+      "failure_gate_aligned_failures": 0,
+      "failure_gate_progress_m": 9.988301,
+      "failure_gate_progress_retained_vs_proxy": 0.428779,
+      "proxy_ade_3s_m": 2.053932,
+      "proxy_aligned_failures": 20,
+      "proxy_progress_m": 23.294766,
+      "recoverable_failures_closed_by_gate": 20,
+      "recoverable_gap_closed_rate": 1.0,
+      "recoverable_proxy_failures": 20,
+      "replay_oracle_ade_3s_m": 10.020115,
+      "replay_oracle_aligned_failures": 0,
+      "replay_oracle_progress_m": 5.194389,
+      "seed": 0
+    },
+    {
+      "absolute_box_failures_all_selectors": {
+        "failure_gate": 40,
+        "proxy_selector": 40,
+        "replay_oracle": 40
+      },
+      "base_scene_count": 40,
+      "failure_gate_ade_3s_m": 3.904942,
+      "failure_gate_aligned_failures": 6,
+      "failure_gate_progress_m": 20.969451,
+      "failure_gate_progress_retained_vs_proxy": 0.784721,
+      "proxy_ade_3s_m": 2.389744,
+      "proxy_aligned_failures": 20,
+      "proxy_progress_m": 26.722188,
+      "recoverable_failures_closed_by_gate": 14,
+      "recoverable_gap_closed_rate": 0.823529,
+      "recoverable_proxy_failures": 17,
+      "replay_oracle_ade_3s_m": 5.663025,
+      "replay_oracle_aligned_failures": 3,
+      "replay_oracle_progress_m": 13.521738,
+      "seed": 1
+    },
+    {
+      "absolute_box_failures_all_selectors": {
+        "failure_gate": 40,
+        "proxy_selector": 40,
+        "replay_oracle": 40
+      },
+      "base_scene_count": 40,
+      "failure_gate_ade_3s_m": 4.140334,
+      "failure_gate_aligned_failures": 3,
+      "failure_gate_progress_m": 19.899281,
+      "failure_gate_progress_retained_vs_proxy": 0.755606,
+      "proxy_ade_3s_m": 2.499186,
+      "proxy_aligned_failures": 20,
+      "proxy_progress_m": 26.335514,
+      "recoverable_failures_closed_by_gate": 17,
+      "recoverable_gap_closed_rate": 1.0,
+      "recoverable_proxy_failures": 17,
+      "replay_oracle_ade_3s_m": 5.614249,
+      "replay_oracle_aligned_failures": 3,
+      "replay_oracle_progress_m": 13.763396,
+      "seed": 2
+    },
+    {
+      "absolute_box_failures_all_selectors": {
+        "failure_gate": 40,
+        "proxy_selector": 40,
+        "replay_oracle": 40
+      },
+      "base_scene_count": 40,
+      "failure_gate_ade_3s_m": 2.364701,
+      "failure_gate_aligned_failures": 20,
+      "failure_gate_progress_m": 23.183074,
+      "failure_gate_progress_retained_vs_proxy": 1.0,
+      "proxy_ade_3s_m": 2.364701,
+      "proxy_aligned_failures": 20,
+      "proxy_progress_m": 23.183074,
+      "recoverable_failures_closed_by_gate": 0,
+      "recoverable_gap_closed_rate": null,
+      "recoverable_proxy_failures": 0,
+      "replay_oracle_ade_3s_m": 2.364701,
+      "replay_oracle_aligned_failures": 20,
+      "replay_oracle_progress_m": 23.183074,
+      "seed": 3
+    },
+    {
+      "absolute_box_failures_all_selectors": {
+        "failure_gate": 40,
+        "proxy_selector": 40,
+        "replay_oracle": 40
+      },
+      "base_scene_count": 40,
+      "failure_gate_ade_3s_m": 6.916841,
+      "failure_gate_aligned_failures": 0,
+      "failure_gate_progress_m": 9.557071,
+      "failure_gate_progress_retained_vs_proxy": 0.454686,
+      "proxy_ade_3s_m": 1.943166,
+      "proxy_aligned_failures": 20,
+      "proxy_progress_m": 21.01904,
+      "recoverable_failures_closed_by_gate": 20,
+      "recoverable_gap_closed_rate": 1.0,
+      "recoverable_proxy_failures": 20,
+      "replay_oracle_ade_3s_m": 9.090312,
+      "replay_oracle_aligned_failures": 0,
+      "replay_oracle_progress_m": 5.131453,
+      "seed": 4
+    }
+  ],
+  "schema": "nuplan_valuemlp_failure_gate_bridge_seed_summary_v2",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "selector_family": "embedded MLP replay-value fallback + learned failure gate"
+}

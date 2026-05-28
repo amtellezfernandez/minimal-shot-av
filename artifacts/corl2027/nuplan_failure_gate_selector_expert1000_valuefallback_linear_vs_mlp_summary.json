@@ -1,0 +1,748 @@
+{
+  "schema": "nuplan_failure_gate_value_fallback_comparison_v1",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "variants": {
+    "linear_value_p100": {
+      "mean_std": {
+        "failure_gate": {
+          "mean_ade_3s_m": {
+            "mean": 4.7239398,
+            "std": 1.4465191027608864
+          },
+          "mean_selected_progress_m": {
+            "mean": 21.7498688,
+            "std": 6.264069045110579
+          },
+          "selected_replay_infeasible_count": {
+            "mean": 94.8,
+            "std": 71.08417545417545
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.352796,
+            "std": 0.21745251227980789
+          },
+          "selected_token_entropy": {
+            "mean": 2.2441778,
+            "std": 0.1843670342240174
+          }
+        },
+        "oracle_failure_gate": {
+          "mean_ade_3s_m": {
+            "mean": 4.7009744,
+            "std": 1.419688513355602
+          },
+          "mean_selected_progress_m": {
+            "mean": 21.6750596,
+            "std": 6.3625666778113255
+          },
+          "selected_replay_infeasible_count": {
+            "mean": 83.4,
+            "std": 70.41193080721477
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.3004518,
+            "std": 0.21935587733853862
+          },
+          "selected_token_entropy": {
+            "mean": 2.3295132,
+            "std": 0.12775721561367867
+          }
+        },
+        "progress_oracle_failure_gate": {
+          "mean_ade_3s_m": {
+            "mean": 4.4878866,
+            "std": 0.9952996848621223
+          },
+          "mean_selected_progress_m": {
+            "mean": 21.8950924,
+            "std": 5.502187168483951
+          },
+          "selected_replay_infeasible_count": {
+            "mean": 73.4,
+            "std": 64.9079347999919
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.2590106,
+            "std": 0.2042462173070532
+          },
+          "selected_token_entropy": {
+            "mean": 2.3050314000000003,
+            "std": 0.16242911959694914
+          }
+        },
+        "proxy_selector": {
+          "mean_ade_3s_m": {
+            "mean": 2.4427179999999997,
+            "std": 0.3003304745409629
+          },
+          "mean_selected_progress_m": {
+            "mean": 28.0430884,
+            "std": 3.4066927075734084
+          },
+          "selected_replay_infeasible_count": {
+            "mean": 164.4,
+            "std": 68.0047057195309
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.6521504,
+            "std": 0.10785888401721948
+          },
+          "selected_token_entropy": {
+            "mean": 2.0104222000000003,
+            "std": 0.24717814806604568
+          }
+        },
+        "replay_oracle": {
+          "mean_ade_3s_m": {
+            "mean": 7.9555726,
+            "std": 1.2101257421870837
+          },
+          "mean_selected_progress_m": {
+            "mean": 12.285833199999999,
+            "std": 2.390189397623996
+          },
+          "selected_replay_infeasible_count": {
+            "mean": 73.4,
+            "std": 64.9079347999919
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.2590106,
+            "std": 0.2042462173070532
+          },
+          "selected_token_entropy": {
+            "mean": 2.443933,
+            "std": 0.25022391335921523
+          }
+        },
+        "safe_selector": {
+          "mean_ade_3s_m": {
+            "mean": 5.2378008,
+            "std": 1.192841072947675
+          },
+          "mean_selected_progress_m": {
+            "mean": 20.450749000000002,
+            "std": 5.613389431646694
+          },
+          "selected_replay_infeasible_count": {
+            "mean": 84.8,
+            "std": 70.40852221144824
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.3063654,
+            "std": 0.21745306717229812
+          },
+          "selected_token_entropy": {
+            "mean": 2.2236029999999998,
+            "std": 0.140272684609656
+          }
+        }
+      },
+      "per_seed": [
+        {
+          "failure_gate": {
+            "mean_ade_3s_m": 6.233013,
+            "mean_selected_progress_m": 18.8933,
+            "selected_replay_infeasible_count": 57,
+            "selected_replay_infeasible_rate": 0.19,
+            "selected_token_entropy": 2.505294
+          },
+          "holdout_scene_count": 300,
+          "oracle_failure_gate": {
+            "mean_ade_3s_m": 6.076092,
+            "mean_selected_progress_m": 19.370859,
+            "selected_replay_infeasible_count": 50,
+            "selected_replay_infeasible_rate": 0.166667,
+            "selected_token_entropy": 2.52887
+          },
+          "progress_oracle_failure_gate": {
+            "mean_ade_3s_m": 5.296581,
+            "mean_selected_progress_m": 21.114019,
+            "selected_replay_infeasible_count": 49,
+            "selected_replay_infeasible_rate": 0.163333,
+            "selected_token_entropy": 2.353915
+          },
+          "proxy_selector": {
+            "mean_ade_3s_m": 2.250885,
+            "mean_selected_progress_m": 29.383353,
+            "selected_replay_infeasible_count": 209,
+            "selected_replay_infeasible_rate": 0.696667,
+            "selected_token_entropy": 2.239771
+          },
+          "replay_oracle": {
+            "mean_ade_3s_m": 9.328638,
+            "mean_selected_progress_m": 10.889235,
+            "selected_replay_infeasible_count": 49,
+            "selected_replay_infeasible_rate": 0.163333,
+            "selected_token_entropy": 2.344412
+          },
+          "safe_selector": {
+            "mean_ade_3s_m": 6.396586,
+            "mean_selected_progress_m": 18.690156,
+            "selected_replay_infeasible_count": 52,
+            "selected_replay_infeasible_rate": 0.173333,
+            "selected_token_entropy": 2.370622
+          },
+          "seed": 0
+        },
+        {
+          "failure_gate": {
+            "mean_ade_3s_m": 3.643814,
+            "mean_selected_progress_m": 22.699499,
+            "selected_replay_infeasible_count": 50,
+            "selected_replay_infeasible_rate": 0.322581,
+            "selected_token_entropy": 2.061237
+          },
+          "holdout_scene_count": 155,
+          "oracle_failure_gate": {
+            "mean_ade_3s_m": 3.932639,
+            "mean_selected_progress_m": 21.242657,
+            "selected_replay_infeasible_count": 31,
+            "selected_replay_infeasible_rate": 0.2,
+            "selected_token_entropy": 2.213245
+          },
+          "progress_oracle_failure_gate": {
+            "mean_ade_3s_m": 3.987902,
+            "mean_selected_progress_m": 20.496545,
+            "selected_replay_infeasible_count": 18,
+            "selected_replay_infeasible_rate": 0.116129,
+            "selected_token_entropy": 2.423947
+          },
+          "proxy_selector": {
+            "mean_ade_3s_m": 2.929124,
+            "mean_selected_progress_m": 25.17955,
+            "selected_replay_infeasible_count": 80,
+            "selected_replay_infeasible_rate": 0.516129,
+            "selected_token_entropy": 1.595436
+          },
+          "replay_oracle": {
+            "mean_ade_3s_m": 5.808238,
+            "mean_selected_progress_m": 14.470682,
+            "selected_replay_infeasible_count": 18,
+            "selected_replay_infeasible_rate": 0.116129,
+            "selected_token_entropy": 2.847478
+          },
+          "safe_selector": {
+            "mean_ade_3s_m": 4.344676,
+            "mean_selected_progress_m": 20.294625,
+            "selected_replay_infeasible_count": 31,
+            "selected_replay_infeasible_rate": 0.2,
+            "selected_token_entropy": 2.329066
+          },
+          "seed": 1
+        },
+        {
+          "failure_gate": {
+            "mean_ade_3s_m": 3.524022,
+            "mean_selected_progress_m": 26.264934,
+            "selected_replay_infeasible_count": 167,
+            "selected_replay_infeasible_rate": 0.556667,
+            "selected_token_entropy": 2.073085
+          },
+          "holdout_scene_count": 300,
+          "oracle_failure_gate": {
+            "mean_ade_3s_m": 3.636963,
+            "mean_selected_progress_m": 25.873642,
+            "selected_replay_infeasible_count": 140,
+            "selected_replay_infeasible_rate": 0.466667,
+            "selected_token_entropy": 2.265453
+          },
+          "progress_oracle_failure_gate": {
+            "mean_ade_3s_m": 3.753137,
+            "mean_selected_progress_m": 25.209371,
+            "selected_replay_infeasible_count": 118,
+            "selected_replay_infeasible_rate": 0.393333,
+            "selected_token_entropy": 2.458984
+          },
+          "proxy_selector": {
+            "mean_ade_3s_m": 2.657583,
+            "mean_selected_progress_m": 28.997672,
+            "selected_replay_infeasible_count": 199,
+            "selected_replay_infeasible_rate": 0.663333,
+            "selected_token_entropy": 1.881658
+          },
+          "replay_oracle": {
+            "mean_ade_3s_m": 8.586598,
+            "mean_selected_progress_m": 11.345914,
+            "selected_replay_infeasible_count": 118,
+            "selected_replay_infeasible_rate": 0.393333,
+            "selected_token_entropy": 2.612509
+          },
+          "safe_selector": {
+            "mean_ade_3s_m": 4.338729,
+            "mean_selected_progress_m": 24.19106,
+            "selected_replay_infeasible_count": 142,
+            "selected_replay_infeasible_rate": 0.473333,
+            "selected_token_entropy": 2.085739
+          },
+          "seed": 2
+        },
+        {
+          "failure_gate": {
+            "mean_ade_3s_m": 3.484446,
+            "mean_selected_progress_m": 29.483063,
+            "selected_replay_infeasible_count": 191,
+            "selected_replay_infeasible_rate": 0.636667,
+            "selected_token_entropy": 2.158884
+          },
+          "holdout_scene_count": 300,
+          "oracle_failure_gate": {
+            "mean_ade_3s_m": 3.146384,
+            "mean_selected_progress_m": 30.383831,
+            "selected_replay_infeasible_count": 191,
+            "selected_replay_infeasible_rate": 0.636667,
+            "selected_token_entropy": 2.21031
+          },
+          "progress_oracle_failure_gate": {
+            "mean_ade_3s_m": 3.393519,
+            "mean_selected_progress_m": 29.609555,
+            "selected_replay_infeasible_count": 177,
+            "selected_replay_infeasible_rate": 0.59,
+            "selected_token_entropy": 2.285439
+          },
+          "proxy_selector": {
+            "mean_ade_3s_m": 2.216902,
+            "mean_selected_progress_m": 33.172982,
+            "selected_replay_infeasible_count": 247,
+            "selected_replay_infeasible_rate": 0.823333,
+            "selected_token_entropy": 2.081989
+          },
+          "replay_oracle": {
+            "mean_ade_3s_m": 8.48393,
+            "mean_selected_progress_m": 15.597871,
+            "selected_replay_infeasible_count": 177,
+            "selected_replay_infeasible_rate": 0.59,
+            "selected_token_entropy": 2.197294
+          },
+          "safe_selector": {
+            "mean_ade_3s_m": 4.146501,
+            "mean_selected_progress_m": 27.868837,
+            "selected_replay_infeasible_count": 192,
+            "selected_replay_infeasible_rate": 0.64,
+            "selected_token_entropy": 2.024749
+          },
+          "seed": 3
+        },
+        {
+          "failure_gate": {
+            "mean_ade_3s_m": 6.734404,
+            "mean_selected_progress_m": 11.408548,
+            "selected_replay_infeasible_count": 9,
+            "selected_replay_infeasible_rate": 0.058065,
+            "selected_token_entropy": 2.422389
+          },
+          "holdout_scene_count": 155,
+          "oracle_failure_gate": {
+            "mean_ade_3s_m": 6.712794,
+            "mean_selected_progress_m": 11.504309,
+            "selected_replay_infeasible_count": 5,
+            "selected_replay_infeasible_rate": 0.032258,
+            "selected_token_entropy": 2.429688
+          },
+          "progress_oracle_failure_gate": {
+            "mean_ade_3s_m": 6.008294,
+            "mean_selected_progress_m": 13.045972,
+            "selected_replay_infeasible_count": 5,
+            "selected_replay_infeasible_rate": 0.032258,
+            "selected_token_entropy": 2.002872
+          },
+          "proxy_selector": {
+            "mean_ade_3s_m": 2.159096,
+            "mean_selected_progress_m": 23.481885,
+            "selected_replay_infeasible_count": 87,
+            "selected_replay_infeasible_rate": 0.56129,
+            "selected_token_entropy": 2.253257
+          },
+          "replay_oracle": {
+            "mean_ade_3s_m": 7.570459,
+            "mean_selected_progress_m": 9.125464,
+            "selected_replay_infeasible_count": 5,
+            "selected_replay_infeasible_rate": 0.032258,
+            "selected_token_entropy": 2.217972
+          },
+          "safe_selector": {
+            "mean_ade_3s_m": 6.962512,
+            "mean_selected_progress_m": 11.209067,
+            "selected_replay_infeasible_count": 7,
+            "selected_replay_infeasible_rate": 0.045161,
+            "selected_token_entropy": 2.307839
+          },
+          "seed": 4
+        }
+      ]
+    },
+    "mlp_value_p100": {
+      "mean_std": {
+        "failure_gate": {
+          "mean_ade_3s_m": {
+            "mean": 4.7331296,
+            "std": 0.8476674027500644
+          },
+          "mean_selected_progress_m": {
+            "mean": 21.3362734,
+            "std": 5.082498094545736
+          },
+          "selected_replay_infeasible_count": {
+            "mean": 88.6,
+            "std": 67.70701588461863
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.3221506,
+            "std": 0.20475699926361493
+          },
+          "selected_token_entropy": {
+            "mean": 2.227018,
+            "std": 0.11712733571801247
+          }
+        },
+        "oracle_failure_gate": {
+          "mean_ade_3s_m": {
+            "mean": 4.5682906,
+            "std": 1.0287566396598566
+          },
+          "mean_selected_progress_m": {
+            "mean": 21.6569032,
+            "std": 5.712113662249917
+          },
+          "selected_replay_infeasible_count": {
+            "mean": 77.4,
+            "std": 68.10168867216143
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.27234400000000003,
+            "std": 0.21460180716480465
+          },
+          "selected_token_entropy": {
+            "mean": 2.2262966,
+            "std": 0.12025636392906622
+          }
+        },
+        "progress_oracle_failure_gate": {
+          "mean_ade_3s_m": {
+            "mean": 4.4878866,
+            "std": 0.9952996848621223
+          },
+          "mean_selected_progress_m": {
+            "mean": 21.8950924,
+            "std": 5.502187168483951
+          },
+          "selected_replay_infeasible_count": {
+            "mean": 73.4,
+            "std": 64.9079347999919
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.2590106,
+            "std": 0.2042462173070532
+          },
+          "selected_token_entropy": {
+            "mean": 2.3050314000000003,
+            "std": 0.16242911959694914
+          }
+        },
+        "proxy_selector": {
+          "mean_ade_3s_m": {
+            "mean": 2.4427179999999997,
+            "std": 0.3003304745409629
+          },
+          "mean_selected_progress_m": {
+            "mean": 28.0430884,
+            "std": 3.4066927075734084
+          },
+          "selected_replay_infeasible_count": {
+            "mean": 164.4,
+            "std": 68.0047057195309
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.6521504,
+            "std": 0.10785888401721948
+          },
+          "selected_token_entropy": {
+            "mean": 2.0104222000000003,
+            "std": 0.24717814806604568
+          }
+        },
+        "replay_oracle": {
+          "mean_ade_3s_m": {
+            "mean": 7.9555726,
+            "std": 1.2101257421870837
+          },
+          "mean_selected_progress_m": {
+            "mean": 12.285833199999999,
+            "std": 2.390189397623996
+          },
+          "selected_replay_infeasible_count": {
+            "mean": 73.4,
+            "std": 64.9079347999919
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.2590106,
+            "std": 0.2042462173070532
+          },
+          "selected_token_entropy": {
+            "mean": 2.443933,
+            "std": 0.25022391335921523
+          }
+        },
+        "safe_selector": {
+          "mean_ade_3s_m": {
+            "mean": 5.2401516,
+            "std": 0.7916565163100977
+          },
+          "mean_selected_progress_m": {
+            "mean": 19.2014198,
+            "std": 5.2463358070498085
+          },
+          "selected_replay_infeasible_count": {
+            "mean": 77.4,
+            "std": 68.10168867216143
+          },
+          "selected_replay_infeasible_rate": {
+            "mean": 0.27234400000000003,
+            "std": 0.21460180716480465
+          },
+          "selected_token_entropy": {
+            "mean": 2.4590468,
+            "std": 0.34984791387195663
+          }
+        }
+      },
+      "per_seed": [
+        {
+          "failure_gate": {
+            "mean_ade_3s_m": 5.449659,
+            "mean_selected_progress_m": 20.805365,
+            "selected_replay_infeasible_count": 66,
+            "selected_replay_infeasible_rate": 0.22,
+            "selected_token_entropy": 2.247706
+          },
+          "holdout_scene_count": 300,
+          "oracle_failure_gate": {
+            "mean_ade_3s_m": 5.391577,
+            "mean_selected_progress_m": 20.94135,
+            "selected_replay_infeasible_count": 53,
+            "selected_replay_infeasible_rate": 0.176667,
+            "selected_token_entropy": 2.34602
+          },
+          "progress_oracle_failure_gate": {
+            "mean_ade_3s_m": 5.296581,
+            "mean_selected_progress_m": 21.114019,
+            "selected_replay_infeasible_count": 49,
+            "selected_replay_infeasible_rate": 0.163333,
+            "selected_token_entropy": 2.353915
+          },
+          "proxy_selector": {
+            "mean_ade_3s_m": 2.250885,
+            "mean_selected_progress_m": 29.383353,
+            "selected_replay_infeasible_count": 209,
+            "selected_replay_infeasible_rate": 0.696667,
+            "selected_token_entropy": 2.239771
+          },
+          "replay_oracle": {
+            "mean_ade_3s_m": 9.328638,
+            "mean_selected_progress_m": 10.889235,
+            "selected_replay_infeasible_count": 49,
+            "selected_replay_infeasible_rate": 0.163333,
+            "selected_token_entropy": 2.344412
+          },
+          "safe_selector": {
+            "mean_ade_3s_m": 5.768239,
+            "mean_selected_progress_m": 19.764886,
+            "selected_replay_infeasible_count": 53,
+            "selected_replay_infeasible_rate": 0.176667,
+            "selected_token_entropy": 2.252553
+          },
+          "seed": 0
+        },
+        {
+          "failure_gate": {
+            "mean_ade_3s_m": 4.269524,
+            "mean_selected_progress_m": 19.944034,
+            "selected_replay_infeasible_count": 34,
+            "selected_replay_infeasible_rate": 0.219355,
+            "selected_token_entropy": 2.314696
+          },
+          "holdout_scene_count": 155,
+          "oracle_failure_gate": {
+            "mean_ade_3s_m": 4.354653,
+            "mean_selected_progress_m": 19.268561,
+            "selected_replay_infeasible_count": 18,
+            "selected_replay_infeasible_rate": 0.116129,
+            "selected_token_entropy": 2.238082
+          },
+          "progress_oracle_failure_gate": {
+            "mean_ade_3s_m": 3.987902,
+            "mean_selected_progress_m": 20.496545,
+            "selected_replay_infeasible_count": 18,
+            "selected_replay_infeasible_rate": 0.116129,
+            "selected_token_entropy": 2.423947
+          },
+          "proxy_selector": {
+            "mean_ade_3s_m": 2.929124,
+            "mean_selected_progress_m": 25.17955,
+            "selected_replay_infeasible_count": 80,
+            "selected_replay_infeasible_rate": 0.516129,
+            "selected_token_entropy": 1.595436
+          },
+          "replay_oracle": {
+            "mean_ade_3s_m": 5.808238,
+            "mean_selected_progress_m": 14.470682,
+            "selected_replay_infeasible_count": 18,
+            "selected_replay_infeasible_rate": 0.116129,
+            "selected_token_entropy": 2.847478
+          },
+          "safe_selector": {
+            "mean_ade_3s_m": 5.179038,
+            "mean_selected_progress_m": 14.97318,
+            "selected_replay_infeasible_count": 18,
+            "selected_replay_infeasible_rate": 0.116129,
+            "selected_token_entropy": 2.842396
+          },
+          "seed": 1
+        },
+        {
+          "failure_gate": {
+            "mean_ade_3s_m": 3.913076,
+            "mean_selected_progress_m": 24.767973,
+            "selected_replay_infeasible_count": 147,
+            "selected_replay_infeasible_rate": 0.49,
+            "selected_token_entropy": 2.268167
+          },
+          "holdout_scene_count": 300,
+          "oracle_failure_gate": {
+            "mean_ade_3s_m": 3.805612,
+            "mean_selected_progress_m": 24.975422,
+            "selected_replay_infeasible_count": 127,
+            "selected_replay_infeasible_rate": 0.423333,
+            "selected_token_entropy": 2.32433
+          },
+          "progress_oracle_failure_gate": {
+            "mean_ade_3s_m": 3.753137,
+            "mean_selected_progress_m": 25.209371,
+            "selected_replay_infeasible_count": 118,
+            "selected_replay_infeasible_rate": 0.393333,
+            "selected_token_entropy": 2.458984
+          },
+          "proxy_selector": {
+            "mean_ade_3s_m": 2.657583,
+            "mean_selected_progress_m": 28.997672,
+            "selected_replay_infeasible_count": 199,
+            "selected_replay_infeasible_rate": 0.663333,
+            "selected_token_entropy": 1.881658
+          },
+          "replay_oracle": {
+            "mean_ade_3s_m": 8.586598,
+            "mean_selected_progress_m": 11.345914,
+            "selected_replay_infeasible_count": 118,
+            "selected_replay_infeasible_rate": 0.393333,
+            "selected_token_entropy": 2.612509
+          },
+          "safe_selector": {
+            "mean_ade_3s_m": 4.564598,
+            "mean_selected_progress_m": 22.097474,
+            "selected_replay_infeasible_count": 127,
+            "selected_replay_infeasible_rate": 0.423333,
+            "selected_token_entropy": 2.773926
+          },
+          "seed": 2
+        },
+        {
+          "failure_gate": {
+            "mean_ade_3s_m": 4.008962,
+            "mean_selected_progress_m": 28.132637,
+            "selected_replay_infeasible_count": 187,
+            "selected_replay_infeasible_rate": 0.623333,
+            "selected_token_entropy": 2.306546
+          },
+          "holdout_scene_count": 300,
+          "oracle_failure_gate": {
+            "mean_ade_3s_m": 3.235041,
+            "mean_selected_progress_m": 30.090359,
+            "selected_replay_infeasible_count": 184,
+            "selected_replay_infeasible_rate": 0.613333,
+            "selected_token_entropy": 2.21612
+          },
+          "progress_oracle_failure_gate": {
+            "mean_ade_3s_m": 3.393519,
+            "mean_selected_progress_m": 29.609555,
+            "selected_replay_infeasible_count": 177,
+            "selected_replay_infeasible_rate": 0.59,
+            "selected_token_entropy": 2.285439
+          },
+          "proxy_selector": {
+            "mean_ade_3s_m": 2.216902,
+            "mean_selected_progress_m": 33.172982,
+            "selected_replay_infeasible_count": 247,
+            "selected_replay_infeasible_rate": 0.823333,
+            "selected_token_entropy": 2.081989
+          },
+          "replay_oracle": {
+            "mean_ade_3s_m": 8.48393,
+            "mean_selected_progress_m": 15.597871,
+            "selected_replay_infeasible_count": 177,
+            "selected_replay_infeasible_rate": 0.59,
+            "selected_token_entropy": 2.197294
+          },
+          "safe_selector": {
+            "mean_ade_3s_m": 4.255207,
+            "mean_selected_progress_m": 27.026952,
+            "selected_replay_infeasible_count": 184,
+            "selected_replay_infeasible_rate": 0.613333,
+            "selected_token_entropy": 2.531237
+          },
+          "seed": 3
+        },
+        {
+          "failure_gate": {
+            "mean_ade_3s_m": 6.024427,
+            "mean_selected_progress_m": 13.031358,
+            "selected_replay_infeasible_count": 9,
+            "selected_replay_infeasible_rate": 0.058065,
+            "selected_token_entropy": 1.997975
+          },
+          "holdout_scene_count": 155,
+          "oracle_failure_gate": {
+            "mean_ade_3s_m": 6.05457,
+            "mean_selected_progress_m": 13.008824,
+            "selected_replay_infeasible_count": 5,
+            "selected_replay_infeasible_rate": 0.032258,
+            "selected_token_entropy": 2.006931
+          },
+          "progress_oracle_failure_gate": {
+            "mean_ade_3s_m": 6.008294,
+            "mean_selected_progress_m": 13.045972,
+            "selected_replay_infeasible_count": 5,
+            "selected_replay_infeasible_rate": 0.032258,
+            "selected_token_entropy": 2.002872
+          },
+          "proxy_selector": {
+            "mean_ade_3s_m": 2.159096,
+            "mean_selected_progress_m": 23.481885,
+            "selected_replay_infeasible_count": 87,
+            "selected_replay_infeasible_rate": 0.56129,
+            "selected_token_entropy": 2.253257
+          },
+          "replay_oracle": {
+            "mean_ade_3s_m": 7.570459,
+            "mean_selected_progress_m": 9.125464,
+            "selected_replay_infeasible_count": 5,
+            "selected_replay_infeasible_rate": 0.032258,
+            "selected_token_entropy": 2.217972
+          },
+          "safe_selector": {
+            "mean_ade_3s_m": 6.433676,
+            "mean_selected_progress_m": 12.144607,
+            "selected_replay_infeasible_count": 5,
+            "selected_replay_infeasible_rate": 0.032258,
+            "selected_token_entropy": 1.895122
+          },
+          "seed": 4
+        }
+      ]
+    }
+  }
+}

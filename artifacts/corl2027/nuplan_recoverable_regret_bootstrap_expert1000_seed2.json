@@ -1,0 +1,527 @@
+{
+  "candidate_distribution": {
+    "candidate_token_entropy": 3.169925,
+    "candidate_token_histogram": {
+      "crawl": 1000,
+      "evasive_left": 1000,
+      "evasive_right": 1000,
+      "lane_recover": 1000,
+      "maintain": 1000,
+      "nudge_left": 1000,
+      "nudge_right": 1000,
+      "slow_yield": 1000,
+      "stop": 1000
+    },
+    "max_candidate_count": 9,
+    "mean_candidate_count": 9.0,
+    "mean_pairwise_final_pose_distance_m": 13.280919,
+    "min_candidate_count": 9
+  },
+  "claim_boundary": "This is a ManeuverToken surrogate for VLA candidate bootstrapping: G1 changes top-1 selection from recovered oracle@K targets, but does not yet regenerate new trajectory candidates.",
+  "holdout": {
+    "g0_proxy_top1": {
+      "expert_distance_available_count": 300,
+      "gap_summary": {
+        "generation_gap_count": 118,
+        "generation_gap_rate": 0.393333,
+        "mean_recoverable_regret": 63.365033,
+        "median_recoverable_regret": 0.0,
+        "positive_regret_count": 135,
+        "positive_regret_rate": 0.45,
+        "scene_count": 300
+      },
+      "mean_ade_3s_m": 2.657583,
+      "mean_fde_3s_m": 5.142203,
+      "mean_heading_error_3s_rad": 0.31389,
+      "mean_selected_progress_m": 28.997672,
+      "mean_selected_proxy_score": 22.227958,
+      "no_replay_safe_token_count": 118,
+      "proxy_safe_selected_count": 198,
+      "proxy_safe_selected_rate": 0.66,
+      "recoverable_proxy_optimism_count": 81,
+      "recoverable_proxy_optimism_fixed_count": 0,
+      "recoverable_proxy_optimism_recovery_rate": 0.0,
+      "scene_count": 300,
+      "score_summary": {
+        "mean_score": -142.150828,
+        "median_score": -212.137693,
+        "scored_scene_count": 300
+      },
+      "selected_replay_infeasible_count": 199,
+      "selected_replay_infeasible_rate": 0.663333,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 101,
+      "selected_token_entropy": 1.881658,
+      "selected_token_histogram": {
+        "evasive_left": 7,
+        "evasive_right": 6,
+        "lane_recover": 36,
+        "maintain": 177,
+        "nudge_left": 12,
+        "nudge_right": 16,
+        "slow_yield": 46
+      },
+      "selector_name": "g0_proxy_top1"
+    },
+    "g1_student_top1": {
+      "expert_distance_available_count": 300,
+      "gap_summary": {
+        "generation_gap_count": 118,
+        "generation_gap_rate": 0.393333,
+        "mean_recoverable_regret": 67.844356,
+        "median_recoverable_regret": 0.0,
+        "positive_regret_count": 106,
+        "positive_regret_rate": 0.353333,
+        "scene_count": 300
+      },
+      "mean_ade_3s_m": 3.489946,
+      "mean_fde_3s_m": 6.526816,
+      "mean_heading_error_3s_rad": 0.310839,
+      "mean_selected_progress_m": 27.849741,
+      "mean_selected_proxy_score": 20.342721,
+      "no_replay_safe_token_count": 118,
+      "proxy_safe_selected_count": 201,
+      "proxy_safe_selected_rate": 0.67,
+      "recoverable_proxy_optimism_count": 81,
+      "recoverable_proxy_optimism_fixed_count": 14,
+      "recoverable_proxy_optimism_recovery_rate": 0.17284,
+      "scene_count": 300,
+      "score_summary": {
+        "mean_score": -146.630151,
+        "median_score": -212.923453,
+        "scored_scene_count": 300
+      },
+      "selected_replay_infeasible_count": 201,
+      "selected_replay_infeasible_rate": 0.67,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 99,
+      "selected_token_entropy": 1.458811,
+      "selected_token_histogram": {
+        "evasive_left": 27,
+        "evasive_right": 2,
+        "lane_recover": 7,
+        "maintain": 209,
+        "slow_yield": 39,
+        "stop": 16
+      },
+      "selector_name": "g1_student_top1"
+    },
+    "oracle_at_k": {
+      "expert_distance_available_count": 300,
+      "gap_summary": {
+        "generation_gap_count": 118,
+        "generation_gap_rate": 0.393333,
+        "mean_recoverable_regret": 0.0,
+        "median_recoverable_regret": 0.0,
+        "positive_regret_count": 0,
+        "positive_regret_rate": 0.0,
+        "scene_count": 300
+      },
+      "mean_ade_3s_m": 3.659601,
+      "mean_fde_3s_m": 6.676552,
+      "mean_heading_error_3s_rad": 0.311451,
+      "mean_selected_progress_m": 26.866741,
+      "mean_selected_proxy_score": 18.447861,
+      "no_replay_safe_token_count": 118,
+      "proxy_safe_selected_count": 186,
+      "proxy_safe_selected_rate": 0.62,
+      "recoverable_proxy_optimism_count": 81,
+      "recoverable_proxy_optimism_fixed_count": 81,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 300,
+      "score_summary": {
+        "mean_score": -78.785795,
+        "median_score": -14.830616,
+        "scored_scene_count": 300
+      },
+      "selected_replay_infeasible_count": 118,
+      "selected_replay_infeasible_rate": 0.393333,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 182,
+      "selected_token_entropy": 1.862005,
+      "selected_token_histogram": {
+        "crawl": 17,
+        "evasive_right": 3,
+        "lane_recover": 5,
+        "maintain": 187,
+        "nudge_left": 4,
+        "nudge_right": 32,
+        "slow_yield": 23,
+        "stop": 29
+      },
+      "selector_name": "oracle_at_k"
+    },
+    "replay_oracle_safe_only": {
+      "expert_distance_available_count": 300,
+      "gap_summary": {
+        "generation_gap_count": 118,
+        "generation_gap_rate": 0.393333,
+        "mean_recoverable_regret": 25.374821,
+        "median_recoverable_regret": 10.087372,
+        "positive_regret_count": 192,
+        "positive_regret_rate": 0.64,
+        "scene_count": 300
+      },
+      "mean_ade_3s_m": 8.586598,
+      "mean_fde_3s_m": 14.627861,
+      "mean_heading_error_3s_rad": 0.311227,
+      "mean_selected_progress_m": 11.345914,
+      "mean_selected_proxy_score": 9.12876,
+      "no_replay_safe_token_count": 118,
+      "proxy_safe_selected_count": 239,
+      "proxy_safe_selected_rate": 0.796667,
+      "recoverable_proxy_optimism_count": 81,
+      "recoverable_proxy_optimism_fixed_count": 81,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 300,
+      "score_summary": {
+        "mean_score": -104.160616,
+        "median_score": -16.100637,
+        "scored_scene_count": 300
+      },
+      "selected_replay_infeasible_count": 118,
+      "selected_replay_infeasible_rate": 0.393333,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 182,
+      "selected_token_entropy": 2.612509,
+      "selected_token_histogram": {
+        "crawl": 63,
+        "evasive_left": 21,
+        "evasive_right": 7,
+        "lane_recover": 13,
+        "maintain": 32,
+        "nudge_left": 3,
+        "nudge_right": 17,
+        "slow_yield": 37,
+        "stop": 107
+      },
+      "selector_name": "replay_oracle_safe_only"
+    },
+    "teacher_promoted_upper_bound": {
+      "expert_distance_available_count": 300,
+      "gap_summary": {
+        "generation_gap_count": 118,
+        "generation_gap_rate": 0.393333,
+        "mean_recoverable_regret": 0.0,
+        "median_recoverable_regret": 0.0,
+        "positive_regret_count": 0,
+        "positive_regret_rate": 0.0,
+        "scene_count": 300
+      },
+      "mean_ade_3s_m": 3.659601,
+      "mean_fde_3s_m": 6.676552,
+      "mean_heading_error_3s_rad": 0.311451,
+      "mean_selected_progress_m": 26.866741,
+      "mean_selected_proxy_score": 18.447861,
+      "no_replay_safe_token_count": 118,
+      "proxy_safe_selected_count": 186,
+      "proxy_safe_selected_rate": 0.62,
+      "recoverable_proxy_optimism_count": 81,
+      "recoverable_proxy_optimism_fixed_count": 81,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 300,
+      "score_summary": {
+        "mean_score": -78.785795,
+        "median_score": -14.830616,
+        "scored_scene_count": 300
+      },
+      "selected_replay_infeasible_count": 118,
+      "selected_replay_infeasible_rate": 0.393333,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 182,
+      "selected_token_entropy": 1.862005,
+      "selected_token_histogram": {
+        "crawl": 17,
+        "evasive_right": 3,
+        "lane_recover": 5,
+        "maintain": 187,
+        "nudge_left": 4,
+        "nudge_right": 32,
+        "slow_yield": 23,
+        "stop": 29
+      },
+      "selector_name": "teacher_promoted_upper_bound"
+    }
+  },
+  "input_replay_json": "artifacts/corl2027/nuplan_public_replay_study_interaction1000_expert/replay.json",
+  "schema": "nuplan_recoverable_regret_bootstrap_v1",
+  "score_config": {
+    "ade_weight": 2.0,
+    "clearance_weight": 0.0,
+    "fail_penalty": 250.0,
+    "near_miss_threshold_m": 1.0,
+    "progress_weight": 1.0
+  },
+  "split": {
+    "holdout_db_count": 2,
+    "holdout_dbs": [
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db"
+    ],
+    "holdout_fraction": 0.3,
+    "holdout_scene_count": 300,
+    "seed": 2,
+    "split_unit": "source_db_file",
+    "train_db_count": 6,
+    "train_dbs": [
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.12.22.28.35_veh-35_00620_01164.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db",
+      "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db"
+    ],
+    "train_scene_count": 700
+  },
+  "student_fit_metrics": {
+    "example_count": 700.0,
+    "example_log_loss": 0.3225713081460847,
+    "scene_accuracy": 0.8585714285714285,
+    "scene_count": 700.0
+  },
+  "target_summary": {
+    "mean_recoverable_regret": 79.649275,
+    "median_recoverable_regret": 0.080345,
+    "target_count": 1000,
+    "teacher_changes_proxy_count": 509,
+    "teacher_changes_proxy_rate": 0.509,
+    "token_histogram": {
+      "crawl": 92,
+      "evasive_left": 40,
+      "evasive_right": 99,
+      "lane_recover": 18,
+      "maintain": 457,
+      "nudge_left": 4,
+      "nudge_right": 69,
+      "slow_yield": 175,
+      "stop": 46
+    }
+  },
+  "train": {
+    "g0_proxy_top1": {
+      "expert_distance_available_count": 700,
+      "gap_summary": {
+        "generation_gap_count": 163,
+        "generation_gap_rate": 0.232857,
+        "mean_recoverable_regret": 86.628235,
+        "median_recoverable_regret": 0.275952,
+        "positive_regret_count": 374,
+        "positive_regret_rate": 0.534286,
+        "scene_count": 700
+      },
+      "mean_ade_3s_m": 2.392183,
+      "mean_fde_3s_m": 3.937862,
+      "mean_heading_error_3s_rad": 0.134446,
+      "mean_selected_progress_m": 27.517867,
+      "mean_selected_proxy_score": 24.335546,
+      "no_replay_safe_token_count": 163,
+      "proxy_safe_selected_count": 576,
+      "proxy_safe_selected_rate": 0.822857,
+      "recoverable_proxy_optimism_count": 265,
+      "recoverable_proxy_optimism_fixed_count": 0,
+      "recoverable_proxy_optimism_recovery_rate": 0.0,
+      "scene_count": 700,
+      "score_summary": {
+        "mean_score": -130.123642,
+        "median_score": -210.396551,
+        "scored_scene_count": 700
+      },
+      "selected_replay_infeasible_count": 428,
+      "selected_replay_infeasible_rate": 0.611429,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 272,
+      "selected_token_entropy": 2.472266,
+      "selected_token_histogram": {
+        "evasive_left": 92,
+        "evasive_right": 106,
+        "lane_recover": 93,
+        "maintain": 258,
+        "nudge_left": 11,
+        "nudge_right": 64,
+        "slow_yield": 76
+      },
+      "selector_name": "g0_proxy_top1"
+    },
+    "g1_student_top1": {
+      "expert_distance_available_count": 700,
+      "gap_summary": {
+        "generation_gap_count": 163,
+        "generation_gap_rate": 0.232857,
+        "mean_recoverable_regret": 7.112683,
+        "median_recoverable_regret": 0.0,
+        "positive_regret_count": 99,
+        "positive_regret_rate": 0.141429,
+        "scene_count": 700
+      },
+      "mean_ade_3s_m": 4.703653,
+      "mean_fde_3s_m": 7.808542,
+      "mean_heading_error_3s_rad": 0.123612,
+      "mean_selected_progress_m": 21.299217,
+      "mean_selected_proxy_score": 19.098974,
+      "no_replay_safe_token_count": 163,
+      "proxy_safe_selected_count": 589,
+      "proxy_safe_selected_rate": 0.841429,
+      "recoverable_proxy_optimism_count": 265,
+      "recoverable_proxy_optimism_fixed_count": 253,
+      "recoverable_proxy_optimism_recovery_rate": 0.954717,
+      "scene_count": 700,
+      "score_summary": {
+        "mean_score": -50.60809,
+        "median_score": 7.273655,
+        "scored_scene_count": 700
+      },
+      "selected_replay_infeasible_count": 175,
+      "selected_replay_infeasible_rate": 0.25,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 525,
+      "selected_token_entropy": 2.683716,
+      "selected_token_histogram": {
+        "crawl": 71,
+        "evasive_left": 43,
+        "evasive_right": 123,
+        "lane_recover": 19,
+        "maintain": 196,
+        "nudge_right": 60,
+        "slow_yield": 151,
+        "stop": 37
+      },
+      "selector_name": "g1_student_top1"
+    },
+    "oracle_at_k": {
+      "expert_distance_available_count": 700,
+      "gap_summary": {
+        "generation_gap_count": 163,
+        "generation_gap_rate": 0.232857,
+        "mean_recoverable_regret": 0.0,
+        "median_recoverable_regret": 0.0,
+        "positive_regret_count": 0,
+        "positive_regret_rate": 0.0,
+        "scene_count": 700
+      },
+      "mean_ade_3s_m": 4.166994,
+      "mean_fde_3s_m": 6.923618,
+      "mean_heading_error_3s_rad": 0.127577,
+      "mean_selected_progress_m": 23.052867,
+      "mean_selected_proxy_score": 19.722808,
+      "no_replay_safe_token_count": 163,
+      "proxy_safe_selected_count": 557,
+      "proxy_safe_selected_rate": 0.795714,
+      "recoverable_proxy_optimism_count": 265,
+      "recoverable_proxy_optimism_fixed_count": 265,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 700,
+      "score_summary": {
+        "mean_score": -43.495407,
+        "median_score": 7.420586,
+        "scored_scene_count": 700
+      },
+      "selected_replay_infeasible_count": 163,
+      "selected_replay_infeasible_rate": 0.232857,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 537,
+      "selected_token_entropy": 2.444122,
+      "selected_token_histogram": {
+        "crawl": 75,
+        "evasive_left": 40,
+        "evasive_right": 96,
+        "lane_recover": 13,
+        "maintain": 270,
+        "nudge_right": 37,
+        "slow_yield": 152,
+        "stop": 17
+      },
+      "selector_name": "oracle_at_k"
+    },
+    "replay_oracle_safe_only": {
+      "expert_distance_available_count": 700,
+      "gap_summary": {
+        "generation_gap_count": 163,
+        "generation_gap_rate": 0.232857,
+        "mean_recoverable_regret": 16.991537,
+        "median_recoverable_regret": 8.72205,
+        "positive_regret_count": 466,
+        "positive_regret_rate": 0.665714,
+        "scene_count": 700
+      },
+      "mean_ade_3s_m": 7.658066,
+      "mean_fde_3s_m": 12.482202,
+      "mean_heading_error_3s_rad": 0.131727,
+      "mean_selected_progress_m": 13.043475,
+      "mean_selected_proxy_score": 13.5383,
+      "no_replay_safe_token_count": 163,
+      "proxy_safe_selected_count": 666,
+      "proxy_safe_selected_rate": 0.951429,
+      "recoverable_proxy_optimism_count": 265,
+      "recoverable_proxy_optimism_fixed_count": 265,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 700,
+      "score_summary": {
+        "mean_score": -60.486944,
+        "median_score": -11.479583,
+        "scored_scene_count": 700
+      },
+      "selected_replay_infeasible_count": 163,
+      "selected_replay_infeasible_rate": 0.232857,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 537,
+      "selected_token_entropy": 2.571123,
+      "selected_token_histogram": {
+        "crawl": 92,
+        "evasive_left": 118,
+        "evasive_right": 159,
+        "lane_recover": 12,
+        "maintain": 31,
+        "nudge_left": 7,
+        "nudge_right": 1,
+        "slow_yield": 88,
+        "stop": 192
+      },
+      "selector_name": "replay_oracle_safe_only"
+    },
+    "teacher_promoted_upper_bound": {
+      "expert_distance_available_count": 700,
+      "gap_summary": {
+        "generation_gap_count": 163,
+        "generation_gap_rate": 0.232857,
+        "mean_recoverable_regret": 0.0,
+        "median_recoverable_regret": 0.0,
+        "positive_regret_count": 0,
+        "positive_regret_rate": 0.0,
+        "scene_count": 700
+      },
+      "mean_ade_3s_m": 4.166994,
+      "mean_fde_3s_m": 6.923618,
+      "mean_heading_error_3s_rad": 0.127577,
+      "mean_selected_progress_m": 23.052867,
+      "mean_selected_proxy_score": 19.722808,
+      "no_replay_safe_token_count": 163,
+      "proxy_safe_selected_count": 557,
+      "proxy_safe_selected_rate": 0.795714,
+      "recoverable_proxy_optimism_count": 265,
+      "recoverable_proxy_optimism_fixed_count": 265,
+      "recoverable_proxy_optimism_recovery_rate": 1.0,
+      "scene_count": 700,
+      "score_summary": {
+        "mean_score": -43.495407,
+        "median_score": 7.420586,
+        "scored_scene_count": 700
+      },
+      "selected_replay_infeasible_count": 163,
+      "selected_replay_infeasible_rate": 0.232857,
+      "selected_replay_missing_count": 0,
+      "selected_replay_safe_count": 537,
+      "selected_token_entropy": 2.444122,
+      "selected_token_histogram": {
+        "crawl": 75,
+        "evasive_left": 40,
+        "evasive_right": 96,
+        "lane_recover": 13,
+        "maintain": 270,
+        "nudge_right": 37,
+        "slow_yield": 152,
+        "stop": 17
+      },
+      "selector_name": "teacher_promoted_upper_bound"
+    }
+  }
+}

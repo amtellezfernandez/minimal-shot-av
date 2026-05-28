@@ -1,0 +1,309 @@
+{
+  "schema": "nuplan_recoverable_regret_bootstrap_seed_summary_v1",
+  "splits": {
+    "regret_weighted_student": {
+      "g0_proxy_top1": {
+        "mean_ade_3s_m": {
+          "mean": 2.442718,
+          "std": 0.30033
+        },
+        "mean_recoverable_regret": {
+          "mean": 89.217306,
+          "std": 25.822474
+        },
+        "mean_score": {
+          "mean": -139.879983,
+          "std": 23.405798
+        },
+        "mean_selected_progress_m": {
+          "mean": 28.043088,
+          "std": 3.406693
+        },
+        "positive_regret_rate": {
+          "mean": 0.509161,
+          "std": 0.034447
+        },
+        "selected_replay_infeasible_rate": {
+          "mean": 0.65215,
+          "std": 0.107859
+        },
+        "selected_token_entropy": {
+          "mean": 2.010422,
+          "std": 0.247178
+        }
+      },
+      "g1_student_top1": {
+        "mean_ade_3s_m": {
+          "mean": 5.586327,
+          "std": 1.144252
+        },
+        "mean_recoverable_regret": {
+          "mean": 59.657435,
+          "std": 23.502809
+        },
+        "mean_score": {
+          "mean": -110.320112,
+          "std": 45.541638
+        },
+        "mean_selected_progress_m": {
+          "mean": 19.051468,
+          "std": 6.770688
+        },
+        "positive_regret_rate": {
+          "mean": 0.64028,
+          "std": 0.173279
+        },
+        "selected_replay_infeasible_rate": {
+          "mean": 0.472796,
+          "std": 0.213054
+        },
+        "selected_token_entropy": {
+          "mean": 2.261185,
+          "std": 0.111369
+        }
+      },
+      "oracle_at_k": {
+        "mean_ade_3s_m": {
+          "mean": 4.431798,
+          "std": 1.057111
+        },
+        "mean_recoverable_regret": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "mean_score": {
+          "mean": -50.662677,
+          "std": 43.276411
+        },
+        "mean_selected_progress_m": {
+          "mean": 22.953608,
+          "std": 6.419164
+        },
+        "positive_regret_rate": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "selected_replay_infeasible_rate": {
+          "mean": 0.259011,
+          "std": 0.204246
+        },
+        "selected_token_entropy": {
+          "mean": 1.985914,
+          "std": 0.26887
+        }
+      },
+      "replay_oracle_safe_only": {
+        "mean_ade_3s_m": {
+          "mean": 7.955573,
+          "std": 1.210126
+        },
+        "mean_recoverable_regret": {
+          "mean": 17.715324,
+          "std": 7.950032
+        },
+        "mean_score": {
+          "mean": -68.378001,
+          "std": 50.753488
+        },
+        "mean_selected_progress_m": {
+          "mean": 12.285833,
+          "std": 2.390189
+        },
+        "positive_regret_rate": {
+          "mean": 0.603183,
+          "std": 0.040179
+        },
+        "selected_replay_infeasible_rate": {
+          "mean": 0.259011,
+          "std": 0.204246
+        },
+        "selected_token_entropy": {
+          "mean": 2.443933,
+          "std": 0.250224
+        }
+      },
+      "teacher_promoted_upper_bound": {
+        "mean_ade_3s_m": {
+          "mean": 4.431798,
+          "std": 1.057111
+        },
+        "mean_recoverable_regret": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "mean_score": {
+          "mean": -50.662677,
+          "std": 43.276411
+        },
+        "mean_selected_progress_m": {
+          "mean": 22.953608,
+          "std": 6.419164
+        },
+        "positive_regret_rate": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "selected_replay_infeasible_rate": {
+          "mean": 0.259011,
+          "std": 0.204246
+        },
+        "selected_token_entropy": {
+          "mean": 1.985914,
+          "std": 0.26887
+        }
+      }
+    },
+    "uniform_student": {
+      "g0_proxy_top1": {
+        "mean_ade_3s_m": {
+          "mean": 2.442718,
+          "std": 0.30033
+        },
+        "mean_recoverable_regret": {
+          "mean": 89.217306,
+          "std": 25.822474
+        },
+        "mean_score": {
+          "mean": -139.879983,
+          "std": 23.405798
+        },
+        "mean_selected_progress_m": {
+          "mean": 28.043088,
+          "std": 3.406693
+        },
+        "positive_regret_rate": {
+          "mean": 0.509161,
+          "std": 0.034447
+        },
+        "selected_replay_infeasible_rate": {
+          "mean": 0.65215,
+          "std": 0.107859
+        },
+        "selected_token_entropy": {
+          "mean": 2.010422,
+          "std": 0.247178
+        }
+      },
+      "g1_student_top1": {
+        "mean_ade_3s_m": {
+          "mean": 4.61897,
+          "std": 1.249977
+        },
+        "mean_recoverable_regret": {
+          "mean": 63.653181,
+          "std": 20.666368
+        },
+        "mean_score": {
+          "mean": -114.315858,
+          "std": 40.172285
+        },
+        "mean_selected_progress_m": {
+          "mean": 22.771545,
+          "std": 6.770386
+        },
+        "positive_regret_rate": {
+          "mean": 0.480731,
+          "std": 0.145414
+        },
+        "selected_replay_infeasible_rate": {
+          "mean": 0.511398,
+          "std": 0.195816
+        },
+        "selected_token_entropy": {
+          "mean": 1.924429,
+          "std": 0.315705
+        }
+      },
+      "oracle_at_k": {
+        "mean_ade_3s_m": {
+          "mean": 4.431798,
+          "std": 1.057111
+        },
+        "mean_recoverable_regret": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "mean_score": {
+          "mean": -50.662677,
+          "std": 43.276411
+        },
+        "mean_selected_progress_m": {
+          "mean": 22.953608,
+          "std": 6.419164
+        },
+        "positive_regret_rate": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "selected_replay_infeasible_rate": {
+          "mean": 0.259011,
+          "std": 0.204246
+        },
+        "selected_token_entropy": {
+          "mean": 1.985914,
+          "std": 0.26887
+        }
+      },
+      "replay_oracle_safe_only": {
+        "mean_ade_3s_m": {
+          "mean": 7.955573,
+          "std": 1.210126
+        },
+        "mean_recoverable_regret": {
+          "mean": 17.715324,
+          "std": 7.950032
+        },
+        "mean_score": {
+          "mean": -68.378001,
+          "std": 50.753488
+        },
+        "mean_selected_progress_m": {
+          "mean": 12.285833,
+          "std": 2.390189
+        },
+        "positive_regret_rate": {
+          "mean": 0.603183,
+          "std": 0.040179
+        },
+        "selected_replay_infeasible_rate": {
+          "mean": 0.259011,
+          "std": 0.204246
+        },
+        "selected_token_entropy": {
+          "mean": 2.443933,
+          "std": 0.250224
+        }
+      },
+      "teacher_promoted_upper_bound": {
+        "mean_ade_3s_m": {
+          "mean": 4.431798,
+          "std": 1.057111
+        },
+        "mean_recoverable_regret": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "mean_score": {
+          "mean": -50.662677,
+          "std": 43.276411
+        },
+        "mean_selected_progress_m": {
+          "mean": 22.953608,
+          "std": 6.419164
+        },
+        "positive_regret_rate": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "selected_replay_infeasible_rate": {
+          "mean": 0.259011,
+          "std": 0.204246
+        },
+        "selected_token_entropy": {
+          "mean": 1.985914,
+          "std": 0.26887
+        }
+      }
+    }
+  }
+}

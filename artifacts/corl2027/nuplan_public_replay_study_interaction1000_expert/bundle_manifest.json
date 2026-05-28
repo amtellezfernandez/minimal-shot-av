@@ -1,0 +1,65 @@
+{
+  "db_count": 8,
+  "members": [
+    {
+      "exists": true,
+      "extracted_path": "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.12.22.28.35_veh-35_00620_01164.db",
+      "file_size": 344469504,
+      "member": "data/cache/mini/2021.05.12.22.28.35_veh-35_00620_01164.db",
+      "selection_reason": "reuse_existing_bundle"
+    },
+    {
+      "exists": true,
+      "extracted_path": "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+      "file_size": 345374720,
+      "member": "data/cache/mini/2021.05.25.14.16.10_veh-35_01690_02183.db",
+      "selection_reason": "reuse_existing_bundle"
+    },
+    {
+      "exists": true,
+      "extracted_path": "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+      "file_size": 348114944,
+      "member": "data/cache/mini/2021.06.08.16.31.33_veh-38_01589_02072.db",
+      "selection_reason": "reuse_existing_bundle"
+    },
+    {
+      "exists": true,
+      "extracted_path": "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+      "file_size": 367718400,
+      "member": "data/cache/mini/2021.06.09.17.23.18_veh-38_02526_03027.db",
+      "selection_reason": "reuse_existing_bundle"
+    },
+    {
+      "exists": true,
+      "extracted_path": "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+      "file_size": 348061696,
+      "member": "data/cache/mini/2021.06.09.17.37.09_veh-12_00404_00864.db",
+      "selection_reason": "reuse_existing_bundle"
+    },
+    {
+      "exists": true,
+      "extracted_path": "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db",
+      "file_size": 431718400,
+      "member": "data/cache/mini/2021.07.16.00.51.05_veh-17_01352_01901.db",
+      "selection_reason": "reuse_existing_bundle"
+    },
+    {
+      "exists": true,
+      "extracted_path": "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db",
+      "file_size": 354758656,
+      "member": "data/cache/mini/2021.07.16.18.06.21_veh-38_04933_05307.db",
+      "selection_reason": "reuse_existing_bundle"
+    },
+    {
+      "exists": true,
+      "extracted_path": "workspace/nuplan/public_replay_bundle_interaction/data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db",
+      "file_size": 412368896,
+      "member": "data/cache/mini/2021.07.16.20.45.29_veh-35_00600_01084.db",
+      "selection_reason": "reuse_existing_bundle"
+    }
+  ],
+  "output_dir": "workspace/nuplan/public_replay_bundle_interaction",
+  "schema": "nuplan_public_mini_bundle_v2",
+  "selection_mode": "existing_bundle",
+  "url": null
+}

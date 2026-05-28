@@ -1,0 +1,362 @@
+{
+  "mean_std": {
+    "gate_ade": {
+      "mean": 3.8796346,
+      "std": 0.611058222626486
+    },
+    "gate_fp": {
+      "mean": 20.4,
+      "std": 2.3323807579381204
+    },
+    "gate_introduced": {
+      "mean": 0,
+      "std": 0.0
+    },
+    "gate_missed": {
+      "mean": 14.2,
+      "std": 9.239047569960878
+    },
+    "gate_progress": {
+      "mean": 23.7782958,
+      "std": 3.5858973909866076
+    },
+    "gate_rate": {
+      "mean": 0.4235698,
+      "std": 0.156076072995703
+    },
+    "gate_switch_rate": {
+      "mean": 0.3190322,
+      "std": 0.11708710082225113
+    },
+    "gate_tp": {
+      "mean": 56.6,
+      "std": 40.971209403677605
+    },
+    "oracle_rate": {
+      "mean": 0.2590106,
+      "std": 0.2042462173070532
+    },
+    "proxy_ade": {
+      "mean": 2.4427179999999997,
+      "std": 0.3003304745409629
+    },
+    "proxy_progress": {
+      "mean": 28.0430884,
+      "std": 3.4066927075734084
+    },
+    "proxy_rate": {
+      "mean": 0.6521504,
+      "std": 0.10785888401721948
+    },
+    "safe_ade": {
+      "mean": 4.95972,
+      "std": 0.9010115660007924
+    },
+    "safe_progress": {
+      "mean": 19.6662062,
+      "std": 2.969920530737306
+    },
+    "safe_rate": {
+      "mean": 0.37367720000000004,
+      "std": 0.1777315169939198
+    }
+  },
+  "recommendation_mean_std": {
+    "balanced_80pct_proxy_progress": {
+      "ade": {
+        "mean": 3.7760067999999998,
+        "std": 0.7194544274877734
+      },
+      "progress": {
+        "mean": 24.0391586,
+        "std": 3.8571272241520163
+      },
+      "rate": {
+        "mean": 0.4235698,
+        "std": 0.16455923116543783
+      },
+      "switch_rate": {
+        "mean": 0.3613548,
+        "std": 0.19013046875385334
+      },
+      "threshold": {
+        "mean": 0.52,
+        "std": 0.14696938456699069
+      }
+    },
+    "safety_first": {
+      "ade": {
+        "mean": 3.9151556,
+        "std": 0.6656374895228182
+      },
+      "progress": {
+        "mean": 23.6872128,
+        "std": 3.6339473021003155
+      },
+      "rate": {
+        "mean": 0.4182794,
+        "std": 0.1616043567576073
+      },
+      "switch_rate": {
+        "mean": 0.3812258,
+        "std": 0.16853169121254316
+      },
+      "threshold": {
+        "mean": 0.44,
+        "std": 0.04898979485566355
+      }
+    },
+    "utility_90pct_proxy_progress": {
+      "ade": {
+        "mean": 3.9151556,
+        "std": 0.6656374895228182
+      },
+      "progress": {
+        "mean": 23.6872128,
+        "std": 3.6339473021003155
+      },
+      "rate": {
+        "mean": 0.4182794,
+        "std": 0.1616043567576073
+      },
+      "switch_rate": {
+        "mean": 0.3812258,
+        "std": 0.16853169121254316
+      },
+      "threshold": {
+        "mean": 0.44,
+        "std": 0.04898979485566355
+      }
+    }
+  },
+  "rows": [
+    {
+      "gate_ade": 5.032249,
+      "gate_fp": 21,
+      "gate_introduced": 0,
+      "gate_missed": 23,
+      "gate_progress": 21.882765,
+      "gate_rate": 0.24,
+      "gate_switch_rate": 0.526667,
+      "gate_tp": 137,
+      "oracle_rate": 0.163333,
+      "proxy_ade": 2.250885,
+      "proxy_progress": 29.383353,
+      "proxy_rate": 0.696667,
+      "safe_ade": 6.333914,
+      "safe_progress": 18.341822,
+      "safe_rate": 0.163333,
+      "seed": 0
+    },
+    {
+      "gate_ade": 3.711914,
+      "gate_fp": 19,
+      "gate_introduced": 0,
+      "gate_missed": 16,
+      "gate_progress": 22.670421,
+      "gate_rate": 0.335484,
+      "gate_switch_rate": 0.303226,
+      "gate_tp": 28,
+      "oracle_rate": 0.116129,
+      "proxy_ade": 2.929124,
+      "proxy_progress": 25.17955,
+      "proxy_rate": 0.516129,
+      "safe_ade": 4.371538,
+      "safe_progress": 17.253258,
+      "safe_rate": 0.245161,
+      "seed": 1
+    },
+    {
+      "gate_ade": 3.904363,
+      "gate_fp": 24,
+      "gate_introduced": 0,
+      "gate_missed": 25,
+      "gate_progress": 25.534866,
+      "gate_rate": 0.56,
+      "gate_switch_rate": 0.183333,
+      "gate_tp": 31,
+      "oracle_rate": 0.393333,
+      "proxy_ade": 2.657583,
+      "proxy_progress": 28.997672,
+      "proxy_rate": 0.663333,
+      "safe_ade": 5.464628,
+      "safe_progress": 19.108791,
+      "safe_rate": 0.513333,
+      "seed": 2
+    },
+    {
+      "gate_ade": 3.370911,
+      "gate_fp": 21,
+      "gate_introduced": 0,
+      "gate_missed": 3,
+      "gate_progress": 29.67476,
+      "gate_rate": 0.653333,
+      "gate_switch_rate": 0.24,
+      "gate_tp": 51,
+      "oracle_rate": 0.59,
+      "proxy_ade": 2.216902,
+      "proxy_progress": 33.172982,
+      "proxy_rate": 0.823333,
+      "safe_ade": 4.921126,
+      "safe_progress": 25.487317,
+      "safe_rate": 0.643333,
+      "seed": 3
+    },
+    {
+      "gate_ade": 3.378736,
+      "gate_fp": 17,
+      "gate_introduced": 0,
+      "gate_missed": 4,
+      "gate_progress": 19.128667,
+      "gate_rate": 0.329032,
+      "gate_switch_rate": 0.341935,
+      "gate_tp": 36,
+      "oracle_rate": 0.032258,
+      "proxy_ade": 2.159096,
+      "proxy_progress": 23.481885,
+      "proxy_rate": 0.56129,
+      "safe_ade": 3.707394,
+      "safe_progress": 18.139843,
+      "safe_rate": 0.303226,
+      "seed": 4
+    }
+  ],
+  "schema": "nuplan_failure_gate_fallback_aware_seed_sweep_summary_v1",
+  "threshold_recommendation_rows": [
+    {
+      "ade": 5.180489,
+      "policy": "balanced_80pct_proxy_progress",
+      "progress": 21.494472,
+      "rate": 0.22,
+      "seed": 0,
+      "switch_rate": 0.566667,
+      "threshold": 0.4
+    },
+    {
+      "ade": 5.180489,
+      "policy": "safety_first",
+      "progress": 21.494472,
+      "rate": 0.22,
+      "seed": 0,
+      "switch_rate": 0.566667,
+      "threshold": 0.4
+    },
+    {
+      "ade": 5.180489,
+      "policy": "utility_90pct_proxy_progress",
+      "progress": 21.494472,
+      "rate": 0.22,
+      "seed": 0,
+      "switch_rate": 0.566667,
+      "threshold": 0.4
+    },
+    {
+      "ade": 3.711914,
+      "policy": "balanced_80pct_proxy_progress",
+      "progress": 22.670421,
+      "rate": 0.335484,
+      "seed": 1,
+      "switch_rate": 0.303226,
+      "threshold": 0.5
+    },
+    {
+      "ade": 3.741279,
+      "policy": "safety_first",
+      "progress": 22.603299,
+      "rate": 0.329032,
+      "seed": 1,
+      "switch_rate": 0.322581,
+      "threshold": 0.4
+    },
+    {
+      "ade": 3.741279,
+      "policy": "utility_90pct_proxy_progress",
+      "progress": 22.603299,
+      "rate": 0.329032,
+      "seed": 1,
+      "switch_rate": 0.322581,
+      "threshold": 0.4
+    },
+    {
+      "ade": 3.237984,
+      "policy": "balanced_80pct_proxy_progress",
+      "progress": 27.227473,
+      "rate": 0.58,
+      "seed": 2,
+      "switch_rate": 0.103333,
+      "threshold": 0.8
+    },
+    {
+      "ade": 3.904363,
+      "policy": "safety_first",
+      "progress": 25.534866,
+      "rate": 0.56,
+      "seed": 2,
+      "switch_rate": 0.183333,
+      "threshold": 0.5
+    },
+    {
+      "ade": 3.904363,
+      "policy": "utility_90pct_proxy_progress",
+      "progress": 25.534866,
+      "rate": 0.56,
+      "seed": 2,
+      "switch_rate": 0.183333,
+      "threshold": 0.5
+    },
+    {
+      "ade": 3.370911,
+      "policy": "balanced_80pct_proxy_progress",
+      "progress": 29.67476,
+      "rate": 0.653333,
+      "seed": 3,
+      "switch_rate": 0.24,
+      "threshold": 0.5
+    },
+    {
+      "ade": 3.370911,
+      "policy": "safety_first",
+      "progress": 29.67476,
+      "rate": 0.653333,
+      "seed": 3,
+      "switch_rate": 0.24,
+      "threshold": 0.5
+    },
+    {
+      "ade": 3.370911,
+      "policy": "utility_90pct_proxy_progress",
+      "progress": 29.67476,
+      "rate": 0.653333,
+      "seed": 3,
+      "switch_rate": 0.24,
+      "threshold": 0.5
+    },
+    {
+      "ade": 3.378736,
+      "policy": "balanced_80pct_proxy_progress",
+      "progress": 19.128667,
+      "rate": 0.329032,
+      "seed": 4,
+      "switch_rate": 0.593548,
+      "threshold": 0.4
+    },
+    {
+      "ade": 3.378736,
+      "policy": "safety_first",
+      "progress": 19.128667,
+      "rate": 0.329032,
+      "seed": 4,
+      "switch_rate": 0.593548,
+      "threshold": 0.4
+    },
+    {
+      "ade": 3.378736,
+      "policy": "utility_90pct_proxy_progress",
+      "progress": 19.128667,
+      "rate": 0.329032,
+      "seed": 4,
+      "switch_rate": 0.593548,
+      "threshold": 0.4
+    }
+  ]
+}

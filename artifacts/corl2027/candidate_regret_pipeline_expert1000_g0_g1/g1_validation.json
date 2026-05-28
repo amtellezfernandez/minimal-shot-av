@@ -1,0 +1,26 @@
+{
+  "candidate_count": 9000,
+  "generator_histogram": {
+    "nuplan_maneuver_token": 1000
+  },
+  "input_json": "artifacts/corl2027/nuplan_bootstrap_candidate_loop_expert1000_lambda80_g1_replay.json",
+  "issue_examples": [],
+  "mean_candidate_count": 9.0,
+  "readiness": "analysis_ready",
+  "replay_metric_missing_candidate_count": 0,
+  "required_for_recoverable_regret": [
+    "scene_id",
+    "top1_candidate_id",
+    "candidates[].candidate_id",
+    "candidates[].trajectory",
+    "candidates[].metrics.replay_fail or clearance_m",
+    "candidates[].metrics.progress_m"
+  ],
+  "scene_count": 1000,
+  "schema": "candidate_generator_dump_validation_v1",
+  "top1_missing_scene_count": 0,
+  "trajectory_missing_candidate_count": 0,
+  "utility_metric_missing_candidate_count": 0,
+  "valid_analysis_scene_count": 1000,
+  "valid_generation_scene_count": 1000
+}
