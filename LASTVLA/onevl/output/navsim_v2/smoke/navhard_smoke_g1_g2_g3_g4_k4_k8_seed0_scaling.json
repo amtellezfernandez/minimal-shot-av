@@ -1,0 +1,77 @@
+{
+  "description": "Mapped NAVSIM v2 navhard smoke scaling across matched scene groups, seed 0. Official values are fixed-candidate EPDMS; token_oracle_proxy_at_k_score is the per-scene proxy oracle over candidates and is not an official combined score.",
+  "rows": [
+    {
+      "group": "g1",
+      "scene_count": 24,
+      "k": 4,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 3,
+      "best_fixed_epdms": 0.362017664334727,
+      "token_oracle_proxy_at_k_score": 0.6614652223499332
+    },
+    {
+      "group": "g1",
+      "scene_count": 24,
+      "k": 8,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 2,
+      "best_fixed_epdms": 0.8006622399329324,
+      "token_oracle_proxy_at_k_score": 0.6957756672143193
+    },
+    {
+      "group": "g2",
+      "scene_count": 48,
+      "k": 4,
+      "top1_epdms": 0.04581082646752237,
+      "best_fixed_candidate": 3,
+      "best_fixed_epdms": 0.2786596854589903,
+      "token_oracle_proxy_at_k_score": 0.6023335971987615
+    },
+    {
+      "group": "g2",
+      "scene_count": 48,
+      "k": 8,
+      "top1_epdms": 0.04581082646752237,
+      "best_fixed_candidate": 2,
+      "best_fixed_epdms": 0.4189085097664613,
+      "token_oracle_proxy_at_k_score": 0.6142062747318405
+    },
+    {
+      "group": "g3",
+      "scene_count": 64,
+      "k": 4,
+      "top1_epdms": 0.06412786083750617,
+      "best_fixed_candidate": 1,
+      "best_fixed_epdms": 0.2910941368761574,
+      "token_oracle_proxy_at_k_score": 0.5549947630233079
+    },
+    {
+      "group": "g3",
+      "scene_count": 64,
+      "k": 8,
+      "top1_epdms": 0.06412786083750617,
+      "best_fixed_candidate": 2,
+      "best_fixed_epdms": 0.43666210578609954,
+      "token_oracle_proxy_at_k_score": 0.6013868768293672
+    },
+    {
+      "group": "g4",
+      "scene_count": 92,
+      "k": 4,
+      "top1_epdms": 0.15724459335849156,
+      "best_fixed_candidate": 2,
+      "best_fixed_epdms": 0.3784545109558194,
+      "token_oracle_proxy_at_k_score": 0.663590460828946
+    },
+    {
+      "group": "g4",
+      "scene_count": 92,
+      "k": 8,
+      "top1_epdms": 0.15724459335849156,
+      "best_fixed_candidate": 2,
+      "best_fixed_epdms": 0.37936976999886773,
+      "token_oracle_proxy_at_k_score": 0.696682118476823
+    }
+  ]
+}
