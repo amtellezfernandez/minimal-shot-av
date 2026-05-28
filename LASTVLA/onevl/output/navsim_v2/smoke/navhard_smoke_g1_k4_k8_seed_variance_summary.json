@@ -1,0 +1,143 @@
+{
+  "note": "Mapped NAVSIM v2 navhard_two_stage smoke group g1: 2 original tokens plus 22 reactive synthetic scenarios. Variance artifact for K=4 versus K=8 corrected hybrid banks across seeds 0-3; smoke-scale only.",
+  "rows": [
+    {
+      "k": 4,
+      "seed": 0,
+      "scene_count": 24,
+      "candidate_count": 4,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 3,
+      "best_fixed_epdms": 0.362017664334727,
+      "token_oracle_proxy_at_k_score": 0.6614652223499332,
+      "token_oracle_proxy_gap": 0.6614652223499332,
+      "oracle_winner_not_top1_rate": 0.4166666666666667
+    },
+    {
+      "k": 4,
+      "seed": 1,
+      "scene_count": 24,
+      "candidate_count": 4,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 1,
+      "best_fixed_epdms": 0.43749999956884855,
+      "token_oracle_proxy_at_k_score": 0.6848735570405592,
+      "token_oracle_proxy_gap": 0.6848735570405592,
+      "oracle_winner_not_top1_rate": 0.375
+    },
+    {
+      "k": 4,
+      "seed": 2,
+      "scene_count": 24,
+      "candidate_count": 4,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 0,
+      "best_fixed_epdms": 0.0,
+      "token_oracle_proxy_at_k_score": 0.629534020991222,
+      "token_oracle_proxy_gap": 0.629534020991222,
+      "oracle_winner_not_top1_rate": 0.375
+    },
+    {
+      "k": 4,
+      "seed": 3,
+      "scene_count": 24,
+      "candidate_count": 4,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 0,
+      "best_fixed_epdms": 0.0,
+      "token_oracle_proxy_at_k_score": 0.6130598606451155,
+      "token_oracle_proxy_gap": 0.6130598606451155,
+      "oracle_winner_not_top1_rate": 0.3333333333333333
+    },
+    {
+      "k": 8,
+      "seed": 0,
+      "scene_count": 24,
+      "candidate_count": 8,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 2,
+      "best_fixed_epdms": 0.8006622399329324,
+      "token_oracle_proxy_at_k_score": 0.6957756672143193,
+      "token_oracle_proxy_gap": 0.6957756672143193,
+      "oracle_winner_not_top1_rate": 0.5
+    },
+    {
+      "k": 8,
+      "seed": 1,
+      "scene_count": 24,
+      "candidate_count": 8,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 5,
+      "best_fixed_epdms": 0.4382760993163024,
+      "token_oracle_proxy_at_k_score": 0.7017222312894399,
+      "token_oracle_proxy_gap": 0.7017222312894399,
+      "oracle_winner_not_top1_rate": 0.5
+    },
+    {
+      "k": 8,
+      "seed": 2,
+      "scene_count": 24,
+      "candidate_count": 8,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 7,
+      "best_fixed_epdms": 0.43749997283325076,
+      "token_oracle_proxy_at_k_score": 0.6597571743139133,
+      "token_oracle_proxy_gap": 0.6597571743139133,
+      "oracle_winner_not_top1_rate": 0.3333333333333333
+    },
+    {
+      "k": 8,
+      "seed": 3,
+      "scene_count": 24,
+      "candidate_count": 8,
+      "top1_epdms": 0.0,
+      "best_fixed_candidate": 7,
+      "best_fixed_epdms": 0.737776780688703,
+      "token_oracle_proxy_at_k_score": 0.6983386783391312,
+      "token_oracle_proxy_gap": 0.6983386783391312,
+      "oracle_winner_not_top1_rate": 0.5
+    }
+  ],
+  "aggregates": [
+    {
+      "k": 4,
+      "seed_count": 4,
+      "best_fixed_epdms_mean": 0.19987941597589387,
+      "best_fixed_epdms_std": 0.20165311502035857,
+      "best_fixed_epdms_min": 0.0,
+      "best_fixed_epdms_max": 0.43749999956884855,
+      "token_oracle_proxy_at_k_score_mean": 0.6472331652567075,
+      "token_oracle_proxy_at_k_score_std": 0.02784073004858981,
+      "token_oracle_proxy_at_k_score_min": 0.6130598606451155,
+      "token_oracle_proxy_at_k_score_max": 0.6848735570405592,
+      "token_oracle_proxy_gap_mean": 0.6472331652567075,
+      "token_oracle_proxy_gap_std": 0.02784073004858981,
+      "token_oracle_proxy_gap_min": 0.6130598606451155,
+      "token_oracle_proxy_gap_max": 0.6848735570405592,
+      "oracle_winner_not_top1_rate_mean": 0.375,
+      "oracle_winner_not_top1_rate_std": 0.029462782549439494,
+      "oracle_winner_not_top1_rate_min": 0.3333333333333333,
+      "oracle_winner_not_top1_rate_max": 0.4166666666666667
+    },
+    {
+      "k": 8,
+      "seed_count": 4,
+      "best_fixed_epdms_mean": 0.6035537731927971,
+      "best_fixed_epdms_std": 0.1671512320458378,
+      "best_fixed_epdms_min": 0.43749997283325076,
+      "best_fixed_epdms_max": 0.8006622399329324,
+      "token_oracle_proxy_at_k_score_mean": 0.6888984377892009,
+      "token_oracle_proxy_at_k_score_std": 0.01695639512749661,
+      "token_oracle_proxy_at_k_score_min": 0.6597571743139133,
+      "token_oracle_proxy_at_k_score_max": 0.7017222312894399,
+      "token_oracle_proxy_gap_mean": 0.6888984377892009,
+      "token_oracle_proxy_gap_std": 0.01695639512749661,
+      "token_oracle_proxy_gap_min": 0.6597571743139133,
+      "token_oracle_proxy_gap_max": 0.7017222312894399,
+      "oracle_winner_not_top1_rate_mean": 0.4583333333333333,
+      "oracle_winner_not_top1_rate_std": 0.07216878364870323,
+      "oracle_winner_not_top1_rate_min": 0.3333333333333333,
+      "oracle_winner_not_top1_rate_max": 0.5
+    }
+  ]
+}

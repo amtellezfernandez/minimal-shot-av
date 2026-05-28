@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="430" viewBox="0 0 780 430">
+<rect width="100%" height="100%" fill="#fff"/>
+<text x="70" y="26" font-family="Arial, sans-serif" font-size="18" font-weight="700">NAVSIM v2 mapped smoke seed variance</text>
+<line x1="70" y1="368.0" x2="740" y2="368.0" stroke="#e5e7eb"/>
+<text x="60" y="372.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.0</text>
+<line x1="70" y1="290.8" x2="740" y2="290.8" stroke="#e5e7eb"/>
+<text x="60" y="294.8" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.2</text>
+<line x1="70" y1="213.6" x2="740" y2="213.6" stroke="#e5e7eb"/>
+<text x="60" y="217.6" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.4</text>
+<line x1="70" y1="136.5" x2="740" y2="136.5" stroke="#e5e7eb"/>
+<text x="60" y="140.5" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.6</text>
+<line x1="70" y1="59.3" x2="740" y2="59.3" stroke="#e5e7eb"/>
+<text x="60" y="63.3" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0.8</text>
+<text x="284.4" y="398" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#222">K=4</text>
+<line x1="214.4" y1="118.2" x2="354.4" y2="118.2" stroke="#0f766e" stroke-width="3"/>
+<line x1="214.4" y1="290.9" x2="354.4" y2="290.9" stroke="#b45309" stroke-width="3"/>
+<text x="539.0" y="398" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#222">K=8</text>
+<line x1="469.0" y1="102.2" x2="609.0" y2="102.2" stroke="#0f766e" stroke-width="3"/>
+<line x1="469.0" y1="135.1" x2="609.0" y2="135.1" stroke="#b45309" stroke-width="3"/>
+<circle cx="251.4" cy="112.8" r="5" fill="#0f766e"/>
+<circle cx="251.4" cy="228.3" r="5" fill="#b45309"/>
+<text x="251.4" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">s0</text>
+<circle cx="273.4" cy="103.7" r="5" fill="#0f766e"/>
+<circle cx="273.4" cy="199.2" r="5" fill="#b45309"/>
+<text x="273.4" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">s1</text>
+<circle cx="295.4" cy="125.1" r="5" fill="#0f766e"/>
+<circle cx="295.4" cy="368.0" r="5" fill="#b45309"/>
+<text x="295.4" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">s2</text>
+<circle cx="317.4" cy="131.4" r="5" fill="#0f766e"/>
+<circle cx="317.4" cy="368.0" r="5" fill="#b45309"/>
+<text x="317.4" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">s3</text>
+<circle cx="506.0" cy="99.5" r="5" fill="#0f766e"/>
+<circle cx="506.0" cy="59.0" r="5" fill="#b45309"/>
+<text x="506.0" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">s0</text>
+<circle cx="528.0" cy="97.2" r="5" fill="#0f766e"/>
+<circle cx="528.0" cy="198.9" r="5" fill="#b45309"/>
+<text x="528.0" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">s1</text>
+<circle cx="550.0" cy="113.4" r="5" fill="#0f766e"/>
+<circle cx="550.0" cy="199.2" r="5" fill="#b45309"/>
+<text x="550.0" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">s2</text>
+<circle cx="572.0" cy="98.5" r="5" fill="#0f766e"/>
+<circle cx="572.0" cy="83.3" r="5" fill="#b45309"/>
+<text x="572.0" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#555">s3</text>
+<line x1="505" y1="52" x2="540" y2="52" stroke="#0f766e" stroke-width="3"/><text x="548" y="56" font-family="Arial, sans-serif" font-size="12">Token-oracle proxy</text>
+<line x1="505" y1="74" x2="540" y2="74" stroke="#b45309" stroke-width="3"/><text x="548" y="78" font-family="Arial, sans-serif" font-size="12">Best fixed branch</text>
+<text x="16" y="230" font-family="Arial, sans-serif" font-size="12" fill="#555" transform="rotate(-90 16 230)">EPDMS / proxy score</text>
+</svg>
