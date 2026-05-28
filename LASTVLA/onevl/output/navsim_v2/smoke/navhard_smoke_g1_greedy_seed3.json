@@ -4,7 +4,7 @@
         "token": "4a919f7ea2f65200",
         "stage": "first",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.71815037727356,
+        "latency": 9.838541984558105,
         "messages": [
             {
                 "role": "user",
@@ -85,7 +85,7 @@
         "token": "d715fbc6ea0551f8",
         "stage": "first",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.158474445343018,
+        "latency": 9.344166994094849,
         "messages": [
             {
                 "role": "user",
@@ -166,7 +166,7 @@
         "token": "5421fa2f2e2b4cb13",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.018649816513062,
+        "latency": 9.218540906906128,
         "messages": [
             {
                 "role": "user",
@@ -247,7 +247,7 @@
         "token": "5634addd2134d1453",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 8.949454307556152,
+        "latency": 9.173346757888794,
         "messages": [
             {
                 "role": "user",
@@ -328,7 +328,7 @@
         "token": "13aeb83dad95704fa",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 8.817779541015625,
+        "latency": 8.893846988677979,
         "messages": [
             {
                 "role": "user",
@@ -409,7 +409,7 @@
         "token": "7d4dd35efebf5aa8f",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 8.928996086120605,
+        "latency": 9.151490688323975,
         "messages": [
             {
                 "role": "user",
@@ -490,7 +490,7 @@
         "token": "46ccc7e9752595671",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 8.779451608657837,
+        "latency": 9.027240991592407,
         "messages": [
             {
                 "role": "user",
@@ -571,7 +571,7 @@
         "token": "b7f53c6ea01b7cbc9",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 8.886012077331543,
+        "latency": 9.029719829559326,
         "messages": [
             {
                 "role": "user",
@@ -652,7 +652,7 @@
         "token": "c864abb5afff1f7f4",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.14919376373291,
+        "latency": 9.297711610794067,
         "messages": [
             {
                 "role": "user",
@@ -733,7 +733,7 @@
         "token": "6b912a3796564dd7e",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.131306171417236,
+        "latency": 9.093374252319336,
         "messages": [
             {
                 "role": "user",
@@ -814,7 +814,7 @@
         "token": "6b5b128424d5357b0",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 8.680474042892456,
+        "latency": 8.773586511611938,
         "messages": [
             {
                 "role": "user",
@@ -895,7 +895,7 @@
         "token": "3b9a4be29bdd2c8ae",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 8.692816495895386,
+        "latency": 8.728189706802368,
         "messages": [
             {
                 "role": "user",
@@ -976,7 +976,7 @@
         "token": "7be779b9f100e6373",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.180596590042114,
+        "latency": 9.141700029373169,
         "messages": [
             {
                 "role": "user",
@@ -1057,7 +1057,7 @@
         "token": "e2ea1000f4e2d0904",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 8.999987840652466,
+        "latency": 9.101637125015259,
         "messages": [
             {
                 "role": "user",
@@ -1138,7 +1138,7 @@
         "token": "0e55c21e09e86d8ba",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.131749153137207,
+        "latency": 9.01583456993103,
         "messages": [
             {
                 "role": "user",
@@ -1219,7 +1219,7 @@
         "token": "0a8cbe192f3d3dfba",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.149090051651001,
+        "latency": 9.144821166992188,
         "messages": [
             {
                 "role": "user",
@@ -1300,7 +1300,7 @@
         "token": "778f661244251a842",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.10393214225769,
+        "latency": 9.150972604751587,
         "messages": [
             {
                 "role": "user",
@@ -1381,7 +1381,7 @@
         "token": "18dbdfb5b9fe301f4",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.137289762496948,
+        "latency": 9.229722499847412,
         "messages": [
             {
                 "role": "user",
@@ -1462,7 +1462,7 @@
         "token": "530edf0e35aa025b6",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.10252857208252,
+        "latency": 9.401962280273438,
         "messages": [
             {
                 "role": "user",
@@ -1543,7 +1543,7 @@
         "token": "3dd919c5a93fd6754",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.18227744102478,
+        "latency": 9.405629873275757,
         "messages": [
             {
                 "role": "user",
@@ -1624,7 +1624,7 @@
         "token": "ea1bac206caf8d18e",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.177249908447266,
+        "latency": 9.316723823547363,
         "messages": [
             {
                 "role": "user",
@@ -1705,7 +1705,7 @@
         "token": "3b8808368bea4771a",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.05297040939331,
+        "latency": 9.345065116882324,
         "messages": [
             {
                 "role": "user",
@@ -1786,7 +1786,7 @@
         "token": "b4750fa326ea1085b",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.379626035690308,
+        "latency": 9.526461362838745,
         "messages": [
             {
                 "role": "user",
@@ -1867,7 +1867,7 @@
         "token": "bba03402f6222135f",
         "stage": "second",
         "log_name": "2021.05.25.14.16.10_veh-35_01100_01664",
-        "latency": 9.265772342681885,
+        "latency": 9.3941171169281,
         "messages": [
             {
                 "role": "user",
