@@ -3,44 +3,44 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: paper.aux
 The style file: corlabbrvnat.bst
 Database file #1: paper.bib
-You've used 8 entries,
+You've used 9 entries,
             2773 wiz_defined-function locations,
-            632 strings with 6634 characters,
-and the built_in function-call counts, 5547 in all, are:
-= -- 426
-> -- 533
+            637 strings with 6958 characters,
+and the built_in function-call counts, 6364 in all, are:
+= -- 486
+> -- 634
 < -- 4
-+ -- 179
-- -- 171
-* -- 495
-:= -- 882
-add.period$ -- 24
-call.type$ -- 8
-change.case$ -- 79
-chr.to.int$ -- 8
-cite$ -- 16
-duplicate$ -- 201
-empty$ -- 330
-format.name$ -- 179
-if$ -- 1128
++ -- 213
+- -- 204
+* -- 577
+:= -- 1024
+add.period$ -- 28
+call.type$ -- 9
+change.case$ -- 92
+chr.to.int$ -- 9
+cite$ -- 18
+duplicate$ -- 221
+empty$ -- 361
+format.name$ -- 213
+if$ -- 1285
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 8
-newline$ -- 48
-num.names$ -- 32
-pop$ -- 176
+missing$ -- 9
+newline$ -- 54
+num.names$ -- 36
+pop$ -- 201
 preamble$ -- 1
-purify$ -- 71
+purify$ -- 83
 quote$ -- 0
-skip$ -- 187
+skip$ -- 210
 stack$ -- 0
-substring$ -- 96
-swap$ -- 36
+substring$ -- 98
+swap$ -- 37
 text.length$ -- 3
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 88
+type$ -- 99
 warning$ -- 0
-while$ -- 30
+while$ -- 33
 width$ -- 0
-write$ -- 106
+write$ -- 120

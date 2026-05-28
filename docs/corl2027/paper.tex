@@ -57,7 +57,10 @@ therefore structural: candidate expansion addresses the generation branch, but t
 effective learning unit for recoverable regret is candidate-level boundary matching, not
 scene-level token classification. The current evidence is deliberately bounded: it is
 public nuPlan log replay with a ManeuverToken surrogate generator, not proof of
-closed-loop VLA safety. The contribution is the recoverable-regret training loop, the
+closed-loop VLA safety. A separate mapped NAVSIM v2 smoke audit with a released VLA,
+OneVL, shows the same interface-level problem in a harder evaluator: larger candidate
+banks expose additional oracle headroom, but a blind low-capacity selector does not yet
+recover it. The contribution is the recoverable-regret training loop, the
 generation-versus-selection decomposition, and the candidate-level replay-value student
 that approximates the local oracle boundary inside each candidate bank.
 \end{abstract}
@@ -194,6 +197,8 @@ ultimately use. A grounded generator can still fail if its top-1 candidate is no
 candidate it generated. Conversely, no reranker can recover a scene where oracle@K is
 unsafe. The paper's core distinction is therefore between generation gap and recoverable
 selection regret.
+We use OneVL~\citep{lu2026onevl} as a released VLA-style trajectory generator for a
+bounded NAVSIM v2 interface check, not as the main training result.
 
 \paragraph{Reranking, self-training, and bootstrapping.}
 Candidate reranking is a known way to improve top-1 decisions. \method{} is not presented
@@ -364,6 +369,70 @@ future-geometry infeasibility and recoverable candidate regret. It does not prov
 controller safety, because actors do not react to ego actions. We use the closed-loop
 bridge only as infrastructure in this draft, not as the main evidence claim.
 
+\subsection{Released VLA Check on NAVSIM v2}
+\label{sec:exp:navsim_v2}
+
+The candidate interface is also useful for released VLA planners. We adapted OneVL to
+emit corrected hybrid candidate banks on NAVSIM v2 \texttt{navhard\_two\_stage}: the
+greedy trajectory is always candidate 0, and candidates 1--$K-1$ are sampled alternatives
+from the same prompt. We then convert each fixed candidate index into an official NAVSIM
+submission and score it with the Extended PDM Score (EPDMS). This is not the main nuPlan
+training experiment; it is a benchmark-facing diagnostic that asks whether VLA sampling
+creates recoverable alternatives and whether cheap interface-only selection is already
+sufficient.
+
+Table~\ref{tab:navsim_v2_scaling} summarizes the mapped smoke runs that are currently
+complete. The subsets are small but matched: group \(g1\) has 24 scenes, \(g2\) has 48,
+\(g3\) has 64, and \(g4\) has 92. The fixed-candidate columns are official aggregate
+EPDMS values obtained by selecting the same candidate index for every scene. The proxy
+oracle is a per-token upper bound from the score rows; it measures candidate-bank
+headroom but is not an official leaderboard aggregate.
+
+\begin{table}[t]
+\centering
+\caption{Mapped NAVSIM v2 OneVL smoke audit. K8 consistently increases the per-token
+proxy oracle over K4, but official fixed-candidate gains are not monotone at larger
+scale. This supports a bounded candidate-headroom claim and exposes selector learning as
+the unresolved problem.}
+\label{tab:navsim_v2_scaling}
+\scriptsize
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Subset & Scenes & \(K\) & Greedy EPDMS & Best fixed cand. & Best fixed EPDMS & Proxy oracle \\
+\midrule
+g1 & 24 & 4 & 0.000 & 3 & 0.362 & 0.661 \\
+g1 & 24 & 8 & 0.000 & 2 & 0.801 & 0.696 \\
+g2 & 48 & 4 & 0.046 & 3 & 0.279 & 0.602 \\
+g2 & 48 & 8 & 0.046 & 2 & 0.419 & 0.614 \\
+g3 & 64 & 4 & 0.064 & 1 & 0.291 & 0.555 \\
+g3 & 64 & 8 & 0.064 & 2 & 0.437 & 0.601 \\
+g4 & 92 & 4 & 0.157 & 2 & 0.378 & 0.664 \\
+g4 & 92 & 8 & 0.157 & 2 & 0.379 & 0.697 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+Two details are important for the paper's claim. First, the small g1 K-sweep shows that
+candidate support does expand with sampling budget: proxy oracle rises from 0.603 at
+K1 to 0.696 at K8 and 0.708 at K32. Second, the fixed-candidate official score does not
+simply improve with K on every subset. On g4, K8 increases proxy oracle from 0.664 to
+0.697, but the best fixed official EPDMS is essentially tied with K4 (0.379 versus
+0.378). That is exactly the failure mode the method is meant to expose: the candidate
+bank can contain better local choices while a global fixed selector, or the native greedy
+decoder, fails to exploit them.
+
+We also ran the deliberately restricted zero-perception ridge probe used in the early
+NAVSIM audit: trajectory geometry, prompt kinematics, and decode metadata only; no images,
+map rasters, hidden states, or scene context. On NAVSIM v2 this probe is not yet a
+solution. For example, on g4/K8 it selects to a 0.541 proxy score versus the greedy
+candidate's 0.571 proxy score, while the proxy oracle is 0.697. The negative result is
+useful: it prevents us from claiming that blind geometry is sufficient on NAVSIM v2. The
+paper-safe conclusion is narrower and stronger: released VLA sampling produces measurable
+candidate-bank headroom, but selection requires richer supervision than a low-capacity
+interface-only probe.
+
 \subsection{Initial Regret Decomposition}
 \label{sec:exp:g0}
 
@@ -382,6 +451,7 @@ illustrative split of a fixed bank. Candidate expansion changes the oracle bound
 student choice determines how much of that boundary is actually exploited.}
 \label{tab:lifecycle}
 \footnotesize
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
 Stage & Gen. gap & Safety regret & Utility regret & Mean regret & Top-1 fail & Oracle fail \\
@@ -392,6 +462,7 @@ expanded + scene-token student & 223 & n/a & n/a & 85.707 & 0.460 & 0.097 \\
 expanded + replay-value student & 223 & n/a & n/a & 21.146 & 0.097 & 0.097 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 \subsection{Expanded Candidate Bank}
@@ -621,10 +692,12 @@ most splits.
 \paragraph{Relation to VLA planners.}
 The candidate interface is intentionally model-agnostic. A VLA generator can be plugged in
 if it emits $K$ candidate trajectories and top-1 metadata. The current repository includes
-conversion and validation tools for this path, but this paper does not claim VLA top-1
-improvement until replay and utility metrics are attached to every generated candidate.
-The ManeuverToken experiment is therefore a controlled proof of the regret-bootstrap
-mechanism, not a claim that a released VLA planner has already been improved.
+conversion, candidate-bank generation, and NAVSIM v2 scoring tools for this path. The
+completed OneVL smoke runs in Section~\ref{sec:exp:navsim_v2} show measurable
+candidate-bank headroom, but they do not show an improved deployed VLA selector. The
+ManeuverToken experiment is therefore the controlled proof of the regret-bootstrap
+mechanism; the released-VLA result is a boundary check showing where the same
+generation-versus-selection question appears in a harder benchmark.
 
 % =====================================================================
 \section{Limitations}
@@ -642,7 +715,8 @@ The reported lifecycle uses a nine-token ManeuverToken generator. This makes the
 candidate bank auditable, but it also fixes the candidate distribution. The unchanged
 281-scene generation gap is partly a property of that limited bank. A VLA or sampling
 generator must be evaluated by whether it reduces this gap while preserving candidate
-diversity.
+diversity. The OneVL/NAVSIM v2 smoke audit is a first step in that direction, but its
+mapped subsets are still too small for a final benchmark claim.
 
 \paragraph{Current evidence stops at candidate-level selection.}
 The current replay-value student proves that candidate-level learning can exploit the

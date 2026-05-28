@@ -1,4 +1,4 @@
-\begin{thebibliography}{8}
+\begin{thebibliography}{9}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -64,5 +64,14 @@ Y.~Luo, F.~Li, S.~Xu, Y.~Ji, Z.~Zhang, B.~Wang, Y.~Shen, J.~Cui, L.~Chen,
 \newblock {LaST-VLA}: Thinking in latent spatio-temporal space for
   vision-language-action in autonomous driving.
 \newblock \emph{arXiv preprint arXiv:2603.01928}, 2026.
+
+\bibitem[Lu et~al.(2026)Lu, Guan, Huang, Li, Li, Kong, Li, Wang, Xu, Luo,
+  et~al.]{lu2026onevl}
+J.~Lu, J.~Guan, Z.~Huang, J.~Li, G.~Li, L.~Kong, Y.~Li, H.~Wang, S.~Xu, Y.~Luo,
+  et~al.
+\newblock {OneVL}: One-step latent reasoning and planning with vision-language
+  explanation.
+\newblock \emph{arXiv preprint arXiv:2604.18486}, 2026.
+\newblock URL \url{https://arxiv.org/abs/2604.18486}.
 
 \end{thebibliography}
