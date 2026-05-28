@@ -1,0 +1,48 @@
+{
+  "note": "Mapped NAVSIM v2 g2 K=8 seed0 smoke result: 48 scenes (4 original + 44 reactive synthetic). Probe scores are per-token proxy rows, while official EPDMS is reported separately.",
+  "oracle_summary": {
+    "scene_count": 48,
+    "candidate_count": 8,
+    "top1_epdms": 0.04581082646752237,
+    "best_fixed_candidate": 2,
+    "best_fixed_epdms": 0.4189085097664613,
+    "token_oracle_proxy_at_k_score": 0.6142062747318405,
+    "token_oracle_proxy_gap": 0.5683954482643182
+  },
+  "zero_perception_loso": {
+    "feature_count": 35,
+    "proxy_top1_score": 0.5453944002028243,
+    "proxy_oracle_at_k_score": 0.6142062747318405,
+    "loso_proxy_ridge_score": 0.5159413953075745,
+    "gap_closed_vs_top1_proxy": -0.4280221269488903,
+    "selected_alpha": 0.1,
+    "selected_candidate_hist": {
+      "0": 10,
+      "1": 5,
+      "2": 5,
+      "3": 4,
+      "4": 5,
+      "5": 5,
+      "6": 8,
+      "7": 6
+    }
+  },
+  "full_probe_loso": {
+    "feature_count": 37,
+    "proxy_top1_score": 0.5453944002028243,
+    "proxy_oracle_at_k_score": 0.6142062747318405,
+    "loso_proxy_ridge_score": 0.5188622433625717,
+    "gap_closed_vs_top1_proxy": -0.38557526621462124,
+    "selected_alpha": 100.0,
+    "selected_candidate_hist": {
+      "0": 18,
+      "1": 7,
+      "2": 6,
+      "3": 3,
+      "4": 4,
+      "5": 5,
+      "6": 3,
+      "7": 2
+    }
+  }
+}

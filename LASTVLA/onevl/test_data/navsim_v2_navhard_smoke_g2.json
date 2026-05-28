@@ -1,0 +1,818 @@
+[
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [3.7, -0.09]. Acceleration: [0.28, 0.37]. Historical trajectory: [[-5.08, -0.04, 0.04], [-3.5, -0.0, 0.01], [-1.8, 0.0, -0.01]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim/download/test_sensor_blobs/test/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/7512f7c95e45540e.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 0,
+    "token": "4a919f7ea2f65200",
+    "stage": "first",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [3.51, -0.05]. Acceleration: [0.42, -0.01]. Historical trajectory: [[-4.77, -0.19, 0.08], [-3.28, -0.08, 0.05], [-1.7, -0.02, 0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim/download/test_sensor_blobs/test/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/7e14832c062f54f2.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 1,
+    "token": "d715fbc6ea0551f8",
+    "stage": "first",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [3.07, -0.08]. Acceleration: [-0.59, -0.04]. Historical trajectory: [[-5.22, 0.04, -0.0], [-3.31, 0.02, -0.0], [-1.58, 0.02, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim/download/test_sensor_blobs/test/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/01609bfe8b3151cc.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 2,
+    "token": "e1f6c044f4235462",
+    "stage": "first",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [3.4, -0.06]. Acceleration: [-0.7, -0.07]. Historical trajectory: [[-5.71, 0.01, -0.0], [-3.64, 0.02, -0.0], [-1.73, -0.0, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim/download/test_sensor_blobs/test/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/737a760ea318507b.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 3,
+    "token": "197f2dea642850e7",
+    "stage": "first",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [0.04, -0.01]. Acceleration: [0.37, -0.04]. Historical trajectory: [[-0.04, 0.02, -0.01], [0.04, 0.0, -0.0], [0.01, -0.0, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/638ec620117f75ec4.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 4,
+    "token": "5421fa2f2e2b4cb13",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.01, -0.01]. Acceleration: [-0.04, -0.09]. Historical trajectory: [[-0.32, 0.02, -0.02], [-0.05, 0.02, -0.0], [0.03, 0.0, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/765885a6293f88d54.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 5,
+    "token": "5634addd2134d1453",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.01, -0.0]. Acceleration: [-0.05, 0.01]. Historical trajectory: [[-0.11, -0.01, -0.01], [0.05, -0.01, -0.0], [0.05, 0.0, 0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/be8dd65468311e01d.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 6,
+    "token": "13aeb83dad95704fa",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.0, 0.01]. Acceleration: [0.05, 0.06]. Historical trajectory: [[-0.58, 0.0, -0.03], [-0.16, -0.01, -0.01], [0.0, -0.01, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/bfe0227798077958e.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 7,
+    "token": "7d4dd35efebf5aa8f",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.01, 0.0]. Acceleration: [-0.04, 0.01]. Historical trajectory: [[0.07, -0.0, 0.0], [0.04, -0.0, -0.0], [0.01, -0.0, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/399bcc9a2e7cd1571.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 8,
+    "token": "46ccc7e9752595671",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.01, -0.0]. Acceleration: [-0.06, -0.04]. Historical trajectory: [[0.01, 0.02, 0.0], [0.06, -0.0, 0.0], [0.03, -0.0, 0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/a6f24f55b437d2939.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 9,
+    "token": "b7f53c6ea01b7cbc9",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [0.67, 0.0]. Acceleration: [-0.6, 0.13]. Historical trajectory: [[-1.93, 0.08, -0.1], [-1.0, 0.02, -0.05], [-0.39, 0.0, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/f71b113ee7dd89905.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 10,
+    "token": "c864abb5afff1f7f4",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [1.07, -0.02]. Acceleration: [-0.74, 0.08]. Historical trajectory: [[-2.75, 0.2, -0.15], [-1.54, 0.05, -0.08], [-0.61, 0.01, -0.03]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/438b7670eac804f33.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 11,
+    "token": "6b912a3796564dd7e",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [0.07, 0.02]. Acceleration: [-0.32, 0.17]. Historical trajectory: [[-0.73, 0.01, -0.07], [-0.3, -0.01, -0.03], [-0.07, -0.0, -0.01]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/0bf867be04b39b943.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 12,
+    "token": "6b5b128424d5357b0",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [0.35, 0.02]. Acceleration: [-0.77, 0.08]. Historical trajectory: [[-1.31, 0.06, -0.13], [-0.66, 0.01, -0.06], [-0.23, -0.01, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/bc86217e7519e1403.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 13,
+    "token": "3b9a4be29bdd2c8ae",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [2.92, -0.03]. Acceleration: [-0.34, -0.01]. Historical trajectory: [[-4.31, 0.15, -0.1], [-2.9, 0.04, -0.05], [-1.45, -0.01, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/7d15dfc7128ac7c60.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 14,
+    "token": "7be779b9f100e6373",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [2.92, -0.04]. Acceleration: [-0.05, 0.25]. Historical trajectory: [[-4.24, 0.27, -0.16], [-2.86, 0.1, -0.08], [-1.45, 0.02, -0.03]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/049e8224ae2a6fd91.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 15,
+    "token": "e2ea1000f4e2d0904",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [3.07, -0.09]. Acceleration: [-0.13, 0.28]. Historical trajectory: [[-4.44, 0.32, -0.15], [-2.98, 0.16, -0.08], [-1.5, 0.04, -0.04]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/d126d7ee9e7a625fe.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 16,
+    "token": "0e55c21e09e86d8ba",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [3.05, -0.1]. Acceleration: [0.18, 0.4]. Historical trajectory: [[-4.41, 0.37, -0.2], [-2.95, 0.16, -0.11], [-1.48, 0.06, -0.04]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/3e64661f7e813b897.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 17,
+    "token": "0a8cbe192f3d3dfba",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [3.22, -0.05]. Acceleration: [-0.18, 0.03]. Historical trajectory: [[-4.95, 0.14, -0.07], [-3.28, 0.04, -0.04], [-1.61, -0.0, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/8fa9b98cacdc2413b.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 18,
+    "token": "778f661244251a842",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [3.32, -0.06]. Acceleration: [0.04, 0.2]. Historical trajectory: [[-4.98, 0.23, -0.11], [-3.34, 0.09, -0.06], [-1.67, 0.02, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/ae0a62e993117b34f.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 19,
+    "token": "18dbdfb5b9fe301f4",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [3.39, -0.07]. Acceleration: [-0.01, 0.61]. Historical trajectory: [[-4.76, 0.48, -0.19], [-3.3, 0.22, -0.13], [-1.69, 0.06, -0.06]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/7f1feac45db668870.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 20,
+    "token": "530edf0e35aa025b6",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [3.35, -0.09]. Acceleration: [-0.03, 0.7]. Historical trajectory: [[-4.53, 0.49, -0.19], [-3.1, 0.23, -0.13], [-1.62, 0.07, -0.07]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/2c4773f3bc167902b.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 21,
+    "token": "3dd919c5a93fd6754",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [2.06, -0.01]. Acceleration: [-2.94, 0.28]. Historical trajectory: [[-4.1, 0.4, -0.19], [-2.64, 0.16, -0.13], [-1.24, 0.03, -0.06]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/7dd83a56557bf1c3c.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 22,
+    "token": "ea1bac206caf8d18e",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [2.81, -0.06]. Acceleration: [-0.75, 0.4]. Historical trajectory: [[-4.36, 0.46, -0.2], [-2.87, 0.2, -0.13], [-1.4, 0.05, -0.07]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/ef05760ea0be8fe47.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 23,
+    "token": "3b8808368bea4771a",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [4.86, -0.09]. Acceleration: [0.05, -0.14]. Historical trajectory: [[-6.97, 0.82, -0.24], [-4.69, 0.37, -0.16], [-2.37, 0.1, -0.08]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/cba8c357c3de9c9ca.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 24,
+    "token": "b4750fa326ea1085b",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [4.85, -0.06]. Acceleration: [-0.05, 1.18]. Historical trajectory: [[-6.98, 0.83, -0.24], [-4.65, 0.36, -0.16], [-2.33, 0.08, -0.08]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01100_01664/CAM_F0/15e7fe9a95afd9db2.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 25,
+    "token": "bba03402f6222135f",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01100_01664"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.01, 0.0]. Acceleration: [0.03, 0.0]. Historical trajectory: [[0.05, -0.0, -0.0], [0.03, 0.0, -0.0], [0.01, 0.0, 0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/07663d4da4810b7d3.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 26,
+    "token": "e3be3af3b3213f65e",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.01, -0.0]. Acceleration: [-0.1, -0.02]. Historical trajectory: [[0.0, -0.01, -0.0], [0.04, -0.0, -0.0], [0.02, -0.0, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/24092899babe5f1a6.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 27,
+    "token": "db81ab220d6667266",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.01, -0.0]. Acceleration: [-0.1, -0.02]. Historical trajectory: [[0.0, -0.01, -0.0], [0.04, -0.0, -0.0], [0.02, -0.0, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/bc6142f2d5783646f.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 28,
+    "token": "86cf77209e00173f3",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.01, 0.0]. Acceleration: [-0.19, -0.02]. Historical trajectory: [[-0.18, -0.02, -0.01], [-0.01, -0.01, -0.0], [0.02, -0.0, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/2a744aaeb392b061b.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 29,
+    "token": "1e33e12832b3a171e",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [0.03, 0.0]. Acceleration: [-0.22, -0.04]. Historical trajectory: [[-0.45, -0.01, -0.01], [-0.12, -0.01, -0.0], [-0.0, -0.0, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/223e40a165f9b77a7.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 30,
+    "token": "7a574ea5511afe40d",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [0.1, 0.01]. Acceleration: [-0.23, 0.02]. Historical trajectory: [[-1.04, 0.01, -0.03], [-0.45, -0.0, -0.01], [-0.12, -0.01, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/dcbd49ef1bcd7f0b8.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 31,
+    "token": "2fb3e2d50e23c577b",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.0, -0.0]. Acceleration: [-0.07, -0.02]. Historical trajectory: [[0.04, 0.0, -0.0], [0.02, 0.0, 0.0], [0.01, 0.0, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/2a68fd302fc846a22.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 32,
+    "token": "7e1f129d7bf7e7065",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.0, -0.0]. Acceleration: [-0.0, -0.03]. Historical trajectory: [[0.05, 0.01, 0.0], [0.03, 0.0, 0.0], [0.01, 0.0, 0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/dce0b249f99f7d0dc.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 33,
+    "token": "bbc7311ff7a7c3e18",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.01, -0.0]. Acceleration: [-0.04, -0.08]. Historical trajectory: [[-0.06, 0.02, 0.0], [0.04, 0.0, -0.0], [0.02, -0.0, 0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/231c19091d2499377.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 34,
+    "token": "50da2cb15a6c805e6",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [-0.0, -0.0]. Acceleration: [-0.14, 0.02]. Historical trajectory: [[-0.38, 0.03, 0.02], [-0.07, 0.02, 0.0], [0.02, 0.01, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/d5b54a67d651177a1.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 35,
+    "token": "594f782a45aefdedc",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [0.06, -0.02]. Acceleration: [0.18, -0.02]. Historical trajectory: [[-0.77, 0.02, -0.01], [-0.3, 0.02, -0.0], [-0.06, 0.01, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/64ad05d83c7900826.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 36,
+    "token": "81742324c5b46cc6f",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [0.34, -0.02]. Acceleration: [-0.84, 0.01]. Historical trajectory: [[-1.4, 0.02, -0.02], [-0.71, 0.02, -0.01], [-0.24, 0.01, -0.0]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/8ac9ea874a06747c5.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 37,
+    "token": "0eea2180fbf7c0949",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [1.71, 0.02]. Acceleration: [-0.33, 0.12]. Historical trajectory: [[-2.86, 0.14, -0.08], [-1.85, 0.05, -0.05], [-0.88, 0.02, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/6a1ddd3a0251065be.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 38,
+    "token": "ceb646b2fba95ebf9",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [1.88, 0.03]. Acceleration: [-0.42, -0.24]. Historical trajectory: [[-2.99, 0.15, -0.09], [-1.98, 0.08, -0.06], [-0.97, 0.02, -0.03]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/84156e7ab07545195.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 39,
+    "token": "d4bddc4246b475541",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [0.7, -0.02]. Acceleration: [0.14, 0.02]. Historical trajectory: [[-1.02, 0.05, -0.06], [-0.62, 0.04, -0.04], [-0.3, 0.02, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/ceb30d5f28da010e1.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 40,
+    "token": "256ffb5e85a521e98",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [0.68, -0.01]. Acceleration: [-0.18, 0.01]. Historical trajectory: [[-1.35, 0.04, -0.07], [-0.72, 0.02, -0.04], [-0.31, 0.02, -0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/09844014d28eeef55.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 41,
+    "token": "38fd2f329eb063f83",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [1.36, 0.01]. Acceleration: [-0.33, -0.06]. Historical trajectory: [[-2.64, -0.1, 0.08], [-1.57, -0.04, 0.05], [-0.7, -0.0, 0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/90f6ebb7ac1beecd7.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 42,
+    "token": "c0581b1e56946d6c1",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [1.62, 0.03]. Acceleration: [-0.47, -0.13]. Historical trajectory: [[-3.11, -0.12, 0.08], [-1.94, -0.05, 0.05], [-0.87, -0.01, 0.03]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/f198be990ced1c67b.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 43,
+    "token": "4ff48fa4e19774be7",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [1.76, 0.04]. Acceleration: [-0.69, 0.25]. Historical trajectory: [[-3.15, -0.08, 0.06], [-2.0, -0.03, 0.03], [-0.93, -0.0, 0.01]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/ae831bd12fd89978d.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 44,
+    "token": "735bf126af1875fe2",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [2.08, 0.05]. Acceleration: [-0.58, -0.3]. Historical trajectory: [[-3.4, -0.12, 0.09], [-2.21, -0.05, 0.05], [-1.07, -0.02, 0.02]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/3632241257f85d63b.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 45,
+    "token": "a43ef1df0d28a30db",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [2.94, 0.07]. Acceleration: [-0.31, -0.15]. Historical trajectory: [[-4.23, -0.2, 0.1], [-2.93, -0.11, 0.07], [-1.5, -0.04, 0.04]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/a88fd71e2cad67200.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 46,
+    "token": "053755e0b8f0dd052",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "<image> is the front view. Command: MOVE FORWARD. Velocity: [2.95, 0.04]. Acceleration: [0.12, -0.26]. Historical trajectory: [[-3.94, -0.15, 0.09], [-2.74, -0.07, 0.06], [-1.43, -0.02, 0.03]]. Output the reasoning in <think></think> and the predicted trajectory in <answer></answer>. For the content in <answer></answer>, Only generate the predicted future waypoints in pure text format: [x_1, y_1, heading_1], [x_2, y_2, heading_2], ..., [x_8, y_8, heading_8]. Output exactly 8 waypoints in the format [x, y, heading], with numbers in decimal form and exactly 2 digits after the decimal point. Separate waypoints using comma. Do not include extra text, brackets, or invalid values. The output must strictly follow this structure."
+      }
+    ],
+    "images": [
+      "/home/atellez/dev/navsim-v2/data/navhard_two_stage/sensor_blobs/2021.05.25.14.16.10_veh-35_01690_02183/CAM_F0/88e37260045393d8d.jpg"
+    ],
+    "solution": "",
+    "GT": "",
+    "idx": 47,
+    "token": "230446b36041db9de",
+    "stage": "second",
+    "log_name": "2021.05.25.14.16.10_veh-35_01690_02183"
+  }
+]
