@@ -1,0 +1,29 @@
+{
+  "status": "interrupted_by_user_to_free_gpu",
+  "interrupted_at_local_time": "2026-05-28T20:51:59",
+  "subset": "navhard_two_stage mapped g10",
+  "intended_scene_count": 246,
+  "completed_artifacts": {
+    "dataset_json": "LASTVLA/onevl/test_data/navsim_v2_navhard_smoke_g10.json",
+    "greedy_json": "LASTVLA/onevl/output/navsim_v2/smoke/navhard_smoke_g10_greedy_seed0.json",
+    "partial_sample7_json": "LASTVLA/onevl/output/navsim_v2/smoke/navhard_smoke_g10_sample7_seed0_t0.8_p0.95_partial51.json",
+    "remote_log_copy": "LASTVLA/onevl/output/navsim_v2/smoke/navhard_smoke_g10_k1_k2_k4_k8_seed0_interrupted.log",
+    "remote_driver_copy": "LASTVLA/onevl/output/navsim_v2/smoke/navhard_smoke_g10_k1_k2_k4_k8_seed0_interrupted.sh"
+  },
+  "counts": {
+    "dataset": 246,
+    "greedy": 246,
+    "partial_sample7": 51
+  },
+  "completed": {
+    "dataset_build": true,
+    "greedy_inference": true,
+    "sample7_inference": false,
+    "official_navsim_scoring": false
+  },
+  "notes": [
+    "The sample7 file is intentionally renamed with partial51 because it contains only 51 of 246 scenes.",
+    "Do not use the partial sample file as a complete K8 candidate bank.",
+    "No K1/K2/K4/K8 official score artifacts were produced before interruption."
+  ]
+}
