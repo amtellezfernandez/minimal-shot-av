@@ -1,10 +1,11 @@
 {
-  "description": "Mapped NAVSIM v2 navhard smoke scaling across matched scene groups, seed 0. Official values are fixed-candidate EPDMS; token_oracle_proxy_at_k_score is the per-scene proxy oracle over candidates and is not an official combined score.",
+  "description": "Mapped NAVSIM v2 navhard smoke scaling across matched scene groups. Official values are fixed-candidate EPDMS; token_oracle_proxy_at_k_score is a per-scene proxy oracle over candidates and is not an official combined score.",
   "rows": [
     {
       "group": "g1",
       "scene_count": 24,
       "k": 4,
+      "seed": 0,
       "top1_epdms": 0.0,
       "best_fixed_candidate": 3,
       "best_fixed_epdms": 0.362017664334727,
@@ -14,64 +15,85 @@
       "group": "g1",
       "scene_count": 24,
       "k": 8,
+      "seed": 0,
       "top1_epdms": 0.0,
       "best_fixed_candidate": 2,
       "best_fixed_epdms": 0.8006622399329324,
-      "token_oracle_proxy_at_k_score": 0.6957756672143193
+      "token_oracle_proxy_at_k_score": 0.6957756672143193,
+      "zero_perception_loso_proxy": 0.6082522994808547,
+      "zero_perception_gap_closed": 0.0538919402340299
     },
     {
       "group": "g2",
       "scene_count": 48,
       "k": 4,
+      "seed": 0,
       "top1_epdms": 0.04581082646752237,
       "best_fixed_candidate": 3,
       "best_fixed_epdms": 0.2786596854589903,
-      "token_oracle_proxy_at_k_score": 0.6023335971987615
+      "token_oracle_proxy_at_k_score": 0.6023335971987615,
+      "zero_perception_loso_proxy": 0.5505180522718734,
+      "zero_perception_gap_closed": 0.08998462112865377
     },
     {
       "group": "g2",
       "scene_count": 48,
       "k": 8,
+      "seed": 0,
       "top1_epdms": 0.04581082646752237,
       "best_fixed_candidate": 2,
       "best_fixed_epdms": 0.4189085097664613,
-      "token_oracle_proxy_at_k_score": 0.6142062747318405
+      "token_oracle_proxy_at_k_score": 0.6142062747318405,
+      "zero_perception_loso_proxy": 0.5159413953075745,
+      "zero_perception_gap_closed": -0.4280221269488903
     },
     {
       "group": "g3",
       "scene_count": 64,
       "k": 4,
+      "seed": 0,
       "top1_epdms": 0.06412786083750617,
       "best_fixed_candidate": 1,
       "best_fixed_epdms": 0.2910941368761574,
-      "token_oracle_proxy_at_k_score": 0.5549947630233079
+      "token_oracle_proxy_at_k_score": 0.5549947630233079,
+      "zero_perception_loso_proxy": 0.47226809935769754,
+      "zero_perception_gap_closed": -0.39834349305814415
     },
     {
       "group": "g3",
       "scene_count": 64,
       "k": 8,
+      "seed": 0,
       "top1_epdms": 0.06412786083750617,
       "best_fixed_candidate": 2,
       "best_fixed_epdms": 0.43666210578609954,
-      "token_oracle_proxy_at_k_score": 0.6013868768293672
+      "token_oracle_proxy_at_k_score": 0.6013868768293672,
+      "zero_perception_loso_proxy": 0.46197356847073867,
+      "zero_perception_gap_closed": -0.3207947947453432
     },
     {
       "group": "g4",
       "scene_count": 92,
       "k": 4,
+      "seed": 0,
       "top1_epdms": 0.15724459335849156,
       "best_fixed_candidate": 2,
       "best_fixed_epdms": 0.3784545109558194,
-      "token_oracle_proxy_at_k_score": 0.663590460828946
+      "token_oracle_proxy_at_k_score": 0.663590460828946,
+      "zero_perception_loso_proxy": 0.5579790758786419,
+      "zero_perception_gap_closed": -0.14627016349263922
     },
     {
       "group": "g4",
       "scene_count": 92,
       "k": 8,
+      "seed": 0,
       "top1_epdms": 0.15724459335849156,
       "best_fixed_candidate": 2,
       "best_fixed_epdms": 0.37936976999886773,
-      "token_oracle_proxy_at_k_score": 0.696682118476823
+      "token_oracle_proxy_at_k_score": 0.696682118476823,
+      "zero_perception_loso_proxy": 0.5408481472873746,
+      "zero_perception_gap_closed": -0.244417196963743
     }
   ]
 }

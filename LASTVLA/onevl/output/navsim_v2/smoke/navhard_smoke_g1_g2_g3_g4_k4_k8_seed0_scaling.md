@@ -1,16 +1,23 @@
-# NAVSIM v2 mapped K4/K8 scaling, groups g1-g4
+# NAVSIM v2 mapped smoke scaling
 
-Seed 0, corrected hybrid decoding. Official EPDMS uses fixed candidate selection over the mapped navhard smoke subset. The proxy oracle is per-scene and should be read only as candidate-bank headroom, not an official aggregate.
+Seed-specific corrected hybrid decoding over matched NAVSIM v2 smoke groups. Official EPDMS uses fixed-candidate selection over each mapped subset. The token-oracle proxy is per-scene candidate-bank headroom and is not an official aggregate.
 
-| group | scenes | K | top1 EPDMS | best fixed candidate | best fixed EPDMS | proxy oracle |
-|---|---:|---:|---:|---:|---:|---:|
-| g1 | 24 | 4 | 0.0000 | 3 | 0.3620 | 0.6615 |
-| g1 | 24 | 8 | 0.0000 | 2 | 0.8007 | 0.6958 |
-| g2 | 48 | 4 | 0.0458 | 3 | 0.2787 | 0.6023 |
-| g2 | 48 | 8 | 0.0458 | 2 | 0.4189 | 0.6142 |
-| g3 | 64 | 4 | 0.0641 | 1 | 0.2911 | 0.5550 |
-| g3 | 64 | 8 | 0.0641 | 2 | 0.4367 | 0.6014 |
-| g4 | 92 | 4 | 0.1572 | 2 | 0.3785 | 0.6636 |
-| g4 | 92 | 8 | 0.1572 | 2 | 0.3794 | 0.6967 |
+| Group | Scenes | K | Official top-1 | Best fixed candidate | Best fixed EPDMS | Token-oracle proxy | Zero-perception LOSO proxy |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| g1 | 24 | 4 | 0.000000 | 3 | 0.362018 | 0.661465 | - |
+| g1 | 24 | 8 | 0.000000 | 2 | 0.800662 | 0.695776 | 0.608252 |
+| g2 | 48 | 4 | 0.045811 | 3 | 0.278660 | 0.602334 | 0.550518 |
+| g2 | 48 | 8 | 0.045811 | 2 | 0.418909 | 0.614206 | 0.515941 |
+| g3 | 64 | 4 | 0.064128 | 1 | 0.291094 | 0.554995 | 0.472268 |
+| g3 | 64 | 8 | 0.064128 | 2 | 0.436662 | 0.601387 | 0.461974 |
+| g4 | 92 | 4 | 0.157245 | 2 | 0.378455 | 0.663590 | 0.557979 |
+| g4 | 92 | 8 | 0.157245 | 2 | 0.379370 | 0.696682 | 0.540848 |
 
-Key readout: K8 consistently improves the token-level oracle proxy over K4, but official fixed-candidate gains vary with scale. On g4, K8 exposes higher proxy headroom while the best fixed official candidate stays effectively tied with K4, which argues for studying selector quality rather than claiming monotonic official gains from K alone.
+## Delta readout
+
+| Group | Scenes | Best fixed delta | Proxy delta | Zero-perception delta |
+| --- | ---: | ---: | ---: | ---: |
+| g1 | 24 | 0.438645 | 0.034310 | - |
+| g2 | 48 | 0.140249 | 0.011873 | -0.034577 |
+| g3 | 64 | 0.145568 | 0.046392 | -0.010295 |
+| g4 | 92 | 0.000915 | 0.033092 | -0.017131 |

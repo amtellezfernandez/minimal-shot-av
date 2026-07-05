@@ -1,57 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="420" viewBox="0 0 760 420">
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="360" viewBox="0 0 980 360">
 <rect width="100%" height="100%" fill="white"/>
-<text x="380.0" y="22" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700">NAVSIM v2 mapped smoke: K4/K8 scaling</text>
-<line x1="70" x2="730" y1="355.0" y2="355.0" stroke="#e2e8f0"/>
-<text x="60" y="359.0" text-anchor="end" font-family="Arial" font-size="12" fill="#4a5568">0.0</text>
-<line x1="70" x2="730" y1="281.0" y2="281.0" stroke="#e2e8f0"/>
-<text x="60" y="285.0" text-anchor="end" font-family="Arial" font-size="12" fill="#4a5568">0.2</text>
-<line x1="70" x2="730" y1="207.0" y2="207.0" stroke="#e2e8f0"/>
-<text x="60" y="211.0" text-anchor="end" font-family="Arial" font-size="12" fill="#4a5568">0.4</text>
-<line x1="70" x2="730" y1="133.0" y2="133.0" stroke="#e2e8f0"/>
-<text x="60" y="137.0" text-anchor="end" font-family="Arial" font-size="12" fill="#4a5568">0.6</text>
-<line x1="70" x2="730" y1="58.9" y2="58.9" stroke="#e2e8f0"/>
-<text x="60" y="62.9" text-anchor="end" font-family="Arial" font-size="12" fill="#4a5568">0.8</text>
-<line x1="70" x2="730" y1="355" y2="355" stroke="#2d3748"/>
-<line x1="70" x2="70" y1="35" y2="355" stroke="#2d3748"/>
-<text x="70.0" y="382" text-anchor="middle" font-family="Arial" font-size="12" fill="#4a5568">24</text>
-<text x="290.0" y="382" text-anchor="middle" font-family="Arial" font-size="12" fill="#4a5568">48</text>
-<text x="510.0" y="382" text-anchor="middle" font-family="Arial" font-size="12" fill="#4a5568">64</text>
-<text x="730.0" y="382" text-anchor="middle" font-family="Arial" font-size="12" fill="#4a5568">92</text>
-<text x="380.0" y="408" text-anchor="middle" font-family="Arial" font-size="13" fill="#2d3748">scene count</text>
-<text x="18" y="210.0" text-anchor="middle" transform="rotate(-90 18 210.0)" font-family="Arial" font-size="13" fill="#2d3748">score</text>
-<polyline fill="none" stroke="#2b6cb0" stroke-width="2.5" points="70.0,221.0 290.0,251.9 510.0,247.3 730.0,214.9"/>
-<circle cx="70.0" cy="221.0" r="4" fill="#2b6cb0"><title>K4 best fixed g1: 0.3620</title></circle>
-<circle cx="290.0" cy="251.9" r="4" fill="#2b6cb0"><title>K4 best fixed g2: 0.2787</title></circle>
-<circle cx="510.0" cy="247.3" r="4" fill="#2b6cb0"><title>K4 best fixed g3: 0.2911</title></circle>
-<circle cx="730.0" cy="214.9" r="4" fill="#2b6cb0"><title>K4 best fixed g4: 0.3785</title></circle>
-<polyline fill="none" stroke="#c05621" stroke-width="2.5" points="70.0,58.7 290.0,200.0 510.0,193.4 730.0,214.6"/>
-<circle cx="70.0" cy="58.7" r="4" fill="#c05621"><title>K8 best fixed g1: 0.8007</title></circle>
-<circle cx="290.0" cy="200.0" r="4" fill="#c05621"><title>K8 best fixed g2: 0.4189</title></circle>
-<circle cx="510.0" cy="193.4" r="4" fill="#c05621"><title>K8 best fixed g3: 0.4367</title></circle>
-<circle cx="730.0" cy="214.6" r="4" fill="#c05621"><title>K8 best fixed g4: 0.3794</title></circle>
-<polyline fill="none" stroke="#2f855a" stroke-width="2.5" points="70.0,110.2 290.0,132.1 510.0,149.6 730.0,109.4"/>
-<circle cx="70.0" cy="110.2" r="4" fill="#2f855a"><title>K4 proxy oracle g1: 0.6615</title></circle>
-<circle cx="290.0" cy="132.1" r="4" fill="#2f855a"><title>K4 proxy oracle g2: 0.6023</title></circle>
-<circle cx="510.0" cy="149.6" r="4" fill="#2f855a"><title>K4 proxy oracle g3: 0.5550</title></circle>
-<circle cx="730.0" cy="109.4" r="4" fill="#2f855a"><title>K4 proxy oracle g4: 0.6636</title></circle>
-<polyline fill="none" stroke="#805ad5" stroke-width="2.5" points="70.0,97.5 290.0,127.7 510.0,132.4 730.0,97.2"/>
-<circle cx="70.0" cy="97.5" r="4" fill="#805ad5"><title>K8 proxy oracle g1: 0.6958</title></circle>
-<circle cx="290.0" cy="127.7" r="4" fill="#805ad5"><title>K8 proxy oracle g2: 0.6142</title></circle>
-<circle cx="510.0" cy="132.4" r="4" fill="#805ad5"><title>K8 proxy oracle g3: 0.6014</title></circle>
-<circle cx="730.0" cy="97.2" r="4" fill="#805ad5"><title>K8 proxy oracle g4: 0.6967</title></circle>
-<polyline fill="none" stroke="#4a5568" stroke-width="2.5" points="70.0,355.0 290.0,338.0 510.0,331.3 730.0,296.8"/>
-<circle cx="70.0" cy="355.0" r="4" fill="#4a5568"><title>top1 official g1: 0.0000</title></circle>
-<circle cx="290.0" cy="338.0" r="4" fill="#4a5568"><title>top1 official g2: 0.0458</title></circle>
-<circle cx="510.0" cy="331.3" r="4" fill="#4a5568"><title>top1 official g3: 0.0641</title></circle>
-<circle cx="730.0" cy="296.8" r="4" fill="#4a5568"><title>top1 official g4: 0.1572</title></circle>
-<line x1="490" x2="514" y1="48" y2="48" stroke="#2b6cb0" stroke-width="3"/>
-<text x="522" y="52" font-family="Arial" font-size="12" fill="#2d3748">K4 best fixed</text>
-<line x1="490" x2="514" y1="69" y2="69" stroke="#c05621" stroke-width="3"/>
-<text x="522" y="73" font-family="Arial" font-size="12" fill="#2d3748">K8 best fixed</text>
-<line x1="490" x2="514" y1="90" y2="90" stroke="#2f855a" stroke-width="3"/>
-<text x="522" y="94" font-family="Arial" font-size="12" fill="#2d3748">K4 proxy oracle</text>
-<line x1="490" x2="514" y1="111" y2="111" stroke="#805ad5" stroke-width="3"/>
-<text x="522" y="115" font-family="Arial" font-size="12" fill="#2d3748">K8 proxy oracle</text>
-<line x1="490" x2="514" y1="132" y2="132" stroke="#4a5568" stroke-width="3"/>
-<text x="522" y="136" font-family="Arial" font-size="12" fill="#2d3748">top1 official</text>
+<line x1="60" y1="300" x2="760" y2="300" stroke="#222"/>
+<line x1="60" y1="30" x2="60" y2="300" stroke="#222"/>
+<line x1="56" y1="300.0" x2="760" y2="300.0" stroke="#e2e8f0"/>
+<text x="52" y="304.0" text-anchor="end" font-family="Arial" font-size="11">-0.020</text>
+<line x1="56" y1="246.0" x2="760" y2="246.0" stroke="#e2e8f0"/>
+<text x="52" y="250.0" text-anchor="end" font-family="Arial" font-size="11">0.150</text>
+<line x1="56" y1="192.0" x2="760" y2="192.0" stroke="#e2e8f0"/>
+<text x="52" y="196.0" text-anchor="end" font-family="Arial" font-size="11">0.320</text>
+<line x1="56" y1="138.0" x2="760" y2="138.0" stroke="#e2e8f0"/>
+<text x="52" y="142.0" text-anchor="end" font-family="Arial" font-size="11">0.490</text>
+<line x1="56" y1="84.0" x2="760" y2="84.0" stroke="#e2e8f0"/>
+<text x="52" y="88.0" text-anchor="end" font-family="Arial" font-size="11">0.661</text>
+<line x1="56" y1="30.0" x2="760" y2="30.0" stroke="#e2e8f0"/>
+<text x="52" y="34.0" text-anchor="end" font-family="Arial" font-size="11">0.831</text>
+<text x="147.5" y="332" text-anchor="middle" font-family="Arial" font-size="12">g1</text>
+<circle cx="129.5" cy="178.7" r="4" fill="#2b6cb0"><title>g1 K4 best_fixed: 0.3620</title></circle>
+<circle cx="165.5" cy="39.5" r="4" fill="#c05621"><title>g1 K8 best_fixed: 0.8007</title></circle>
+<circle cx="129.5" cy="83.7" r="4" fill="#2f855a"><title>g1 K4 proxy: 0.6615</title></circle>
+<circle cx="165.5" cy="72.8" r="4" fill="#805ad5"><title>g1 K8 proxy: 0.6958</title></circle>
+<line x1="119.5" y1="293.7" x2="175.5" y2="293.7" stroke="#4a5568" stroke-width="2"/>
+<title>g1 top1: 0.0000</title>
+<text x="322.5" y="332" text-anchor="middle" font-family="Arial" font-size="12">g2</text>
+<circle cx="304.5" cy="205.2" r="4" fill="#2b6cb0"><title>g2 K4 best_fixed: 0.2787</title></circle>
+<circle cx="340.5" cy="160.7" r="4" fill="#c05621"><title>g2 K8 best_fixed: 0.4189</title></circle>
+<circle cx="304.5" cy="102.5" r="4" fill="#2f855a"><title>g2 K4 proxy: 0.6023</title></circle>
+<circle cx="340.5" cy="98.7" r="4" fill="#805ad5"><title>g2 K8 proxy: 0.6142</title></circle>
+<line x1="294.5" y1="279.1" x2="350.5" y2="279.1" stroke="#4a5568" stroke-width="2"/>
+<title>g2 top1: 0.0458</title>
+<text x="497.5" y="332" text-anchor="middle" font-family="Arial" font-size="12">g3</text>
+<circle cx="479.5" cy="201.3" r="4" fill="#2b6cb0"><title>g3 K4 best_fixed: 0.2911</title></circle>
+<circle cx="515.5" cy="155.1" r="4" fill="#c05621"><title>g3 K8 best_fixed: 0.4367</title></circle>
+<circle cx="479.5" cy="117.5" r="4" fill="#2f855a"><title>g3 K4 proxy: 0.5550</title></circle>
+<circle cx="515.5" cy="102.8" r="4" fill="#805ad5"><title>g3 K8 proxy: 0.6014</title></circle>
+<line x1="469.5" y1="273.3" x2="525.5" y2="273.3" stroke="#4a5568" stroke-width="2"/>
+<title>g3 top1: 0.0641</title>
+<text x="672.5" y="332" text-anchor="middle" font-family="Arial" font-size="12">g4</text>
+<circle cx="654.5" cy="173.5" r="4" fill="#2b6cb0"><title>g4 K4 best_fixed: 0.3785</title></circle>
+<circle cx="690.5" cy="173.2" r="4" fill="#c05621"><title>g4 K8 best_fixed: 0.3794</title></circle>
+<circle cx="654.5" cy="83.0" r="4" fill="#2f855a"><title>g4 K4 proxy: 0.6636</title></circle>
+<circle cx="690.5" cy="72.5" r="4" fill="#805ad5"><title>g4 K8 proxy: 0.6967</title></circle>
+<line x1="644.5" y1="243.7" x2="700.5" y2="243.7" stroke="#4a5568" stroke-width="2"/>
+<title>g4 top1: 0.1572</title>
+<line x1="780" y1="48" x2="796" y2="48" stroke="#4a5568" stroke-width="2"/>
+<text x="804" y="52" font-family="Arial" font-size="12" fill="#2d3748">Top-1 official</text>
+<circle cx="788" cy="69" r="4" fill="#2b6cb0"/>
+<text x="804" y="73" font-family="Arial" font-size="12" fill="#2d3748">K4 best fixed</text>
+<circle cx="788" cy="90" r="4" fill="#c05621"/>
+<text x="804" y="94" font-family="Arial" font-size="12" fill="#2d3748">K8 best fixed</text>
+<circle cx="788" cy="111" r="4" fill="#2f855a"/>
+<text x="804" y="115" font-family="Arial" font-size="12" fill="#2d3748">K4 proxy oracle</text>
+<circle cx="788" cy="132" r="4" fill="#805ad5"/>
+<text x="804" y="136" font-family="Arial" font-size="12" fill="#2d3748">K8 proxy oracle</text>
+<text x="490.0" y="352" text-anchor="middle" font-family="Arial" font-size="13">Mapped smoke group</text>
+<text x="18" y="180.0" transform="rotate(-90 18 180.0)" text-anchor="middle" font-family="Arial" font-size="13">EPDMS / proxy score</text>
 </svg>

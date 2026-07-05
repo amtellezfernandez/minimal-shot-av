@@ -304,6 +304,26 @@ The reranker uses candidate trajectory geometry plus OneVL decode statistics
 (`avg_entropy`, `seq_confidence`, `avg_log_prob`) and reports leave-one-scene-out
 selection performance against official NAVSIM scores.
 
+### NAVSIM v2 mapped smoke summaries
+
+For the preserved `navhard_two_stage` mapped smoke artifacts in
+`output/navsim_v2/smoke`, rebuild the cross-group K-scaling summary with:
+
+```bash
+python scripts/summarize_navsim_v2_mapped_scaling.py \
+  --smoke-dir output/navsim_v2/smoke \
+  --groups g1,g2,g3,g4 \
+  --ks 4,8 \
+  --seed 0 \
+  --out-json output/navsim_v2/smoke/navhard_smoke_g1_g2_g3_g4_k4_k8_seed0_scaling.json \
+  --out-md output/navsim_v2/smoke/navhard_smoke_g1_g2_g3_g4_k4_k8_seed0_scaling.md \
+  --out-svg output/navsim_v2/smoke/navhard_smoke_g1_g2_g3_g4_k4_k8_seed0_scaling.svg
+```
+
+The script reads the saved `*_oracle.json` files and, when available,
+augments the table with `*_zero_perception_loso.json` results. Missing groups
+or interrupted runs are skipped rather than failing the whole summary.
+
 ### For visual cot/text cot explain
 ```bash
 bash scripts/infer_ar1_explain.sh  # APR1 (language + visual explanations, use APR1 as example)
