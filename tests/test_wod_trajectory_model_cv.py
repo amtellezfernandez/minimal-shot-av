@@ -777,7 +777,7 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
             "local",
         ]
         with patch.object(sys, "argv", argv), patch.object(
-            cv,
+            cv._target,
             "load_preference_frames",
             return_value=[sample_frame("segment-0-100", step=1.0), sample_frame("segment-1-100", step=1.1)],
         ):
@@ -816,7 +816,9 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
                 "--output",
                 str(output_path),
             ]
-            with patch.object(sys, "argv", argv), patch.object(cv, "load_preference_frames", return_value=frames):
+            with patch.object(sys, "argv", argv), patch.object(
+                cv._target, "load_preference_frames", return_value=frames
+            ):
                 cv.main()
 
             self.assertTrue(all(frame.camera_images for frame in frames))
@@ -857,7 +859,9 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
                 "--output",
                 str(output_path),
             ]
-            with patch.object(sys, "argv", argv), patch.object(cv, "load_preference_frames", return_value=frames):
+            with patch.object(sys, "argv", argv), patch.object(
+                cv._target, "load_preference_frames", return_value=frames
+            ):
                 cv.main()
 
             report = json.loads(output_path.read_text(encoding="utf-8"))
@@ -884,7 +888,7 @@ class WodTrajectoryModelCvTests(unittest.TestCase):
                 "local",
             ]
             with patch.object(sys, "argv", argv), patch.object(
-                cv,
+                cv._target,
                 "load_preference_frames",
                 return_value=[sample_frame("segment-0-100", step=1.0), sample_frame("segment-1-100", step=1.1)],
             ):

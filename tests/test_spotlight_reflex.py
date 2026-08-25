@@ -31,7 +31,13 @@ from minimal_shot_av.simulator.environment import (
 from minimal_shot_av.simulator.oracle import OracleConfig, _choose_privileged_action, run_oracle_policy
 from minimal_shot_av.simulator.perception import ScenePerception, perceive_scene
 from minimal_shot_av.simulator.planner import PlannedAction
-from minimal_shot_av.simulator.policy import EgoState, RolloutConfig, advance_ego_state, run_policy, run_spotlight_reflex_policy
+from minimal_shot_av.simulator.policy import (
+    EgoState,
+    RolloutConfig,
+    advance_ego_state,
+    run_policy,
+    run_spotlight_reflex_policy,
+)
 from minimal_shot_av.simulator.policy import _blocking_obstacle_row
 from minimal_shot_av.simulator.trajectory_selector import (
     TrajectoryCandidate,

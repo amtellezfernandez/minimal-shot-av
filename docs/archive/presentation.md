@@ -619,7 +619,7 @@ The RFF projection is calibrated to the full feature covariance, not the turn su
 
 | What this IS | What this IS NOT |
 |-------------|-----------------|
-| Runnable closed-loop minimal-shot policy | A production AV stack |
+| Runnable closed-loop minimal-shot policy | Not a production AV stack |
 | WOD-E2E harness, **7.845 RFS** (5-fold, GPU MLP+Cosmos) · 7.834 RFF champion | A strict zero-shot WOD-E2E result |
 | AlpaSim trajectory plugin, same policy, no modification | Full sensor-realistic perception |
 | Validated submission packaging pipeline | A completed official leaderboard submission |

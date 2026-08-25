@@ -13,7 +13,12 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from minimal_shot_av.audit import critical_event_bundle, export_alpasim_audit_log, export_internal_audit_log, load_audit_log
+from minimal_shot_av.audit import (
+    critical_event_bundle,
+    export_alpasim_audit_log,
+    export_internal_audit_log,
+    load_audit_log,
+)
 
 
 class AuditRerunBridgeTests(unittest.TestCase):
@@ -176,7 +181,13 @@ class AuditRerunBridgeTests(unittest.TestCase):
             (run_dir / "driver").mkdir(parents=True)
             (run_dir / "aggregate").mkdir(parents=True)
             (run_dir / "launch-metadata.json").write_text(
-                json.dumps({"model": "token_dagger_iter2_hybrid_clamped", "scene_preset": "fresh_3scene", "scene_ids": ["clipgt-test-scene"]}),
+                json.dumps(
+                    {
+                        "model": "token_dagger_iter2_hybrid_clamped",
+                        "scene_preset": "fresh_3scene",
+                        "scene_ids": ["clipgt-test-scene"],
+                    }
+                ),
                 encoding="utf-8",
             )
             (run_dir / "aggregate" / "metrics_results.json").write_text(
@@ -229,7 +240,9 @@ class AuditRerunBridgeTests(unittest.TestCase):
         self.assertEqual("alpasim:fresh_3scene", bundle["severity_policy"]["profile"])
         self.assertGreater(bundle["bookmark_count"], 0)
         self.assertTrue(all(item["severity"] == "high" for item in bundle["bookmarks"]))
-        self.assertTrue(any(item["media"] and item["media"][0]["path"] == "frames/front_0001.jpg" for item in bundle["bookmarks"]))
+        self.assertTrue(
+            any(item["media"] and item["media"][0]["path"] == "frames/front_0001.jpg" for item in bundle["bookmarks"])
+        )
 
     def test_critical_event_bundle_uses_scenario_specific_policy(self) -> None:
         manifest = {"source": "internal", "scenario_cluster": "intersection", "frame_count": 1}
@@ -238,7 +251,12 @@ class AuditRerunBridgeTests(unittest.TestCase):
                 "frame_idx": 0,
                 "timestamp_s": 0.0,
                 "ego": {"speed": 1.0, "goal_distance": 10.0},
-                "step": {"min_obstacle_distance": 1.2, "collision_risk": 0.0, "lane_error": 0.0, "action_mode": "maintain"},
+                "step": {
+                    "min_obstacle_distance": 1.2,
+                    "collision_risk": 0.0,
+                    "lane_error": 0.0,
+                    "action_mode": "maintain",
+                },
                 "trigger_state": {},
                 "media": [],
             }
@@ -256,7 +274,13 @@ class AuditRerunBridgeTests(unittest.TestCase):
             (run_dir / "driver").mkdir(parents=True)
             (run_dir / "aggregate").mkdir(parents=True)
             (run_dir / "launch-metadata.json").write_text(
-                json.dumps({"model": "token_dagger_iter2_hybrid_clamped", "scene_preset": "fresh_3scene", "scene_ids": ["clipgt-test-scene"]}),
+                json.dumps(
+                    {
+                        "model": "token_dagger_iter2_hybrid_clamped",
+                        "scene_preset": "fresh_3scene",
+                        "scene_ids": ["clipgt-test-scene"],
+                    }
+                ),
                 encoding="utf-8",
             )
             (run_dir / "aggregate" / "metrics_results.json").write_text(
@@ -279,7 +303,17 @@ class AuditRerunBridgeTests(unittest.TestCase):
                 "spotlight_top_candidates": [{"token": "maintain"}],
                 "alpasim_signal": {
                     "route_waypoints": [{"x": 0.0, "y": 0.0}, {"x": 20.0, "y": 0.0}, {"x": 40.0, "y": 1.0}],
-                    "structured_hazards": [{"x": 8.0, "y": 1.0, "radius": 1.0, "kind": "vehicle", "label": "crossing_vehicle", "vx": -1.0, "vy": 0.0}],
+                    "structured_hazards": [
+                        {
+                            "x": 8.0,
+                            "y": 1.0,
+                            "radius": 1.0,
+                            "kind": "vehicle",
+                            "label": "crossing_vehicle",
+                            "vx": -1.0,
+                            "vy": 0.0,
+                        }
+                    ],
                     "dynamics_risk": 0.2,
                 },
             }
@@ -328,7 +362,13 @@ class AuditRerunBridgeTests(unittest.TestCase):
             (alpasim_run_dir / "driver").mkdir(parents=True)
             (alpasim_run_dir / "aggregate").mkdir(parents=True)
             (alpasim_run_dir / "launch-metadata.json").write_text(
-                json.dumps({"model": "token_dagger_iter2_hybrid_clamped", "scene_preset": "fresh_3scene", "scene_ids": ["clipgt-test-scene"]}),
+                json.dumps(
+                    {
+                        "model": "token_dagger_iter2_hybrid_clamped",
+                        "scene_preset": "fresh_3scene",
+                        "scene_ids": ["clipgt-test-scene"],
+                    }
+                ),
                 encoding="utf-8",
             )
             (alpasim_run_dir / "aggregate" / "metrics_results.json").write_text(
@@ -386,6 +426,9 @@ class AuditRerunBridgeTests(unittest.TestCase):
         self.assertIn("bookmarks", payload["right"])
         self.assertIn("paired_bookmarks", payload)
         self.assertGreater(len(payload["left"]["bookmarks"]), 0)
-        self.assertIn(payload["left"]["bookmarks"][0]["kind"], {"trigger_activation", "near_miss", "collision_risk_spike", "intervention"})
+        self.assertIn(
+            payload["left"]["bookmarks"][0]["kind"],
+            {"trigger_activation", "near_miss", "collision_risk_spike", "intervention"},
+        )
         if payload["alignment_mode"] == "timestamp":
             self.assertIn("timestamp_delta_s", payload["aligned_samples"][0])

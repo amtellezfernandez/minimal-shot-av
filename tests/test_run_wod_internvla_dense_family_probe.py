@@ -72,7 +72,7 @@ class RunWodInternVlaDenseFamilyProbeTests(unittest.TestCase):
                 Path(command[command.index("--output") + 1]).write_text(payload, encoding="utf-8")
                 return 0
 
-            with patch.object(module, "_run", side_effect=fake_run):
+            with patch.object(module._target, "_run", side_effect=fake_run):
                 old_argv = sys.argv
                 sys.argv = [
                     "run_wod_internvla_dense_family_probe.py",

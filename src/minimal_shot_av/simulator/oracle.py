@@ -3,7 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 
-from .environment import DEFAULT_EGO_RADIUS_M, Scenario, min_time_swept_clearance, nearest_lane_point, route_centerline, scenario_at_state
+from .environment import (
+    DEFAULT_EGO_RADIUS_M,
+    Scenario,
+    min_time_swept_clearance,
+    nearest_lane_point,
+    route_centerline,
+    scenario_at_state,
+    scenario_at_tick,
+)
 from .perception import perceive_scene
 from .policy import EgoState, Rollout, RolloutConfig, StepRecord, advance_ego_state
 from .world_model import update_world_state
@@ -236,7 +244,7 @@ def _horizon_score(
         progress * config.progress_score_weight
         + clearance_score
         - lane_penalty * config.lane_penalty_weight
-        - (config.stopped_penalty if speed == 0.0 else 0.0)
+        - (config.stopped_penalty if target_step_distance == 0.0 else 0.0)
     )
 
 

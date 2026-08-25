@@ -10,7 +10,9 @@ from scripts import check_alpasim_readiness
 
 class CheckAlpaSimReadinessTests(unittest.TestCase):
     def test_readiness_script_calls_all_preflights(self) -> None:
-        with patch.object(check_alpasim_readiness, "_resolve_alpasim_root", return_value=Path("/tmp/alpasim")), patch.object(
+        with patch.object(
+            check_alpasim_readiness, "_resolve_alpasim_root", return_value=Path("/tmp/alpasim")
+        ), patch.object(
             check_alpasim_readiness, "_scene_ids", return_value=["scene-1", "scene-2"]
         ), patch.object(check_alpasim_readiness, "_validate_alpasim_checkout") as validate, patch.object(
             check_alpasim_readiness, "_preflight_docker_access"
@@ -37,7 +39,9 @@ class CheckAlpaSimReadinessTests(unittest.TestCase):
         self.assertIn("AlpaSim readiness: OK", stdout.getvalue())
 
     def test_readiness_script_can_skip_optional_checks(self) -> None:
-        with patch.object(check_alpasim_readiness, "_resolve_alpasim_root", return_value=Path("/tmp/alpasim")), patch.object(
+        with patch.object(
+            check_alpasim_readiness, "_resolve_alpasim_root", return_value=Path("/tmp/alpasim")
+        ), patch.object(
             check_alpasim_readiness, "_scene_ids", return_value=["scene-1"]
         ), patch.object(check_alpasim_readiness, "_validate_alpasim_checkout"), patch.object(
             check_alpasim_readiness, "_preflight_docker_access"

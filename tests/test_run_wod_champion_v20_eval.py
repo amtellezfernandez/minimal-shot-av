@@ -136,9 +136,18 @@ class WodChampionV20EvalTests(unittest.TestCase):
         self.assertEqual("sklearn_hist_gradient_boosting", command[command.index("--direct-policy-model") + 1])
         self.assertEqual("relative_world_prior_contextual", command[command.index("--direct-policy-feature-mode") + 1])
         self.assertEqual("0.0", command[command.index("--direct-policy-conformal-alpha") + 1])
-        self.assertEqual("0.06984597645913741", command[command.index("--direct-policy-min-margin") + 1])
-        self.assertEqual("0.4239459504330415", command[command.index("--direct-policy-min-precision") + 1])
-        self.assertEqual("32", command[command.index("--direct-policy-stump-thresholds") + 1])
+        self.assertEqual(
+            module.HGB_DIRECT_CONFIG["direct_policy_min_margin"],
+            command[command.index("--direct-policy-min-margin") + 1],
+        )
+        self.assertEqual(
+            module.HGB_DIRECT_CONFIG["direct_policy_min_precision"],
+            command[command.index("--direct-policy-min-precision") + 1],
+        )
+        self.assertEqual(
+            module.HGB_DIRECT_CONFIG["direct_policy_stump_thresholds"],
+            command[command.index("--direct-policy-stump-thresholds") + 1],
+        )
         self.assertEqual("learned,internnav", command[command.index("--direct-policy-candidate-sources") + 1])
         self.assertEqual("boosted_stumps", command[command.index("--source-gate-model") + 1])
         self.assertEqual("0.05", command[command.index("--source-gate-conformal-alpha") + 1])
@@ -165,7 +174,9 @@ class WodChampionV20EvalTests(unittest.TestCase):
             output=ROOT / "jepa.json",
         )
 
-        self.assertEqual("relative_precedent_latent_contextual", command[command.index("--direct-policy-feature-mode") + 1])
+        self.assertEqual(
+            "relative_precedent_latent_contextual", command[command.index("--direct-policy-feature-mode") + 1]
+        )
         self.assertEqual("latent_predictive", command[command.index("--world-prior") + 1])
         self.assertEqual("mixed", command[command.index("--world-prior-mask-mode") + 1])
 

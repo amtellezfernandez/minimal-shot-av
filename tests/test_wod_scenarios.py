@@ -138,8 +138,11 @@ class WodScenarioGeneratorTests(unittest.TestCase):
 
         self.assertGreaterEqual(crossing_actor.active_from, 24)
         self.assertGreaterEqual(crossing_actor.speed, 2.6)
-        self.assertFalse(any(obstacle.label == "conflicting_vehicle" for obstacle in scenario_at_tick(scenario, tick=0).obstacles))
-        self.assertTrue(any(obstacle.label == "conflicting_vehicle" for obstacle in scenario_at_tick(scenario, tick=crossing_actor.active_from).obstacles))
+        self.assertFalse(
+            any(obstacle.label == "conflicting_vehicle" for obstacle in scenario_at_tick(scenario, tick=0).obstacles)
+        )
+        active_scenario = scenario_at_tick(scenario, tick=crossing_actor.active_from)
+        self.assertTrue(any(obstacle.label == "conflicting_vehicle" for obstacle in active_scenario.obstacles))
 
     def test_intersection_conflict_actor_starts_close_enough_to_force_a_decision(self) -> None:
         scenario = generate_wod_scenario("intersection", seed=3)
@@ -164,9 +167,15 @@ class WodScenarioGeneratorTests(unittest.TestCase):
         scenario = generate_wod_scenario("spotlight", seed=3)
         trigger_region = scenario.environment["trigger_regions"][0]
         center_x = (float(trigger_region["x_min"]) + float(trigger_region["x_max"])) * 0.5
-        before_scenario, runtime = scenario_at_state(scenario, tick=10, position=(center_x - 12.0, scenario.start[1]), runtime_state={})
-        armed_scenario, runtime = scenario_at_state(scenario, tick=11, position=(center_x, scenario.start[1]), runtime_state=runtime)
-        after_scenario, _ = scenario_at_state(scenario, tick=12, position=(center_x, scenario.start[1]), runtime_state=runtime)
+        before_scenario, runtime = scenario_at_state(
+            scenario, tick=10, position=(center_x - 12.0, scenario.start[1]), runtime_state={}
+        )
+        armed_scenario, runtime = scenario_at_state(
+            scenario, tick=11, position=(center_x, scenario.start[1]), runtime_state=runtime
+        )
+        after_scenario, _ = scenario_at_state(
+            scenario, tick=12, position=(center_x, scenario.start[1]), runtime_state=runtime
+        )
 
         self.assertFalse(any(obstacle.label == "spotlight_hazard" for obstacle in before_scenario.obstacles))
         self.assertFalse(any(obstacle.label == "spotlight_hazard" for obstacle in armed_scenario.obstacles))

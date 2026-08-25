@@ -66,7 +66,9 @@ class WodRankerFeatureTests(unittest.TestCase):
         self.assertIn("waypoint_nearest_neighbor_l2", relative_contextual)
         self.assertIn("endpoint_distance_frame_rank", relative_contextual)
         self.assertIn("retrieval_support_score", selector_numeric_features("relative_retrieval_latent_contextual"))
-        self.assertIn("retrieval_latent_disagreement", selector_numeric_features("relative_retrieval_latent_contextual"))
+        self.assertIn(
+            "retrieval_latent_disagreement", selector_numeric_features("relative_retrieval_latent_contextual")
+        )
         self.assertIn("external_embedding_00", external_contextual)
         self.assertIn("source_scene_x_external_embedding_00", external_contextual)
         self.assertIn("source_temporal_x_external_embedding_00", external_contextual)

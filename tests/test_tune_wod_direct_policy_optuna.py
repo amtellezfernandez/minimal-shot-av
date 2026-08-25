@@ -425,12 +425,13 @@ class WodDirectPolicyOptunaTunerTests(unittest.TestCase):
                 called["count"] += 1
                 raise AssertionError("cached artifact should have been reused")
 
-            original_run_command = module._run_command
-            module._run_command = _should_not_run
+            globals_dict = module._objective.__globals__
+            original_run_command = globals_dict["_run_command"]
+            globals_dict["_run_command"] = _should_not_run
             try:
                 score = module._objective(trial, args)
             finally:
-                module._run_command = original_run_command
+                globals_dict["_run_command"] = original_run_command
 
             self.assertEqual(0, called["count"])
             self.assertAlmostEqual(9.25, score)
@@ -475,12 +476,13 @@ class WodDirectPolicyOptunaTunerTests(unittest.TestCase):
                 called["count"] += 1
                 return SimpleNamespace(returncode=0)
 
-            original_run_command = module._run_command
-            module._run_command = _run_once
+            globals_dict = module._objective.__globals__
+            original_run_command = globals_dict["_run_command"]
+            globals_dict["_run_command"] = _run_once
             try:
                 score = module._objective(trial, args)
             finally:
-                module._run_command = original_run_command
+                globals_dict["_run_command"] = original_run_command
 
             self.assertEqual(1, called["count"])
             self.assertAlmostEqual(8.0, score)
@@ -511,12 +513,13 @@ class WodDirectPolicyOptunaTunerTests(unittest.TestCase):
             def _timeout(*_args, **_kwargs):
                 raise subprocess.TimeoutExpired(cmd=["python3"], timeout=1.0)
 
-            original_run_command = module._run_command
-            module._run_command = _timeout
+            globals_dict = module._objective.__globals__
+            original_run_command = globals_dict["_run_command"]
+            globals_dict["_run_command"] = _timeout
             try:
                 score = module._objective(trial, args)
             finally:
-                module._run_command = original_run_command
+                globals_dict["_run_command"] = original_run_command
 
             self.assertEqual(-1.0e9, score)
             self.assertTrue(trial.attrs["timed_out"])

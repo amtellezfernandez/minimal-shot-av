@@ -23,7 +23,7 @@ def _load_module():
 class WodModelBiasAuditTests(unittest.TestCase):
     def test_solution_reset_declares_world_model_result_as_insufficient(self) -> None:
         declaration = (ROOT / "models" / "DECLARATION.md").read_text(encoding="utf-8")
-        reset = (ROOT / "docs" / "solution-reset.md").read_text(encoding="utf-8")
+        reset = (ROOT / "docs" / "notes" / "solution-reset.md").read_text(encoding="utf-8")
 
         self.assertIn("7.606198495114426", declaration)
         self.assertIn("small to claim a meaningful solution", declaration)

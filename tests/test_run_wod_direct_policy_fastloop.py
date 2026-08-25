@@ -83,7 +83,9 @@ class WodDirectPolicyFastloopTests(unittest.TestCase):
 
         self.assertEqual("official", rewritten[rewritten.index("--rfs-backend") + 1])
         self.assertEqual("official.json", Path(rewritten[rewritten.index("--output") + 1]).name)
-        self.assertEqual(str(ROOT / "workspace" / "waymo-open-dataset/src"), rewritten[rewritten.index("--waymo-src") + 1])
+        self.assertEqual(
+            str(ROOT / "workspace" / "waymo-open-dataset/src"), rewritten[rewritten.index("--waymo-src") + 1]
+        )
         self.assertEqual("20", rewritten[rewritten.index("--max-preference-frames") + 1])
         self.assertEqual("2", rewritten[rewritten.index("--folds") + 1])
         self.assertIn("--progress-every-fold", rewritten)

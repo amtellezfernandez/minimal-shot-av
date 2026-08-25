@@ -36,6 +36,21 @@ not:
 - `src/wizard/**` — tracked wizard/deployment overrides
 - `src/driver/**` — tracked external-driver override files
 
+## Provenance & Licensing
+
+- The patches and override files here are unified diffs and drop-in replacements
+  against a **separate upstream AlpaSim checkout** that lives (gitignored) at
+  `workspace/alpasim/` and is **not redistributed** with this repository.
+- Because the upstream source is not shipped here, its license text is not
+  reproduced here either. Anyone applying these patches must obtain AlpaSim
+  from its owner and comply with the upstream license terms.
+- Copyright in the unmodified upstream fragments quoted inside the diffs remains
+  with the upstream AlpaSim authors; the project-authored modifications are
+  covered by the repo root `LICENSE` (Apache-2.0).
+- When regenerating these patches, record the upstream commit hash they were
+  produced against in this README. (The historical patches predate this rule;
+  their base commit was not recorded.)
+
 ## Boundary Rule
 
 These files are not the main simulator implementation and not the WOD model stack.

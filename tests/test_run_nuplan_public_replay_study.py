@@ -34,7 +34,10 @@ class RunNuPlanPublicReplayStudyTests(unittest.TestCase):
         original_enrich = globals_dict["enrich_report_with_realized_clearance"]
         try:
             globals_dict["_load_scenes"] = lambda args: [{"scene_id": "scene_a"}]
-            globals_dict["run_rollout"] = lambda scenes, selector=None: {"schema": "rollout", "scenes": scenes}
+            globals_dict["run_rollout"] = lambda scenes, selector=None, candidate_profile="base": {
+                "schema": "rollout",
+                "scenes": scenes,
+            }
             globals_dict["enrich_report_with_realized_clearance"] = (
                 lambda report, clearance_provider, near_miss_threshold_m: {
                     "schema": "replay",
@@ -50,6 +53,7 @@ class RunNuPlanPublicReplayStudyTests(unittest.TestCase):
                 near_miss_threshold_m=1.0,
                 sampling_mode="interaction",
                 max_scenes_per_db=2,
+                candidate_profile="base",
             )
         finally:
             globals_dict["_load_scenes"] = original_load_scenes
@@ -137,6 +141,7 @@ class RunNuPlanPublicReplayStudyTests(unittest.TestCase):
             sampling_rows=rows,
             sampling_mode="interaction",
             max_scenes_per_db=1,
+            candidate_profile="base",
             invalid_db_files=[],
         )
 

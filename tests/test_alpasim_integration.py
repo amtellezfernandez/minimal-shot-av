@@ -641,7 +641,11 @@ class AlpaSimIntegrationTests(unittest.TestCase):
             self.assertEqual("maintain", trace["hybrid_token"])
             self.assertEqual("maintain", trace["spotlight_token"])
             self.assertTrue(selection_log_path.is_file())
-            records = [json.loads(line) for line in selection_log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+            records = [
+                json.loads(line)
+                for line in selection_log_path.read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
             self.assertEqual(1, len(records))
             self.assertEqual("clipgt-test-scene", records[0]["scene_id"])
             self.assertEqual("evasive_left", records[0]["dagger_argmax_token"])
@@ -1003,7 +1007,9 @@ class AlpaSimIntegrationTests(unittest.TestCase):
             "rear_flow_risk",
             _actor_route_stable_violation("crawl", evaluations_by_name["crawl"], signals["crawl"]),
         )
-        self.assertIsNone(_actor_route_stable_violation("maintain", evaluations_by_name["maintain"], signals["maintain"]))
+        self.assertIsNone(
+            _actor_route_stable_violation("maintain", evaluations_by_name["maintain"], signals["maintain"])
+        )
         self.assertTrue(_actor_axis_route_guard_required("stop", evaluations_by_name, signals))
         self.assertFalse(_actor_axis_route_guard_required("maintain", evaluations_by_name, signals))
 
@@ -1064,7 +1070,9 @@ class AlpaSimIntegrationTests(unittest.TestCase):
                 oracle_actor_proxy_tolerance_us=20_000,
             )
             prediction_input = SimpleNamespace(
-                camera_images={"front": [SimpleNamespace(timestamp_us=1000000, image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                camera_images={
+                    "front": [SimpleNamespace(timestamp_us=1000000, image=np.full((4, 4, 3), 180, dtype=np.uint8))]
+                },
                 command=DriveCommand.STRAIGHT,
                 speed=6.0,
                 acceleration=0.0,
@@ -1153,7 +1161,9 @@ class AlpaSimIntegrationTests(unittest.TestCase):
                 oracle_actor_proxy_tolerance_us=20_000,
             )
             prediction_input = SimpleNamespace(
-                camera_images={"front": [SimpleNamespace(timestamp_us=1000000, image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                camera_images={
+                    "front": [SimpleNamespace(timestamp_us=1000000, image=np.full((4, 4, 3), 180, dtype=np.uint8))]
+                },
                 command=DriveCommand.STRAIGHT,
                 speed=6.0,
                 acceleration=0.0,
@@ -1232,7 +1242,9 @@ class AlpaSimIntegrationTests(unittest.TestCase):
                 oracle_actor_proxy_tolerance_us=20_000,
             )
             prediction_input = SimpleNamespace(
-                camera_images={"front": [SimpleNamespace(timestamp_us=1000000, image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                camera_images={
+                    "front": [SimpleNamespace(timestamp_us=1000000, image=np.full((4, 4, 3), 180, dtype=np.uint8))]
+                },
                 command=DriveCommand.STRAIGHT,
                 speed=6.0,
                 acceleration=0.0,
@@ -1299,7 +1311,9 @@ class AlpaSimIntegrationTests(unittest.TestCase):
                 oracle_actor_proxy_tolerance_us=20_000,
             )
             prediction_input = SimpleNamespace(
-                camera_images={"front": [SimpleNamespace(timestamp_us=1000000, image=np.full((4, 4, 3), 180, dtype=np.uint8))]},
+                camera_images={
+                    "front": [SimpleNamespace(timestamp_us=1000000, image=np.full((4, 4, 3), 180, dtype=np.uint8))]
+                },
                 command=DriveCommand.STRAIGHT,
                 speed=6.0,
                 acceleration=0.0,

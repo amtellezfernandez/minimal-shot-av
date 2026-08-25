@@ -119,6 +119,7 @@ This repo is intentionally split into three visible surfaces:
 
 | If you need... | Go here |
 |---|---|
+| fresh-clone setup / env map | [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) |
 | Spotlight Reflex / internal debug simulator | [`src/minimal_shot_av/simulator/README.md`](src/minimal_shot_av/simulator/README.md) |
 | internal simulator write-up | [`docs/simulation.md`](docs/simulation.md) |
 | AlpaSim integration / reproduction | [`docs/corl2027/AUDIT.md`](docs/corl2027/AUDIT.md) |
@@ -189,3 +190,12 @@ uv run --no-sync python scripts/run_tests.py --quick
 # Current paper evidence audit
 ./scripts/run_corl2027_audit.sh
 ```
+
+New here? Start with [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md).
+
+## License
+
+First-party code is released under the [Apache License 2.0](LICENSE). Vendored
+external material under [`LASTVLA/`](LASTVLA/README.md) and patched upstream work
+under [`third_party/`](third_party/README.md) remain under their upstream terms —
+see the per-directory READMEs for provenance. Cite via [`CITATION.cff`](CITATION.cff).

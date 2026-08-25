@@ -154,7 +154,9 @@ class AnalyzeAlpaSimTransferMatrixTests(unittest.TestCase):
             },
         }
 
-        with patch.object(module, "_discover_batches", return_value={key: Path(key) for key in synthetic}), patch.object(
+        with patch.object(
+            module, "_discover_batches", return_value={key: Path(key) for key in synthetic}
+        ), patch.object(
             module,
             "_load_batch_rows",
             side_effect=lambda batch_dir, max_dist_to_gt: synthetic[batch_dir.name],

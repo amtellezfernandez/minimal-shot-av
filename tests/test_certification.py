@@ -201,7 +201,9 @@ class CertificationEvidenceTests(unittest.TestCase):
             corridor_margin=2.0,
             free_space_confidence=0.26,
             uncertainty=0.74,
-            visible_obstacles=[PerceivedObstacle(x=1.0, y=0.0, radius=1.0, signed_distance=0.2)],
+            visible_obstacles=[
+                PerceivedObstacle(x=1.0, y=0.0, radius=1.0, length=None, heading=0.0, signed_distance=0.2)
+            ],
         )
 
         safe = apply_safety_filter(action, world_state, perception)
@@ -229,7 +231,9 @@ class CertificationEvidenceTests(unittest.TestCase):
             corridor_margin=2.0,
             free_space_confidence=0.1,
             uncertainty=0.9,
-            visible_obstacles=[PerceivedObstacle(x=0.5, y=0.0, radius=1.0, signed_distance=-0.2)],
+            visible_obstacles=[
+                PerceivedObstacle(x=0.5, y=0.0, radius=1.0, length=None, heading=0.0, signed_distance=-0.2)
+            ],
         )
 
         safe = apply_safety_filter(action, world_state, perception)
@@ -257,7 +261,9 @@ class CertificationEvidenceTests(unittest.TestCase):
             corridor_margin=2.0,
             free_space_confidence=0.46,
             uncertainty=0.54,
-            visible_obstacles=[PerceivedObstacle(x=1.0, y=0.0, radius=1.0, signed_distance=0.8)],
+            visible_obstacles=[
+                PerceivedObstacle(x=1.0, y=0.0, radius=1.0, length=None, heading=0.0, signed_distance=0.8)
+            ],
         )
 
         safe = apply_safety_filter(action, world_state, perception)

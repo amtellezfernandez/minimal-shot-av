@@ -600,7 +600,9 @@ def fit_latent_predictive_world_prior(
     context_scale = context.std(axis=0)
     context_scale[context_scale < 1e-8] = 1.0
     context_norm = (context - context_mean) / context_scale
-    summaries = np.asarray([_future_summary_vector(frame.future_trajectory) for frame in target_frames], dtype=np.float64)
+    summaries = np.asarray(
+        [_future_summary_vector(frame.future_trajectory) for frame in target_frames], dtype=np.float64
+    )
     target_mean = summaries.mean(axis=0)
     target_scale = summaries.std(axis=0)
     target_scale[target_scale < 1e-8] = 1.0
@@ -1023,10 +1025,16 @@ def _masked_world_prior_training_frames(
 ) -> list[WodE2EPreferenceFrame]:
     variants = [frame]
     if mask_mode in {WORLD_PRIOR_MASK_TAIL, WORLD_PRIOR_MASK_MIXED}:
-        variants.append(_masked_world_prior_frame(frame, feature_mode=feature_mode, latent_source=latent_source, mode="tail", rng=rng))
+        variants.append(
+            _masked_world_prior_frame(
+                frame, feature_mode=feature_mode, latent_source=latent_source, mode="tail", rng=rng
+            )
+        )
     if mask_mode in {WORLD_PRIOR_MASK_RANDOM, WORLD_PRIOR_MASK_MIXED}:
         variants.append(
-            _masked_world_prior_frame(frame, feature_mode=feature_mode, latent_source=latent_source, mode="random", rng=rng)
+            _masked_world_prior_frame(
+                frame, feature_mode=feature_mode, latent_source=latent_source, mode="random", rng=rng
+            )
         )
     return variants
 

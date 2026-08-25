@@ -329,27 +329,13 @@ def _install_torch_for_alpasim(*, uv_bin: str, venv_python: Path, cwd: Path) -> 
         TORCH_INDEX_URL,
         TORCH_PACKAGE,
     ]
-    result = subprocess.run(
-        uv_cmd,
-        cwd=cwd,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    if result.returncode == 0:
-        if result.stdout:
-            sys.stdout.write(result.stdout)
-        if result.stderr:
-            sys.stderr.write(result.stderr)
+    try:
+        _run(uv_cmd, cwd=cwd)
         return
-
-    if result.stdout:
-        sys.stdout.write(result.stdout)
-    if result.stderr:
-        sys.stderr.write(result.stderr)
-    sys.stderr.write(
-        "uv torch install failed inside AlpaSim env; retrying with pip in the same environment.\n"
-    )
+    except SystemExit:
+        sys.stderr.write(
+            "uv torch install failed inside AlpaSim env; retrying with pip in the same environment.\n"
+        )
     _ensure_venv_pip(venv_python=venv_python, cwd=cwd)
     _run(
         [
@@ -366,16 +352,10 @@ def _install_torch_for_alpasim(*, uv_bin: str, venv_python: Path, cwd: Path) -> 
 
 
 def _ensure_venv_pip(*, venv_python: Path, cwd: Path) -> None:
-    probe = subprocess.run(
-        [str(venv_python), "-m", "pip", "--version"],
-        cwd=cwd,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    if probe.returncode == 0:
-        return
-    _run([str(venv_python), "-m", "ensurepip", "--upgrade"], cwd=cwd)
+    try:
+        _run([str(venv_python), "-m", "pip", "--version"], cwd=cwd, capture_output=True)
+    except SystemExit:
+        _run([str(venv_python), "-m", "ensurepip", "--upgrade"], cwd=cwd)
 
 
 def _plugin_names(venv_python: Path) -> list[str]:

@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Minimal-Shot Autonomous Driving"
+authors:
+  - family-names: "Tellez Fernandez"
+    given-names: "Alba Maria"
+repository-code: "https://github.com/amtellezfernandez/minimal-shot-av"
+license: Apache-2.0
+date-released: 2026-04-25
+keywords:
+  - autonomous-driving
+  - transfer-diagnostics
+  - WOD-E2E
+  - AlpaSim
+  - NAVSIM
+abstract: >-
+  CoRL 2027 repository for AlpaSim transfer diagnostics, WOD-E2E selector
+  evidence, and the Spotlight Reflex code used to generate diagnostic
+  candidates. Includes an internal 2D debug simulator, a Waymo Open Dataset
+  end-to-end candidate/selector stack, and NAVSIM v2 diagnostic tooling.
